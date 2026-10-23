@@ -475,7 +475,7 @@ VerificationTest[
         QuantumEntangledQ[QuantumState[ccnrMissRho, {2, 2}], Automatic, "Negativity"],
         QuantumEntangledQ[QuantumState[ccnrMissRho, {2, 2}], Automatic, "Realignment"]
     },
-    {True, False},
+    {True, Indeterminate},
     TestID -> "Criterion-EntangledQ-NegativityCatches-RealignmentMisses"
 ]
 
@@ -502,7 +502,7 @@ VerificationTest[
         QuantumEntangledQ[QuantumState[N @ horodeckiRho, {3, 3}], Automatic, "Negativity"],
         QuantumEntangledQ[QuantumState[N @ horodeckiRho, {3, 3}], Automatic, "Realignment"]
     },
-    {False, True},
+    {Indeterminate, True},
     TestID -> "Criterion-EntangledQ-Horodecki-RealignmentCatches-NegativityMisses"
 ]
 

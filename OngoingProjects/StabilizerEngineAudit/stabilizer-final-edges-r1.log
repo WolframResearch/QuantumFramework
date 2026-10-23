@@ -1,0 +1,17 @@
+OutputForm[>> ]WordBoundaryV -> {{True, True, True, True}, {True, True, True, True}}
+
+PauliStabilizer::nonclifford: Gate PauliX -> {1} cannot be applied to the stabilizer tableau: it is stored in a basis that is not computational. Use Method -> "TensorNetwork" or "Schrodinger" for operations the stabilizer engine cannot track.
+OutputForm[>> ]WarmBasisRefusal1 -> $Failed
+
+PauliStabilizer::nonclifford: Gate PauliX -> {1} cannot be applied to the stabilizer tableau: it is stored in a basis that is not computational. Use Method -> "TensorNetwork" or "Schrodinger" for operations the stabilizer engine cannot track.
+OutputForm[>> ]WarmBasisRefusal2 -> $Failed
+
+PauliStabilizer::invalidorder: Gate wires must lie in the register {1, ..., 3}, with distinct wires for a two-qubit gate.
+
+PauliStabilizer::invalidorder: Gate wires must lie in the register {1, ..., 3}, with distinct wires for a two-qubit gate.
+
+PauliStabilizer::invalidorder: Gate wires must lie in the register {1, ..., 3}, with distinct wires for a two-qubit gate.
+
+General::stop: Further output of PauliStabilizer::invalidorder will be suppressed during this calculation.
+OutputForm[>> ]InvalidWires -> {$Failed, $Failed, $Failed, $Failed}
+OutputForm[>> ]Messages -> {HoldForm[PauliStabilizer::nonclifford], HoldForm[PauliStabilizer::nonclifford], HoldForm[PauliStabilizer::invalidorder], HoldForm[PauliStabilizer::invalidorder], HoldForm[PauliStabilizer::invalidorder], HoldForm[General::stop]}

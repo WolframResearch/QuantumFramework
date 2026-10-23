@@ -1,0 +1,61 @@
+Historical inverse-fix evidence. The subsequent WL integration review revises helper ownership and execution boundaries; see WLIntegrationReviewResults.txt for current sources, correctness and performance.
+
+Stabilizer inverse-phase correction
+
+The pre-existing inverse bug is fixed. The only production file edited for this request is QuantumFramework/Kernel/Stabilizer/GateUpdates.m. All task changes remain uncommitted and unstaged on the existing main branch. Earlier stabilizer performance improvements are retained.
+
+CAUSE AND CORRECTION
+The inverse first constructs the inverse binary symplectic matrix with zero phase, then composes it with the input. That composition already includes the input's phase. XORing the input phase into the resulting residual a second time erased Pauli signs. Even X, Y and Z incorrectly inverted to identity under the previous rule. The corrected inverse uses the residual composition phase directly. The matrix inversion, singular-tableau guard and canonical/chunk-packed/generator-packed storage choices are unchanged by this request.
+
+The saved before/after reproduction reports the three-qubit fixture's double inverse and both composition orders as false before, true after. X, Y and Z inverse equality likewise changes from false to true. Neither reproduction emits messages. See inverse-proof-pre.json, inverse-proof-post.json and InverseRegressionProof.wls.
+
+CORRECTNESS
+Full fresh-kernel stabilizer suite: 1527 tests across 14 files, zero failures and outside messages {}. The new InversePhase.wlt contains 330 passing tests. It covers all 24 one-qubit Clifford actions; primitive adjoints; all 64 sign choices for the reported three-qubit matrix; canonical, chunk-packed and generator-packed storage; both inverse composition orders and exact double inversion; randomized reversed-adjoint circuits; independent exact dense U-dagger P U conjugation at n1-4; packed-word boundaries n31/32/61/62/63/124/125; symbolic binary substitutions; and singular-matrix messages/$Failed. The earlier CompiledEvolution inverse regression now asserts actual involution rather than agreement with the old canonical behavior.
+
+LONG-CIRCUIT BEFORE/AFTER: FIVE-TRIAL MEDIANS AND RANGES, MILLISECONDS
+Before means the optimized engine immediately before this inverse correction, including the cold-encoding fix. After means the current main source. Compiled.m is byte-identical between these versions. No forward evolution code changed. Small variations in unchanged paths are measurement noise; this inverse fix is a correctness correction, not a claim of a new speedup in each row.
+Workload | Before median [min, max] ms | After median [min, max] ms
+Direct/n=128/g=1000 | 0.472 [0.458, 0.538] | 0.508 [0.467, 0.599]
+PublicWarm/n=128/g=1000 | 0.630 [0.622, 0.668] | 0.675 [0.651, 0.751]
+PublicColdPlan/n=128/g=1000 | 161.306 [159.171, 164.542] | 160.800 [157.310, 162.834]
+Direct/n=128/g=10000 | 3.030 [2.729, 3.134] | 2.784 [2.767, 3.185]
+TenDirectCalls/n=128 | 4.485 [4.443, 4.729] | 4.454 [4.442, 4.656]
+TenPublicCalls/n=128 | 6.362 [6.219, 6.421] | 6.237 [6.190, 6.403]
+MaterializeTableau/n=128 | 0.185 [0.179, 0.236] | 0.195 [0.181, 0.252]
+Direct/n=1024/g=1000 | 0.896 [0.884, 1.087] | 1.017 [0.909, 1.086]
+PublicWarm/n=1024/g=1000 | 1.473 [1.343, 2.548] | 1.346 [1.305, 1.454]
+PublicColdPlan/n=1024/g=1000 | 143.617 [140.870, 145.210] | 142.819 [140.632, 146.093]
+Direct/n=1024/g=10000 | 3.812 [3.582, 4.375] | 3.785 [3.559, 4.637]
+TenDirectCalls/n=1024 | 12.674 [10.063, 23.770] | 11.949 [9.611, 15.523]
+TenPublicCalls/n=1024 | 13.939 [13.582, 17.441] | 13.166 [12.382, 14.744]
+MaterializeTableau/n=1024 | 15.550 [14.328, 16.058] | 15.440 [14.310, 16.389]
+DirectOneV/n=128/g=10001 | 2.771 [2.710, 3.359] | 2.708 [2.686, 3.346]
+DirectColdEncoding/n=128/g=10000 | 9.517 [8.912, 10.752] | 9.227 [8.870, 9.521]
+DirectColdEncoding/n=1024/g=10000 | 10.136 [9.562, 10.864] | 10.340 [10.097, 12.225]
+DirectRandomCold/n=128/g=10000 | 8.585 [8.540, 9.849] | 9.140 [8.417, 10.043]
+
+RETAINED GAINS RELATIVE TO THE ORIGINAL ENGINE
+Original measurements are the historical same-workload five-trial baseline in long-before.json, before all three initial optimizations. They are not concurrent controls for this inverse-only correction. Fresh before/after controls above isolate this correction.
+Workload | Original median ms | Current median ms | Retained speedup
+Direct/n=1024/g=10000 | 39.899 | 3.785 | 10.54x
+TenPublicCalls/n=1024 | 11163.177 | 13.166 | 847.88x
+DirectOneV/n=128/g=10001 | 1215.218 | 2.708 | 448.75x
+DirectColdEncoding/n=128/g=10000 | 12.232 | 9.227 | 1.33x
+DirectColdEncoding/n=1024/g=10000 | 41.735 | 10.340 | 4.04x
+
+METHOD AND LIMITS
+WolframKernel 15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026). Kernel startup, native-kernel compilation/warmup, input construction and expanded-tableau export are excluded from evolution times. Each measured trial clears System caches. Warm rows reuse the encoded plan; cold-encoding and cold-plan rows also empty stabilizer caches. Timed audit kernels ran sequentially, with correctness kernels finished beforehand. The 10,000-gate workload repeats one deterministic mixed-Clifford 1,000-gate block ten times. The separate randomized cold128 workload has 10,000 randomly selected mixed gates and wires, with a fixed seed. TenPublicCalls reuses the same prebuilt 1,000-gate circuit for ten successive calls. DirectOneV inserts one V into a 10,000-gate list. Matrix-based first-use public circuit classification and deferred full-tableau materialization retain the previously documented costs; neither is altered by this correction. Benchmarks measure evolution, not the inverse operation itself.
+
+REPRODUCTION AND SCOPE
+Run RunStabilizerSuite.wls with STABILIZER_AUDIT_PHASE=inverse. Run LongCliffordBenchmark.wls followed by ColdFixColdCases.wls with STABILIZER_AUDIT_PHASE=inverse-post for current source. To recreate the immediate pre-fix snapshot without git operations, copy the current paclet Kernel and PacletInfo.wl to a temporary QuantumFramework directory and replace Kernel/Stabilizer/GateUpdates.m with inverse-before-GateUpdates.m; set STABILIZER_AUDIT_REPO to its parent and STABILIZER_AUDIT_PHASE=inverse-pre. All drivers use the installed WolframKernel -noinit -script <driver>. Source and test SHA256 values, branch and observed HEAD are in inverse-fix-manifest.json.
+The only stabilizer production delta from the frozen pre-inverse snapshot is GateUpdates.m. Unrelated concurrent edits outside the stabilizer engine are preserved and recorded separately in the manifest. No unrelated code or user work was changed by this request. All 1,527 stabilizer tests ran on main.
+
+INDEPENDENT VERIFICATION
+One fresh-context verification and WL/physics quality round passed with OPEN ISSUES: 0. Independent exact dense reconstruction verified all 64 signed versions of the fixture, all 24 one-qubit Cliffords and 12 random 2-4-qubit actions; all layouts, packed boundaries, all 64 symbolic assignments, empty identities and singular message contracts passed without messages. Independent TestReport reruns passed 330/330 InversePhase and 65/65 CompiledEvolution tests. All seven quality axes passed. The independent reviewer also reproduced the original/pre-fix/current timing controls, 18 workloads with five trials for each version, 270 total message-free trials. Timing kernels ran serially and have exited. Small pre/post changes overlap trial ranges; no uniform per-row speedup is claimed for the inverse correction.
+Workload | Original median ms | Before inverse correction ms | Current ms | Retained speedup
+DirectColdEncoding/n=128/g=10000 | 12.565 | 9.323 | 9.049 | 1.39x
+Direct/n=1024/g=10000 | 38.055 | 3.513 | 3.476 | 10.95x
+TenPublicCalls/n=1024 | 11282.627 | 13.727 | 14.072 | 801.78x
+DirectOneV/n=128/g=10001 | 1224.159 | 2.881 | 2.769 | 442.09x
+DirectColdEncoding/n=1024/g=10000 | 40.585 | 10.379 | 10.253 | 3.96x
+Full verdict, ranges and executable evidence: InversePhaseIndependentReview.txt and inverse-independent-* files.

@@ -1,0 +1,47 @@
+{
+  "Branch": "main",
+  "HEAD": "890517010618b3a2bb018d90758c3d96df3ed4c2",
+  "IndexEmpty": true,
+  "SourceAndTestHashes": {
+    "QuantumFramework/Kernel/Stabilizer/GateMatrix.m": "b5cbb28228a7e7f3e49d205bc20abc5a6368d8ce83617b929536d5340754f2e1",
+    "QuantumFramework/Kernel/Stabilizer/Compiled.m": "c5f4e17678b953788e0aa03f195f9642582ea10c8512d4ae80a8ab098144b3da",
+    "QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m": "36e15a279123848412c3e3250785fe6a0a2f9ee2a082079743c97017743dc334",
+    "Tests/Stabilizer/BulkPlanBuilder.wlt": "2749a6093f54bf6338c1f20b90ece00c0b2468b1f0c3419a5ff7846491210a4d"
+  },
+  "ChangedProductionFileForThisRequest": "QuantumFramework/Kernel/Stabilizer/GateMatrix.m",
+  "LatestDelta": {
+    "AddedLines": 16,
+    "RemovedLines": 15
+  },
+  "FullSuiteTests": 1667,
+  "FullSuiteFailures": 0,
+  "ParentTimedResults": 270,
+  "IndependentTimedResults": 84,
+  "ReviewRounds": 1,
+  "OpenReviewIssues": 0,
+  "Limitation": "Independent 1024-qubit warm wall-clock timing inconclusive under background load; no precise warm no-regression bound claimed. Warm hits bypass changed helper.",
+  "EvidenceHashes": {
+    "BeforeGroupDefinition.wl": "f337ee025d0a709ca7ba5669395084005affb0cd8bcbb1abb672205e537ee599",
+    "Correctness.wls": "4d6567c769a0af50f0ddf03508c30031eebfaae62f9255cbc86e18ec32d486e1",
+    "IndependentTiming.wls": "ece97313ceefa53a7f9004594c7614b43ee1975924dbc9a976824f61ce4698bb",
+    "PairedHelperBenchmark.wls": "950d0162a8fe484a24f8bf7000f89295dc1fb5992d84a9c1505d908f6c2424cf",
+    "RESULTS.md": "1da64494bd47d6cfd7495fd318b8fd5d26cbc68de99b6a295707fcf2628551be",
+    "ReviewRound1.md": "fbad50784ec037fd5fad7a93d6e39cd5e5a6cb14b8d6ecc57a8ec537858dc672",
+    "RunFullSuite.wls": "6cb92cc6907532e935822dd45d07daeaf9329f80e2b2e789c062f38f485fe195",
+    "Summarize.py": "fbc8755f20afd0bcc9f7242dbf5c8a6ad8194788997fbd30c4a4f91e3b604314",
+    "WarmCacheProof.wls": "eec7ae949f2542dda1de7d04b2f69681e6b80cd6e1c2cda564c934c122e384f2",
+    "background-load.txt": "d5e040266967d2db109b8589fd756262f34c664b817f2e20e6bb47c135066145",
+    "before-GateMatrix.m": "e63d64ef3487badac05f03c99838f18d21572ea4e48e318cb8632cd2efc863d2",
+    "correctness.json": "8a47ead5e26964ea23d9cc8553b0837008837612559a187b97bd248d3ae1353a",
+    "correctness.log": "d1751d1a18322050676212cfe23b48be44d80b611f691f87ba1599c313243171",
+    "helper-extraction.diff": "74fd578b20ab217b5c0de5a3945577764be13638464641f595e541507d78e91f",
+    "independent-timing.json": "a12489e07732934a9b02712cdc6298ec59c124dd7875c5fa835c24dce5f155bd",
+    "independent-timing.log": "5a0b2f1b8e7058e065956303db4f371eca83c82f442e81f150645324bbdc319e",
+    "paired.json": "77e4e1e478734210cf4f5bba66a3678c9a4d89a9bacfd85489a14587924d4aab",
+    "paired.log": "239bfeb96c86b237d7db99e0779836059114c272dfafb2bd2e845a7ea8981e04",
+    "starting-manifest.json": "54ac5dfd49154178ac09b94768f8d294fdb721830aee067f4a42da050403019b",
+    "suite-after.json": "92638d635e67252d7222d3fce949d56017fc13fa4ecaf71c39b528066f6a7da6",
+    "suite-after.log": "c9428f265694be0459096feab4259ad89433ba1058b613bb48b79c662edb8357",
+    "warm-cache-proof.log": "6932bb50590b0a775d258242b4609772b3fc12dbb5ed8ce1897500b7c62c8bdf"
+  }
+}

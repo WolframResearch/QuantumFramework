@@ -1,0 +1,84 @@
+=======================================================================
+  QuantumFramework Test Coverage Report
+=======================================================================
+  Date:       Thu 22 Oct 2026 18:48:13
+  Paclet:     /Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework
+  Loaded:     /Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/QuantumFrameworkMain.m
+  Test files: 1 matching "BulkPlanBuilder"
+PACLET	/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework
+
+  NOTE: an installed Wolfram/QuantumFramework paclet is also visible:
+    /Users/mohammadb/Library/Wolfram/Paclets/Repository/Wolfram__QuantumFramework-2.1.3
+    Nothing has been uninstalled.  PacletDirectoryLoad gives the repo
+    copy priority, so this is usually harmless.  To remove it yourself:
+      PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]
+
+-----------------------------------------------------------------------
+  Stabilizer/BulkPlanBuilder.wlt
+-----------------------------------------------------------------------
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"I\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"H\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"S\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-SuperDagger[\"S\"] -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"X\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"Y\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"Z\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"V\" -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-SuperDagger[\"V\"] -> 2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"CNOT\" -> {1, 2}"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"CZ\" -> {1, 2}"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"SWAP\" -> {1, 2}"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"CNOT\" -> {2, 1}"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"CZ\" -> {2, 1}"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PrimitiveDense-\"SWAP\" -> {2, 1}"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n2-1"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n2-2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n2-3"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n3-1"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n3-2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n3-3"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n4-1"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n4-2"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-RandomDense-n4-3"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-ContentRecognitionIgnoresMisleadingLabels"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-InterleavedIdentityBlocksPreserveGateOrder"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-AllIdentityGroups"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-EmptyCircuit"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-NestedCircuitsAndBarriers"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-31"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-32"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-61"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-62"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-63"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-124"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-125"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-128"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-PackedBoundary-1024"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-TenThousandGates-ReusedPlan"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-ApproximateCustomGates-MachinePrecision"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-ApproximateCustomGates-40"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-ExactGlobalPhasesUseGeneralClassifier"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-SymbolicSigns-AllBinaryAssignments"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-NonCliffordFrameFallback"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-SymbolicTokensRemappedPerOccurrence"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-SymbolicTokensDoNotBorrowAnotherLabel"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-CompositeTokensDoNotBorrowAnotherLabel"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-SharedDataCannotHideMovedWires"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-ComputationalAndNoncomputationalBasesRemainDistinct"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-QuditDimensionsRemainDistinct"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-NonunitaryGateRefused"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-DefaultRegisterUsesHighestWire"	Success
+TEST	Stabilizer/BulkPlanBuilder.wlt	"BPB-AllStorageLayouts"	Success
+FILE	Stabilizer/BulkPlanBuilder.wlt	53	53
+  53/53 succeeded
+
+=======================================================================
+  Summary
+=======================================================================
+  PASS Stabilizer/BulkPlanBuilder.wlt: 53/53
+
+  Total: 53/53 succeeded (100.0%)
+OUTCOME	Success	53
+TOTAL	53	53
+STATUS	GREEN
+=======================================================================

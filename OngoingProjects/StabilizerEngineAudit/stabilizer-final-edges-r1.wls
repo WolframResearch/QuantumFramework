@@ -1,0 +1,15 @@
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+same[a_,b_]:=a["Signs"]===b["Signs"]&&a["Tableau"]===b["Tableau"];
+p=PauliStabilizer[63]["ApplyCircuit",{"H"->62,"CNOT"->{62,63},"S"->63,"H"->31,"CNOT"->{31,32}}];
+c=PauliStabilizer[<|"Signs"->p["Signs"],"Tableau"->p["Tableau"]|>];
+Echo["WordBoundaryV" -> Table[same[p["ApplyCircuit",{g->q}],c[g->q]],{g,{"V",SuperDagger["V"]}},{q,{31,32,62,63}}]];
+stabilizerClearCaches[];
+QuantumCircuitOperator[{"H"->1}][PauliStabilizer[1]];
+noncomp=QuantumCircuitOperator[{QuantumOperator[QuantumOperator["H"],QuantumBasis["PauliX"]]}];
+Echo["WarmBasisRefusal1" -> noncomp[PauliStabilizer[1]]];
+Echo["WarmBasisRefusal2" -> noncomp[PauliStabilizer[1]]];
+Echo["InvalidWires" -> Table[PauliStabilizer[3]["ApplyCircuit",{spec}],{spec,{"H"->0,"H"->4,"CNOT"->{1,1},"SWAP"->{2,2}}}]];
+Echo["Messages"->ToString[$MessageList,InputForm]];
+Exit[];

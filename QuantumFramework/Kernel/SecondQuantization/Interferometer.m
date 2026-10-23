@@ -620,48 +620,63 @@ photonPatterns[n_, m_] := ReverseSort @ FrobeniusSolve[ConstantArray[1, m], n]
    <T| U |S> = Perm(W_{T,S}) / Sqrt[Prod s! Prod t!]; Ryser over the multiplicities x <= s, Prod (s + 1) terms of
    Sum_x (-1)^(N - |x|) Prod Binomial[s, x] Prod_j (W_j . x)^t_j, run N digits above the input since they cancel *)
 repeatedPermanent[w_, s_, t_] := With[{rows = Flatten @ Position[t, _ ? Positive]},
-    Total[Times @@ Binomial[s, #] (-1) ^ (Total[s] - Total[#]) Times @@ ((w[[rows]] . #) ^ t[[rows]]) & /@ Tuples[Range[0, #] & /@ s]]
+    With[{v = w[[rows]], powers = t[[rows]]},
+        Total[Times @@ Binomial[s, #] (-1) ^ (Total[s] - Total[#]) Times @@ ((v . #) ^ powers) & /@ Tuples[Range[0, #] & /@ s]]
+    ]
 ]
 
 (* Calibrated on WL 15.0 ARM: K is the smaller grouped term count, and cols/rows are
    occupied dimensions in that orientation. Cost = cols rows + K cols (rows + 1).
    Machine packable/generic paths include different fixed-call budgets; arbitrary
    precision uses the grouped sum for collisions. Exact inputs retain Permanent.
-   See OngoingProjects/Quantum Interferometer/OccupiedModeOptimization. *)
-useRepeatedPermanentQ[w_, s_, t_] := With[{p = Precision[w]},
-    p =!= Infinity && With[{n = Total[s], a = Times @@ (s + 1), b = Times @@ (t + 1)},
-        With[{k = Min[a, b]},
-            k < 2 ^ n && (p =!= MachinePrecision || With[{
-                cols = Count[If[a <= b, s, t], _ ? Positive],
-                rows = Count[If[a <= b, t, s], _ ? Positive]
-            },
-                With[{cost = cols rows + k cols (rows + 1), budget = n 2 ^ n},
-                    cost < budget + 256 && (
-                        48 cost < budget + 4096 ||
-                        ! Developer`PackedArrayQ[w] && ! Developer`PackedArrayQ[Developer`ToPackedArray[
-                            w[[Flatten @ Position[t, _ ? Positive], Flatten @ Position[s, _ ? Positive]]]
-                        ]]
-                    )
+   The plan holds {precision, occupied block, input counts, output counts, forward}.
+   Occupations are validated nonnegative integers; construct indices only after the guards. *)
+repeatedPermanentPlan[w_, s_, t_] := With[{p = Precision[w]},
+    If[p === Infinity, False,
+        With[{n = Total[s], a = Times @@ (s + 1), b = Times @@ (t + 1)},
+            With[{k = Min[a, b]},
+                If[k < 2 ^ n,
+                    With[{rows = Pick[Range[Length[t]], Unitize[t], 1], cols = Pick[Range[Length[s]], Unitize[s], 1]},
+                        With[{c = If[a <= b, Length[cols], Length[rows]], r = If[a <= b, Length[rows], Length[cols]]},
+                            With[{cost = c r + k c (r + 1), budget = n 2 ^ n},
+                                Module[{block},
+                                    (* The packing probe and evaluator share this lazy extraction. *)
+                                    block := block = w[[rows, cols]];
+                                    If[p =!= MachinePrecision || cost < budget + 256 && (
+                                        48 cost < budget + 4096 ||
+                                        ! Developer`PackedArrayQ[w] && ! Developer`PackedArrayQ[Developer`ToPackedArray[block]]
+                                    ),
+                                        {p, block, s[[cols]], t[[rows]], a <= b},
+                                        False
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    False
                 ]
-            ])
+            ]
         ]
     ]
 ]
 
+useRepeatedPermanentQ[w_, s_, t_] := ListQ[repeatedPermanentPlan[w, s, t]]
+
 permanentAmplitude[w_, s_, t_] := Which[
     Total[s] != Total[t], 0,
     Total[s] == 0, 1,
-    useRepeatedPermanentQ[w, s, t],
-        (* Retain the precision of the whole input, including entries outside the occupied block. *)
-        With[{rows = Flatten @ Position[t, _ ? Positive], cols = Flatten @ Position[s, _ ? Positive], p = Precision[w]},
-            With[{v = SetPrecision[w[[rows, cols]], p + Total[s]]},
-                N[If[Times @@ (s + 1) <= Times @@ (t + 1),
-                    repeatedPermanent[v, s[[cols]], t[[rows]]], repeatedPermanent[Transpose[v], t[[rows]], s[[cols]]]
-                ] / Sqrt[Times @@ (s!) Times @@ (t!)], p]
-            ]
-        ],
-    True, Permanent[w[[modeList[t], modeList[s]]]] / Sqrt[Times @@ (s!) Times @@ (t!)]
+    True, permanentAmplitude[w, s, t, repeatedPermanentPlan[w, s, t]]
 ]
+
+permanentAmplitude[w_, s_, t_, False] :=
+    Permanent[w[[modeList[t], modeList[s]]]] / Sqrt[Times @@ (s!) Times @@ (t!)]
+
+permanentAmplitude[w_, s_, t_, {p_, block_, in_, out_, forward_}] :=
+    (* Retain the precision of the whole input, including entries outside the occupied block. *)
+    With[{v = SetPrecision[block, p + Total[s]]},
+        N[If[forward, repeatedPermanent[v, in, out], repeatedPermanent[Transpose[v], out, in]] /
+            Sqrt[Times @@ (s!) Times @@ (t!)], p]
+    ]
 
 (* U |S> = Prod_k (Sum_j W[[j, k]] a_j^dag)^s_k / Sqrt[s_k!] |0>, so the amplitude
    of T is its monomial's coefficient times Sqrt[Prod t! / Prod s!]. *)

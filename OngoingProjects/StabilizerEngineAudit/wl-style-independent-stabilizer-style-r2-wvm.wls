@@ -1,0 +1,11 @@
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+SeedRandom[98122];
+specs=Table[With[{w=RandomSample[Range[63],2],g=RandomChoice[{"H","S",SuperDagger["S"],"V",SuperDagger["V"],"X","Y","Z","CNOT","CZ","SWAP"}]},g->If[MemberQ[{"CNOT","CZ","SWAP"},g],w,First[w]]],{300}];
+result=Block[{$stabilizerCompileTarget="WVM"},PauliStabilizer[63]["ApplyCircuit",specs]];
+expected=Fold[#1[#2]&,PauliStabilizer[63],specs];
+pass=result["Tableau"]===expected["Tableau"] && result["Signs"]===expected["Signs"];
+Echo[<|"Target"->"WVM","CompiledHead"->Head[compiledCliffordFold],"Pass"->pass|>];
+Export["/private/tmp/stabilizer-style-r2-wvm.json",<|"Target"->"WVM","Pass"->pass|>,"RawJSON"];
+Exit[If[TrueQ[pass],0,1]];

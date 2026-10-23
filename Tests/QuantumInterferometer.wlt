@@ -905,12 +905,14 @@ VerificationTest[
         {
             $qiPermanentAmplitude[w, {4, 0, 0}, {1, 2, 1}] === Sqrt[12] / 9,
             $qiUseRepeatedPermanentQ[w, {4, 0, 0}, {1, 2, 1}],
-            Module[{selectorProbe, preprocessingProbe},
+            Module[{selectorProbe, planProbe, preprocessingProbe},
                 SetAttributes[preprocessingProbe, HoldAll];
                 preprocessingProbe[op_, args___] := (Sow[HoldForm[op], "exact-preprocessing"]; op[args]);
-                With[{f = $qiUseRepeatedPermanentQ},
-                    DownValues[selectorProbe] = DownValues[f] /. f -> selectorProbe /.
-                        HoldPattern[(h : Count | Position | Developer`PackedArrayQ | Developer`ToPackedArray | SetPrecision)[args___]] :>
+                With[{f = $qiUseRepeatedPermanentQ,
+                      plan = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`repeatedPermanentPlan},
+                    DownValues[selectorProbe] = DownValues[f] /. {f -> selectorProbe, plan -> planProbe};
+                    DownValues[planProbe] = DownValues[plan] /. plan -> planProbe /.
+                        HoldPattern[(h : Count | Position | Pick | Part | Developer`PackedArrayQ | Developer`ToPackedArray | SetPrecision)[args___]] :>
                             preprocessingProbe[h, args]
                 ];
                 Reap[selectorProbe[w, {4, 0, 0}, {1, 2, 1}], "exact-preprocessing"] === {False, {}}
@@ -1286,6 +1288,24 @@ VerificationTest[
     {QuantumInterferometer::method, QuantumInterferometer::elem, QuantumInterferometer::modes,
         QuantumInterferometer::compose, QuantumInterferometer::state},
     TestID -> "QI-rejects-invalid-method-elements-composition-and-state-dimensions"
+]
+
+(* The fallback keeps exact occupied entries exact even beside unused approximate modes. *)
+VerificationTest[
+    With[{w = ReplacePart[IdentityMatrix[4], {4, 4} -> N[Exp[I/7]]], in = {1, 0, 0, 0}},
+        With[{a = $qiPermanentAmplitude[w, in, in]},
+            {Precision[w] === MachinePrecision, $qiUseRepeatedPermanentQ[w, in, in], a, Precision[a]}
+        ]
+    ],
+    {True, False, 1, Infinity},
+    TestID -> "QI-permanent-fallback-preserves-exact-occupied-block"
+]
+
+(* Enumerating the six assignments gives 2 b^2 f + 4 b c e; the zero-output row contributes nothing. *)
+VerificationTest[
+    Expand[$qiRepeatedPermanent[{{a, d}, {b, e}, {c, f}}, {2, 1}, {0, 2, 1}] - 2 b^2 f - 4 b c e],
+    0,
+    TestID -> "QI-repeated-permanent-hoisted-rows-exact-coefficient"
 ]
 
 EndTestSection[]

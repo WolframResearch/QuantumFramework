@@ -1,0 +1,55 @@
+{
+  "Branch": "main",
+  "StartingHead": "708dc533489f0b7d7a0f92b412c380ce137ff25d",
+  "FinalObservedHead": "708dc533489f0b7d7a0f92b412c380ce137ff25d",
+  "ProductionChangesThisReview": [
+    {
+      "File": "QuantumFramework/Kernel/Stabilizer/Compiled.m",
+      "BeforeSHA256": "936e8acce001a027888719b5ddb37733297fc1de1df7c0df65ca13801a80b3a2",
+      "AfterSHA256": "c5f4e17678b953788e0aa03f195f9642582ea10c8512d4ae80a8ab098144b3da"
+    },
+    {
+      "File": "QuantumFramework/Kernel/Stabilizer/GateMatrix.m",
+      "BeforeSHA256": "82292aa1b18997fa4aae6cecf79cfdd216f394eb42696f25f4d60229aa1d5c8f",
+      "AfterSHA256": "bbfaeb5af198381baf497e0dbbaa48f8f09033f6f75677a2066cd4c8a6f643d6"
+    },
+    {
+      "File": "QuantumFramework/Kernel/Stabilizer/GateUpdates.m",
+      "BeforeSHA256": "d8fffa90878b64a7ebf4dda7988b21080aadd6aada764b3c8f5b6076b008604d",
+      "AfterSHA256": "ccee1abd250dbcefb86e047bd592aac80efbd099a0804d843e6c0ee339556f6b"
+    },
+    {
+      "File": "QuantumFramework/Kernel/Stabilizer/Packed.m",
+      "BeforeSHA256": "691a103a9eda8b7c7cf6fee3688e6c40493fab972e5d8d0ac9974fe2ff2fe43e",
+      "AfterSHA256": "c65e9a219fc5f685c503068481da53ee4402283ca588f0d43dcebedb9157d1dd"
+    },
+    {
+      "File": "QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m",
+      "BeforeSHA256": "38a444a10de7d4a8b75fa31750a8f0005ac5f16e9ce5dedabd6bf900e2687d90",
+      "AfterSHA256": "36e15a279123848412c3e3250785fe6a0a2f9ee2a082079743c97017743dc334"
+    }
+  ],
+  "NewTests": [
+    {
+      "File": "Tests/Stabilizer/ExecutionContracts.wlt",
+      "SHA256": "1af0bd4a9d5faabc41f2828938fdeccd97dab300c2ec7a1d1c0180649e7f80ba",
+      "Count": 84
+    }
+  ],
+  "NativeCliffordKernelSourceUnchangedSHA256": "532d780bd447f956fb8fd9ffa150793dbf01d965516afe52ab749855ff1734f4",
+  "Suite": {
+    "Count": 1611,
+    "Files": 15,
+    "Failures": 0,
+    "OutsideMessages": "{}"
+  },
+  "QualityReview": {
+    "Rounds": 3,
+    "Round1OpenIssues": 3,
+    "Round2OpenIssues": 1,
+    "Round3OpenIssues": 0,
+    "ReportSHA256": "a8f7c4a1415ec424ebeb7e448e1293df6ee559e297cb703e3e06cf67a23b09dc"
+  },
+  "CommitsCreated": 0,
+  "StagedTaskPaths": []
+}

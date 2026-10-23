@@ -1,0 +1,46 @@
+--- before/QuantumFramework/Kernel/Stabilizer/GateMatrix.m
++++ after/QuantumFramework/Kernel/Stabilizer/GateMatrix.m
+@@ -538,26 +538,27 @@
+ stabilizerRemapSpecs[specs_List, wires_List] :=
+     Transpose[Thread[First[#] -> wires[[All, Last[#]]]] & /@ specs]
+ 
+-stabilizerOperatorGroupSpecs[operators_List, data_, positions_List] := With[{
+-    orders = operators[[All, 2]], first = First[operators]
+-},
+-    With[{local = If[AllTrue[orders, Sort[First[#]] === Sort[Last[#]] &],
++stabilizerOperatorGroupClassification[operator_QuantumOperator, data_, orders_List] :=
++    If[AllTrue[orders, Sort[First[#]] === Sort[Last[#]] &],
+         Replace[Replace[data, $stabilizerPrimitiveDispatch], $Failed :>
+-            With[{key = stabilizerGateKey[first]},
++            With[{key = stabilizerGateKey[operator]},
+                 Lookup[$stabilizerGateMemo, key,
+-                    stabilizerRemember[$stabilizerGateMemo, key, stabilizerOperatorClassification[first]]]
++                    stabilizerRemember[$stabilizerGateMemo, key, stabilizerOperatorClassification[operator]]]
+             ]],
+         $Failed
+-    ]},
+-        MapThread[List, {positions,
+-            If[ListQ[local],
+-                stabilizerRemapSpecs[local, Sort /@ orders[[All, 2]]],
+-                (* Symbolic/composite token recovery and refusal details may
+-                   depend on each occurrence's label and absolute wires. *)
+-                stabilizerOperatorSpecs /@ operators
+-            ]
+-        }]
+-    ]
++    ]
++
++stabilizerOperatorGroupSpecs[operators_List, data_, positions_List] := With[{
++    local = stabilizerOperatorGroupClassification[First[operators], data, operators[[All, 2]]]
++},
++    MapThread[List, {positions,
++        If[ListQ[local],
++            stabilizerRemapSpecs[local, Sort /@ operators[[All, 2, 2]]],
++            (* Symbolic/composite token recovery and refusal details may
++               depend on each occurrence's label and absolute wires. *)
++            stabilizerOperatorSpecs /@ operators
++        ]
++    }]
+ ]
+ 
+ stabilizerBulkOperatorSpecs[{}] := {}

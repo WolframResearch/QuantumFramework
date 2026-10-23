@@ -1,0 +1,10 @@
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+same[a_,b_]:=a["Signs"]===b["Signs"]&&a["Tableau"]===b["Tableau"];
+fixed[p_]:=With[{mat=Inverse[p["Matrix"],Modulus->2],n=p["Qubits"]},With[{zero=PauliStabilizer[<|"Matrix"->mat,"Signs"->ConstantArray[1,2n]|>]},PauliStabilizer[<|"Phase"->p[zero]["Phase"],"Matrix"->mat|>]]];
+Scan[Function[g,With[{p=PauliStabilizer[1]["ApplyCircuit",{g->1}],id=PauliStabilizer[1]},With[{q=fixed[p]},Echo[<|"Gate"->ToString[g,InputForm],"Phase"->p["Phase"],"OldInversePhase"->p["Dagger"]["Phase"],"FixedPhase"->q["Phase"],"BothIdentity"->{same[p[q],id],same[q[p],id]},"Involution"->same[fixed[q],p]|>]]]],{"H","S",SuperDagger["S"],"X","Y","Z","V",SuperDagger["V"]}];
+p=PauliStabilizer[<|"Signs"->{1,1,1,-1,1,1},"Tableau"->{{{1,1,0,1,1,1},{1,1,0,1,1,0},{1,0,0,1,0,1}},{{1,1,1,0,0,0},{0,0,1,1,0,1},{0,0,0,1,1,0}}}|>];
+Echo[<|"Fixture"->True,"OldDouble"->same[p["Dagger"]["Dagger"],p],"FixedDouble"->same[fixed[fixed[p]],p],"FixedBothIdentity"->{same[p[fixed[p]],PauliStabilizer[3]],same[fixed[p][p],PauliStabilizer[3]]}|>];
+SeedRandom[139];records=Flatten[Table[With[{s=Table[With[{w=RandomSample[Range[n],2],g=RandomChoice[{"H","S",SuperDagger["S"],"X","Y","Z","CNOT","CZ","SWAP","V",SuperDagger["V"]}]},g->If[MemberQ[{"CNOT","CZ","SWAP"},g],w,First[w]]],{50}]},With[{p=PauliStabilizer[n]["ApplyCircuit",s]},With[{q=fixed[p]},same[p[q],PauliStabilizer[n]]&&same[q[p],PauliStabilizer[n]]&&same[fixed[q],p]]]],{n,{2,3,4,5}},{10}]];
+Echo[{"RandomCount",Length[records],"All",And@@records}];Echo[$MessageList];Exit[];

@@ -1,0 +1,16 @@
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+$ProgressReporting=False;
+qc[s_]:=QuantumCircuitOperator[<|"Elements"->(FromCircuitOperatorShorthand /@ s),"Label"->None|>];
+current=DownValues[stabilizerCircuitSpecs];
+With[{e=Wolfram`QuantumFramework`GateMatrix`PackagePrivate`stabilizerElementSpecs},before={HoldPattern[stabilizerCircuitSpecs[c_QuantumCircuitOperator]]:>Catenate[e /@ c["Operators"]]}];
+makeSpecs[n_,m_]:=Table[With[{j=Mod[37i,n]+1},Switch[Mod[i,7],0,"H"->j,1,"S"->j,2,"CNOT"->{j,Mod[j,n]+1},3,"CZ"->{j,Mod[j,n]+1},4,"X"->j,5,"SWAP"->{j,Mod[j,n]+1},6,SuperDagger["S"]->j]],{i,m}];
+rows=Table[With[{c=qc[makeSpecs[n,1000]]},Table[DownValues[stabilizerCircuitSpecs]=If[mode==="Before",before,current];stabilizerClearCaches[];With[{s=stabilizerCircuitSpecs[c]},<|"N"->n,"Mode"->mode,"Specs"->Length[s],"EncodedGates"->Length[encodeStabilizerGates[s]]|>],{mode,{"Before","After"}}]],{n,{128,1024}}];
+DownValues[stabilizerCircuitSpecs]=current;
+stabilizerClearCaches[];
+calls=0;
+ops=Join[Thread[{"I","H","S",SuperDagger["S"],"X","Y","Z","V",SuperDagger["V"]}->ConstantArray[3,9]],Thread[{"CNOT","CZ","SWAP"}->ConstantArray[{1,3},3]]];
+s=Block[{Wolfram`QuantumFramework`GateMatrix`PackagePrivate`stabilizerOperatorClassification=Function[Null,calls++;Missing["NotClifford"]]},stabilizerCircuitSpecs[qc[ops]]];
+Echo[<|"Version"->$Version,"Target"->$stabilizerCompileTarget,"GateCounts"->Flatten[rows],"CanonicalPrimitivesBypass"->(calls===0&&FreeQ[s,_Missing]),"ClassifierCalls"->calls,"Messages"->ToString[$MessageList,InputForm]|>,"StructuralControls"];
+Exit[If[calls===0&&FreeQ[s,_Missing]&&$MessageList==={},0,1]];

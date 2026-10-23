@@ -29,12 +29,15 @@ agOmega[n_Integer] := ArrayFlatten[{
 (* Validity check that doesn't depend on PauliStabilizerQ context resolution.
    Phase 1 typo-fix follow-up: promote PauliStabilizerQ to PackageScope so
    bare-name resolution works in Tests/ files. For now, structural Head check.
-   Accepts both the canonical rank-3 "Tableau" form and the bit-packed form
-   (Stabilizer/Packed.m, "PackedX"/"PackedZ" keys); both must reconstruct to a
+   Accepts the canonical rank-3 "Tableau" form and both bit-packed forms
+   (Stabilizer/Packed.m, "PackedX"/"PackedZ" keys); all must reconstruct to a
    valid binary tableau via ps["Tableau"]. *)
+(* Other test files alias this name to PauliStabilizerQ; remove that OwnValue
+   before installing this file-local concrete fixture check. *)
+Clear[psValidQ];
 psValidQ[ps_PauliStabilizer] := Module[{a = First[ps], t},
     AssociationQ[a] && KeyExistsQ[a, "Signs"] && MatchQ[a["Signs"], {(-1 | 1) ...}] &&
-    (KeyExistsQ[a, "Tableau"] || KeyExistsQ[a, "PackedX"]) &&
+    (KeyExistsQ[a, "Tableau"] || KeyExistsQ[a, "PackedX"] || KeyExistsQ[a, "GeneratorX"]) &&
     (t = ps["Tableau"]; ArrayQ[t, 3, MatchQ[0 | 1] (* unsigned *)] &&
         Length[a["Signs"]] === Dimensions[t][[3]])
 ]

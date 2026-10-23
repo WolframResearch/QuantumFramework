@@ -1,0 +1,10 @@
+repo=Environment["QF_REVIEW_REPO"];
+PacletDirectoryLoad[repo<>"/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+base=PauliStabilizer[2];
+p=PauliStabilizer[<|"Signs"->base["Signs"],"Tableau"->base["Tableau"],"Qubits"->99|>];
+calls=0;
+reach=Catch[Block[{compiledCliffordFold=Function[Null,calls++;Throw["ReachedNativeBoundary","NativeBoundary"]]},p["ApplyCircuit",{"H"->50}]],"NativeBoundary"];
+Echo[<|"Repo"->repo,"Loaded"->FindFile["Wolfram`QuantumFramework`"],"Valid"->PauliStabilizerQ[p],"Fast"->psConcreteFastQ[p],"Qubits"->p["Qubits"],"TableauDimensions"->Dimensions[p["Tableau"]],"NativeCalls"->calls,"Reach"->reach|>];
+Exit[];

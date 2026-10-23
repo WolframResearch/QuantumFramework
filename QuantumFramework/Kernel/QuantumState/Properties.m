@@ -3,6 +3,8 @@ Package["Wolfram`QuantumFramework`"]
 PackageImport["Wolfram`Arrays`"]
 
 PackageScope["lazyClosedForm"]
+PackageScope["exactNumericStateQ"]
+PackageScope["simplifiedExactState"]
 
 
 
@@ -678,7 +680,7 @@ QuantumStateProp[qs_, "Computational"] := If[
 QuantumStateProp[qs_, "Canonical"] := QuantumState[qs, qs["Basis"]["Canonical"]]
 
 
-QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["VectorQ"] && dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
+QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["VectorQ"] && (dim === Automatic || Divisible[qs["Dimension"], dim]) := Module[{
     uMatrix, alphaValues, wMatrix,
     n = Replace[dim, Automatic :> If[
         qs["Qudits"] > 1,
@@ -704,29 +706,56 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     ]
 ]
 
-QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["MatrixQ"] :=
-    qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"])
+(* A Schmidt basis belongs to a pure state. A density matrix that is pure, or zero, takes the Schmidt basis of its
+   state vector in the computational frame, scaled by the square root of its trace; a mixed one has none, and fails
+   with QuantumState::notpure. Exact numeric entries are simplified first, so that a purity written as radicals is
+   read as the 1 it is. A symbolic density matrix fails with QuantumState::symbolicschmidt: a state vector read off
+   it holds for some parameter values only. *)
+QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["MatrixQ"] := With[{c = simplifiedExactState[qs["Computational"]]},
+    Which[
+        ! c["NumericQ"],
+        Failure["SymbolicDensityMatrix", <|"MessageTemplate" :> QuantumState::symbolicschmidt|>],
+        c["PureStateQ"] || c["DegenerateStateQ"],
+        With[{v = c["Normalized"]["VectorState"]}, QuantumState[Sqrt[c["Norm"]] v["StateVector"], v["Basis"]]]["SchmidtBasis", dim],
+        True,
+        Failure["NotPure", <|"MessageTemplate" :> QuantumState::notpure|>]
+    ]
+]
+
+QuantumState::symbolicschmidt = "is a symbolic density matrix; its Schmidt basis is taken from a state vector only";
 
 
 QuantumStateProp[qs_, "PrimeBasis"] := QuantumState[qs, QuantumBasis[primeFactors[qs["OutputDimension"]], primeFactors[qs["InputDimension"]]]]
 
 
+(* The partial trace of a state vector reads its coefficients, so one held in a frame that is not unitary on each
+   qudit is first written in the computational frame; a density matrix, stored by similarity, has the right partial
+   trace in any invertible frame. A state with no density matrix in the computational frame is refused before the
+   trace. *)
 QuantumStateProp[qs_, "Bipartition", bipartition : {{_Integer..}, {_Integer..}}] := With[{
     qudits = Catenate @ bipartition,
     allQudits = Range[qs["Qudits"]]
 },
     With[{trace = Complement[allQudits, qudits]},
-        QuantumPartialTrace[qs, trace][
-            "Bipartition",
-            bipartition[[1]] /. Thread[
-                Join[Complement[allQudits, trace], trace] -> allQudits
-            ]
+        If[ computationalDensityMatrixQ[qs],
+            QuantumPartialTrace[If[qs["VectorQ"] && ! qs["ComputationalQ"] && ! unitaryFrameQ[qs["Basis"]], qs["Computational"], qs], trace][
+                "Bipartition",
+                bipartition[[1]] /. Thread[
+                    Join[Complement[allQudits, trace], trace] -> allQudits
+                ]
+            ],
+            Failure["NoDensityMatrix", <|"MessageTemplate" :> QuantumState::nodensitymatrix|>]
         ]
     ] /; DuplicateFreeQ[qudits] && ContainsAll[allQudits, qudits]
 ]
 
-QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] :=
-    qs["Split", qs["Qudits"]]["Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
+(* A permutation of the qudits returns a state in the Schrodinger picture, so a state with no density matrix in the
+   computational frame is refused before it. *)
+QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] := If[
+    computationalDensityMatrixQ[qs],
+    qs["Split", qs["Qudits"]]["Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]]["Bipartition", Times @@ qs["Dimensions"][[qudits]]],
+    Failure["NoDensityMatrix", <|"MessageTemplate" :> QuantumState::nodensitymatrix|>]
+]
 
 (* A change of basis to the computational frame exists when each qudit's basis elements form a square matrix of
    full rank. The rank of a numeric frame is read numerically, which keeps roots-of-unity frames fast. *)
@@ -735,26 +764,64 @@ invertibleFrameQ[qb_] := AllTrue[
     With[{m = Normal @ #["ReducedMatrix"]}, SquareMatrixQ[m] && MatrixRank[If[ArrayQ[m, 2, NumericQ], N[m], m]] == Length[m]] &
 ]
 
-(* A mixed state held in an invertible non-computational frame, outside the phase-space picture, is regrouped in the
-   computational frame, two-qudit states included, so every monotone reads the state itself whatever frame holds it:
-   a pair split ends here too, on the two-qudit state its partial trace leaves. Exact or symbolic entries are simplified
-   after the change of basis, which leaves them as long unsimplified sums (of roots of unity in a Fourier frame) on which
-   exact trace norms stall; Simplify acts on the Normal array, a SparseArray being atomic to it. Pure states keep their
-   Schmidt basis, and other two-qudit states are returned as they are. *)
+(* The coefficients of a state vector in a frame that is unitary on each qudit are its amplitudes up to a local
+   unitary, which changes no entanglement quantity; in any other frame they are not. A numeric frame is tested
+   numerically. *)
+unitaryFrameQ[qb_] := AllTrue[
+    Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]],
+    With[{m = Normal @ #["ReducedMatrix"]},
+        SquareMatrixQ[m] && ArrayQ[m, 2, NumericQ] && With[{n = N[m]}, Max[Abs[n . ConjugateTranspose[n] - IdentityMatrix[Length[n]]]] < 10 ^ -10]
+    ] &
+]
+
+QuantumState::nodensitymatrix = "has no density matrix in the computational basis: it is held in the phase-space picture, or as a density matrix in a frame that has no inverse";
+
+computationalDensityMatrixQ[qs_] := qs["Picture"] =!= "PhaseSpace" && (qs["VectorQ"] || qs["ComputationalQ"] || invertibleFrameQ[qs["Basis"]])
+
+(* A split reads the state itself: in the computational frame, or as a state vector with approximate or symbolic
+   coefficients in a frame unitary on each qudit. Any other state is first written in the computational frame, a
+   state vector from any frame and a density matrix, stored by similarity, from an invertible one, two-qudit states
+   included; a pair split ends here too, on the two-qudit state its partial trace leaves. A ket with exact numeric
+   coefficients is written there from a unitary frame too: the frame's own elements, roots of unity in a Fourier
+   frame, would otherwise enter its Schmidt basis as sums that cancel to exact zeros, on which every Abs or comparison
+   raises N::meprec. Exact or symbolic entries are simplified after the change of basis, which leaves them as long
+   unsimplified sums on which exact trace norms stall; Simplify acts on the Normal array, a SparseArray being atomic
+   to it. A state held in the phase-space picture, or a density matrix in a frame with no inverse, has no density
+   matrix in the computational frame and is refused. A computational state is regrouped into the two parts, a
+   two-qudit state in a unitary frame is returned as it is, and any other state vector in a unitary frame takes its
+   Schmidt basis. *)
 QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := Which[
-    qs["MatrixQ"] && ! qs["ComputationalQ"] && qs["Picture"] =!= "PhaseSpace" && invertibleFrameQ[qs["Basis"]],
+    ! computationalDensityMatrixQ[qs],
+    Failure["NoDensityMatrix", <|"MessageTemplate" :> QuantumState::nodensitymatrix|>],
+    ! qs["ComputationalQ"] && (qs["MatrixQ"] || exactNumericStateQ[qs] || ! unitaryFrameQ[qs["Basis"]]),
     With[{c = qs["Computational"]},
-        If[Precision[c["State"]] === Infinity, QuantumState[Simplify[Normal @ c["State"]], c["Basis"]], c]
+        Which[exactNumericStateQ[c], simplifiedExactState[c], Precision[c["State"]] === Infinity, QuantumState[Simplify[Normal @ c["State"]], c["Basis"]], True, c]
     ]["Bipartition", dim],
     qs["Qudits"] == 2,
     qs,
     qs["ComputationalQ"],
     QuantumState[qs, With[{d = Replace[dim, Automatic :> If[qs["Qudits"] > 1, First @ qs["Dimensions"], Replace[Divisors[qs["Dimension"]], {{1, d_} :> d, {___, d_, _} :> d}]]]}, {d, qs["Dimension"] / d}]],
     True,
-    If[ qs["VectorQ"],
-        qs["SchmidtBasis", dim],
-        (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))
-    ]
+    qs["SchmidtBasis", dim]
+]
+
+exactNumericStateQ[qs_] := qs["NumericQ"] && Precision[qs["State"]] === Infinity
+
+(* An entry in which Simplify leaves a root of unity, a power of E or of -1, is reduced by RootReduce to a single
+   algebraic number, in which a sum of roots of unity that cancels is 0; within 5 seconds, or the entry stays as
+   Simplify leaves it. *)
+simplifiedExactState[qs_] := If[
+    exactNumericStateQ[qs],
+    With[{s = Simplify[Normal @ qs["State"]]},
+        QuantumState[
+            If[ FreeQ[s, Power[E, _] | Power[-1, _Rational]],
+                s,
+                TimeConstrained[Map[If[FreeQ[#, Power[E, _] | Power[-1, _Rational]], #, RootReduce[#]] &, s, {ArrayDepth[s]}], 5, s]
+            ],
+            qs["Basis"]
+        ]
+    ],
+    qs
 ]
 
 QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
