@@ -711,4 +711,73 @@ VerificationTest[
     TestID -> "TwoModeInterleavedExponentialsStayApart"
 ]
 
+(* Normal order across modes: an exponential of one mode commutes with every exponential of
+   another, so creators of any mode move left of annihilators of any other at no cost.  The
+   ranks are 1 for creator-only factors, 3 for annihilator-only, 2 otherwise. *)
+VerificationTest[
+    BosonicExpOrder[Exp[\[Alpha] \[FormalA]]**Exp[\[Beta] SuperDagger[\[FormalB]]]**Exp[\[Gamma] \[FormalB]]],
+    Exp[\[Beta] SuperDagger[\[FormalB]]]**Exp[\[Alpha] \[FormalA]]**Exp[\[Gamma] \[FormalB]],
+    TestID -> "TwoModeCreatorsMoveLeft"
+]
+
+VerificationTest[
+    Module[{s = 10, big = 40, am, idx, in, ord, rank},
+        am = Normal[AnnihilationOperator[big]["Matrix"]];
+        idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
+        rank = Which[FreeQ[#, SuperDagger], 3, FreeQ[# /. SuperDagger[_] -> 1, \[FormalA] | \[FormalB]], 1, True, 2] &;
+        in = Exp[0.2 \[FormalA]]**Exp[0.3 SuperDagger[\[FormalB]]]**Exp[-0.25 \[FormalB]]**Exp[0.15 SuperDagger[\[FormalA]]];
+        ord = BosonicExpOrder[in];
+        {
+            rank /@ List @@ Replace[ord, c_ m_NonCommutativeMultiply /; FreeQ[c, \[FormalA] | \[FormalB]] :> m],
+            Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] -
+                KroneckerProduct[
+                    (MatrixExp[0.2 am] . MatrixExp[0.15 ConjugateTranspose[am]])[[;; 3, ;; 3]],
+                    (MatrixExp[0.3 ConjugateTranspose[am]] . MatrixExp[-0.25 am])[[;; 3, ;; 3]]
+                ]]] < 10^-12
+        }
+    ],
+    {{1, 1, 3, 3}, True},
+    TestID -> "TwoModeInterleavedProductNormalOrders"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["BosonicExpOrder - products of three or more exponentials"]
+
+(* The rules repeat until nothing changes, so a reordering that exposes a new adjacent pair is
+   followed through; a single pass left E^(gamma a) to the left of E^(beta a^dagger). *)
+VerificationTest[
+    BosonicExpOrder[Exp[\[Gamma] \[FormalA]]**Exp[\[Alpha] \[FormalA]]**Exp[\[Beta] SuperDagger[\[FormalA]]]],
+    E^(\[Beta] (\[Alpha] + \[Gamma])) Exp[\[Beta] SuperDagger[\[FormalA]]]**Exp[\[Gamma] \[FormalA]]**Exp[\[Alpha] \[FormalA]],
+    TestID -> "ThreeFactorProductNormalOrders"
+]
+
+(* the displacement group law D(alpha) D(beta) = e^((alpha beta* - alpha* beta)/2) D(alpha + beta),
+   read off as <1| D(alpha) D(beta) |0> *)
+VerificationTest[
+    FullSimplify[
+        BosonicMatrixElement[{1, 0},
+            Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]**
+                Exp[\[Beta] SuperDagger[\[FormalA]] - Conjugate[\[Beta]] \[FormalA]]] -
+        Exp[-(\[Alpha] Conjugate[\[Alpha]] + \[Beta] Conjugate[\[Beta]])/2 - Conjugate[\[Alpha]] \[Beta]] (\[Alpha] + \[Beta])
+    ],
+    0,
+    TestID -> "DisplacementCompositionMatrixElement"
+]
+
+(* Repeating must not re-enter a marker: the number exponential gives one NormalOrdered, not a
+   tower, and ordering an ordered product changes nothing. *)
+VerificationTest[
+    With[{d = Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]**
+            Exp[\[Beta] SuperDagger[\[FormalA]] - Conjugate[\[Beta]] \[FormalA]]},
+        {
+            Count[BosonicExpOrder[Exp[\[Lambda] SuperDagger[\[FormalA]]**\[FormalA]]], _NormalOrdered, {0, Infinity}],
+            BosonicExpOrder[BosonicExpOrder[d]] === BosonicExpOrder[d]
+        }
+    ],
+    {1, True},
+    TestID -> "RepeatedOrderingIsStableAndIdempotent"
+]
+
 EndTestSection[]

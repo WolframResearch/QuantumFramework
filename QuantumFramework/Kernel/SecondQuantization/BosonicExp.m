@@ -20,6 +20,18 @@ algA[vars_List] := algA[vars] = NonCommutativeAlgebra[<|"Generators" -> vars|>];
 shiftPolynomialQ[expr_, v_] :=
     NonCommutativePolynomialQ[expr, algA[v]] && FreeQ[expr, Power[E, _?(! FreeQ[#, _?FormalSymbolQ] &)]];
 
+ladderRank[f_] := Which[
+    FreeQ[f, SuperDagger], 3,
+    FreeQ[f /. SuperDagger[_?FormalSymbolQ] -> 1, _?FormalSymbolQ], 1,
+    True, 2
+];
+
+modeSwap[rank_] := NonCommutativeMultiply[l___,
+        x : (_Power | _NormalOrdered | _AntinormalOrdered), y : (_Power | _NormalOrdered | _AntinormalOrdered), r___] /;
+    ! FreeQ[x, _?FormalSymbolQ] && ! FreeQ[y, _?FormalSymbolQ] && rank[x] > rank[y] &&
+        DisjointQ @@ (DeleteDuplicates[Cases[#, w_?FormalSymbolQ :> w, {0, Infinity}]] & /@ {x, y}) :>
+    NonCommutativeMultiply[l, y, x, r];
+
 
 getNCPower[var_, var_] := 1;
 
@@ -108,7 +120,9 @@ rulesNO = {
             Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]] **
                 Sec[Omega] Exp[Log[Sec[Omega]] (SuperDagger[v1] ** v1 + SuperDagger[v2] ** v2)] **
                 Exp[(alpha Tan[Omega]/Omega) v1 ** v2]
-        ]
+        ],
+
+    modeSwap[ladderRank]
 };
 
 
@@ -169,7 +183,9 @@ rulesAN = {
             Exp[(alpha Tan[Omega]/Omega) v1 ** v2] **
                 Sec[Omega] Exp[-Log[Sec[Omega]] (v1 ** SuperDagger[v1] + v2 ** SuperDagger[v2])] **
                 Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]]
-        ]
+        ],
+
+    modeSwap[4 - ladderRank[#] &]
 };
 
 
@@ -296,7 +312,13 @@ AntinormalOrdered[expr_] /; ladderPolynomialQ[expr] :=
 
 expApplyRules[expr_, assum_, rules_] :=
     Assuming[assum,
-        Simplify[canonicalizeGenerators[expr] /. rules,
+        Simplify[
+            FixedPoint[
+                (# /. Prepend[rules, n : (_NormalOrdered | _AntinormalOrdered) :> n]) //.
+                    (NonCommutativeMultiply[l___, Times[c_, m_NonCommutativeMultiply], r___] /; FreeQ[c, _?FormalSymbolQ] :>
+                        c NonCommutativeMultiply[l, m, r]) &,
+                canonicalizeGenerators[expr]
+            ],
             ExcludedForms -> _GeneralizedPower
         ]
     ]

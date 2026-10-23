@@ -256,4 +256,25 @@ VerificationTest[
     TestID -> "BosonicExpAnti-TwoModeInterleavedExponentialsStayApart"
 ]
 
+(* anti-normal order across modes: annihilators of any mode move left of creators of any other *)
+VerificationTest[
+    Module[{s = 20, big = 40, am, idx, in, ord, rank},
+        am = Normal[AnnihilationOperator[big]["Matrix"]];
+        idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
+        rank = Which[FreeQ[#, SuperDagger], 3, FreeQ[# /. SuperDagger[_] -> 1, \[FormalA] | \[FormalB]], 1, True, 2] &;
+        in = Exp[0.15 SuperDagger[\[FormalA]]]**Exp[0.3 SuperDagger[\[FormalB]]]**Exp[-0.25 \[FormalB]]**Exp[0.2 \[FormalA]];
+        ord = BosonicExpOrder[in, "Ordering" -> "Antinormal"];
+        {
+            rank /@ List @@ Replace[ord, c_ m_NonCommutativeMultiply /; FreeQ[c, \[FormalA] | \[FormalB]] :> m],
+            Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] -
+                KroneckerProduct[
+                    (MatrixExp[0.15 ConjugateTranspose[am]] . MatrixExp[0.2 am])[[;; 3, ;; 3]],
+                    (MatrixExp[0.3 ConjugateTranspose[am]] . MatrixExp[-0.25 am])[[;; 3, ;; 3]]
+                ]]] < 10^-12
+        }
+    ],
+    {{3, 3, 1, 1}, True},
+    TestID -> "BosonicExpAnti-TwoModeInterleavedProductAntinormalOrders"
+]
+
 EndTestSection[]
