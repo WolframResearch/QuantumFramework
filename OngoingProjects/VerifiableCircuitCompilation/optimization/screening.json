@@ -1,0 +1,450 @@
+{
+  "status": "SCREENING_ONLY_NOT_FULL_VERIFICATION",
+  "verifier_sha256": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a",
+  "analysis_source_sha256": "ef3f90e95213fdf1ff3fae96b8193651fb66587f9091a9a8f108e4f1e9b86538",
+  "width_certificates_sha256": "ba544c74e32b49ccf31653c180b0827f4f4cb6b5eaec194a87eba19e60dfaa2d",
+  "candidates": [
+    {
+      "fractional_bits": [
+        29,
+        25,
+        19
+      ],
+      "status": "SYMBOLIC_CERTIFICATE_REJECTED"
+    },
+    {
+      "fractional_bits": [
+        30,
+        22,
+        16
+      ],
+      "status": "SYMBOLIC_CERTIFICATE_REJECTED"
+    },
+    {
+      "fractional_bits": [
+        30,
+        23,
+        14
+      ],
+      "status": "SYMBOLIC_CERTIFICATE_REJECTED"
+    },
+    {
+      "fractional_bits": [
+        30,
+        23,
+        15
+      ],
+      "status": "SYMBOLIC_CERTIFICATE_REJECTED"
+    },
+    {
+      "fractional_bits": [
+        30,
+        23,
+        16
+      ],
+      "screening": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "capacity_violations": 0,
+        "worst_error_over_tolerance": 0.7178548753050588,
+        "worst_x": 1052634,
+        "minimum_margin_units": 302366505
+      },
+      "variants": [
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 142,
+          "toffoli_count": 3460,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 527287.988387595
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 142,
+          "toffoli_count": 3460,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 527287.988387595
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3544,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 531621.3970018543
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": null,
+          "num_qubits": 157,
+          "toffoli_count": 3181,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 539184.423780651
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 150,
+          "num_qubits": 150,
+          "toffoli_count": 3377,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 544544.3539305582
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3685,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 551361.3970018543
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 121,
+          "toffoli_count": 5028,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 639036.7788373169
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 121,
+          "toffoli_count": 5028,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 639036.7788373169
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 121,
+          "toffoli_count": 5028,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 639036.7788373169
+        }
+      ]
+    },
+    {
+      "fractional_bits": [
+        30,
+        23,
+        17
+      ],
+      "screening": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "capacity_violations": 0,
+        "worst_error_over_tolerance": 0.7235202443200724,
+        "worst_x": 1060813,
+        "minimum_margin_units": 295150652
+      },
+      "variants": [
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 142,
+          "toffoli_count": 3460,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 527313.6203023284
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 142,
+          "toffoli_count": 3460,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 527313.6203023284
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3572,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 535566.6679037041
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": null,
+          "num_qubits": 158,
+          "toffoli_count": 3181,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 542647.2394913231
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 150,
+          "num_qubits": 150,
+          "toffoli_count": 3405,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 548771.4298968258
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3741,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 559226.6679037041
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 122,
+          "toffoli_count": 5028,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 644340.096316085
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 122,
+          "toffoli_count": 5028,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 644340.096316085
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 122,
+          "toffoli_count": 5028,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 644340.096316085
+        }
+      ]
+    },
+    {
+      "fractional_bits": [
+        30,
+        24,
+        16
+      ],
+      "screening": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "capacity_violations": 0,
+        "worst_error_over_tolerance": 0.7448692079791479,
+        "worst_x": 1052655,
+        "minimum_margin_units": 273413324
+      },
+      "variants": [
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 144,
+          "toffoli_count": 3512,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 542310.8983835311
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 144,
+          "toffoli_count": 3512,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 542310.8983835311
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": null,
+          "num_qubits": 158,
+          "toffoli_count": 3233,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 550953.5690597078
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3706,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 554406.7067617663
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 150,
+          "num_qubits": 150,
+          "toffoli_count": 3457,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 556657.1858161783
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3847,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 574146.7067617665
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 123,
+          "toffoli_count": 5080,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 656087.8923692663
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 123,
+          "toffoli_count": 5080,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 656087.8923692663
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 123,
+          "toffoli_count": 5080,
+          "rotation_count": 37,
+          "estimated_cost_from_model_margin": 656087.8923692663
+        }
+      ]
+    },
+    {
+      "fractional_bits": [
+        31,
+        23,
+        16
+      ],
+      "screening": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "capacity_violations": 0,
+        "worst_error_over_tolerance": 0.7076478002297012,
+        "worst_x": 1077055,
+        "minimum_margin_units": 309732838
+      },
+      "variants": [
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 145,
+          "toffoli_count": 3532,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 549862.432329745
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 145,
+          "toffoli_count": 3532,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 549862.432329745
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3726,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 558061.6588011332
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": null,
+          "num_qubits": 160,
+          "toffoli_count": 3253,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 562104.7529155808
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 150,
+          "num_qubits": 150,
+          "toffoli_count": 3531,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 568673.205858357
+        },
+        {
+          "arithmetic": "padded",
+          "recycle_coefficient": false,
+          "adder_budget": 140,
+          "num_qubits": 140,
+          "toffoli_count": 3867,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 577801.6588011332
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": null,
+          "num_qubits": 122,
+          "toffoli_count": 5100,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 653938.8740981303
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 140,
+          "num_qubits": 122,
+          "toffoli_count": 5100,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 653938.8740981303
+        },
+        {
+          "arithmetic": "controlled",
+          "recycle_coefficient": true,
+          "adder_budget": 150,
+          "num_qubits": 122,
+          "toffoli_count": 5100,
+          "rotation_count": 38,
+          "estimated_cost_from_model_margin": 653938.8740981303
+        }
+      ]
+    }
+  ],
+  "selected_fractional_bits": [
+    30,
+    23,
+    16
+  ],
+  "selected_sample": {
+    "unique_inputs": 4095,
+    "basis_shots": 16380,
+    "seed": 371811,
+    "x_restored": true,
+    "scratch_clean": true,
+    "phase_matches_integer_model_exactly": true,
+    "sampled_priced_counts_equal_static_counts": true
+  }
+}

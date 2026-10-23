@@ -1,5 +1,13 @@
 # Inverse-square-root phasing: QF / kickmix prototype
 
+The [reduced-width quadratic circuit](OPTIMIZED.md) is the latest verified
+implementation. WL certifies rounded representations of the fixed source
+coefficients at fractional widths `(30,23,16)`. Shorter registers and reused
+scratch reduce qubits from **220 to 142**. The full **200,540,928-shot** official
+local verifier passed with actual cost **527,287.99**, a **49.4557% reduction**
+from the earlier quadratic circuit and **3.938596 times** better than baseline.
+Fresh `wl-verify` and `wl-quality` reports accompany the symbolic certificates.
+
 The subsequent [WL-backed architectural comparison](feasibility/COMPARISON.md)
 compares better Newton seeds, direct polynomial phasing, and phase propagation.
 Its exact certificates, resource counts, full-domain integer models, and
@@ -52,6 +60,15 @@ of the competition title.
 - `test_quadratic.py` checks byte identity with the reviewed feasibility circuit,
   coefficient integrity, independent model agreement, serialization, and a
   65,536-shot small-domain verifier run.
+- `optimized_quadratic.py` builds the reduced-width design from the same frozen
+  source table, with certified coefficient rounding and scratch reuse.
+- `optimization/` contains its WL derivation, interval certificates, rejected
+  width choices, exhaustive integer screens and independent reviews.
+- `verify_optimized_quadratic.py` runs the full official verifier and compares
+  actual cost with both the baseline and earlier quadratic implementation.
+- `test_optimized_quadratic.py` checks certificate correspondence, alternative
+  register schedules, boundary phases, cleanup and an insufficient-precision
+  negative control. [Reproduction commands](optimization/README.md#reproduction).
 
 The bridge supports small fragments (at most eight qubits), not full benchmark
 simulation or general kickmix import. `HMR` takes explicit outcomes and retains
