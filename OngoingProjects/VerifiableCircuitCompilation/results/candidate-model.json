@@ -1,0 +1,30 @@
+{
+  "python": "3.13.1 (main, Dec  3 2024, 17:59:52) [Clang 16.0.0 (clang-1600.0.26.4)]",
+  "platform": "macOS-14.2-arm64-arm-64bit-Mach-O",
+  "numpy": "2.5.4",
+  "kickmix": "0.1",
+  "data_sha256": {
+    "sample_submission/invsqrt.kmb": "e2bf8eb64350a4460a271fc7f1d591ef125b1e276377e9a0f64b96ab3ca321e1",
+    "verifiers/invsqrt/nr_reference_circuit.py": "bb90330dcf774f7b502de471293facba67f27952cc8808fe4a9970a9b1322e23",
+    "verifiers/invsqrt/verify_submission_invsqrt.py": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a"
+  },
+  "status": "MODEL_PASS",
+  "checked_inputs": 3133452,
+  "failed_inputs": 0,
+  "worst_error_over_tolerance": 0.9251076979764682,
+  "worst_x": 1119994,
+  "minimum_margin_units": 77808879,
+  "precision": {
+    "delta_bits": 12,
+    "coef_bits": 17,
+    "square_bits": 28,
+    "product_bits": 27,
+    "result_bits": 28
+  },
+  "num_qubits": 256,
+  "toffoli_count": 7327,
+  "rotation_count": 36,
+  "toffoli_equivalent": 7583.127186961416,
+  "model_estimated_score": 1941280.5598621224,
+  "elapsed_seconds": 64.02544779100572
+}

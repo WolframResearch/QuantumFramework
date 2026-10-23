@@ -1,0 +1,39 @@
+{
+	"runtime":"15.0.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+	"checks":{
+		"newton_symbolic":true,
+		"newton_exact_seed":true,
+		"newton_quadratic_limit":true,
+		"newton_uniform_bound":true,
+		"normalization_relative_error":true,
+		"square_dropped_bits_exact_bound":true,
+		"square_bound_attained":true,
+		"row_truncation_is_not_whole_product":true,
+		"all_interval_certificates_true":true,
+		"all_quantized_horner_examples":true,
+		"all_error_budgets_positive":true,
+		"reject_inaccurate_polynomial":true,
+		"reject_inexact_certificate":true,
+		"reject_empty_certificate_domain":true,
+		"two_bit_phase_identity":true,
+		"three_bit_phase_identity":true,
+		"general_phase_identity":true,
+		"boolean_anf_full_adder":true,
+		"xor_real_polynomial":true,
+		"gf2_is_not_phase_arithmetic":true,
+		"symbolic_diagonal_unitary":true,
+		"absolute_zero_state_phase":true,
+		"compiled_phase_terms_match_retained_rows":true,
+		"phase_modulo_one_turn":true,
+		"milp_documented_integer_signature":true
+	},
+	"passed":25,
+	"failed":[],
+	"source_sha256":{
+		"Feasibility.wl":"9c3bdfa1d30bb50b095d2a97a48ec5c36817434c32fcf2674337edc96f880759",
+		"verify-feasibility.wls":"a242a103dae8d4b3613da0e2177f6d99245c0161af80d7c80e7c9df7a16bdbda",
+		"run-feasibility.wls":"73e5e86083cdbdba3f8a48e5c112792f2c5e4b03b74e60b1a3a70f35ea49c033",
+		"designs.json":"35e62d7bb0b862ae81d3f11527363e221c07e9e93cd614511de7c6344de28c05",
+		"phase-terms.json":"72c3eef4486cbfec582313da47afb3fdf70d25a339614cbe00660ee78d1c9c60"
+	}
+}

@@ -1,0 +1,72 @@
+{
+  "status": "REVIEWED_FEASIBILITY_DECISION",
+  "selected_design": "B-quadratic-192",
+  "selection_scope": "Lowest predicted objective among the specified probes; no global-optimality claim.",
+  "wl_verify": {
+    "rounds": 1,
+    "open_issues": 0,
+    "report": "reviews/correctness-1.md"
+  },
+  "wl_quality": {
+    "rounds": 1,
+    "open_issues": 0,
+    "report": "reviews/quality-1.md"
+  },
+  "wl_checks": 25,
+  "exact_interval_certificates": 1044,
+  "checked_model_inputs": 3133452,
+  "qubits": 220,
+  "toffoli_like": 4449,
+  "fine_rotations": 43,
+  "predicted_objective": 1043220.2106310283,
+  "predicted_baseline_improvement": 1.990734278872025,
+  "predicted_incumbent_improvement": 1.8608540556244313,
+  "full_official_circuit_verification": "NOT_RUN_FOR_NEW_DESIGN",
+  "sha256": {
+    "Feasibility.wl": "9c3bdfa1d30bb50b095d2a97a48ec5c36817434c32fcf2674337edc96f880759",
+    "run-feasibility.wls": "73e5e86083cdbdba3f8a48e5c112792f2c5e4b03b74e60b1a3a70f35ea49c033",
+    "verify-feasibility.wls": "a242a103dae8d4b3613da0e2177f6d99245c0161af80d7c80e7c9df7a16bdbda",
+    "resource_probe.py": "64a6ea9259ac877a0c0b0728588efafe7ddeeba8190ff8bc3fb95a8ee457bb1b",
+    "designs.json": "35e62d7bb0b862ae81d3f11527363e221c07e9e93cd614511de7c6344de28c05",
+    "phase-terms.json": "72c3eef4486cbfec582313da47afb3fdf70d25a339614cbe00660ee78d1c9c60",
+    "wl-checks.json": "7dc2041fc5d0831d3388d4f4907fbaf9c9fdbf10043a85a010c60d9cd3ace7e4",
+    "resource-results.json": "7a0015a2759de85fa5e776786fb1b5abe9dd1a779f679fcdb65acdd65475e3c8",
+    "COMPARISON.md": "d9780d68ba355381b66b781eff285a31ab14c9b62eae9a1f3bd7de2a38efba6f",
+    "DOCUMENTATION.md": "53bc2385a521f54cd6701b29a4527a869ef2bda72f3a2d44ca58ca60dfc674cb",
+    "PLAN.md": "2b67de216c7a4226fb1608022db35dc909fefe2d243a158fcfcdb21170571f0f",
+    "reviews/correctness-1.md": "c8d68df123b4c5ade5cf6f8a2fafe5c24abf1f316d9097c454af45f3d86f8bed",
+    "reviews/quality-1.md": "828aca461f33866ada988c2c8279a26fde48e05822570099e07cd35099d7631f"
+  },
+  "review_snapshot_sha256": {
+    "Feasibility.wl": "9c3bdfa1d30bb50b095d2a97a48ec5c36817434c32fcf2674337edc96f880759",
+    "run-feasibility.wls": "73e5e86083cdbdba3f8a48e5c112792f2c5e4b03b74e60b1a3a70f35ea49c033",
+    "verify-feasibility.wls": "a242a103dae8d4b3613da0e2177f6d99245c0161af80d7c80e7c9df7a16bdbda",
+    "resource_probe.py": "f14baf2b3682144453bd9cfe40233bc7d1e0e20968826ac10121f66284c5a642",
+    "designs.json": "35e62d7bb0b862ae81d3f11527363e221c07e9e93cd614511de7c6344de28c05",
+    "phase-terms.json": "72c3eef4486cbfec582313da47afb3fdf70d25a339614cbe00660ee78d1c9c60",
+    "wl-checks.json": "7dc2041fc5d0831d3388d4f4907fbaf9c9fdbf10043a85a010c60d9cd3ace7e4",
+    "resource-results.json": "d2703c650e5d0dc7b7f184ae092e1c4ebb60f53a33c5b56eafaac0ffff6991ac",
+    "COMPARISON.md": "a75f50d44d3a0754831effb6b3995ec56fce4ac2ee570644d8c82d5f09168274",
+    "DOCUMENTATION.md": "3bff06bdcadb215da8bbc6dad419c9f2bd81be0a767114d216042e83a7493b79",
+    "PLAN.md": "2b67de216c7a4226fb1608022db35dc909fefe2d243a158fcfcdb21170571f0f",
+    "reviews/correctness-1.md": "04049bb127ab32db556c87e1bdd042633b6ce907467232d1f21c2ae10ec6fa23",
+    "reviews/quality-1.md": "fab6cfbe2c8fa1c8659e172022f2a4466566c93bf3cc5589937e09ce04f73718"
+  },
+  "publication_preparation": {
+    "date": "2026-10-23",
+    "changes": [
+      "External competition path is now an explicit --data argument.",
+      "Provenance labels use relative paths or filenames.",
+      "Machine-specific documentation and review paths were removed."
+    ],
+    "wl_executable_sources_unchanged": true,
+    "all_numerical_resource_and_model_evidence_unchanged": true,
+    "checks": {
+      "wl_feasibility": 25,
+      "qf": 17,
+      "python_contract_tests": 5,
+      "full_resource_model_rerun": true
+    },
+    "review_scope": "Independent reports describe the original research snapshot. Publication changes affect Python CLI/provenance and document paths only; reruns reproduce the mathematical and numerical evidence."
+  }
+}

@@ -1,0 +1,14 @@
+root=DirectoryName[$InputFileName];
+Get[FileNameJoin[{root,"Feasibility.wl"}]];
+designSpecs={
+  {"A-quadratic-12","A",2,2,24,16},
+  {"A-linear-96","A",5,1,24,16},
+  {"B-cubic-48","B",4,3,36,20},
+  {"B-quadratic-192","B",6,2,36,20}};
+designs=Map[Function[spec,With[{design=InvSqrtFeasibility`DiscoverDesign@@spec},
+  Export[FileNameJoin[{root,First[spec]<>".json"}],design,"RawJSON"];
+  Echo[KeyTake[design,{"name","certified","nr_bits","seed_relative_bound","certified_relative_bound","margin_fraction"}]];
+  design]],designSpecs];
+Export[FileNameJoin[{root,"designs.json"}],<|"runtime"->$Version,"designs"->designs|>,"RawJSON"];
+Export[FileNameJoin[{root,"phase-terms.json"}],InvSqrtFeasibility`PhaseVariants[],"RawJSON"];
+Exit[If[And@@Lookup[designs,"certified"],0,1]];

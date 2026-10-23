@@ -1,0 +1,24 @@
+{
+  "AndPhase": {
+    "NumQubits": 3,
+    "Lines": [
+      "R q2",
+      "CCX q0 q1 q2",
+      "Z_POW q2 0.1875",
+      "HMR q2 b0",
+      "CZ q0 q1 if b0"
+    ],
+    "Measurements": 1,
+    "Toffolis": 1
+  },
+  "Addition": {
+    "NumQubits": 4,
+    "Lines": [
+      "CCX q2 q0 q1",
+      "CX q2 q0",
+      "CX q3 q1"
+    ],
+    "Measurements": 0,
+    "Toffolis": 1
+  }
+}

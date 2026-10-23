@@ -1,0 +1,30 @@
+{
+  "baseline_cost": 2076774.233715282,
+  "candidate_cost": 1941280.5598621224,
+  "cost_reduction_percent": 6.5242370428857726,
+  "task_improvement": 1.0697960287938921,
+  "aggregate_with_other_baselines": 1.0227441258606245,
+  "verified_shots_each": 200540928,
+  "status": "PASS",
+  "official_verifier_modified": false,
+  "kickmix_source_commit": "638777fac4379bc62e2a1e4a52cf1a1753895d48",
+  "candidate_circuit_sha256": "53479d65b192b99868275f8f26e166b0a95715eef742b7d493515d8c64ce3057",
+  "baseline_generator_byte_identical": true,
+  "qf_checks_passed": 17,
+  "python_contract_tests_passed": 5,
+  "prototype_source_sha256": {
+    "KickmixBridge.wl": "34d25eb65c55b45e0a6f683bcb88a39c79cff2ced36960af32eb3494dc2c3017",
+    "verify-qf.wls": "d2b4a387a2e092ef7416e48c74362bdd004849657645bb3c4e7020a931da1b97",
+    "fragments.py": "c026324a3e104b4c6209484257f21073be3b306a8e9ea00665031583bea04546",
+    "experiment.py": "e5b6d7db992baeea14ea85ff884c1fc1007da3b17eb1d94fca0b00039982a4db",
+    "test_experiment.py": "68eac8e3a279362c97ab5aaa3a1111efd65681196141a5b5e36a24026e881c6d"
+  },
+  "independent_review": {
+    "correctness_rounds": 3,
+    "quantum_and_mathematical_claims_reproduced": true,
+    "last_finding": "Invalid argument shapes returned unevaluated calls",
+    "resolution": "Failure fallback added; locally tested after the three-round fresh-review cap",
+    "quality_rounds": 3,
+    "quality_open_issues": 0
+  }
+}

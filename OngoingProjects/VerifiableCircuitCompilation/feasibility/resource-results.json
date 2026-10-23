@@ -1,0 +1,3127 @@
+{
+  "status": "RESOURCE_ONLY",
+  "python": "3.13.1 (main, Dec  3 2024, 17:59:52) [Clang 16.0.0 (clang-1600.0.26.4)]",
+  "platform": "macOS-14.2-arm64-arm-64bit-Mach-O",
+  "kickmix_version": "0.1",
+  "kickmix_module": "kickmix.cpython-313-darwin.so",
+  "kickmix_binary_sha256": "ac0cf559d180b411f17bfda206bde6fce88ef9762d43b99d5c22a18224ef5337",
+  "probe_source_sha256": "64a6ea9259ac877a0c0b0728588efafe7ddeeba8190ff8bc3fb95a8ee457bb1b",
+  "source_sha256": {
+    "sample_submission/invsqrt.kmb": "e2bf8eb64350a4460a271fc7f1d591ef125b1e276377e9a0f64b96ab3ca321e1",
+    "../results/candidate.kmb": "53479d65b192b99868275f8f26e166b0a95715eef742b7d493515d8c64ce3057",
+    "verifiers/invsqrt/nr_reference_circuit.py": "bb90330dcf774f7b502de471293facba67f27952cc8808fe4a9970a9b1322e23",
+    "verifiers/invsqrt/verify_submission_invsqrt.py": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a"
+  },
+  "scope": "No production candidate, no full verification, no architecture selected.",
+  "reference_and_incumbent": {
+    "official_sample": {
+      "file": "sample_submission/invsqrt.kmb",
+      "precision": {
+        "delta_bits": 14,
+        "coef_bits": 17,
+        "square_bits": 28,
+        "product_bits": 28,
+        "result_bits": 29
+      },
+      "resource_only": false,
+      "num_qubits": 260,
+      "num_operations": 62160,
+      "toffoli_like": 7735,
+      "base_t_angles": 1,
+      "fine_rotations": 37,
+      "reaction_depth": 4005,
+      "operation_counts": {
+        "NEG": 2,
+        "X": 4712,
+        "Z": 4,
+        "R": 6727,
+        "HMR": 6727,
+        "CX": 28750,
+        "CZ": 6723,
+        "CSWAP": 820,
+        "CCX": 6915,
+        "Z_POW": 40,
+        "INFO_TAG": 628,
+        "POP_CONDITION": 56,
+        "PUSH_CONDITION": 56
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_y1/correct": {
+            "instruction_count_excluding_tags": 241,
+            "toffoli_like": 28,
+            "CCX": 28,
+            "HMR": 29,
+            "classically_conditioned_instructions": 29
+          },
+          "compute_y1/denormalize": {
+            "instruction_count_excluding_tags": 300,
+            "toffoli_like": 300,
+            "CSWAP": 300
+          },
+          "compute_y1/horner": {
+            "instruction_count_excluding_tags": 10038,
+            "toffoli_like": 1071,
+            "CCX": 1071,
+            "HMR": 1029,
+            "classically_conditioned_instructions": 1029
+          },
+          "compute_y1/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "compute_y1/multiply_m": {
+            "instruction_count_excluding_tags": 8433,
+            "toffoli_like": 1043,
+            "CCX": 1043,
+            "HMR": 1021,
+            "classically_conditioned_instructions": 1021
+          },
+          "compute_y1/multiply_y0": {
+            "instruction_count_excluding_tags": 6766,
+            "toffoli_like": 867,
+            "CCX": 867,
+            "HMR": 850,
+            "classically_conditioned_instructions": 850
+          },
+          "compute_y1/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_y1/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "toffoli_like": 3,
+            "CCX": 3
+          },
+          "compute_y1/square": {
+            "instruction_count_excluding_tags": 3840,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 40,
+            "z_pow_fine": 37,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_y1/correct": {
+            "instruction_count_excluding_tags": 301,
+            "toffoli_like": 28,
+            "CCX": 28,
+            "HMR": 29,
+            "classically_conditioned_instructions": 29
+          },
+          "uncompute_y1/denormalize": {
+            "instruction_count_excluding_tags": 300,
+            "toffoli_like": 300,
+            "CSWAP": 300
+          },
+          "uncompute_y1/horner": {
+            "instruction_count_excluding_tags": 8610,
+            "toffoli_like": 1071,
+            "CCX": 1071,
+            "HMR": 1029,
+            "classically_conditioned_instructions": 1029
+          },
+          "uncompute_y1/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "uncompute_y1/multiply_m": {
+            "instruction_count_excluding_tags": 9751,
+            "toffoli_like": 1043,
+            "CCX": 1043,
+            "HMR": 1021,
+            "classically_conditioned_instructions": 1021
+          },
+          "uncompute_y1/multiply_y0": {
+            "instruction_count_excluding_tags": 7786,
+            "toffoli_like": 867,
+            "CCX": 867,
+            "HMR": 850,
+            "classically_conditioned_instructions": 850
+          },
+          "uncompute_y1/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_y1/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "HMR": 3,
+            "classically_conditioned_instructions": 3
+          },
+          "uncompute_y1/square": {
+            "instruction_count_excluding_tags": 4492,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          }
+        },
+        "sum_stage_toffoli_like": 7735,
+        "sum_stage_fine_rotations": 37,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.4295084687750408e-12,
+          "synthesis_t_count": 1011.3826443748329,
+          "toffoli_equivalent_static": 7988.095661093708,
+          "estimated_objective_Q_times_C": 2076904.8718843642
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 7.147542320860869e-13,
+          "synthesis_t_count": 1032.1026444710842,
+          "toffoli_equivalent_static": 7993.275661117771,
+          "estimated_objective_Q_times_C": 2078251.6718906204
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.8590169375500816e-13,
+          "synthesis_t_count": 1059.492994500899,
+          "toffoli_equivalent_static": 8000.123248625225,
+          "estimated_objective_Q_times_C": 2080032.0446425583
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.859016523292051e-14,
+          "synthesis_t_count": 1128.3233489582678,
+          "toffoli_equivalent_static": 8017.330837239567,
+          "estimated_objective_Q_times_C": 2084506.0176822874
+        }
+      ]
+    },
+    "incumbent": {
+      "file": "../results/candidate.kmb",
+      "precision": {
+        "delta_bits": 12,
+        "coef_bits": 17,
+        "square_bits": 28,
+        "product_bits": 27,
+        "result_bits": 28
+      },
+      "resource_only": false,
+      "num_qubits": 256,
+      "num_operations": 58505,
+      "toffoli_like": 7327,
+      "base_t_angles": 1,
+      "fine_rotations": 36,
+      "reaction_depth": 3761,
+      "operation_counts": {
+        "NEG": 2,
+        "X": 4428,
+        "Z": 4,
+        "R": 6351,
+        "HMR": 6351,
+        "CX": 26944,
+        "CZ": 6347,
+        "CSWAP": 800,
+        "CCX": 6527,
+        "Z_POW": 39,
+        "INFO_TAG": 604,
+        "POP_CONDITION": 54,
+        "PUSH_CONDITION": 54
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_y1/correct": {
+            "instruction_count_excluding_tags": 233,
+            "toffoli_like": 27,
+            "CCX": 27,
+            "HMR": 28,
+            "classically_conditioned_instructions": 28
+          },
+          "compute_y1/denormalize": {
+            "instruction_count_excluding_tags": 290,
+            "toffoli_like": 290,
+            "CSWAP": 290
+          },
+          "compute_y1/horner": {
+            "instruction_count_excluding_tags": 8748,
+            "toffoli_like": 954,
+            "CCX": 954,
+            "HMR": 918,
+            "classically_conditioned_instructions": 918
+          },
+          "compute_y1/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "compute_y1/multiply_m": {
+            "instruction_count_excluding_tags": 8118,
+            "toffoli_like": 1001,
+            "CCX": 1001,
+            "HMR": 979,
+            "classically_conditioned_instructions": 979
+          },
+          "compute_y1/multiply_y0": {
+            "instruction_count_excluding_tags": 6511,
+            "toffoli_like": 833,
+            "CCX": 833,
+            "HMR": 816,
+            "classically_conditioned_instructions": 816
+          },
+          "compute_y1/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_y1/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "toffoli_like": 3,
+            "CCX": 3
+          },
+          "compute_y1/square": {
+            "instruction_count_excluding_tags": 3840,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 39,
+            "z_pow_fine": 36,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_y1/correct": {
+            "instruction_count_excluding_tags": 291,
+            "toffoli_like": 27,
+            "CCX": 27,
+            "HMR": 28,
+            "classically_conditioned_instructions": 28
+          },
+          "uncompute_y1/denormalize": {
+            "instruction_count_excluding_tags": 290,
+            "toffoli_like": 290,
+            "CSWAP": 290
+          },
+          "uncompute_y1/horner": {
+            "instruction_count_excluding_tags": 7524,
+            "toffoli_like": 954,
+            "CCX": 954,
+            "HMR": 918,
+            "classically_conditioned_instructions": 918
+          },
+          "uncompute_y1/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "uncompute_y1/multiply_m": {
+            "instruction_count_excluding_tags": 9394,
+            "toffoli_like": 1001,
+            "CCX": 1001,
+            "HMR": 979,
+            "classically_conditioned_instructions": 979
+          },
+          "uncompute_y1/multiply_y0": {
+            "instruction_count_excluding_tags": 7497,
+            "toffoli_like": 833,
+            "CCX": 833,
+            "HMR": 816,
+            "classically_conditioned_instructions": 816
+          },
+          "uncompute_y1/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_y1/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "HMR": 3,
+            "classically_conditioned_instructions": 3
+          },
+          "uncompute_y1/square": {
+            "instruction_count_excluding_tags": 4492,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          }
+        },
+        "sum_stage_toffoli_like": 7327,
+        "sum_stage_fine_rotations": 36,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.4692170373521253e-12,
+          "synthesis_t_count": 983.2510864886456,
+          "toffoli_equivalent_static": 7573.062771622162,
+          "estimated_objective_Q_times_C": 1938704.0695352734
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 7.346085163107005e-13,
+          "synthesis_t_count": 1003.4110865822954,
+          "toffoli_equivalent_static": 7578.102771645574,
+          "estimated_objective_Q_times_C": 1939994.3095412669
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.9384340747042506e-13,
+          "synthesis_t_count": 1030.0611568815748,
+          "toffoli_equivalent_static": 7584.765289220393,
+          "estimated_objective_Q_times_C": 1941699.9140404207
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.938433648939053e-14,
+          "synthesis_t_count": 1097.0312314887444,
+          "toffoli_equivalent_static": 7601.507807872186,
+          "estimated_objective_Q_times_C": 1945985.9988152797
+        }
+      ]
+    }
+  },
+  "polynomial_probes": [
+    {
+      "family": "A",
+      "degree": 2,
+      "interval_bits": 2,
+      "coef_bits": 24,
+      "delta_bits": 16,
+      "interval_count": 12,
+      "lookup_entries_including_padding": 16,
+      "lookup_target_bits": 72,
+      "lookup_strategy": "one concatenated coefficient-magnitude table; init_lookup then del_lookup",
+      "explicitly_allocated_qubits": 263,
+      "phase_fractional_bits": 47,
+      "resource_only": true,
+      "nr_precision": {
+        "square_bits": 36,
+        "product_bits": 36,
+        "result_bits": 36
+      },
+      "name": "A-quadratic-12-nr36",
+      "imported_design": {
+        "name": "A-quadratic-12",
+        "family": "A",
+        "degree": 2,
+        "interval_bits": 2,
+        "coef_bits": 24,
+        "delta_bits": 16,
+        "nr_bits": 36,
+        "eta_bound": "59570205/549755813888",
+        "horner_absolute_bound": "35/33554432",
+        "delta_absolute_bound": "1/65536",
+        "seed_relative_bound": "77494301/549755813888",
+        "certified_relative_bound": "10214438133342447728323004229/332306998946228968225951765070086144",
+        "margin_fraction": 0.4843026616196771,
+        "newton_arithmetic_bound": "36032521018841117/38685626227668133590597632",
+        "certified": true
+      },
+      "num_qubits": 300,
+      "num_operations": 85961,
+      "toffoli_like": 10497,
+      "base_t_angles": 1,
+      "fine_rotations": 44,
+      "reaction_depth": 5550,
+      "operation_counts": {
+        "NEG": 3,
+        "BIT_INVERT": 390,
+        "BIT_STORE0": 17,
+        "X": 6219,
+        "Z": 6,
+        "R": 9430,
+        "HMR": 9430,
+        "CX": 39645,
+        "CZ": 9367,
+        "SWAP": 4,
+        "CSWAP": 961,
+        "CCX": 9536,
+        "Z_POW": 47,
+        "INFO_TAG": 618,
+        "POP_CONDITION": 144,
+        "PUSH_CONDITION": 144
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_poly/coefficient_lookup": {
+            "instruction_count_excluding_tags": 567,
+            "toffoli_like": 14,
+            "CCX": 14,
+            "HMR": 15,
+            "classically_conditioned_instructions": 15
+          },
+          "compute_poly/correct": {
+            "instruction_count_excluding_tags": 305,
+            "toffoli_like": 36,
+            "CCX": 36,
+            "HMR": 37,
+            "classically_conditioned_instructions": 37
+          },
+          "compute_poly/denormalize": {
+            "instruction_count_excluding_tags": 370,
+            "toffoli_like": 370,
+            "CSWAP": 370
+          },
+          "compute_poly/horner": {
+            "instruction_count_excluding_tags": 9800,
+            "toffoli_like": 1050,
+            "CCX": 1050,
+            "HMR": 1022,
+            "classically_conditioned_instructions": 1022
+          },
+          "compute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 11073,
+            "toffoli_like": 1395,
+            "CCX": 1395,
+            "HMR": 1373,
+            "classically_conditioned_instructions": 1373
+          },
+          "compute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 11736,
+            "toffoli_like": 1476,
+            "CCX": 1476,
+            "HMR": 1452,
+            "classically_conditioned_instructions": 1452
+          },
+          "compute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_poly/square": {
+            "instruction_count_excluding_tags": 6912,
+            "toffoli_like": 798,
+            "CCX": 798,
+            "HMR": 780,
+            "classically_conditioned_instructions": 780
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 47,
+            "z_pow_fine": 44,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_poly/coefficient_unlookup": {
+            "instruction_count_excluding_tags": 679,
+            "HMR": 77,
+            "classically_conditioned_instructions": 93,
+            "toffoli_like": 3,
+            "CSWAP": 1,
+            "CCX": 2
+          },
+          "uncompute_poly/correct": {
+            "instruction_count_excluding_tags": 381,
+            "toffoli_like": 36,
+            "CCX": 36,
+            "HMR": 37,
+            "classically_conditioned_instructions": 37
+          },
+          "uncompute_poly/denormalize": {
+            "instruction_count_excluding_tags": 370,
+            "toffoli_like": 370,
+            "CSWAP": 370
+          },
+          "uncompute_poly/horner": {
+            "instruction_count_excluding_tags": 8456,
+            "toffoli_like": 1050,
+            "CCX": 1050,
+            "HMR": 1022,
+            "classically_conditioned_instructions": 1022
+          },
+          "uncompute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 12743,
+            "toffoli_like": 1395,
+            "CCX": 1395,
+            "HMR": 1373,
+            "classically_conditioned_instructions": 1373
+          },
+          "uncompute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 13512,
+            "toffoli_like": 1476,
+            "CCX": 1476,
+            "HMR": 1452,
+            "classically_conditioned_instructions": 1452
+          },
+          "uncompute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_poly/square": {
+            "instruction_count_excluding_tags": 8052,
+            "toffoli_like": 798,
+            "CCX": 798,
+            "HMR": 780,
+            "classically_conditioned_instructions": 780
+          }
+        },
+        "sum_stage_toffoli_like": 10497,
+        "sum_stage_fine_rotations": 44,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.2020866669244662e-12,
+          "synthesis_t_count": 1208.8847709782513,
+          "toffoli_equivalent_static": 10799.471192744562,
+          "estimated_objective_Q_times_C": 3239841.3578233686
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 6.010433315269367e-13,
+          "synthesis_t_count": 1233.524771092712,
+          "toffoli_equivalent_static": 10805.631192773179,
+          "estimated_objective_Q_times_C": 3241689.3578319536
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.404173333848932e-13,
+          "synthesis_t_count": 1266.097079236276,
+          "toffoli_equivalent_static": 10813.77426980907,
+          "estimated_objective_Q_times_C": 3244132.280942721
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.4041729854955886e-14,
+          "synthesis_t_count": 1347.9493926450389,
+          "toffoli_equivalent_static": 10834.23734816126,
+          "estimated_objective_Q_times_C": 3250271.2044483777
+        }
+      ],
+      "exported_certified_relative_bound": "10214438133342447728323004229/332306998946228968225951765070086144",
+      "objective_at_exported_bound": {
+        "margin_fraction_of_minimum_tolerance": "4843026616196771/10000000000000000",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 300818927,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 1.1643475442649795e-12,
+        "synthesis_t_count": 1210.0186831689375,
+        "toffoli_equivalent_static": 10799.754670792234,
+        "estimated_objective_Q_times_C": 3239926.4012376703,
+        "caveat": "Uses an imported approximation/arithmetic bound as a hypothetical synthesis margin. This resource circuit has not been independently shown to implement that bound."
+      },
+      "simulator_model_samples": {
+        "status": "SAMPLED_CIRCUIT_MODEL_AGREEMENT",
+        "unique_inputs": 81,
+        "basis_shots": 162,
+        "seed": 90210,
+        "input_values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          513,
+          1023,
+          1024,
+          1025,
+          2047,
+          2048,
+          2049,
+          4095,
+          4096,
+          4097,
+          8191,
+          8192,
+          8193,
+          16383,
+          16384,
+          16385,
+          32767,
+          32768,
+          32769,
+          65535,
+          65536,
+          65537,
+          131071,
+          131072,
+          131073,
+          262143,
+          262144,
+          262145,
+          524287,
+          524288,
+          524289,
+          1048575,
+          1048576,
+          1048577,
+          1310719,
+          1310720,
+          1310721,
+          1572863,
+          1572864,
+          1572865,
+          1835007,
+          1835008,
+          1835009,
+          2097151,
+          2097152,
+          2097153,
+          2359295,
+          2359296,
+          2359297,
+          2621439,
+          2621440,
+          2621441,
+          2883583,
+          2883584,
+          2883585,
+          3133452
+        ],
+        "x_restored": true,
+        "scratch_clean": true,
+        "phase_matches_integer_model_exactly": true,
+        "sampled_priced_operation_counts_equal_static_counts": true,
+        "mean_executed_toffoli_like": 10497.0,
+        "mean_executed_base_t_angles": 1.0,
+        "mean_executed_fine_rotations": 44.0,
+        "limitation": "A small seeded sample, not the official all-input repeated-shot circuit verification."
+      },
+      "full_domain_integer_model": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "inputs_with_register_capacity_violation": 0,
+        "first_capacity_violation_x": null,
+        "worst_error_over_tolerance": 0.33539486785209616,
+        "worst_x": 1113007,
+        "minimum_margin_units": 620330513,
+        "fractional_phase_bits": 47,
+        "register_ranges": {
+          "horner_c1": {
+            "bits": 24,
+            "minimum_word": 1100264,
+            "maximum_word": 8253054,
+            "minimum_headroom_words": 8524161,
+            "capacity_violations": 0
+          },
+          "horner_c0": {
+            "bits": 24,
+            "minimum_word": 8388652,
+            "maximum_word": 16775399,
+            "minimum_headroom_words": 1816,
+            "capacity_violations": 0
+          },
+          "square": {
+            "bits": 36,
+            "minimum_word": 17180049408,
+            "maximum_word": 68704592677,
+            "minimum_headroom_words": 14884058,
+            "capacity_violations": 0
+          },
+          "multiply_m": {
+            "bits": 38,
+            "minimum_word": 68704586751,
+            "maximum_word": 68735354249,
+            "minimum_headroom_words": 206142552694,
+            "capacity_violations": 0
+          },
+          "correction": {
+            "bits": 38,
+            "minimum_word": 137423075959,
+            "maximum_word": 137453843457,
+            "minimum_headroom_words": 137424063486,
+            "capacity_violations": 0
+          },
+          "multiply_y0": {
+            "bits": 37,
+            "minimum_word": 68719509501,
+            "maximum_word": 137438951043,
+            "minimum_headroom_words": 2428,
+            "capacity_violations": 0
+          },
+          "denormalized_newton": {
+            "bits": 47,
+            "minimum_word": 79505701351,
+            "maximum_word": 140737485868032,
+            "minimum_headroom_words": 2487295,
+            "capacity_violations": 0
+          }
+        },
+        "elapsed_seconds": 1.513078999996651,
+        "limitation": "Exhaustive deterministic integer model only; full circuit and measurement branches remain unverified."
+      },
+      "objective_at_model_margin": {
+        "margin_fraction_of_minimum_tolerance": "620330513/621138291",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 620330513,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 2.4010467580857534e-12,
+        "synthesis_t_count": 1184.2910304822678,
+        "toffoli_equivalent_static": 10793.322757620566,
+        "estimated_objective_Q_times_C": 3237996.82728617,
+        "caveat": "Model-checked synthesis margin; circuit remains unverified."
+      }
+    },
+    {
+      "family": "A",
+      "degree": 2,
+      "interval_bits": 2,
+      "coef_bits": 24,
+      "delta_bits": 16,
+      "interval_count": 12,
+      "lookup_entries_including_padding": 16,
+      "lookup_target_bits": 72,
+      "lookup_strategy": "one concatenated coefficient-magnitude table; init_lookup then del_lookup",
+      "explicitly_allocated_qubits": 231,
+      "phase_fractional_bits": 39,
+      "resource_only": true,
+      "nr_precision": {
+        "square_bits": 28,
+        "product_bits": 28,
+        "result_bits": 28
+      },
+      "name": "A-quadratic-12-nr28",
+      "imported_design": {
+        "name": "A-quadratic-12",
+        "family": "A",
+        "degree": 2,
+        "interval_bits": 2,
+        "coef_bits": 24,
+        "delta_bits": 16,
+        "nr_bits": 36,
+        "eta_bound": "59570205/549755813888",
+        "horner_absolute_bound": "35/33554432",
+        "delta_absolute_bound": "1/65536",
+        "seed_relative_bound": "77494301/549755813888",
+        "certified_relative_bound": "10214438133342447728323004229/332306998946228968225951765070086144",
+        "margin_fraction": 0.4843026616196771,
+        "newton_arithmetic_bound": "36032521018841117/38685626227668133590597632",
+        "certified": true
+      },
+      "precision_status": "UNCERTIFIED_WIDTH_VARIANT; no arithmetic guarantee transferred",
+      "num_qubits": 260,
+      "num_operations": 69017,
+      "toffoli_like": 8361,
+      "base_t_angles": 1,
+      "fine_rotations": 36,
+      "reaction_depth": 4462,
+      "operation_counts": {
+        "NEG": 3,
+        "BIT_INVERT": 390,
+        "BIT_STORE0": 17,
+        "X": 5075,
+        "Z": 6,
+        "R": 7462,
+        "HMR": 7462,
+        "CX": 31941,
+        "CZ": 7399,
+        "SWAP": 4,
+        "CSWAP": 801,
+        "CCX": 7560,
+        "Z_POW": 39,
+        "INFO_TAG": 602,
+        "POP_CONDITION": 128,
+        "PUSH_CONDITION": 128
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_poly/coefficient_lookup": {
+            "instruction_count_excluding_tags": 567,
+            "toffoli_like": 14,
+            "CCX": 14,
+            "HMR": 15,
+            "classically_conditioned_instructions": 15
+          },
+          "compute_poly/correct": {
+            "instruction_count_excluding_tags": 241,
+            "toffoli_like": 28,
+            "CCX": 28,
+            "HMR": 29,
+            "classically_conditioned_instructions": 29
+          },
+          "compute_poly/denormalize": {
+            "instruction_count_excluding_tags": 290,
+            "toffoli_like": 290,
+            "CSWAP": 290
+          },
+          "compute_poly/horner": {
+            "instruction_count_excluding_tags": 9800,
+            "toffoli_like": 1050,
+            "CCX": 1050,
+            "HMR": 1022,
+            "classically_conditioned_instructions": 1022
+          },
+          "compute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 8433,
+            "toffoli_like": 1043,
+            "CCX": 1043,
+            "HMR": 1021,
+            "classically_conditioned_instructions": 1021
+          },
+          "compute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 8856,
+            "toffoli_like": 1092,
+            "CCX": 1092,
+            "HMR": 1068,
+            "classically_conditioned_instructions": 1068
+          },
+          "compute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_poly/square": {
+            "instruction_count_excluding_tags": 4680,
+            "toffoli_like": 554,
+            "CCX": 554,
+            "HMR": 540,
+            "classically_conditioned_instructions": 540
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 39,
+            "z_pow_fine": 36,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_poly/coefficient_unlookup": {
+            "instruction_count_excluding_tags": 679,
+            "HMR": 77,
+            "classically_conditioned_instructions": 93,
+            "toffoli_like": 3,
+            "CSWAP": 1,
+            "CCX": 2
+          },
+          "uncompute_poly/correct": {
+            "instruction_count_excluding_tags": 301,
+            "toffoli_like": 28,
+            "CCX": 28,
+            "HMR": 29,
+            "classically_conditioned_instructions": 29
+          },
+          "uncompute_poly/denormalize": {
+            "instruction_count_excluding_tags": 290,
+            "toffoli_like": 290,
+            "CSWAP": 290
+          },
+          "uncompute_poly/horner": {
+            "instruction_count_excluding_tags": 8456,
+            "toffoli_like": 1050,
+            "CCX": 1050,
+            "HMR": 1022,
+            "classically_conditioned_instructions": 1022
+          },
+          "uncompute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 9751,
+            "toffoli_like": 1043,
+            "CCX": 1043,
+            "HMR": 1021,
+            "classically_conditioned_instructions": 1021
+          },
+          "uncompute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 10248,
+            "toffoli_like": 1092,
+            "CCX": 1092,
+            "HMR": 1068,
+            "classically_conditioned_instructions": 1068
+          },
+          "uncompute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_poly/square": {
+            "instruction_count_excluding_tags": 5444,
+            "toffoli_like": 554,
+            "CCX": 554,
+            "HMR": 540,
+            "classically_conditioned_instructions": 540
+          }
+        },
+        "sum_stage_toffoli_like": 8361,
+        "sum_stage_fine_rotations": 36,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.4692170373521253e-12,
+          "synthesis_t_count": 983.2510864886456,
+          "toffoli_equivalent_static": 8607.06277162216,
+          "estimated_objective_Q_times_C": 2237836.320621762
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 7.346085163107005e-13,
+          "synthesis_t_count": 1003.4110865822954,
+          "toffoli_equivalent_static": 8612.102771645574,
+          "estimated_objective_Q_times_C": 2239146.720627849
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.9384340747042506e-13,
+          "synthesis_t_count": 1030.0611568815748,
+          "toffoli_equivalent_static": 8618.765289220393,
+          "estimated_objective_Q_times_C": 2240878.975197302
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.938433648939053e-14,
+          "synthesis_t_count": 1097.0312314887444,
+          "toffoli_equivalent_static": 8635.507807872185,
+          "estimated_objective_Q_times_C": 2245232.030046768
+        }
+      ],
+      "simulator_model_samples": {
+        "status": "SAMPLED_CIRCUIT_MODEL_AGREEMENT",
+        "unique_inputs": 81,
+        "basis_shots": 162,
+        "seed": 90210,
+        "input_values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          513,
+          1023,
+          1024,
+          1025,
+          2047,
+          2048,
+          2049,
+          4095,
+          4096,
+          4097,
+          8191,
+          8192,
+          8193,
+          16383,
+          16384,
+          16385,
+          32767,
+          32768,
+          32769,
+          65535,
+          65536,
+          65537,
+          131071,
+          131072,
+          131073,
+          262143,
+          262144,
+          262145,
+          524287,
+          524288,
+          524289,
+          1048575,
+          1048576,
+          1048577,
+          1310719,
+          1310720,
+          1310721,
+          1572863,
+          1572864,
+          1572865,
+          1835007,
+          1835008,
+          1835009,
+          2097151,
+          2097152,
+          2097153,
+          2359295,
+          2359296,
+          2359297,
+          2621439,
+          2621440,
+          2621441,
+          2883583,
+          2883584,
+          2883585,
+          3133452
+        ],
+        "x_restored": true,
+        "scratch_clean": true,
+        "phase_matches_integer_model_exactly": true,
+        "sampled_priced_operation_counts_equal_static_counts": true,
+        "mean_executed_toffoli_like": 8361.0,
+        "mean_executed_base_t_angles": 1.0,
+        "mean_executed_fine_rotations": 36.0,
+        "limitation": "A small seeded sample, not the official all-input repeated-shot circuit verification."
+      },
+      "full_domain_integer_model": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "inputs_with_register_capacity_violation": 0,
+        "first_capacity_violation_x": null,
+        "worst_error_over_tolerance": 0.9936078338442418,
+        "worst_x": 985989,
+        "minimum_margin_units": 7078021,
+        "fractional_phase_bits": 39,
+        "register_ranges": {
+          "horner_c1": {
+            "bits": 24,
+            "minimum_word": 1100264,
+            "maximum_word": 8253054,
+            "minimum_headroom_words": 8524161,
+            "capacity_violations": 0
+          },
+          "horner_c0": {
+            "bits": 24,
+            "minimum_word": 8388652,
+            "maximum_word": 16775399,
+            "minimum_headroom_words": 1816,
+            "capacity_violations": 0
+          },
+          "square": {
+            "bits": 28,
+            "minimum_word": 67109568,
+            "maximum_word": 268377310,
+            "minimum_headroom_words": 58145,
+            "capacity_violations": 0
+          },
+          "multiply_m": {
+            "bits": 30,
+            "minimum_word": 268377285,
+            "maximum_word": 268497470,
+            "minimum_headroom_words": 805244353,
+            "capacity_violations": 0
+          },
+          "correction": {
+            "bits": 30,
+            "minimum_word": 536808898,
+            "maximum_word": 536929083,
+            "minimum_headroom_words": 536812740,
+            "capacity_violations": 0
+          },
+          "multiply_y0": {
+            "bits": 29,
+            "minimum_word": 268435582,
+            "maximum_word": 536870903,
+            "minimum_headroom_words": 8,
+            "capacity_violations": 0
+          },
+          "denormalized_newton": {
+            "bits": 39,
+            "minimum_word": 310569144,
+            "maximum_word": 549755804672,
+            "minimum_headroom_words": 9215,
+            "capacity_violations": 0
+          }
+        },
+        "elapsed_seconds": 1.3020649579993915,
+        "limitation": "Exhaustive deterministic integer model only; full circuit and measurement branches remain unverified."
+      },
+      "objective_at_model_margin": {
+        "margin_fraction_of_minimum_tolerance": "7078021/621138291",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 7078021,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 3.3484166767230296e-14,
+        "synthesis_t_count": 1093.2324474916734,
+        "toffoli_equivalent_static": 8634.558111872919,
+        "estimated_objective_Q_times_C": 2244985.1090869587,
+        "caveat": "Model-checked synthesis margin; circuit remains unverified."
+      }
+    },
+    {
+      "family": "A",
+      "degree": 1,
+      "interval_bits": 5,
+      "coef_bits": 24,
+      "delta_bits": 16,
+      "interval_count": 96,
+      "lookup_entries_including_padding": 128,
+      "lookup_target_bits": 48,
+      "lookup_strategy": "one concatenated coefficient-magnitude table; init_lookup then del_lookup",
+      "explicitly_allocated_qubits": 223,
+      "phase_fractional_bits": 43,
+      "resource_only": true,
+      "nr_precision": {
+        "square_bits": 32,
+        "product_bits": 32,
+        "result_bits": 32
+      },
+      "name": "A-linear-96-nr32",
+      "imported_design": {
+        "name": "A-linear-96",
+        "family": "A",
+        "degree": 1,
+        "interval_bits": 5,
+        "coef_bits": 24,
+        "delta_bits": 16,
+        "nr_bits": 32,
+        "eta_bound": "48869057/1099511627776",
+        "horner_absolute_bound": "11/16777216",
+        "delta_absolute_bound": "1/65536",
+        "seed_relative_bound": "83865281/1099511627776",
+        "certified_relative_bound": "67768602175458194889218964545/2658455991569831745807614120560689152",
+        "margin_fraction": 0.5723199931384433,
+        "newton_arithmetic_bound": "1297103746618863297/77371252455336267181195264",
+        "certified": true
+      },
+      "num_qubits": 256,
+      "num_operations": 71342,
+      "toffoli_like": 8256,
+      "base_t_angles": 1,
+      "fine_rotations": 40,
+      "reaction_depth": 4293,
+      "operation_counts": {
+        "NEG": 3,
+        "BIT_INVERT": 2184,
+        "BIT_STORE0": 129,
+        "X": 5079,
+        "Z": 6,
+        "R": 7283,
+        "HMR": 7283,
+        "CX": 32452,
+        "CZ": 7356,
+        "SWAP": 6,
+        "CSWAP": 884,
+        "CCX": 7372,
+        "Z_POW": 43,
+        "INFO_TAG": 1038,
+        "POP_CONDITION": 112,
+        "PUSH_CONDITION": 112
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_poly/coefficient_lookup": {
+            "instruction_count_excluding_tags": 3121,
+            "toffoli_like": 126,
+            "CCX": 126,
+            "HMR": 127,
+            "classically_conditioned_instructions": 127
+          },
+          "compute_poly/correct": {
+            "instruction_count_excluding_tags": 273,
+            "toffoli_like": 32,
+            "CCX": 32,
+            "HMR": 33,
+            "classically_conditioned_instructions": 33
+          },
+          "compute_poly/denormalize": {
+            "instruction_count_excluding_tags": 330,
+            "toffoli_like": 330,
+            "CSWAP": 330
+          },
+          "compute_poly/horner": {
+            "instruction_count_excluding_tags": 3784,
+            "toffoli_like": 396,
+            "CCX": 396,
+            "HMR": 385,
+            "classically_conditioned_instructions": 385
+          },
+          "compute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 9753,
+            "toffoli_like": 1219,
+            "CCX": 1219,
+            "HMR": 1197,
+            "classically_conditioned_instructions": 1197
+          },
+          "compute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 10296,
+            "toffoli_like": 1284,
+            "CCX": 1284,
+            "HMR": 1260,
+            "classically_conditioned_instructions": 1260
+          },
+          "compute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_poly/square": {
+            "instruction_count_excluding_tags": 5812,
+            "toffoli_like": 680,
+            "CCX": 680,
+            "HMR": 664,
+            "classically_conditioned_instructions": 664
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 43,
+            "z_pow_fine": 40,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_poly/coefficient_unlookup": {
+            "instruction_count_excluding_tags": 2734,
+            "HMR": 68,
+            "classically_conditioned_instructions": 196,
+            "toffoli_like": 18,
+            "CSWAP": 4,
+            "CCX": 14
+          },
+          "uncompute_poly/correct": {
+            "instruction_count_excluding_tags": 341,
+            "toffoli_like": 32,
+            "CCX": 32,
+            "HMR": 33,
+            "classically_conditioned_instructions": 33
+          },
+          "uncompute_poly/denormalize": {
+            "instruction_count_excluding_tags": 330,
+            "toffoli_like": 330,
+            "CSWAP": 330
+          },
+          "uncompute_poly/horner": {
+            "instruction_count_excluding_tags": 3256,
+            "toffoli_like": 396,
+            "CCX": 396,
+            "HMR": 385,
+            "classically_conditioned_instructions": 385
+          },
+          "uncompute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 11247,
+            "toffoli_like": 1219,
+            "CCX": 1219,
+            "HMR": 1197,
+            "classically_conditioned_instructions": 1197
+          },
+          "uncompute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 11880,
+            "toffoli_like": 1284,
+            "CCX": 1284,
+            "HMR": 1260,
+            "classically_conditioned_instructions": 1260
+          },
+          "uncompute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_poly/square": {
+            "instruction_count_excluding_tags": 6764,
+            "toffoli_like": 680,
+            "CCX": 680,
+            "HMR": 664,
+            "classically_conditioned_instructions": 664
+          }
+        },
+        "sum_stage_toffoli_like": 8256,
+        "sum_stage_fine_rotations": 40,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.3222953336169128e-12,
+          "synthesis_t_count": 1095.9060765027755,
+          "toffoli_equivalent_static": 8530.226519125694,
+          "estimated_objective_Q_times_C": 2183737.9888961776
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 6.611476646796304e-13,
+          "synthesis_t_count": 1118.3060766068306,
+          "toffoli_equivalent_static": 8535.826519151708,
+          "estimated_objective_Q_times_C": 2185171.588902837
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.6445906672338254e-13,
+          "synthesis_t_count": 1147.9172658282523,
+          "toffoli_equivalent_static": 8543.229316457064,
+          "estimated_objective_Q_times_C": 2187066.7050130083
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.6445902840451477e-14,
+          "synthesis_t_count": 1222.3284598362186,
+          "toffoli_equivalent_static": 8561.832114959054,
+          "estimated_objective_Q_times_C": 2191829.021429518
+        }
+      ],
+      "exported_certified_relative_bound": "67768602175458194889218964545/2658455991569831745807614120560689152",
+      "objective_at_exported_bound": {
+        "margin_fraction_of_minimum_tolerance": "5723199931384433/10000000000000000",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 355489862,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 1.5135521130752388e-12,
+        "synthesis_t_count": 1091.5404528787656,
+        "toffoli_equivalent_static": 8529.13511321969,
+        "estimated_objective_Q_times_C": 2183458.588984241,
+        "caveat": "Uses an imported approximation/arithmetic bound as a hypothetical synthesis margin. This resource circuit has not been independently shown to implement that bound."
+      },
+      "simulator_model_samples": {
+        "status": "SAMPLED_CIRCUIT_MODEL_AGREEMENT",
+        "unique_inputs": 93,
+        "basis_shots": 186,
+        "seed": 90210,
+        "input_values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          513,
+          1023,
+          1024,
+          1025,
+          2047,
+          2048,
+          2049,
+          4095,
+          4096,
+          4097,
+          8191,
+          8192,
+          8193,
+          16383,
+          16384,
+          16385,
+          32767,
+          32768,
+          32769,
+          65535,
+          65536,
+          65537,
+          131071,
+          131072,
+          131073,
+          262143,
+          262144,
+          262145,
+          524287,
+          524288,
+          524289,
+          1048575,
+          1048576,
+          1048577,
+          1212415,
+          1212416,
+          1212417,
+          1409023,
+          1409024,
+          1409025,
+          1605631,
+          1605632,
+          1605633,
+          1802239,
+          1802240,
+          1802241,
+          1998847,
+          1998848,
+          1998849,
+          2097151,
+          2097152,
+          2097153,
+          2195455,
+          2195456,
+          2195457,
+          2392063,
+          2392064,
+          2392065,
+          2588671,
+          2588672,
+          2588673,
+          2785279,
+          2785280,
+          2785281,
+          2981887,
+          2981888,
+          2981889,
+          3133452
+        ],
+        "x_restored": true,
+        "scratch_clean": true,
+        "phase_matches_integer_model_exactly": true,
+        "sampled_priced_operation_counts_equal_static_counts": true,
+        "mean_executed_toffoli_like": 8256.0,
+        "mean_executed_base_t_angles": 1.0,
+        "mean_executed_fine_rotations": 40.0,
+        "limitation": "A small seeded sample, not the official all-input repeated-shot circuit verification."
+      },
+      "full_domain_integer_model": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "inputs_with_register_capacity_violation": 0,
+        "first_capacity_violation_x": null,
+        "worst_error_over_tolerance": 0.07908141128830613,
+        "worst_x": 1065039,
+        "minimum_margin_units": 598402767,
+        "fractional_phase_bits": 43,
+        "register_ranges": {
+          "horner_c0": {
+            "bits": 24,
+            "minimum_word": 8388603,
+            "maximum_word": 16776471,
+            "minimum_headroom_words": 744,
+            "capacity_violations": 0
+          },
+          "square": {
+            "bits": 32,
+            "minimum_word": 1073740538,
+            "maximum_word": 4294585861,
+            "minimum_headroom_words": 381434,
+            "capacity_violations": 0
+          },
+          "multiply_m": {
+            "bits": 34,
+            "minimum_word": 4294585861,
+            "maximum_word": 4295409968,
+            "minimum_headroom_words": 12884459215,
+            "capacity_violations": 0
+          },
+          "correction": {
+            "bits": 34,
+            "minimum_word": 8589491920,
+            "maximum_word": 8590316027,
+            "minimum_headroom_words": 8589553156,
+            "capacity_violations": 0
+          },
+          "multiply_y0": {
+            "bits": 33,
+            "minimum_word": 4294969358,
+            "maximum_word": 8589934560,
+            "minimum_headroom_words": 31,
+            "capacity_violations": 0
+          },
+          "denormalized_newton": {
+            "bits": 43,
+            "minimum_word": 4969106333,
+            "maximum_word": 8796092989440,
+            "minimum_headroom_words": 32767,
+            "capacity_violations": 0
+          }
+        },
+        "elapsed_seconds": 1.3394655830052216,
+        "limitation": "Exhaustive deterministic integer model only; full circuit and measurement branches remain unverified."
+      },
+      "objective_at_model_margin": {
+        "margin_fraction_of_minimum_tolerance": "199467589/207046097",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 598402767,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 2.547790722827758e-12,
+        "synthesis_t_count": 1074.7111440659714,
+        "toffoli_equivalent_static": 8524.927786016493,
+        "estimated_objective_Q_times_C": 2182381.513220222,
+        "caveat": "Model-checked synthesis margin; circuit remains unverified."
+      }
+    },
+    {
+      "family": "A",
+      "degree": 1,
+      "interval_bits": 5,
+      "coef_bits": 24,
+      "delta_bits": 16,
+      "interval_count": 96,
+      "lookup_entries_including_padding": 128,
+      "lookup_target_bits": 48,
+      "lookup_strategy": "one concatenated coefficient-magnitude table; init_lookup then del_lookup",
+      "explicitly_allocated_qubits": 207,
+      "phase_fractional_bits": 39,
+      "resource_only": true,
+      "nr_precision": {
+        "square_bits": 28,
+        "product_bits": 28,
+        "result_bits": 28
+      },
+      "name": "A-linear-96-nr28",
+      "imported_design": {
+        "name": "A-linear-96",
+        "family": "A",
+        "degree": 1,
+        "interval_bits": 5,
+        "coef_bits": 24,
+        "delta_bits": 16,
+        "nr_bits": 32,
+        "eta_bound": "48869057/1099511627776",
+        "horner_absolute_bound": "11/16777216",
+        "delta_absolute_bound": "1/65536",
+        "seed_relative_bound": "83865281/1099511627776",
+        "certified_relative_bound": "67768602175458194889218964545/2658455991569831745807614120560689152",
+        "margin_fraction": 0.5723199931384433,
+        "newton_arithmetic_bound": "1297103746618863297/77371252455336267181195264",
+        "certified": true
+      },
+      "precision_status": "UNCERTIFIED_WIDTH_VARIANT; no arithmetic guarantee transferred",
+      "num_qubits": 236,
+      "num_operations": 62838,
+      "toffoli_like": 7180,
+      "base_t_angles": 1,
+      "fine_rotations": 36,
+      "reaction_depth": 3749,
+      "operation_counts": {
+        "NEG": 3,
+        "BIT_INVERT": 2184,
+        "BIT_STORE0": 129,
+        "X": 4507,
+        "Z": 6,
+        "R": 6291,
+        "HMR": 6291,
+        "CX": 28600,
+        "CZ": 6364,
+        "SWAP": 6,
+        "CSWAP": 804,
+        "CCX": 6376,
+        "Z_POW": 39,
+        "INFO_TAG": 1030,
+        "POP_CONDITION": 104,
+        "PUSH_CONDITION": 104
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_poly/coefficient_lookup": {
+            "instruction_count_excluding_tags": 3121,
+            "toffoli_like": 126,
+            "CCX": 126,
+            "HMR": 127,
+            "classically_conditioned_instructions": 127
+          },
+          "compute_poly/correct": {
+            "instruction_count_excluding_tags": 241,
+            "toffoli_like": 28,
+            "CCX": 28,
+            "HMR": 29,
+            "classically_conditioned_instructions": 29
+          },
+          "compute_poly/denormalize": {
+            "instruction_count_excluding_tags": 290,
+            "toffoli_like": 290,
+            "CSWAP": 290
+          },
+          "compute_poly/horner": {
+            "instruction_count_excluding_tags": 3784,
+            "toffoli_like": 396,
+            "CCX": 396,
+            "HMR": 385,
+            "classically_conditioned_instructions": 385
+          },
+          "compute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 8433,
+            "toffoli_like": 1043,
+            "CCX": 1043,
+            "HMR": 1021,
+            "classically_conditioned_instructions": 1021
+          },
+          "compute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 8856,
+            "toffoli_like": 1092,
+            "CCX": 1092,
+            "HMR": 1068,
+            "classically_conditioned_instructions": 1068
+          },
+          "compute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_poly/square": {
+            "instruction_count_excluding_tags": 4680,
+            "toffoli_like": 554,
+            "CCX": 554,
+            "HMR": 540,
+            "classically_conditioned_instructions": 540
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 39,
+            "z_pow_fine": 36,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_poly/coefficient_unlookup": {
+            "instruction_count_excluding_tags": 2734,
+            "HMR": 68,
+            "classically_conditioned_instructions": 196,
+            "toffoli_like": 18,
+            "CSWAP": 4,
+            "CCX": 14
+          },
+          "uncompute_poly/correct": {
+            "instruction_count_excluding_tags": 301,
+            "toffoli_like": 28,
+            "CCX": 28,
+            "HMR": 29,
+            "classically_conditioned_instructions": 29
+          },
+          "uncompute_poly/denormalize": {
+            "instruction_count_excluding_tags": 290,
+            "toffoli_like": 290,
+            "CSWAP": 290
+          },
+          "uncompute_poly/horner": {
+            "instruction_count_excluding_tags": 3256,
+            "toffoli_like": 396,
+            "CCX": 396,
+            "HMR": 385,
+            "classically_conditioned_instructions": 385
+          },
+          "uncompute_poly/multiply_m": {
+            "instruction_count_excluding_tags": 9751,
+            "toffoli_like": 1043,
+            "CCX": 1043,
+            "HMR": 1021,
+            "classically_conditioned_instructions": 1021
+          },
+          "uncompute_poly/multiply_y0": {
+            "instruction_count_excluding_tags": 10248,
+            "toffoli_like": 1092,
+            "CCX": 1092,
+            "HMR": 1068,
+            "classically_conditioned_instructions": 1068
+          },
+          "uncompute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_poly/square": {
+            "instruction_count_excluding_tags": 5444,
+            "toffoli_like": 554,
+            "CCX": 554,
+            "HMR": 540,
+            "classically_conditioned_instructions": 540
+          }
+        },
+        "sum_stage_toffoli_like": 7180,
+        "sum_stage_fine_rotations": 36,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.4692170373521253e-12,
+          "synthesis_t_count": 983.2510864886456,
+          "toffoli_equivalent_static": 7426.062771622162,
+          "estimated_objective_Q_times_C": 1752550.8141028301
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 7.346085163107005e-13,
+          "synthesis_t_count": 1003.4110865822954,
+          "toffoli_equivalent_static": 7431.102771645574,
+          "estimated_objective_Q_times_C": 1753740.2541083554
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.9384340747042506e-13,
+          "synthesis_t_count": 1030.0611568815748,
+          "toffoli_equivalent_static": 7437.765289220393,
+          "estimated_objective_Q_times_C": 1755312.608256013
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.938433648939053e-14,
+          "synthesis_t_count": 1097.0312314887444,
+          "toffoli_equivalent_static": 7454.507807872186,
+          "estimated_objective_Q_times_C": 1759263.842657836
+        }
+      ],
+      "simulator_model_samples": {
+        "status": "SAMPLED_CIRCUIT_MODEL_AGREEMENT",
+        "unique_inputs": 93,
+        "basis_shots": 186,
+        "seed": 90210,
+        "input_values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          513,
+          1023,
+          1024,
+          1025,
+          2047,
+          2048,
+          2049,
+          4095,
+          4096,
+          4097,
+          8191,
+          8192,
+          8193,
+          16383,
+          16384,
+          16385,
+          32767,
+          32768,
+          32769,
+          65535,
+          65536,
+          65537,
+          131071,
+          131072,
+          131073,
+          262143,
+          262144,
+          262145,
+          524287,
+          524288,
+          524289,
+          1048575,
+          1048576,
+          1048577,
+          1212415,
+          1212416,
+          1212417,
+          1409023,
+          1409024,
+          1409025,
+          1605631,
+          1605632,
+          1605633,
+          1802239,
+          1802240,
+          1802241,
+          1998847,
+          1998848,
+          1998849,
+          2097151,
+          2097152,
+          2097153,
+          2195455,
+          2195456,
+          2195457,
+          2392063,
+          2392064,
+          2392065,
+          2588671,
+          2588672,
+          2588673,
+          2785279,
+          2785280,
+          2785281,
+          2981887,
+          2981888,
+          2981889,
+          3133452
+        ],
+        "x_restored": true,
+        "scratch_clean": true,
+        "phase_matches_integer_model_exactly": true,
+        "sampled_priced_operation_counts_equal_static_counts": true,
+        "mean_executed_toffoli_like": 7180.0,
+        "mean_executed_base_t_angles": 1.0,
+        "mean_executed_fine_rotations": 36.0,
+        "limitation": "A small seeded sample, not the official all-input repeated-shot circuit verification."
+      },
+      "full_domain_integer_model": {
+        "status": "MODEL_FAIL_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 1,
+        "inputs_with_register_capacity_violation": 0,
+        "first_capacity_violation_x": null,
+        "worst_error_over_tolerance": 1.062493771317591,
+        "worst_x": 1048575,
+        "minimum_margin_units": -67102208,
+        "fractional_phase_bits": 39,
+        "register_ranges": {
+          "horner_c0": {
+            "bits": 24,
+            "minimum_word": 8388603,
+            "maximum_word": 16776471,
+            "minimum_headroom_words": 744,
+            "capacity_violations": 0
+          },
+          "square": {
+            "bits": 28,
+            "minimum_word": 67108776,
+            "maximum_word": 268411612,
+            "minimum_headroom_words": 23843,
+            "capacity_violations": 0
+          },
+          "multiply_m": {
+            "bits": 30,
+            "minimum_word": 268411612,
+            "maximum_word": 268463115,
+            "minimum_headroom_words": 805278708,
+            "capacity_violations": 0
+          },
+          "correction": {
+            "bits": 30,
+            "minimum_word": 536843253,
+            "maximum_word": 536894756,
+            "minimum_headroom_words": 536847067,
+            "capacity_violations": 0
+          },
+          "multiply_y0": {
+            "bits": 29,
+            "minimum_word": 268435601,
+            "maximum_word": 536870909,
+            "minimum_headroom_words": 2,
+            "capacity_violations": 0
+          },
+          "denormalized_newton": {
+            "bits": 39,
+            "minimum_word": 310569146,
+            "maximum_word": 549755810816,
+            "minimum_headroom_words": 3071,
+            "capacity_violations": 0
+          }
+        },
+        "elapsed_seconds": 1.2603765410021879,
+        "limitation": "Exhaustive deterministic integer model only; full circuit and measurement branches remain unverified."
+      }
+    },
+    {
+      "family": "B",
+      "degree": 3,
+      "interval_bits": 4,
+      "coef_bits": 36,
+      "delta_bits": 20,
+      "interval_count": 48,
+      "lookup_entries_including_padding": 64,
+      "lookup_target_bits": 144,
+      "lookup_strategy": "one concatenated coefficient-magnitude table; init_lookup then del_lookup",
+      "explicitly_allocated_qubits": 222,
+      "phase_fractional_bits": 46,
+      "resource_only": true,
+      "name": "B-cubic-48",
+      "imported_design": {
+        "name": "B-cubic-48",
+        "family": "B",
+        "degree": 3,
+        "interval_bits": 4,
+        "coef_bits": 36,
+        "delta_bits": 20,
+        "nr_bits": 32,
+        "eta_bound": "31739/1099511627776",
+        "horner_absolute_bound": "273/1099511627776",
+        "delta_absolute_bound": "0",
+        "seed_relative_bound": "32285/1099511627776",
+        "certified_relative_bound": "32285/1099511627776",
+        "margin_fraction": 0.5073699951171875,
+        "newton_arithmetic_bound": "37325585457115682528329245/1298074214633706907132624082305024",
+        "certified": true
+      },
+      "num_qubits": 256,
+      "num_operations": 57957,
+      "toffoli_like": 6638,
+      "base_t_angles": 1,
+      "fine_rotations": 43,
+      "reaction_depth": 3323,
+      "operation_counts": {
+        "NEG": 1,
+        "BIT_INVERT": 3206,
+        "BIT_STORE0": 65,
+        "X": 3679,
+        "Z": 2,
+        "R": 5749,
+        "HMR": 5749,
+        "CX": 26238,
+        "CZ": 5666,
+        "SWAP": 6,
+        "CSWAP": 944,
+        "CCX": 5694,
+        "Z_POW": 46,
+        "INFO_TAG": 624,
+        "POP_CONDITION": 144,
+        "PUSH_CONDITION": 144
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_poly/coefficient_lookup": {
+            "instruction_count_excluding_tags": 3791,
+            "toffoli_like": 62,
+            "CCX": 62,
+            "HMR": 63,
+            "classically_conditioned_instructions": 63
+          },
+          "compute_poly/denormalize": {
+            "instruction_count_excluding_tags": 360,
+            "toffoli_like": 360,
+            "CSWAP": 360
+          },
+          "compute_poly/horner": {
+            "instruction_count_excluding_tags": 26016,
+            "toffoli_like": 2808,
+            "CCX": 2808,
+            "HMR": 2760,
+            "classically_conditioned_instructions": 2760
+          },
+          "compute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 46,
+            "z_pow_fine": 43,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_poly/coefficient_unlookup": {
+            "instruction_count_excluding_tags": 3860,
+            "HMR": 156,
+            "classically_conditioned_instructions": 220,
+            "toffoli_like": 10,
+            "CSWAP": 4,
+            "CCX": 6
+          },
+          "uncompute_poly/denormalize": {
+            "instruction_count_excluding_tags": 360,
+            "toffoli_like": 360,
+            "CSWAP": 360
+          },
+          "uncompute_poly/horner": {
+            "instruction_count_excluding_tags": 22560,
+            "toffoli_like": 2808,
+            "CCX": 2808,
+            "HMR": 2760,
+            "classically_conditioned_instructions": 2760
+          },
+          "uncompute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          }
+        },
+        "sum_stage_toffoli_like": 6638,
+        "sum_stage_fine_rotations": 43,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.2300421708064305e-12,
+          "synthesis_t_count": 1180.6114590088225,
+          "toffoli_equivalent_static": 6933.4028647522055,
+          "estimated_objective_Q_times_C": 1774951.1333765646
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 6.15021083422912e-13,
+          "synthesis_t_count": 1204.6914591206819,
+          "toffoli_equivalent_static": 6939.42286478017,
+          "estimated_objective_Q_times_C": 1776492.2533837236
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.460084341612861e-13,
+          "synthesis_t_count": 1236.52348753371,
+          "toffoli_equivalent_static": 6947.380871883428,
+          "estimated_objective_Q_times_C": 1778529.5032021576
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.460083985158277e-14,
+          "synthesis_t_count": 1316.515521092274,
+          "toffoli_equivalent_static": 6967.378880273069,
+          "estimated_objective_Q_times_C": 1783648.9933499056
+        }
+      ],
+      "exported_certified_relative_bound": "32285/1099511627776",
+      "objective_at_exported_bound": {
+        "margin_fraction_of_minimum_tolerance": "33251/65536",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 315146931,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 1.2481729797408702e-12,
+        "synthesis_t_count": 1180.1031276061894,
+        "toffoli_equivalent_static": 6933.275781901548,
+        "estimated_objective_Q_times_C": 1774918.6001667962,
+        "caveat": "Uses an imported approximation/arithmetic bound as a hypothetical synthesis margin. This resource circuit has not been independently shown to implement that bound."
+      },
+      "simulator_model_samples": {
+        "status": "SAMPLED_CIRCUIT_MODEL_AGREEMENT",
+        "unique_inputs": 93,
+        "basis_shots": 186,
+        "seed": 90210,
+        "input_values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          513,
+          1023,
+          1024,
+          1025,
+          2047,
+          2048,
+          2049,
+          4095,
+          4096,
+          4097,
+          8191,
+          8192,
+          8193,
+          16383,
+          16384,
+          16385,
+          32767,
+          32768,
+          32769,
+          65535,
+          65536,
+          65537,
+          131071,
+          131072,
+          131073,
+          262143,
+          262144,
+          262145,
+          524287,
+          524288,
+          524289,
+          1048575,
+          1048576,
+          1048577,
+          1179647,
+          1179648,
+          1179649,
+          1376255,
+          1376256,
+          1376257,
+          1572863,
+          1572864,
+          1572865,
+          1769471,
+          1769472,
+          1769473,
+          1966079,
+          1966080,
+          1966081,
+          2097151,
+          2097152,
+          2097153,
+          2162687,
+          2162688,
+          2162689,
+          2359295,
+          2359296,
+          2359297,
+          2555903,
+          2555904,
+          2555905,
+          2752511,
+          2752512,
+          2752513,
+          2949119,
+          2949120,
+          2949121,
+          3133452
+        ],
+        "x_restored": true,
+        "scratch_clean": true,
+        "phase_matches_integer_model_exactly": true,
+        "sampled_priced_operation_counts_equal_static_counts": true,
+        "mean_executed_toffoli_like": 6638.0,
+        "mean_executed_base_t_angles": 1.0,
+        "mean_executed_fine_rotations": 43.0,
+        "limitation": "A small seeded sample, not the official all-input repeated-shot circuit verification."
+      },
+      "full_domain_integer_model": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "inputs_with_register_capacity_violation": 0,
+        "first_capacity_violation_x": null,
+        "worst_error_over_tolerance": 0.48593990909768775,
+        "worst_x": 1104622,
+        "minimum_margin_units": 537782754,
+        "fractional_phase_bits": 46,
+        "register_ranges": {
+          "horner_c2": {
+            "bits": 36,
+            "minimum_word": 826679509,
+            "maximum_word": 25686981753,
+            "minimum_headroom_words": 43032494982,
+            "capacity_violations": 0
+          },
+          "horner_c1": {
+            "bits": 36,
+            "minimum_word": 4345966508,
+            "maximum_word": 34358716061,
+            "minimum_headroom_words": 34360760674,
+            "capacity_violations": 0
+          },
+          "horner_c0": {
+            "bits": 36,
+            "minimum_word": 34359754755,
+            "maximum_word": 68719474753,
+            "minimum_headroom_words": 1982,
+            "capacity_violations": 0
+          },
+          "denormalized_direct": {
+            "bits": 46,
+            "minimum_word": 39752850697,
+            "maximum_word": 70368742147072,
+            "minimum_headroom_words": 2030591,
+            "capacity_violations": 0
+          }
+        },
+        "elapsed_seconds": 0.3588100830093026,
+        "limitation": "Exhaustive deterministic integer model only; full circuit and measurement branches remain unverified."
+      },
+      "objective_at_model_margin": {
+        "margin_fraction_of_minimum_tolerance": "179260918/207046097",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 537782754,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 2.1299458648811382e-12,
+        "synthesis_t_count": 1161.5374746432285,
+        "toffoli_equivalent_static": 6928.634368660807,
+        "estimated_objective_Q_times_C": 1773730.3983771666,
+        "caveat": "Model-checked synthesis margin; circuit remains unverified."
+      }
+    },
+    {
+      "family": "B",
+      "degree": 2,
+      "interval_bits": 6,
+      "coef_bits": 36,
+      "delta_bits": 20,
+      "interval_count": 192,
+      "lookup_entries_including_padding": 256,
+      "lookup_target_bits": 108,
+      "lookup_strategy": "one concatenated coefficient-magnitude table; init_lookup then del_lookup",
+      "explicitly_allocated_qubits": 186,
+      "phase_fractional_bits": 46,
+      "resource_only": true,
+      "name": "B-quadratic-192",
+      "imported_design": {
+        "name": "B-quadratic-192",
+        "family": "B",
+        "degree": 2,
+        "interval_bits": 6,
+        "coef_bits": 36,
+        "delta_bits": 20,
+        "nr_bits": 32,
+        "eta_bound": "20017/549755813888",
+        "horner_absolute_bound": "455/2199023255552",
+        "delta_absolute_bound": "0",
+        "seed_relative_bound": "40489/1099511627776",
+        "certified_relative_bound": "40489/1099511627776",
+        "margin_fraction": 0.3821868896484375,
+        "newton_arithmetic_bound": "37325585654436788028087849/1298074214633706907132624082305024",
+        "certified": true
+      },
+      "num_qubits": 220,
+      "num_operations": 53178,
+      "toffoli_like": 4449,
+      "base_t_angles": 1,
+      "fine_rotations": 43,
+      "reaction_depth": 2002,
+      "operation_counts": {
+        "NEG": 1,
+        "BIT_INVERT": 9842,
+        "BIT_STORE0": 257,
+        "X": 2639,
+        "Z": 2,
+        "R": 3564,
+        "HMR": 3564,
+        "CX": 23537,
+        "CZ": 3709,
+        "SWAP": 8,
+        "CSWAP": 951,
+        "CCX": 3498,
+        "Z_POW": 46,
+        "INFO_TAG": 1344,
+        "POP_CONDITION": 108,
+        "PUSH_CONDITION": 108
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_poly/coefficient_lookup": {
+            "instruction_count_excluding_tags": 11735,
+            "toffoli_like": 254,
+            "CCX": 254,
+            "HMR": 255,
+            "classically_conditioned_instructions": 255
+          },
+          "compute_poly/denormalize": {
+            "instruction_count_excluding_tags": 360,
+            "toffoli_like": 360,
+            "CSWAP": 360
+          },
+          "compute_poly/horner": {
+            "instruction_count_excluding_tags": 15064,
+            "toffoli_like": 1610,
+            "CCX": 1610,
+            "HMR": 1582,
+            "classically_conditioned_instructions": 1582
+          },
+          "compute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_by_bits": {
+            "instruction_count_excluding_tags": 46,
+            "z_pow_fine": 43,
+            "z_pow_t": 1,
+            "z_pow_clifford": 2
+          },
+          "uncompute_poly/coefficient_unlookup": {
+            "instruction_count_excluding_tags": 10881,
+            "HMR": 135,
+            "classically_conditioned_instructions": 391,
+            "toffoli_like": 25,
+            "CSWAP": 11,
+            "CCX": 14
+          },
+          "uncompute_poly/denormalize": {
+            "instruction_count_excluding_tags": 360,
+            "toffoli_like": 360,
+            "CSWAP": 360
+          },
+          "uncompute_poly/horner": {
+            "instruction_count_excluding_tags": 13048,
+            "toffoli_like": 1610,
+            "CCX": 1610,
+            "HMR": 1582,
+            "classically_conditioned_instructions": 1582
+          },
+          "uncompute_poly/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          }
+        },
+        "sum_stage_toffoli_like": 4449,
+        "sum_stage_fine_rotations": 43,
+        "sum_stage_t_angles": 1,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.2300421708064305e-12,
+          "synthesis_t_count": 1180.6114590088225,
+          "toffoli_equivalent_static": 4744.4028647522055,
+          "estimated_objective_Q_times_C": 1043768.6302454852
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 6.15021083422912e-13,
+          "synthesis_t_count": 1204.6914591206819,
+          "toffoli_equivalent_static": 4750.42286478017,
+          "estimated_objective_Q_times_C": 1045093.0302516375
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.460084341612861e-13,
+          "synthesis_t_count": 1236.52348753371,
+          "toffoli_equivalent_static": 4758.380871883428,
+          "estimated_objective_Q_times_C": 1046843.7918143541
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.460083985158277e-14,
+          "synthesis_t_count": 1316.515521092274,
+          "toffoli_equivalent_static": 4778.378880273069,
+          "estimated_objective_Q_times_C": 1051243.3536600752
+        }
+      ],
+      "exported_certified_relative_bound": "40489/1099511627776",
+      "objective_at_exported_bound": {
+        "margin_fraction_of_minimum_tolerance": "25047/65536",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 237390911,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 9.402119824110542e-13,
+        "synthesis_t_count": 1189.9460663328102,
+        "toffoli_equivalent_static": 4746.7365165832025,
+        "estimated_objective_Q_times_C": 1044282.0336483045,
+        "caveat": "Uses an imported approximation/arithmetic bound as a hypothetical synthesis margin. This resource circuit has not been independently shown to implement that bound."
+      },
+      "simulator_model_samples": {
+        "status": "SAMPLED_CIRCUIT_MODEL_AGREEMENT",
+        "unique_inputs": 93,
+        "basis_shots": 186,
+        "seed": 90210,
+        "input_values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          513,
+          1023,
+          1024,
+          1025,
+          2047,
+          2048,
+          2049,
+          4095,
+          4096,
+          4097,
+          8191,
+          8192,
+          8193,
+          16383,
+          16384,
+          16385,
+          32767,
+          32768,
+          32769,
+          65535,
+          65536,
+          65537,
+          131071,
+          131072,
+          131073,
+          262143,
+          262144,
+          262145,
+          524287,
+          524288,
+          524289,
+          1048575,
+          1048576,
+          1048577,
+          1228799,
+          1228800,
+          1228801,
+          1425407,
+          1425408,
+          1425409,
+          1622015,
+          1622016,
+          1622017,
+          1818623,
+          1818624,
+          1818625,
+          2015231,
+          2015232,
+          2015233,
+          2097151,
+          2097152,
+          2097153,
+          2211839,
+          2211840,
+          2211841,
+          2408447,
+          2408448,
+          2408449,
+          2605055,
+          2605056,
+          2605057,
+          2801663,
+          2801664,
+          2801665,
+          2998271,
+          2998272,
+          2998273,
+          3133452
+        ],
+        "x_restored": true,
+        "scratch_clean": true,
+        "phase_matches_integer_model_exactly": true,
+        "sampled_priced_operation_counts_equal_static_counts": true,
+        "mean_executed_toffoli_like": 4449.0,
+        "mean_executed_base_t_angles": 1.0,
+        "mean_executed_fine_rotations": 43.0,
+        "limitation": "A small seeded sample, not the official all-input repeated-shot circuit verification."
+      },
+      "full_domain_integer_model": {
+        "status": "MODEL_PASS_CIRCUIT_UNVERIFIED",
+        "checked_inputs": 3133452,
+        "failed_phase_inputs": 0,
+        "inputs_with_register_capacity_violation": 0,
+        "first_capacity_violation_x": null,
+        "worst_error_over_tolerance": 0.6125324809224912,
+        "worst_x": 1052655,
+        "minimum_margin_units": 413820069,
+        "fractional_phase_bits": 46,
+        "register_ranges": {
+          "horner_c1": {
+            "bits": 36,
+            "minimum_word": 4307591824,
+            "maximum_word": 34356850303,
+            "minimum_headroom_words": 34362626432,
+            "capacity_violations": 0
+          },
+          "horner_c0": {
+            "bits": 36,
+            "minimum_word": 34359754776,
+            "maximum_word": 68719474235,
+            "minimum_headroom_words": 2500,
+            "capacity_violations": 0
+          },
+          "denormalized_direct": {
+            "bits": 46,
+            "minimum_word": 39752850735,
+            "maximum_word": 70368741616640,
+            "minimum_headroom_words": 2561023,
+            "capacity_violations": 0
+          }
+        },
+        "elapsed_seconds": 0.23537633402156644,
+        "limitation": "Exhaustive deterministic integer model only; full circuit and measurement branches remain unverified."
+      },
+      "objective_at_model_margin": {
+        "margin_fraction_of_minimum_tolerance": "137940023/207046097",
+        "minimum_tolerance_units": 621138291,
+        "assumed_margin_units": 413820069,
+        "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+        "rotation_eps": 1.638978450341636e-12,
+        "synthesis_t_count": 1170.6401932914237,
+        "toffoli_equivalent_static": 4741.910048322856,
+        "estimated_objective_Q_times_C": 1043220.2106310283,
+        "caveat": "Model-checked synthesis margin; circuit remains unverified."
+      }
+    }
+  ],
+  "phase_probes": [
+    {
+      "family": "C",
+      "resource_only": true,
+      "explicitly_allocated_qubits": 189,
+      "phase_terms": 403,
+      "exponent_blocks": 1,
+      "indicator_strategy": "reuse clean arithmetic scratch; exact CCX compute and exact CCX clear",
+      "phase_bit_mapping": "indices0..16=y0 LSB0..16; indices17..45=z LSB0..28; index46=exponent indicator",
+      "limitation": "fixed-s0-optimistic is diagnostic only; all-exponents retains exported terms without synthesis optimization",
+      "name": "fixed-s0-optimistic",
+      "imported_variant": {
+        "name": "fixed-s0-optimistic"
+      },
+      "num_qubits": 217,
+      "num_operations": 44879,
+      "toffoli_like": 5081,
+      "base_t_angles": 0,
+      "fine_rotations": 403,
+      "reaction_depth": 2845,
+      "operation_counts": {
+        "NEG": 2,
+        "X": 3442,
+        "Z": 4,
+        "R": 4719,
+        "HMR": 4719,
+        "CX": 21198,
+        "CZ": 4715,
+        "CSWAP": 220,
+        "CCX": 4861,
+        "Z_POW": 403,
+        "INFO_TAG": 488,
+        "POP_CONDITION": 54,
+        "PUSH_CONDITION": 54
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_prefix/correct": {
+            "instruction_count_excluding_tags": 233,
+            "toffoli_like": 27,
+            "CCX": 27,
+            "HMR": 28,
+            "classically_conditioned_instructions": 28
+          },
+          "compute_prefix/horner": {
+            "instruction_count_excluding_tags": 8748,
+            "toffoli_like": 954,
+            "CCX": 954,
+            "HMR": 918,
+            "classically_conditioned_instructions": 918
+          },
+          "compute_prefix/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "compute_prefix/multiply_m": {
+            "instruction_count_excluding_tags": 8118,
+            "toffoli_like": 1001,
+            "CCX": 1001,
+            "HMR": 979,
+            "classically_conditioned_instructions": 979
+          },
+          "compute_prefix/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_prefix/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "toffoli_like": 3,
+            "CCX": 3
+          },
+          "compute_prefix/square": {
+            "instruction_count_excluding_tags": 3840,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_polynomial": {
+            "instruction_count_excluding_tags": 1117,
+            "z_pow_fine": 403
+          },
+          "uncompute_prefix/correct": {
+            "instruction_count_excluding_tags": 291,
+            "toffoli_like": 27,
+            "CCX": 27,
+            "HMR": 28,
+            "classically_conditioned_instructions": 28
+          },
+          "uncompute_prefix/horner": {
+            "instruction_count_excluding_tags": 7524,
+            "toffoli_like": 954,
+            "CCX": 954,
+            "HMR": 918,
+            "classically_conditioned_instructions": 918
+          },
+          "uncompute_prefix/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "uncompute_prefix/multiply_m": {
+            "instruction_count_excluding_tags": 9394,
+            "toffoli_like": 1001,
+            "CCX": 1001,
+            "HMR": 979,
+            "classically_conditioned_instructions": 979
+          },
+          "uncompute_prefix/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_prefix/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "HMR": 3,
+            "classically_conditioned_instructions": 3
+          },
+          "uncompute_prefix/square": {
+            "instruction_count_excluding_tags": 4492,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          }
+        },
+        "sum_stage_toffoli_like": 5081,
+        "sum_stage_fine_rotations": 403,
+        "sum_stage_t_angles": 0,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.312451944036638e-13,
+          "synthesis_t_count": 11793.379247229474,
+          "toffoli_equivalent_static": 8029.344811807368,
+          "estimated_objective_Q_times_C": 1742367.824162199
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 6.562259699053403e-14,
+          "synthesis_t_count": 12019.05924827783,
+          "toffoli_equivalent_static": 8085.764812069458,
+          "estimated_objective_Q_times_C": 1754610.9642190724
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.6249038880732758e-14,
+          "synthesis_t_count": 12317.391979683654,
+          "toffoli_equivalent_static": 8160.347994920914,
+          "estimated_objective_Q_times_C": 1770795.5148978382
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.6249035077371192e-15,
+          "synthesis_t_count": 13067.084759313915,
+          "toffoli_equivalent_static": 8347.77118982848,
+          "estimated_objective_Q_times_C": 1811466.34819278
+        }
+      ]
+    },
+    {
+      "family": "C",
+      "resource_only": true,
+      "explicitly_allocated_qubits": 189,
+      "phase_terms": 8877,
+      "exponent_blocks": 11,
+      "indicator_strategy": "reuse clean arithmetic scratch; exact CCX compute and exact CCX clear",
+      "phase_bit_mapping": "indices0..16=y0 LSB0..16; indices17..45=z LSB0..28; index46=exponent indicator",
+      "limitation": "fixed-s0-optimistic is diagnostic only; all-exponents retains exported terms without synthesis optimization",
+      "name": "all-exponents",
+      "imported_variant": {
+        "name": "all-exponents"
+      },
+      "num_qubits": 217,
+      "num_operations": 77317,
+      "toffoli_like": 5099,
+      "base_t_angles": 2,
+      "fine_rotations": 8875,
+      "reaction_depth": 2845,
+      "operation_counts": {
+        "NEG": 2,
+        "X": 3480,
+        "Z": 4,
+        "R": 4719,
+        "HMR": 4719,
+        "CX": 45062,
+        "CZ": 4715,
+        "CSWAP": 220,
+        "CCX": 4879,
+        "Z_POW": 8877,
+        "INFO_TAG": 532,
+        "POP_CONDITION": 54,
+        "PUSH_CONDITION": 54
+      },
+      "tagged_profile": {
+        "stages": {
+          "compute_prefix/correct": {
+            "instruction_count_excluding_tags": 233,
+            "toffoli_like": 27,
+            "CCX": 27,
+            "HMR": 28,
+            "classically_conditioned_instructions": 28
+          },
+          "compute_prefix/horner": {
+            "instruction_count_excluding_tags": 8748,
+            "toffoli_like": 954,
+            "CCX": 954,
+            "HMR": 918,
+            "classically_conditioned_instructions": 918
+          },
+          "compute_prefix/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "compute_prefix/multiply_m": {
+            "instruction_count_excluding_tags": 8118,
+            "toffoli_like": 1001,
+            "CCX": 1001,
+            "HMR": 979,
+            "classically_conditioned_instructions": 979
+          },
+          "compute_prefix/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 120,
+            "CCX": 10,
+            "CSWAP": 110
+          },
+          "compute_prefix/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "toffoli_like": 3,
+            "CCX": 3
+          },
+          "compute_prefix/square": {
+            "instruction_count_excluding_tags": 3840,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          },
+          "outside_tags": {
+            "instruction_count_excluding_tags": 23
+          },
+          "phase_polynomial": {
+            "instruction_count_excluding_tags": 33511,
+            "z_pow_fine": 8875,
+            "toffoli_like": 18,
+            "CCX": 18,
+            "z_pow_t": 2
+          },
+          "uncompute_prefix/correct": {
+            "instruction_count_excluding_tags": 291,
+            "toffoli_like": 27,
+            "CCX": 27,
+            "HMR": 28,
+            "classically_conditioned_instructions": 28
+          },
+          "uncompute_prefix/horner": {
+            "instruction_count_excluding_tags": 7524,
+            "toffoli_like": 954,
+            "CCX": 954,
+            "HMR": 918,
+            "classically_conditioned_instructions": 918
+          },
+          "uncompute_prefix/load_coefficients": {
+            "instruction_count_excluding_tags": 139
+          },
+          "uncompute_prefix/multiply_m": {
+            "instruction_count_excluding_tags": 9394,
+            "toffoli_like": 1001,
+            "CCX": 1001,
+            "HMR": 979,
+            "classically_conditioned_instructions": 979
+          },
+          "uncompute_prefix/normalize": {
+            "instruction_count_excluding_tags": 170,
+            "toffoli_like": 110,
+            "CSWAP": 110,
+            "HMR": 10,
+            "classically_conditioned_instructions": 10
+          },
+          "uncompute_prefix/select_interval": {
+            "instruction_count_excluding_tags": 8,
+            "HMR": 3,
+            "classically_conditioned_instructions": 3
+          },
+          "uncompute_prefix/square": {
+            "instruction_count_excluding_tags": 4492,
+            "toffoli_like": 442,
+            "CCX": 442,
+            "HMR": 428,
+            "classically_conditioned_instructions": 428
+          }
+        },
+        "sum_stage_toffoli_like": 5099,
+        "sum_stage_fine_rotations": 8875,
+        "sum_stage_t_angles": 2,
+        "classically_conditioned_toffoli_like": 0,
+        "classically_conditioned_base_t_angles": 0,
+        "classically_conditioned_fine_rotations": 0,
+        "reconciles_operation_statistics": true,
+        "counting_caveat": "Static counts include all classically conditioned operations. The official objective uses mean executed counts from simulation; these resource probes use static upper counts and have no full-verifier claim."
+      },
+      "objective_margin_sweep": [
+        {
+          "margin_fraction_of_minimum_tolerance": "1/2",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 310569145,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 5.959640940245241e-15,
+          "synthesis_t_count": 281888.369171172,
+          "toffoli_equivalent_static": 75571.592292793,
+          "estimated_objective_Q_times_C": 16399035.52753608
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/4",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 155284572,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 2.979820460527912e-15,
+          "synthesis_t_count": 286858.3691942592,
+          "toffoli_equivalent_static": 76814.0922985648,
+          "estimated_objective_Q_times_C": 16668658.028788563
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/10",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 62113829,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.1919281880490481e-15,
+          "synthesis_t_count": 293428.35180276213,
+          "toffoli_equivalent_static": 78456.58795069053,
+          "estimated_objective_Q_times_C": 17025079.585299846
+        },
+        {
+          "margin_fraction_of_minimum_tolerance": "1/100",
+          "minimum_tolerance_units": 621138291,
+          "assumed_margin_units": 6211382,
+          "status": "CONDITIONAL_RESOURCE_ESTIMATE",
+          "rotation_eps": 1.1919280153442918e-16,
+          "synthesis_t_count": 309938.33547327964,
+          "toffoli_equivalent_static": 82584.08386831991,
+          "estimated_objective_Q_times_C": 17920746.19942542
+        }
+      ]
+    }
+  ],
+  "input_sha256": {
+    "designs.json": "35e62d7bb0b862ae81d3f11527363e221c07e9e93cd614511de7c6344de28c05",
+    "phase-terms.json": "72c3eef4486cbfec582313da47afb3fdf70d25a339614cbe00660ee78d1c9c60"
+  },
+  "pending_inputs": [],
+  "elapsed_seconds": 8.031704041990452
+}

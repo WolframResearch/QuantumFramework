@@ -1,0 +1,28 @@
+{
+  "python": "3.13.1 (main, Dec  3 2024, 17:59:52) [Clang 16.0.0 (clang-1600.0.26.4)]",
+  "platform": "macOS-14.2-arm64-arm-64bit-Mach-O",
+  "numpy": "2.5.4",
+  "kickmix": "0.1",
+  "data_sha256": {
+    "sample_submission/invsqrt.kmb": "e2bf8eb64350a4460a271fc7f1d591ef125b1e276377e9a0f64b96ab3ca321e1",
+    "verifiers/invsqrt/nr_reference_circuit.py": "bb90330dcf774f7b502de471293facba67f27952cc8808fe4a9970a9b1322e23",
+    "verifiers/invsqrt/verify_submission_invsqrt.py": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a"
+  },
+  "status": "PASS",
+  "score": 1941280.5598621224,
+  "toffoli_equivalent": 7583.127186961416,
+  "toffoli_count": 7327.0,
+  "max_toffoli_count": 7327,
+  "t_count": 1.0,
+  "rotation_count": 36.0,
+  "rotation_eps": 3.6809236372811597e-13,
+  "num_qubits": 256,
+  "reaction_depth": 3761,
+  "num_ops": 58505,
+  "verified_shots": 200540928,
+  "worst_error_over_tolerance": 0.9251076979764682,
+  "worst_x": 1119994,
+  "circuit_sha256": "53479d65b192b99868275f8f26e166b0a95715eef742b7d493515d8c64ce3057",
+  "salt": "qf-prototype-local-validation-v1",
+  "elapsed_seconds": 346.27238558401586
+}
