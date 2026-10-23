@@ -749,8 +749,61 @@ BeginTestSection["BosonicExpOrder - products of three or more exponentials"]
    followed through; a single pass left E^(gamma a) to the left of E^(beta a^dagger). *)
 VerificationTest[
     BosonicExpOrder[Exp[\[Gamma] \[FormalA]]**Exp[\[Alpha] \[FormalA]]**Exp[\[Beta] SuperDagger[\[FormalA]]]],
-    E^(\[Beta] (\[Alpha] + \[Gamma])) Exp[\[Beta] SuperDagger[\[FormalA]]]**Exp[\[Gamma] \[FormalA]]**Exp[\[Alpha] \[FormalA]],
+    E^(\[Beta] (\[Alpha] + \[Gamma])) Exp[\[Beta] SuperDagger[\[FormalA]]]**Exp[(\[Alpha] + \[Gamma]) \[FormalA]],
     TestID -> "ThreeFactorProductNormalOrders"
+]
+
+(* Exponentials of one mode that are both creator-only or both annihilator-only commute, so they
+   merge exactly; across modes, and with anything mixed, they stay apart. *)
+VerificationTest[
+    {
+        BosonicExpOrder[Exp[\[Alpha] \[FormalA]]**Exp[\[Beta] SuperDagger[\[FormalA]]]**Exp[\[Gamma] \[FormalA]]],
+        BosonicExpOrder[Exp[\[Alpha] \[FormalA]]**Exp[\[Gamma] \[FormalA]]],
+        BosonicExpOrder[Exp[\[Beta] SuperDagger[\[FormalB]]]**Exp[\[Delta] SuperDagger[\[FormalA]]]]
+    },
+    {
+        E^(\[Alpha] \[Beta]) Exp[\[Beta] SuperDagger[\[FormalA]]]**Exp[(\[Alpha] + \[Gamma]) \[FormalA]],
+        Exp[(\[Alpha] + \[Gamma]) \[FormalA]],
+        Exp[\[Beta] SuperDagger[\[FormalB]]]**Exp[\[Delta] SuperDagger[\[FormalA]]]
+    },
+    TestID -> "SameModeCommutingExponentialsMerge"
+]
+
+(* A product of n displacements needs of order n^2 reorderings; it must run to the end and
+   collapse to one creator and one annihilator exponential. *)
+VerificationTest[
+    Module[{size = 60, am, in, ord},
+        am = Normal[AnnihilationOperator[size]["Matrix"]];
+        in = NonCommutativeMultiply @@ Table[Exp[0.1 j SuperDagger[\[FormalA]] - 0.05 j \[FormalA]], {j, 8}];
+        ord = BosonicExpOrder[in];
+        {
+            Length[Replace[ord, c_ m_NonCommutativeMultiply /; FreeQ[c, \[FormalA]] :> m]],
+            Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA]}, size]["Matrix"]][[;; 12, ;; 12]] -
+                (Dot @@ Table[MatrixExp[0.1 j ConjugateTranspose[am] - 0.05 j am], {j, 8}])[[;; 12, ;; 12]]]] < 10^-10
+        }
+    ],
+    {2, True},
+    TestID -> "LongDisplacementChainCollapses"
+]
+
+(* Exact check, independent of the exponential rules: expand input and output to t^4 and
+   normal-order both with BosonicNormalOrder. *)
+VerificationTest[
+    Module[{vars = {\[FormalA], SuperDagger[\[FormalA]], \[FormalB], SuperDagger[\[FormalB]]},
+            pars = {\[Alpha], \[Beta], \[Gamma], \[Delta]}, n = 4, t, nf},
+        nf[e_] := Module[{x = e /. Thread[pars -> t pars]},
+            x = x /. Power[E, g_] /; ! FreeQ[g, Alternatives @@ vars] :>
+                Sum[If[k == 0, 1, NonCommutativeMultiply @@ ConstantArray[g, k]]/k!, {k, 0, n}];
+            x = x /. Power[E, c_] /; FreeQ[c, Alternatives @@ vars] && ! FreeQ[c, t] :> Normal[Series[E^c, {t, 0, n}]];
+            x = Expand[NonCommutativeExpand[x]] /. t^k_Integer /; k > n -> 0;
+            Expand[BosonicNormalOrder[x, vars, "Scalars" -> Append[pars, t]]] /. t^k_Integer /; k > n -> 0];
+        Simplify[Expand[nf[#] - nf[BosonicExpOrder[#]]]] & /@ {
+            Exp[\[Alpha] \[FormalA]]**Exp[\[Beta] SuperDagger[\[FormalA]]]**Exp[\[Gamma] \[FormalA]],
+            Exp[\[Alpha] \[FormalA]]**Exp[\[Beta] SuperDagger[\[FormalB]]]**Exp[\[Gamma] \[FormalB]]**Exp[\[Delta] SuperDagger[\[FormalA]]]
+        }
+    ],
+    {0, 0},
+    TestID -> "OrderingKeepsTheOperatorExactly"
 ]
 
 (* the displacement group law D(alpha) D(beta) = e^((alpha beta* - alpha* beta)/2) D(alpha + beta),

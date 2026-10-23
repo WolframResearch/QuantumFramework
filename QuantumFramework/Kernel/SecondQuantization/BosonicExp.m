@@ -32,6 +32,11 @@ modeSwap[rank_] := NonCommutativeMultiply[l___,
         DisjointQ @@ (DeleteDuplicates[Cases[#, w_?FormalSymbolQ :> w, {0, Infinity}]] & /@ {x, y}) :>
     NonCommutativeMultiply[l, y, x, r];
 
+modeMerge = NonCommutativeMultiply[l___, Power[E, x_], Power[E, y_], r___] /;
+    ! FreeQ[x, _?FormalSymbolQ] && ladderRank[x] === ladderRank[y] && ladderRank[x] =!= 2 &&
+        SameQ @@ (Union[Cases[#, w_?FormalSymbolQ :> w, {0, Infinity}]] & /@ {x, y}) :>
+    NonCommutativeMultiply[l, Exp[x + y], r];
+
 
 getNCPower[var_, var_] := 1;
 
@@ -122,7 +127,9 @@ rulesNO = {
                 Exp[(alpha Tan[Omega]/Omega) v1 ** v2]
         ],
 
-    modeSwap[ladderRank]
+    modeSwap[ladderRank],
+
+    modeMerge
 };
 
 
@@ -185,7 +192,9 @@ rulesAN = {
                 Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]]
         ],
 
-    modeSwap[4 - ladderRank[#] &]
+    modeSwap[4 - ladderRank[#] &],
+
+    modeMerge
 };
 
 
