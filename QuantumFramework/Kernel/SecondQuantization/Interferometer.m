@@ -719,18 +719,19 @@ coherentAmplitudes[qi_, s_, outs_, f_] := Enclose[
 ]
 
 
-wignerd[b_, j_ ? NumericQ, m1_ ? NumericQ, m2_ ? NumericQ] := If[j < 0 || Abs[m1] > j || Abs[m2] > j, 0, WignerD[{j, m1, m2}, b]]
-
-wignerd /: MakeBoxes[wignerd[b_, j_, m1_, m2_], form_] := RowBox[{
-    SubsuperscriptBox["d", RowBox[{MakeBoxes[m1, form], ",", MakeBoxes[m2, form]}], MakeBoxes[j, form]], "(", MakeBoxes[b, form], ")"
-}]
-
 symbolicCounts[c_, {"BS"[__] -> {p_, q_}, k_}] := ReplacePart[c, {p -> k, q -> c[[p]] + c[[q]] - k}]
 
 symbolicCounts[c_, _] := c
 
-symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] :=
-    (-1) ^ (c[[p]] - k) E^(I ph (c[[p]] - k)) wignerd[2 th, (c[[p]] + c[[q]]) / 2, k - (c[[p]] + c[[q]]) / 2, (c[[p]] - c[[q]]) / 2]
+(* With j = N/2, the magnetic indices are half the input and output occupation differences.
+   WL's Euler-angle convention absorbs the beam-splitter phase and exchange sign.
+   Keep zero outside the physical index range rather than WignerD's analytic continuation. *)
+symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] := With[{
+    j = (c[[p]] + c[[q]]) / 2, in = (c[[p]] - c[[q]]) / 2
+},
+    {out = k - j},
+    Piecewise[{{0, j < 0 || Abs[in] > j || Abs[out] > j}}, WignerD[{j, in, out}, ph, 2 th, - ph]]
+]
 
 symbolicFactor[c_, {"PS"[al_] -> {p_}, _}] := E^(I al c[[p]])
 
@@ -763,7 +764,7 @@ symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, f
         } /. {
             Power[-1, x_ /; ! NumericQ[x]] :> (-1) ^ With[{v = Variables[x]}, Mod[x /. Thread[v -> 0], 2] + Mod[Coefficient[x, v], 2] . v],
             Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Chop[Collect[Expand[x / I], angles]]),
-            wignerd[b_, j_, m1_, m2_] :> If[PossibleZeroQ[j], 1, wignerd[b, Together[Expand[j]], Together[Expand[m1]], Together[Expand[m2]]]]
+            WignerD[{j_, m1_, m2_}, angles___] :> WignerD[Together[Expand[{j, m1, m2}]], angles]
         }
     ]
 ]

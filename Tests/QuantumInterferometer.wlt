@@ -374,6 +374,103 @@ VerificationTest[
     TestID -> "QI-symbolic-photon-numbers-untouched-modes"
 ]
 
+(* Native WignerD exposes the general two-mode rotation; occupations remain discrete. *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]},
+        With[{amplitude = qi["Amplitude", {nx, ny} -> {tx, nx + ny - tx}]},
+            FullSimplify[
+                amplitude == WignerD[{(nx + ny) / 2, (nx - ny) / 2, tx - (nx + ny) / 2}, \[Phi], 2 \[Theta], - \[Phi]],
+                Element[{nx, ny, tx}, Integers] && nx >= 0 && ny >= 0 && 0 <= tx <= nx + ny
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-symbolic-native-WignerD-general-two-mode-identity"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}}, 2]},
+        With[{amplitude = qi["Amplitude", {nx, nx} -> {tx, 2 nx - tx}]},
+            And @@ Flatten @ Table[
+                FullSimplify[(amplitude /. {nx -> n, tx -> t}) - qi["Amplitude", {n, n} -> {t, 2 n - t}]] === 0,
+                {n, 0, 5}, {t, 0, 2 n}
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-symbolic-native-WignerD-balanced-occupations"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]},
+        With[{amplitude = qi["Amplitude", {nx, ny} -> {tx, nx + ny - tx}]},
+            {
+                amplitude /. {nx -> 0, ny -> 0, tx -> 0},
+                (amplitude /. Thread[{nx, ny, tx} -> #]) & /@
+                    {{0, 0, -1}, {0, 0, 1}, {-1, -1, 0}, {-1, 2, 0}, {2, -1, 0}, {1, 1, -1}, {1, 1, 3}},
+                qi["Amplitude", {nx, ny} -> {tx, ty}] /. {nx -> 1, ny -> 1, tx -> 1, ty -> 0}
+            }
+        ]
+    ],
+    {1, ConstantArray[0, 7], 0},
+    TestID -> "QI-symbolic-native-WignerD-range-vacuum-and-number-guards"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]},
+        With[{amplitude = qi["Amplitude", {nx, ny} -> {tx, nx + ny - tx}]},
+            With[{amplitudes = Table[amplitude /. {nx -> 2, ny -> 1, tx -> t}, {t, 0, 3}]},
+                FullSimplify[
+                    {
+                        Total[Abs[amplitudes] ^ 2],
+                        amplitudes /. \[Theta] -> 0,
+                        amplitudes /. \[Theta] -> Pi / 2
+                    },
+                    Element[{\[Theta], \[Phi]}, Reals]
+                ]
+            ]
+        ]
+    ],
+    {1, {0, 0, 1, 0}, {0, - Exp[I \[Phi]], 0, 0}},
+    TestID -> "QI-symbolic-native-WignerD-normalization-and-splitter-limits"
+]
+
+VerificationTest[
+    Map[
+        Function[precision,
+            With[{qi = QuantumInterferometer[{"BS"[N[3 / 10, precision], N[7 / 11, precision]] -> {1, 2}}, 2]},
+                With[{amplitude = qi["Amplitude", {nx, ny} -> {tx, nx + ny - tx}]},
+                    With[{value = amplitude /. {nx -> 2, ny -> 3, tx -> 1}, reference = qi["Amplitude", {2, 3} -> {1, 4}]},
+                        If[precision === MachinePrecision,
+                            Precision[value] === MachinePrecision && Abs[value - reference] < 10^-12,
+                            Precision[value] > precision - 3 && Abs[value - reference] < 10 ^ (- precision + 5)
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        {MachinePrecision, 60}
+    ],
+    {True, True},
+    TestID -> "QI-symbolic-native-WignerD-preserves-numeric-precision"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{
+        "BS"[Pi / 6, Pi / 7] -> {3, 1}, "BS"[Pi / 5, Pi / 11] -> {2, 3}, "BS"[Pi / 4, Pi / 13] -> {1, 2}
+    }, 3]},
+        With[{amplitude = qi["Amplitude", {nx, ny, nz} -> {tx, ty, tz}],
+              vector = qi["CircuitOperator", 3][FockState[{1, 1, 0}, 3]]["StateVector"]},
+            Max[Abs[
+                N[Activate[amplitude /. Thread[{nx, ny, nz, tx, ty, tz} -> Join[{1, 1, 0}, #]]]] -
+                N[vector[[fockIndex[#, 3]]]]
+            ] & /@ patterns[3, 2]] < 10^-12
+        ]
+    ],
+    True,
+    TestID -> "QI-symbolic-native-WignerD-multimode-matches-Fock-circuit"
+]
+
 VerificationTest[
     {
         QuantumInterferometer[{"S"[0.3] -> 1, "BS"[Pi / 4, 0] -> {1, 2}}, 2]["Amplitude", {nx, 0} -> {nx, 0}],
