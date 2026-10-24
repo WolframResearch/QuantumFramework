@@ -67,7 +67,7 @@ QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probab
 QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing or coherent amplitudes; set \"Cutoff\" -> n.";
 QuantumInterferometer::undefprop = "property `` is undefined for this interferometer";
 
-Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True};
+Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True, "Parameters" -> {}};
 
 SetAttributes[QuantumInterferometer, NHoldAll]
 
@@ -76,13 +76,8 @@ SetAttributes[QuantumInterferometer, NHoldAll]
 (* BeamSplitterOperator[{t, f}] on modes p, q *)
 bsBlock[t_, f_] := {{Cos[t], - Exp[- I f] Sin[t]}, {Exp[I f] Sin[t], Cos[t]}}
 
-(* Clements' cell T(t, f) = BS(t, 0) . PS(f on the upper mode), and its inverse for real t *)
-cellBlock[t_, f_] := {{Exp[I f] Cos[t], - Sin[t]}, {Exp[I f] Sin[t], Cos[t]}}
-
-cellInverseBlock[t_, f_] := {{Exp[- I f] Cos[t], Exp[- I f] Sin[t]}, {- Sin[t], Cos[t]}}
-
-(* cellInverseBlock @@ rightNullAngles and cellBlock @@ leftNullAngles in closed form, without the
-   Cos[ArcTan[..]] round trip that swells exact input into nested radicals *)
+(* Clements' cell T(t, f) = BS(t, 0) . PS(f on the upper mode) for the angles of rightNullAngles (inverted)
+   and leftNullAngles, in closed form, without the Cos[ArcTan[..]] round trip that swells exact input into nested radicals *)
 rightInverseCell[a_, b_, tol_] := Which[
     zeroQ[a, tol], IdentityMatrix[2],
     zeroQ[b, tol], {{0, 1}, {- 1, 0}},
@@ -433,12 +428,17 @@ QuantumInterferometer[elements : {___Rule}, m_Integer ? Positive, opts : Options
              NumericQ[#] && ! TrueQ[Element[#, Reals]] &]},
         ConfirmAssert[nonreal === {}, Message[QuantumInterferometer::angles, nonreal]];
         ConfirmAssert[top <= m, Message[QuantumInterferometer::modes, top, m]];
-        elementsInterferometer[##, m, None] & @@ layoutItems[items, m, OptionValue["DropIdentities"], OptionValue[Tolerance]]
+        elementsInterferometer[##, m, None, parameterData[OptionValue["Parameters"], OptionValue["DropIdentities"]]] & @@
+            layoutItems[items, m, OptionValue["DropIdentities"], OptionValue[Tolerance]]
     ],
     $Failed &
 ]
 
-elementsInterferometer[elements_, layers_, m_, unitary_] := With[{passive = FreeQ[elements, "S"[_] -> _]},
+parameterData[{}, _] := <||>
+
+parameterData[params_List, drop_] := <|"Parameters" -> params, "DropIdentities" -> drop|>
+
+elementsInterferometer[elements_, layers_, m_, unitary_, extra_Association : <||>] := With[{passive = FreeQ[elements, "S"[_] -> _]},
     QuantumInterferometer @ Join[
         <|
             "Unitary" -> If[passive, Replace[unitary, None :> elementsUnitary[elements, m]], None],
@@ -447,7 +447,8 @@ elementsInterferometer[elements_, layers_, m_, unitary_] := With[{passive = Free
             "Elements" -> elements,
             "Layers" -> layers
         |>,
-        If[passive, <||>, <|"Bogoliubov" -> gaussianData[elements, m]|>]
+        If[passive, <||>, <|"Bogoliubov" -> gaussianData[elements, m]|>],
+        extra
     ]
 ]
 
@@ -470,7 +471,7 @@ QuantumInterferometer[qi_QuantumInterferometer ? QuantumInterferometerQ, opts : 
 
 
 $QuantumInterferometerProperties = {
-    "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers",
+    "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers", "Parameters",
     "Depth", "BeamSplitterCount", "PhaseShifterCount", "SqueezerCount", "ElementTable",
     "Diagram", "MatrixPlot", "CircuitOperator",
     "Amplitude", "Probability", "Probabilities", "Samples", "SampleCounts", "Dagger"
@@ -483,6 +484,8 @@ $QuantumInterferometerProperties = {
 QuantumInterferometerProp[_, "Properties"] := $QuantumInterferometerProperties
 
 QuantumInterferometerProp[QuantumInterferometer[data_], key : "Modes" | "Method" | "Elements" | "Layers"] := data[key]
+
+QuantumInterferometerProp[QuantumInterferometer[data_], "Parameters"] := Lookup[data, "Parameters", {}]
 
 QuantumInterferometerProp[qi : QuantumInterferometer[data_], "Unitary"] :=
     If[passiveQ[qi], data["Unitary"], Message[QuantumInterferometer::squeezed, "\"Unitary\""]; $Failed]
@@ -589,7 +592,7 @@ inverseElement[(kind : "PS" | "S")[a_] -> modes_] := kind[- a] -> modes
 QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceiling[Max[0, qi["Layers"]] - 1/2]]},
     elementsInterferometer[
         Reverse[inverseElement /@ qi["Elements"]], Reverse[last + 1 - qi["Layers"]], qi["Modes"],
-        If[passiveQ[qi], ConjugateTranspose[qi["Unitary"]], None]
+        If[passiveQ[qi], ConjugateTranspose[qi["Unitary"]], None], KeyTake[First[qi], {"Parameters", "DropIdentities"}]
     ]
 ]
 
@@ -877,9 +880,23 @@ modePositions[qi_] := Merge[MapThread[Thread[modeSpan[#1] -> #2] &, {qi["Element
             qi2["Layers"] + Max[0, Values @ Merge[KeyIntersection[{Max /@ modePositions[qi1], Min /@ modePositions[qi2]}], Floor[Subtract @@ #] + 1 &]]
         ],
         qi1["Modes"],
-        If[passiveQ[qi1] && passiveQ[qi2], qi2["Unitary"] . qi1["Unitary"], None]
+        If[passiveQ[qi1] && passiveQ[qi2], qi2["Unitary"] . qi1["Unitary"], None],
+        parameterData[DeleteDuplicates[Join[qi1["Parameters"], qi2["Parameters"]]], Lookup[First[qi1], "DropIdentities", True]]
     ]
 ]
+
+(* as for QuantumState: values fill the leading parameters, an association substitutes by name,
+   and the interferometer is rebuilt from the substituted elements *)
+(qi_QuantumInterferometer ? QuantumInterferometerQ)[values__] /;
+    0 < Length[{values}] <= Length[qi["Parameters"]] &&
+    NoneTrue[{values}, MatchQ[_Association | _List | _String | _Ket | _QuditName | _QuantumState | _QuantumInterferometer | "Coherent"[_]]] :=
+    qi[AssociationThread[Take[qi["Parameters"], Length[{values}]], {values}]]
+
+(qi_QuantumInterferometer ? QuantumInterferometerQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qi["Parameters"]] :=
+    QuantumInterferometer[qi["Elements"] /. Normal[rules], qi["Modes"],
+        "Parameters" -> DeleteCases[qi["Parameters"], Alternatives @@ Keys[rules]],
+        "DropIdentities" -> Lookup[First[qi], "DropIdentities", True]
+    ]
 
 
 

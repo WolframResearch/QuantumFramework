@@ -365,7 +365,7 @@ BosonicExpSimplify::usage =
 Options[BosonicExpSimplify] = {"Scalars" -> {}, Assumptions :> $Assumptions};
 
 ncPolyQ[exprs_List, vars_] :=
-    AllTrue[exprs, NonCommutativePolynomialQ[#, algA[vars]] &]
+    AllTrue[exprs, NonCommutativePolynomialQ[#, algA[vars]] && vevPolynomialQ[#, vars] &]
 
 ncJoin[xs___] := ncJoinList @ DeleteCases[{xs}, 1]
 
@@ -441,6 +441,8 @@ expReduceRules[vars_, scalars_] := {
             ]
         ]
 }
+
+BosonicExpSimplify[expr_, {}, OptionsPattern[]] := expr
 
 BosonicExpSimplify[expr_, opts : OptionsPattern[]] :=
     With[{
@@ -520,6 +522,8 @@ BosonicExpBraid::usage =
 BosonicExpBraid::direction = "`1` is not a valid setting for \"Direction\"; use \"Right\" or \"Left\"."
 
 Options[BosonicExpBraid] = {"Direction" -> "Right"};
+
+BosonicExpBraid[expr_, {}, OptionsPattern[]] := expr
 
 BosonicExpBraid[expr_, opts : OptionsPattern[]] :=
     BosonicExpBraid[expr, ExtractNCVars[{expr}], opts]

@@ -16,6 +16,8 @@ PackageExport["BosonicVEV"]
 
 PackageExport["BosonicMatrixElement"]
 
+PackageScope["vevPolynomialQ"]
+
 
 BosonicRelations::usage =
 "\!\(\*RowBox[{\"BosonicRelations\", \"[\", RowBox[{StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns the list of bosonic commutation relations for the operators in vars.";
@@ -72,13 +74,14 @@ BosonicNormalOrder[expr_, {}, OptionsPattern[]] := expr
 BosonicNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
 With[{
     method = OptionValue[Method],
-    scalars = OptionValue["Scalars"]
+    scalars = OptionValue["Scalars"],
+    all = vevVars[vars]
 },
     Replace[method, {
         (* NonCommutativePolynomialReduce reduces a whole Plus itself. *)
-        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars],
+        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, all, scalars],
         (* MultiModeBlasiakOrder takes one monomial at a time. *)
-        "Blasiak" :> linearOverSums[MultiModeBlasiakOrder[#, vars, scalars] &][expr],
+        "Blasiak" :> linearOverSums[MultiModeBlasiakOrder[#, all, scalars] &][expr],
         _ :> (Message[BosonicNormalOrder::unknownMethod, method]; $Failed)
     }]
 ]
@@ -115,16 +118,17 @@ BosonicAntinormalOrder[expr_, {}, OptionsPattern[]] := expr
 BosonicAntinormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
 With[{
     method = OptionValue[Method],
-    scalars = OptionValue["Scalars"]
+    scalars = OptionValue["Scalars"],
+    all = vevVars[vars]
 },
     Replace[method, {
         (* NonCommutativePolynomialReduce reduces a whole Plus itself. *)
-        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars, "Antinormal"],
+        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, all, scalars, "Antinormal"],
         (* Normal-order each swapped monomial, then swap back. *)
         "Blasiak" :> linearOverSums[
             ladderSwap[
-                MultiModeBlasiakOrder[ladderSwap[#, vars], vars, scalars],
-                vars,
+                MultiModeBlasiakOrder[ladderSwap[#, all], all, scalars],
+                all,
                 "Inverse"
             ] &
         ][expr],
@@ -230,6 +234,9 @@ BosonicMatrixElement::usage =
 Options[BosonicMatrixElement] = {"Basis" -> "Fock", "Generators" -> Automatic}
 
 SetAttributes[BosonicMatrixElement, HoldRest]
+
+BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, (DisplacementOperator | SqueezeOperator)[_?PossibleZeroQ]] :=
+    KroneckerDelta[m, n]
 
 BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, DisplacementOperator[\[Alpha]_]] :=
     With[{a2 = Abs[\[Alpha]]^2},
