@@ -5,6 +5,7 @@ PackageImport["Wolfram`Arrays`"]
 PackageScope["lazyClosedForm"]
 PackageScope["exactNumericStateQ"]
 PackageScope["simplifiedExactState"]
+PackageScope["invertibleFrameQ"]
 
 
 
@@ -758,11 +759,17 @@ QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range
 ]
 
 (* A change of basis to the computational frame exists when each qudit's basis elements form a square matrix of
-   full rank. The rank of a numeric frame is read numerically, which keeps roots-of-unity frames fast. *)
+   full rank. The rank of an exact numeric frame is read in machine numbers, which keeps roots-of-unity frames fast,
+   when its nonzero entries lie between 10^-290 and 10^290 in size (machineRangeQ), and exactly where that falls short:
+   nearly parallel elements, as {1, 0} and {1, 10^-14}, are independent. An approximate frame is ranked at its own
+   precision. *)
 invertibleFrameQ[qb_] := AllTrue[
     Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]],
-    With[{m = Normal @ #["ReducedMatrix"]}, SquareMatrixQ[m] && MatrixRank[If[ArrayQ[m, 2, NumericQ], N[m], m]] == Length[m]] &
+    With[{m = Normal @ #["ReducedMatrix"]}, SquareMatrixQ[m] && fullRankQ[m]] &
 ]
+
+fullRankQ[m_ /; ArrayQ[m, 2, NumericQ] && Precision[m] === Infinity] := machineRangeQ[m] && MatrixRank[N[m]] == Length[m] || MatrixRank[m] == Length[m]
+fullRankQ[m_] := MatrixRank[m] == Length[m]
 
 (* The coefficients of a state vector in a frame that is unitary on each qudit are its amplitudes up to a local
    unitary, which changes no entanglement quantity; in any other frame they are not. A numeric frame is tested

@@ -224,7 +224,7 @@ VerificationTest[
 VerificationTest[
     FailureQ @ QuantumEntanglementMonotone[QuantumState[{zR3, 0, 0, 0}, {2, 2}], "Negativity"],
     True,
-    {__},
+    {QuantumEntanglementMonotone::zero},
     TestID -> "A6-ZeroNormKet-Failure"
 ]
 
@@ -234,7 +234,7 @@ VerificationTest[
         "Negativity"
     ],
     True,
-    {__},
+    {QuantumEntanglementMonotone::dependent},
     TestID -> "A7-DependentBasis-Failure"
 ]
 
@@ -445,7 +445,7 @@ VerificationTest[
         {FailureQ[QuantumEntanglementMonotone[qs, "Negativity"]], FailureQ[QuantumEntangledQ[qs]]}
     ],
     {True, True},
-    {__},
+    {QuantumEntanglementMonotone::dependent, QuantumEntangledQ::dependent},
     TestID -> "A21-MixedStateInDependentFrame-Refused"
 ]
 
@@ -505,7 +505,7 @@ VerificationTest[
         ]
     ],
     ConstantArray[True, 6],
-    {__},
+    {QuantumEntanglementMonotone::nodensitymatrix, QuantumEntanglementMonotone::nodensitymatrix, QuantumEntangledQ::nodensitymatrix, QuantumEntanglementMonotone::dependent, QuantumEntanglementMonotone::dependent, QuantumEntangledQ::dependent},
     TestID -> "A24-PairSplitWithoutDensityMatrix-Refused"
 ]
 
@@ -550,7 +550,7 @@ VerificationTest[
         QuantumState[werner[2/3], QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 0}}], QuantumBasis[2]]]
     },
     {True, True},
-    {__},
+    {QuantumEntanglementMonotone::nodensitymatrix, QuantumEntanglementMonotone::dependent},
     TestID -> "A28-ConcurrenceVectorWithoutDensityMatrix-Failure"
 ]
 
@@ -560,6 +560,138 @@ VerificationTest[
     False,
     {QuantumState::failprop},
     TestID -> "A29-SymbolicDensityMatrixSchmidtBasis-Refused"
+]
+
+(* a density matrix of trace 0, exact or machine, has no normalized form either *)
+VerificationTest[
+    {
+        FailureQ @ QuantumEntanglementMonotone[QuantumState[ConstantArray[0, {4, 4}], {2, 2}], "Negativity"],
+        FailureQ @ QuantumEntangledQ[QuantumState[N @ DiagonalMatrix[{1, -1, 0, 0}], {2, 2}]],
+        Block[{x}, FailureQ @ QuantumEntangledQ[QuantumState[DiagonalMatrix[{x, -x, 0, 0}], {2, 2}]]]
+    },
+    {True, True, True},
+    {QuantumEntanglementMonotone::zero, QuantumEntangledQ::zero, QuantumEntangledQ::zero},
+    TestID -> "A30-ZeroTraceDensityMatrix-Failure"
+]
+
+(* a ket in a frame with dependent elements is refused for the frame, also when its coefficients give a vector that
+   is not 0: {1, 0, 1, 0} there is 2 |00> *)
+VerificationTest[
+    With[{qs = QuantumState[{1, 0, 1, 0}, QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 0}}], QuantumBasis[2]]]},
+        {FailureQ @ QuantumEntangledQ[qs], FailureQ @ QuantumEntanglementMonotone[qs, "Concurrence"]}
+    ],
+    {True, True},
+    {QuantumEntangledQ::dependent, QuantumEntanglementMonotone::dependent},
+    TestID -> "A31-KetInDependentFrame-Failure"
+]
+
+(* an exact frame of nearly parallel elements, {1, 0} and {1, 10^-14}, is independent and is read: the ket with
+   coefficients (1, 0, 0, 1) there is |0>(|0> + |1>) + 10^-14 |11>, entangled *)
+VerificationTest[
+    QuantumEntangledQ[QuantumState[{1, 0, 0, 1}, QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 10^-14}}], QuantumBasis[2]]]],
+    True,
+    {},
+    TestID -> "A32-NearlyParallelExactFrame-Read"
+]
+
+(* the same frame given with 30 digits is ranked at its own precision, and read; in machine numbers it is too close to
+   dependent to invert, and refused *)
+VerificationTest[
+    QuantumEntangledQ[QuantumState[{1, 0, 0, 1}, QuantumTensorProduct[QuantumBasis[#], QuantumBasis[2]]]] & /@ {N[{{1, 0}, {1, 10^-14}}, 30], N[{{1, 0}, {1, 10^-14}}]},
+    {True, _Failure},
+    {QuantumEntangledQ::dependent},
+    SameTest -> MatchQ,
+    TestID -> "A33-NearlyParallelApproximateFrames"
+]
+
+(* decimals that carry round-off beyond one rounding: a separable state plus an anti-Hermitian residue of 10^-13 or
+   10^-12, and separable states stored in machine frames {{1, 0}, {1, e}} on both qubits, e = 1/100 and 1/1000
+   (condition numbers about 200 and 2000 per qubit), whose round-off the change back to the computational frame
+   multiplies, are never read as entangled; the Bell and Werner 2/5 states in the same frames are *)
+VerificationTest[
+    SeedRandom[113];
+    With[{
+        herm = Function[d, With[{m = RandomComplex[{-1 - I, 1 + I}, {d, d}]}, (m + ConjugateTranspose[m]) / 2]],
+        frame = Function[e, QuantumTensorProduct[QuantumBasis[N[{{1, 0}, {1, e}}]], QuantumBasis[N[{{1, 0}, {1, e}}]]]],
+        sep22 = N[(KroneckerProduct[proj[{1, 0}], proj[{1, 1} / Sqrt[2]]] + KroneckerProduct[proj[{0, 1}], proj[{1, 0}]]) / 2],
+        sep33 = N[(KroneckerProduct[proj[{1, 0, 0}], proj[{1, 1, 0} / Sqrt[2]]] + KroneckerProduct[proj[{0, 1, 1} / Sqrt[2]], proj[{0, 0, 1}]]) / 2]
+    },
+        {
+            QuantumEntangledQ[QuantumState[sep22 + 10.^-13 I herm[4], {2, 2}], Automatic, #] =!= True & /@ {Automatic, "Negativity", "Realignment"},
+            QuantumEntangledQ[QuantumState[sep33 + 10.^-12 I herm[9], {3, 3}], Automatic, #] =!= True & /@ {Automatic, "Negativity", "Realignment"},
+            QuantumEntangledQ[QuantumState[QuantumState[sep22, {2, 2}], frame[#]]] =!= True & /@ {1/100, 1/1000},
+            QuantumEntangledQ[QuantumState[QuantumState[N @ Flatten @ KroneckerProduct[{1, 2}, {3, -1}] / Sqrt[50], {2, 2}], frame[#]]] =!= True & /@ {1/100, 1/1000},
+            QuantumEntangledQ[QuantumState[QuantumState[#1, {2, 2}], frame[#2]]] & @@@ {{N[{1, 0, 0, 1} / Sqrt[2]], 1/1000}, {N @ werner[2/5], 1/100}}
+        }
+    ],
+    {{True, True, True}, {True, True, True}, {True, True}, {True, True}, {True, True}},
+    {},
+    TestID -> "A34-RoundoffFromFramesAndResidues-NeverTrue"
+]
+
+(* frames that multiply round-off never turn it into a separability proof: the Bell and Werner(1/2) density matrices
+   and the Bell ket, stored in machine frames {{1, 0}, {1, e}} on both qubits with e from 10^-4 to 10^-8, are never
+   read as separable, and are refused where the frame leaves the state no digit; a machine state in an exact frame
+   whose two elements differ by 10^-400 is refused *)
+VerificationTest[
+    With[{frame = Function[e, QuantumTensorProduct[QuantumBasis[N[{{1, 0}, {1, e}}]], QuantumBasis[N[{{1, 0}, {1, e}}]]]]},
+        {
+            Flatten @ Table[
+                QuantumEntangledQ[QuantumState[QuantumState[s, {2, 2}], frame[e]]] =!= False,
+                {s, {N @ proj[{1, 0, 0, 1} / Sqrt[2]], N @ werner[1/2], N[{1, 0, 0, 1} / Sqrt[2]]}}, {e, {10^-4, 10^-6, 10^-8}}
+            ],
+            FailureQ @ QuantumEntangledQ[QuantumState[{1., 0, 0, 1.}, QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 10^-400}}], QuantumBasis[2]]]]
+        }
+    ],
+    {ConstantArray[True, 9], True},
+    {___},
+    TestID -> "A35-IllConditionedFrames-NeverFalse"
+]
+
+(* an approximate zero state held outside the computational frame is refused once, for having no normalized form, as
+   in the computational frame: a machine ket in the PauliX and Fourier frames, a 30-digit ket in the PauliX frame and
+   a machine density matrix in a skew frame *)
+VerificationTest[
+    With[{skew = QuantumBasis[{{1, 0}, {1, 1/10}}]},
+        {
+            FailureQ @ QuantumEntangledQ[QuantumState[{0., 0., 0., 0.}, QuantumBasis["PauliX", 2]]],
+            FailureQ @ QuantumEntanglementMonotone[QuantumState[{0., 0., 0., 0.}, QuantumBasis["Fourier"[4]]], "Negativity"],
+            FailureQ @ QuantumEntangledQ[QuantumState[N[{0, 0, 0, 0}, 30], QuantumBasis["PauliX", 2]]],
+            FailureQ @ QuantumEntangledQ[QuantumState[ConstantArray[0., {4, 4}], QuantumTensorProduct[skew, skew]]]
+        }
+    ],
+    {True, True, True, True},
+    {QuantumEntangledQ::zero, QuantumEntanglementMonotone::zero, QuantumEntangledQ::zero, QuantumEntangledQ::zero, General::stop},
+    TestID -> "A36-ApproximateZeroStateInFrame-Failure"
+]
+
+(* an exact frame whose two elements differ by 10^-400, below the range of machine numbers, is ranked exactly: an
+   exact state there is read, |0>(|0> + |1>) + 10^-400 |11> being entangled, and machine and 30-digit states, which
+   the frame leaves no digit, are refused for the frame alone *)
+VerificationTest[
+    With[{frame = QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 10^-400}}], QuantumBasis[2]]},
+        {
+            QuantumEntangledQ[QuantumState[{1, 0, 0, 1}, frame]],
+            FailureQ @ QuantumEntangledQ[QuantumState[{1., 0, 0, 1.}, frame]],
+            FailureQ @ QuantumEntangledQ[QuantumState[N[{1, 0, 0, 1}, 30], frame]]
+        }
+    ],
+    {True, True, True},
+    {QuantumEntangledQ::dependent, QuantumEntangledQ::dependent},
+    TestID -> "A37-ExactFrameBelowMachineRange"
+]
+
+(* the first argument is a quantum state: a list, an operator or no argument at all is refused *)
+VerificationTest[
+    {
+        FailureQ @ QuantumEntangledQ[{1, 0, 0, 1}],
+        FailureQ @ QuantumEntangledQ[],
+        FailureQ @ QuantumEntanglementMonotone[{1, 0, 0, 1} / Sqrt[2], "Negativity"],
+        FailureQ @ QuantumEntanglementMonotone[QuantumOperator["CNOT"]]
+    },
+    {True, True, True, True},
+    {QuantumEntangledQ::state, QuantumEntangledQ::state, QuantumEntanglementMonotone::state, QuantumEntanglementMonotone::state},
+    TestID -> "A38-NotAState-Failure"
 ]
 
 
@@ -589,42 +721,42 @@ VerificationTest[
 VerificationTest[
     {FailureQ @ QuantumEntangledQ[ghz3, {{1}, {4}}], FailureQ @ QuantumEntanglementMonotone[ghz3, {{1}, {4}}, "Concurrence"]},
     {True, True},
-    {__},
+    {QuantumEntangledQ::split, QuantumEntanglementMonotone::split},
     TestID -> "B4-IndexOutOfRange-Failure"
 ]
 
 VerificationTest[
     {FailureQ @ QuantumEntangledQ[bell, {1, 1}], FailureQ @ QuantumEntanglementMonotone[bell, {1, 1}, "Negativity"]},
     {True, True},
-    {__},
+    {QuantumEntangledQ::split, QuantumEntanglementMonotone::split},
     TestID -> "B5-RepeatedIndex-Failure"
 ]
 
 VerificationTest[
     FailureQ @ QuantumEntangledQ[ghz4, {{1, 2}, {2, 3}}],
     True,
-    {__},
+    {QuantumEntangledQ::split},
     TestID -> "B6-OverlappingGroups-Failure"
 ]
 
 VerificationTest[
     FailureQ @ QuantumEntangledQ[ghz3, {{}, {1}}],
     True,
-    {__},
+    {QuantumEntangledQ::split},
     TestID -> "B7-EmptyGroup-Failure"
 ]
 
 VerificationTest[
     {FailureQ @ QuantumEntangledQ[bell, 0], FailureQ @ QuantumEntangledQ[bell, -1]},
     {True, True},
-    {__},
+    {QuantumEntangledQ::split, QuantumEntangledQ::split},
     TestID -> "B8-ZeroOrNegativeSplit-Failure"
 ]
 
 VerificationTest[
     FailureQ @ QuantumEntangledQ[bell, 3],
     True,
-    {__},
+    {QuantumEntangledQ::split},
     TestID -> "B9-IntegerOnTwoQudits-Failure"
 ]
 
@@ -635,8 +767,26 @@ VerificationTest[
         FailureQ @ QuantumEntanglementMonotone[QuantumState["0"], "Negativity"]
     },
     {True, True, True},
-    {__},
+    {QuantumEntangledQ::nosplit, QuantumEntangledQ::nosplit, QuantumEntanglementMonotone::nosplit},
     TestID -> "B10-SingleQuditNoSplit-Failure"
+]
+
+(* a flat list of every qudit leaves the second part empty *)
+VerificationTest[
+    {FailureQ @ QuantumEntangledQ[bell, {1, 2}], FailureQ @ QuantumEntanglementMonotone[ghz3, {3, 1, 2}, "Negativity"]},
+    {True, True},
+    {QuantumEntangledQ::split, QuantumEntanglementMonotone::split},
+    TestID -> "B11-FlatListOfEveryQudit-Failure"
+]
+
+(* a single 6-level qudit splits as 2 x 3 or 3 x 2, Automatic being one of them; 4 does not divide 6 *)
+VerificationTest[
+    With[{qs = QuantumState[Normalize[UnitVector[6, 1] + UnitVector[6, 6]], 6]},
+        {QuantumEntangledQ[qs, #] & /@ {Automatic, 2, 3}, FailureQ @ QuantumEntangledQ[qs, 4]}
+    ],
+    {{True, True, True}, True},
+    {QuantumEntangledQ::quditsplit},
+    TestID -> "B12-SingleQuditDivisorSplits"
 ]
 
 
@@ -657,14 +807,14 @@ VerificationTest[
 VerificationTest[
     {FailureQ @ QuantumEntangledQ[bell, Automatic, "PPT"], FailureQ @ QuantumEntanglementMonotone[bell, "PPT"]},
     {True, True},
-    {__},
+    {QuantumEntangledQ::method, QuantumEntanglementMonotone::method},
     TestID -> "C3-UnknownMethod-Failure"
 ]
 
 VerificationTest[
     FailureQ @ QuantumEntangledQ[bell, Automatic, #] & /@ {"MutualInformationI", "MutualInformationJ", "Discord"},
     {True, True, True},
-    {__},
+    {QuantumEntangledQ::correlation, QuantumEntangledQ::correlation, QuantumEntangledQ::correlation, General::stop},
     TestID -> "C4-CorrelationMeasuresRejected"
 ]
 
@@ -690,6 +840,81 @@ VerificationTest[
     },
     {True, True, 1., 1.},
     TestID -> "C6-RenyiListMethodInBothSlots"
+]
+
+(* more arguments than a split and a method are refused *)
+VerificationTest[
+    {FailureQ @ QuantumEntangledQ[bell, Automatic, "Negativity", 1], FailureQ @ QuantumEntanglementMonotone[bell, Automatic, "Negativity", 1]},
+    {True, True},
+    {QuantumEntangledQ::args, QuantumEntanglementMonotone::args},
+    TestID -> "C7-ExtraArguments-Failure"
+]
+
+(* MutualInformationJ and Discord take a QuantumMeasurementOperator before the split; Automatic, or none, is the
+   measurement of the second part in its computational basis *)
+VerificationTest[
+    SameQ @@@ ({
+        QuantumEntanglementMonotone[classical, #],
+        QuantumEntanglementMonotone[classical, Automatic, #],
+        QuantumEntanglementMonotone[classical, Automatic, Automatic, #],
+        QuantumEntanglementMonotone[classical, QuantumMeasurementOperator[], #],
+        QuantumEntanglementMonotone[classical, QuantumMeasurementOperator[], Automatic, #]
+    } & /@ {"MutualInformationJ", "Discord"}),
+    {True, True},
+    TestID -> "C8-MeasurementArgumentForms"
+]
+
+(* QuantumEntangledQ refuses a method in the second slot that it does not take, as in the third, the concurrence
+   vector among them *)
+VerificationTest[
+    {FailureQ @ QuantumEntangledQ[bell, "PPT"], FailureQ @ QuantumEntangledQ[bell, "ConcurrenceVector"]},
+    {True, True},
+    {QuantumEntangledQ::method, QuantumEntangledQ::method},
+    TestID -> "C9-EntangledQUnknownMethodSecondSlot-Failure"
+]
+
+(* a Renyi order is a nonnegative number, or a real expression in parameters that is not negative for all of them *)
+VerificationTest[
+    {
+        FailureQ @ QuantumEntanglementMonotone[bell, {"RenyiEntropy", "x"}],
+        FailureQ @ QuantumEntangledQ[bell, {"RenyiEntropy", -1}],
+        Block[{x}, FailureQ @ QuantumEntangledQ[bell, {"RenyiEntropy", -x^2 - 1}]],
+        N @ QuantityMagnitude @ QuantumEntanglementMonotone[bell, {"RenyiEntropy", 2}],
+        QuantumEntangledQ[bell, {"RenyiEntropy", 2}],
+        Block[{a}, QuantumEntangledQ[bell, {"RenyiEntropy", a}]]
+    },
+    {True, True, True, 1., True, True},
+    {QuantumEntanglementMonotone::order, QuantumEntangledQ::order, QuantumEntangledQ::order},
+    TestID -> "C10-RenyiOrder"
+]
+
+(* a list or a truth value is no Renyi order; a machine order on an exact pure state decides by its Schmidt rank *)
+VerificationTest[
+    {
+        FailureQ @ QuantumEntanglementMonotone[bell, {"RenyiEntropy", {1, 2}}],
+        FailureQ @ QuantumEntangledQ[bell, {"RenyiEntropy", True}],
+        QuantumEntangledQ[bell, {"RenyiEntropy", 2.5}],
+        QuantumEntangledQ[QuantumState["00"], {"RenyiEntropy", 2.5}]
+    },
+    {True, True, True, False},
+    {QuantumEntanglementMonotone::order, QuantumEntangledQ::order},
+    TestID -> "C11-RenyiOrderForms"
+]
+
+(* an order that is nonreal for every real value of its parameters is refused; one that is real for some is read,
+   2 + I x among them, which is 2 at x = 0 *)
+VerificationTest[
+    Block[{x},
+        {
+            FailureQ @ QuantumEntangledQ[bell, {"RenyiEntropy", Sqrt[-1 - x^2]}],
+            FailureQ @ QuantumEntanglementMonotone[bell, {"RenyiEntropy", x + I}],
+            QuantumEntangledQ[bell, {"RenyiEntropy", Sqrt[x]}],
+            QuantumEntangledQ[bell, {"RenyiEntropy", 2 + I x}]
+        }
+    ],
+    {True, True, True, True},
+    {QuantumEntangledQ::order, QuantumEntanglementMonotone::order},
+    TestID -> "C12-NonrealSymbolicRenyiOrder-Failure"
 ]
 
 
@@ -906,8 +1131,9 @@ VerificationTest[
 
 (* Tiles and the Horodecki 3 x 3 state with weight e in the first three levels of 4 x 4 and 1 - e on |44>: positive
    partial transpose, entangled, and within e of a pure product state. Given with p digits, where e is far above
-   round-off, it is never read as pure or of low rank, and the realignment proves it entangled once its value is
-   above the 10^-10 cut *)
+   round-off, it is never read as pure or of low rank. Its realignment value is e times that of Tiles alone, and
+   proves it entangled once it clears the round-off cut 16 10^-p: with 6 digits not at e = 10^-4, where
+   Automatic and "Realignment" both leave it undecided, and at e = 1/10 *)
 VerificationTest[
     With[{corner = Function[{sigma, e}, e embedState[sigma, {3, 3}, {4, 4}] + (1 - e) proj[UnitVector[16, 16]]]},
         {
@@ -916,11 +1142,11 @@ VerificationTest[
                 {sigma, {tilesState, horodecki33Family[1/2]}},
                 {pe, {{12, 10^-10}, {10, 10^-8}, {8, 10^-6}, {6, 10^-4}, {5, 10^-3}}}
             ],
-            QuantumEntangledQ[QuantumState[SetPrecision[corner[tilesState, 10^-4], 6], {4, 4}], Automatic, #] & /@ {Automatic, "Realignment"}
+            Table[QuantumEntangledQ[QuantumState[SetPrecision[corner[tilesState, e], 6], {4, 4}], Automatic, m], {e, {10^-4, 1/10}}, {m, {Automatic, "Realignment"}}]
         }
     ],
-    {ConstantArray[True, 10], {True, True}},
-    {___},
+    {ConstantArray[True, 10], {{Indeterminate, Indeterminate}, {True, True}}},
+    {},
     TestID -> "D20-PPTEntangledAtLowPrecision-NeverFalse"
 ]
 
@@ -988,10 +1214,12 @@ VerificationTest[
     TestID -> "E6-ExactWernerBarelyEntangled"
 ]
 
+(* the machine Werner state 10^-12 above p = 1/3: its partial transpose has the eigenvalue -7.5 10^-13, far above
+   the round-off of machine numbers in a 4 x 4 matrix, so it is entangled as given *)
 VerificationTest[
     QuantumEntangledQ[QuantumState[werner[1/3 + 10.^-12], {2, 2}]],
-    False,
-    TestID -> "E7-MachineWernerWithinRoundoff"
+    True,
+    TestID -> "E7-MachineWernerAboveRoundoff"
 ]
 
 VerificationTest[
@@ -1249,12 +1477,13 @@ VerificationTest[
     TestID -> "E30-SymbolicKetInPauliXFrame-Bounded"
 ]
 
-(* the concurrence of the machine zero ket is 0, with no division by its zero Schmidt weights *)
+(* the machine zero ket is refused, as the exact one is (A6), before any division by its zero Schmidt weights *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{0., 0., 0., 0.}, {2, 2}], "Concurrence"],
-    0,
-    {QuantumEntanglementMonotone::notphysical},
-    TestID -> "E31-MachineZeroKetConcurrence"
+    _Failure,
+    {QuantumEntanglementMonotone::zero},
+    SameTest -> MatchQ,
+    TestID -> "E31-MachineZeroKet-Failure"
 ]
 
 (* kets held in the Fourier[7] (x) Fourier[2] frame, whose coefficients in the computational frame are sums of 7th
@@ -1337,6 +1566,223 @@ VerificationTest[
     {True, False},
     {QuantumEntangledQ::realparameters, QuantumEntangledQ::realparameters},
     TestID -> "E38-ParameterMessageOnEverySymbolicInput"
+]
+
+(* machine states whose negativity is about 10^-12, far above the round-off of machine numbers, read as entangled by
+   every method that decides them: the ket |00> + 10^-12 |11> in 2 x 2, 2 x 3 and 3 x 3, whose von Neumann entropy is
+   of order 10^-22, and the isotropic 3 x 3 state 10^-12 above p = 1/4. With 30 digits, the Werner state 10^-25 above p = 1/3
+   reads as entangled; in machine numbers 10^-15 above, its negativity is within the round-off of a 4 x 4 matrix, and
+   it reads as PPT *)
+VerificationTest[
+    With[{
+        kets = {{Normalize[{1, 0, 0, 1.*^-12}], {2, 2}}, {Normalize[{1, 0, 0, 0, 1.*^-12, 0}], {2, 3}}, {Normalize[{1, 0, 0, 0, 1.*^-12, 0, 0, 0, 0}], {3, 3}}},
+        iso = With[{phi = Flatten[IdentityMatrix[3]] / Sqrt[3]}, N[(1/4 + 10^-12) proj[phi] + (3/4 - 10^-12) IdentityMatrix[9] / 9]]
+    },
+        {
+            Table[
+                QuantumEntangledQ[QuantumState @@ k, Automatic, m],
+                {k, kets}, {m, {Automatic, "Negativity", "LogNegativity", "Concurrence", "Realignment", "EntanglementEntropy", "RenyiEntropy"}}
+            ],
+            QuantumEntangledQ[QuantumState[iso, {3, 3}], Automatic, #] & /@ {Automatic, "Negativity", "LogNegativity", "Realignment"},
+            QuantumEntangledQ[QuantumState[SetPrecision[werner[1/3 + 10^-25], 30], {2, 2}]],
+            QuantumEntangledQ[QuantumState[werner[1/3 + 10.^-15], {2, 2}]]
+        }
+    ],
+    {ConstantArray[True, {3, 7}], {True, True, True, True}, True, False},
+    {},
+    TestID -> "E39-MachineNegativityNear1e-12-Entangled"
+]
+
+(* arbitrary-precision input is cut at n 10^-p, p the digits its entries are known to, which an entry that cancelled
+   to zero does not lower: with 8 digits the Werner state 10^-6 above p = 1/3 is entangled and 10^-9 above it within
+   round-off; a 20-digit Bell state turned by H (x) H, two of whose entries cancel, is entangled with negativity 1/2,
+   as a ket and as a density matrix, and so is a 20-digit Werner state held in the PauliX frame *)
+VerificationTest[
+    With[{v = N[KroneckerProduct[HadamardMatrix[2], HadamardMatrix[2]], 20] . N[{1, 0, 0, 1} / Sqrt[2], 20]},
+        {
+            QuantumEntangledQ[QuantumState[SetPrecision[werner[1/3 + 10^-6], 8], {2, 2}]],
+            QuantumEntangledQ[QuantumState[SetPrecision[werner[1/3 + 10^-9], 8], {2, 2}]],
+            QuantumEntangledQ[QuantumState[v, {2, 2}]],
+            QuantumEntangledQ[QuantumState[proj[v], {2, 2}]],
+            within[QuantumEntanglementMonotone[QuantumState[proj[v], {2, 2}], "Negativity"], 1/2, 10^-15],
+            within[QuantumEntanglementMonotone[QuantumState[QuantumState[N[werner[4/5], 20], {2, 2}], QuantumBasis["PauliX", 2]], "Negativity"], 7/20, 10^-15]
+        }
+    ],
+    {True, False, True, True, True, True},
+    {},
+    TestID -> "E40-ArbitraryPrecisionCut"
+]
+
+(* beyond two qubits, the mixed concurrence of arbitrary-precision input is read in machine numbers: isotropic states
+   at their separability boundary p = 1/(d + 1), 4 x 4 given with 30 digits, 5 x 5 with 40 and 3 x 3 with 60, and a
+   separable mixture of two product states in 2 x 3 with 30 digits, are left undecided by it, and the 3 x 3 isotropic
+   state at p = 1/2 is entangled. Two qubits keep the Wootters value at their precision: with 30 digits, the Werner
+   state at p = 1/5 is separable and the one 10^-20 above p = 1/3 entangled. The cut is never below the input's own:
+   the 3 x 3 isotropic state 10^-9 above the boundary given with 6 digits is left undecided *)
+VerificationTest[
+    With[{
+        iso = Function[{d, p}, With[{phi = Flatten[IdentityMatrix[d]] / Sqrt[d]}, p proj[phi] + (1 - p) IdentityMatrix[d^2] / d^2]],
+        mix23 = (SeedRandom[2]; With[{w = Normalize[RandomInteger[{1, 5}, 2], Total]},
+            Total[w (proj[Flatten[KroneckerProduct[Normalize[RandomInteger[{-3, 3}, 2] + I RandomInteger[{-3, 3}, 2]], Normalize[RandomInteger[{-3, 3}, 3] + I RandomInteger[{-3, 3}, 3]]]]] & /@ Range[2])]
+        ])
+    },
+        QuantumEntangledQ[QuantumState[#1, #2], Automatic, "Concurrence"] & @@@ {
+            {N[iso[4, 1/5], 30], {4, 4}}, {N[iso[5, 1/6], 40], {5, 5}}, {N[iso[3, 1/4], 60], {3, 3}}, {N[mix23, 30], {2, 3}},
+            {N[iso[3, 1/2], 30], {3, 3}}, {N[werner[1/5], 30], {2, 2}}, {N[werner[1/3 + 10^-20], 30], {2, 2}},
+            {N[iso[3, 1/4 + 10^-9], 6], {3, 3}}
+        }
+    ],
+    {Indeterminate, Indeterminate, Indeterminate, Indeterminate, True, False, True, Indeterminate},
+    {},
+    TestID -> "E41-ArbitraryPrecisionMixedConcurrence"
+]
+
+(* the cut follows the dimension and the precision. Separable states of 10 x 10 qudits built exactly, a product state
+   and a mixture of three, never read as entangled at machine precision or with 20, 30 and 50 digits. Kets
+   |00> + e |d-1, d-1> read as entangled with e a few hundred to a few thousand machine epsilons, in 4 x 4, 8 x 8 and
+   16 x 16, and product
+   kets of one qubit against a 1024-level part as separable. Werner states 1/6 above and 2/15 below p = 1/3 read alike
+   at every precision. Each precision gets states of its own,
+   since states that differ only in precision share cached properties *)
+VerificationTest[
+    SeedRandom[107];
+    With[{
+        ratProj = Function[d, With[{v = Flatten @ KroneckerProduct[RandomInteger[{-3, 3}, d] + I RandomInteger[{-3, 3}, d], RandomInteger[{-3, 3}, d] + I RandomInteger[{-3, 3}, d]]}, proj[v] / (Conjugate[v] . v)]],
+        precisions = {MachinePrecision, 20, 30, 50}
+    },
+        {
+            Count[
+                Flatten @ Table[
+                    QuantumEntangledQ[QuantumState[N[#, p], {10, 10}]] & /@ {ratProj[10], (ratProj[10] + 2 ratProj[10] + 3 ratProj[10]) / 6},
+                    {p, precisions}
+                ],
+                True
+            ],
+            QuantumEntangledQ[QuantumState[Normalize[UnitVector[#1^2, 1] + #2 UnitVector[#1^2, #1^2]], {#1, #1}]] & @@@ {{4, 1.*^-13}, {8, 5.*^-13}, {16, 2.*^-12}},
+            MapIndexed[QuantumEntangledQ[QuantumState[N[werner[1/2 + First[#2] / 1000], #1], {2, 2}]] &, precisions],
+            MapIndexed[QuantumEntangledQ[QuantumState[N[werner[1/5 + First[#2] / 1000], #1], {2, 2}]] &, precisions],
+            Union @ Table[QuantumEntangledQ[QuantumState[Flatten @ KroneckerProduct[randomKet[2], randomKet[1024]], {2, 1024}]], 5]
+        }
+    ],
+    {0, {True, True, True}, {True, True, True, True}, {False, False, False, False}, {False}},
+    {},
+    TestID -> "E42-CutAcrossDimensionAndPrecision"
+]
+
+(* a machine criterion above the round-off floor of n machine epsilons but within the cut decides nothing: Werner
+   states 10^-14 and 3 10^-15 above p = 1/3, and |00><00| mixed with 2 10^-14 of |Phi+>, all entangled as given, are
+   neither proven entangled nor read as separable, by the partial transpose or the purity ball *)
+VerificationTest[
+    {
+        QuantumEntangledQ[QuantumState[werner[1/3 + 10.^-14], {2, 2}]],
+        QuantumEntangledQ[QuantumState[werner[1/3 + 3.*^-15], {2, 2}]],
+        QuantumEntangledQ[QuantumState[N[(1 - 2 10^-14) proj[{1, 0, 0, 0}] + 2 10^-14 proj[{1, 0, 0, 1} / Sqrt[2]]], {2, 2}]]
+    },
+    {Indeterminate, Indeterminate, Indeterminate},
+    {},
+    TestID -> "E43-MachineBandBelowCut-Undecided"
+]
+
+(* answers near the cut do not depend on the local frame or on the order of the parts: the machine Werner states
+   10^-12 above p = 1/3 and at p = 1/5, and the 2 x 3 pure state |00> + 10^-12 |12> held as a density matrix, under
+   random local unitaries and with the parts swapped *)
+VerificationTest[
+    SeedRandom[109];
+    With[{
+        cases = {{N @ werner[1/3 + 10^-12], {2, 2}, True}, {N @ werner[1/5], {2, 2}, False}, {proj[Normalize[{1, 0, 0, 0, 0, 1.*^-12}]], {2, 3}, True}},
+        swap = Function[{rho, dA, dB}, ArrayReshape[Transpose[ArrayReshape[rho, {dA, dB, dA, dB}], {2, 1, 4, 3}], {dA dB, dA dB}]]
+    },
+        Map[
+            Function[c, Union @ Join[
+                Table[QuantumEntangledQ[QuantumState[localUnitary[c[[1]], haarU /@ c[[2]]], c[[2]]]], 5],
+                {QuantumEntangledQ[QuantumState[swap[c[[1]], Sequence @@ c[[2]]], Reverse[c[[2]]]]]}
+            ] === {c[[3]]}],
+            cases
+        ]
+    ],
+    {True, True, True},
+    {},
+    TestID -> "E44-AnswersNearCutLocalUnitaryInvariant"
+]
+
+(* edges of the approximate reading: a machine ket whose small Schmidt coefficient lies between the floor and the cut
+   decides nothing; a 30-digit density matrix of trace 0 is refused; an exact pure 4 x 6 density matrix is decided
+   through one scalar, Tr[rho]^2 - Tr[rhoA^2] *)
+VerificationTest[
+    SeedRandom[127];
+    {
+        QuantumEntangledQ[QuantumState[Normalize[{1, 0, 0, 10 * 4 $MachineEpsilon / Sqrt[2]}], {2, 2}]],
+        FailureQ @ QuantumEntangledQ[QuantumState[N[DiagonalMatrix[{1, -1, 0, 0}], 30], {2, 2}]],
+        With[{v = RandomInteger[{-3, 3}, 24] + I RandomInteger[{-3, 3}, 24]},
+            With[{t = AbsoluteTiming[QuantumEntangledQ[QuantumState[proj[v], {4, 6}], Automatic, #] & /@ {"Concurrence", "EntanglementEntropy"}]},
+                {Last[t], First[t] < 5}
+            ]
+        ]
+    },
+    {Indeterminate, True, {{True, True}, True}},
+    {QuantumEntangledQ::zero},
+    TestID -> "E45-ApproximateReadingEdges"
+]
+
+(* a machine ket below the range of machine numbers has no norm to divide out, and is refused; building it raises
+   QuantumState's own underflow messages *)
+VerificationTest[
+    FailureQ @ QuantumEntangledQ[QuantumState[N[{1, 0, 0, 1} 10^-315], {2, 2}]],
+    True,
+    {___, QuantumEntangledQ::zero},
+    TestID -> "E46-SubnormalMachineKet-Failure"
+]
+
+(* above machine precision the cut is compared with the value the computation holds, not within its precision: with
+   30 digits, the Werner state whose negativity is 6/5 of the cut n 10^-30 is entangled and the one at half of it is
+   not; the ket |0>(|0> + |1>) + e |11>, whose negativity e/2 is read from its Schmidt coefficients without
+   cancellation, is entangled once e/2 exceeds 2 Sqrt[2] 10^-30 and not below it *)
+VerificationTest[
+    {
+        QuantumEntangledQ[QuantumState[N[werner[1/3 + 4 # 10^-30 4 / 3], 30], {2, 2}]] & /@ {6/5, 1/2},
+        QuantumEntangledQ[QuantumState[N[Normalize[{1, 1, 0, 4 # 10^-30}], 30], {2, 2}]] & /@ {2, 1/2}
+    },
+    {{True, False}, {True, False}},
+    {},
+    TestID -> "E47-ArbitraryPrecisionJustAboveCut"
+]
+
+(* a symbolic pure state gets the same answer from every method: a product ket for all angles is separable, and
+   cos(t)|00> + sin(t)|11>, a product at t = 0, is undecided *)
+VerificationTest[
+    Block[{t},
+        With[{methods = {"Negativity", "EntanglementEntropy", {"RenyiEntropy", 5/2}, {"RenyiEntropy", 2.5}, "Concurrence", Automatic}},
+            {
+                QuantumEntangledQ[QuantumState[Flatten @ KroneckerProduct[{Cos[t], Sin[t]}, {1, 0}], {2, 2}], Automatic, #] & /@ methods,
+                QuantumEntangledQ[QuantumState[{Cos[t], 0, 0, Sin[t]}, {2, 2}], Automatic, #] & /@ methods
+            }
+        ]
+    ],
+    {ConstantArray[False, 6], ConstantArray[Indeterminate, 6]},
+    {QuantumEntangledQ::realparameters, QuantumEntangledQ::realparameters, QuantumEntangledQ::realparameters, General::stop},
+    TestID -> "E48-SymbolicPureStateMethodsAgree"
+]
+
+(* in a machine frame that is not unitary, whose round-off can carry a criterion into the floor, nothing reads as zero:
+   the entangled pure state with Schmidt coefficient about 10^-15 and a product state are undecided in the frames
+   {{1, 0}, {1, e}} on both qubits, e = 1/2 and 1/100, which the maximally mixed state, inside the purity ball, is
+   not; in the PauliX frame, unitary, the product state is separable as in the computational frame *)
+VerificationTest[
+    With[{
+        frame = Function[e, QuantumTensorProduct[QuantumBasis[N[{{1, 0}, {1, e}}]], QuantumBasis[N[{{1, 0}, {1, e}}]]]],
+        near = N @ proj[Normalize[{1, 0, 0, 10^-15}]],
+        product = N @ proj[Flatten @ KroneckerProduct[{1, 2}, {3, -1}] / Sqrt[50]]
+    },
+        {
+            QuantumEntangledQ[QuantumState[QuantumState[#1, {2, 2}], frame[#2]], Automatic, #3] & @@@
+                Tuples[{{near, product}, {1/2, 1/100}, {"Negativity", "Concurrence", Automatic}}],
+            QuantumEntangledQ[QuantumState[QuantumState[N[IdentityMatrix[4] / 4], {2, 2}], frame[1/2]]],
+            QuantumEntangledQ[QuantumState[QuantumState[product, {2, 2}], QuantumBasis["PauliX", 2]]]
+        }
+    ],
+    {ConstantArray[Indeterminate, 12], False, False},
+    {___},
+    TestID -> "E49-NonUnitaryMachineFrameReadsNoZero"
 ]
 
 
@@ -1444,7 +1890,7 @@ VerificationTest[
 VerificationTest[
     FailureQ @ QuantumEntanglementMonotone[ghz3, {{1}, {4}}, "Realignment"],
     True,
-    {__},
+    {QuantumEntanglementMonotone::split},
     TestID -> "F8-RealignmentInvalidSplit-Failure"
 ]
 
@@ -1478,7 +1924,7 @@ VerificationTest[
 VerificationTest[
     {FailureQ @ QuantumEntanglementMonotone[QuantumState["0"], "Discord"], FailureQ @ QuantumEntanglementMonotone[QuantumState["0"], "MutualInformationI"]},
     {True, True},
-    {__},
+    {QuantumEntanglementMonotone::nosplit, QuantumEntanglementMonotone::nosplit},
     TestID -> "F12-CorrelationMeasuresOnOneQudit-Failure"
 ]
 

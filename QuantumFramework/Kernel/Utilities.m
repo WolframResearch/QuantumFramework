@@ -54,6 +54,7 @@ PackageScope["matrixExponential"]
 PackageScope["valuelessEntriesQ"]
 PackageScope["exactZeroQ"]
 PackageScope["zeroBaseQ"]
+PackageScope["machineRangeQ"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 

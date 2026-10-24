@@ -631,13 +631,13 @@ VerificationTest[
     TestID -> "Monotone-NonHermitian-Scaled-Warns"
 ]
 
-(* a zero trace cannot be divided out: the zero vector warns *)
+(* a zero trace cannot be divided out: the zero vector is refused *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{0, 0, 0, 0}, {2, 2}], "Negativity"],
-    _ ? NumericQ,
-    {QuantumEntanglementMonotone::notphysical},
+    _Failure,
+    {QuantumEntanglementMonotone::zero},
     SameTest -> MatchQ,
-    TestID -> "Monotone-ZeroTrace-Warns"
+    TestID -> "Monotone-ZeroKet-Refused"
 ]
 
 (* a negative trace warns at any scale: -10^-9 times the Werner state has no eigenvalue below -10^-8, and the
@@ -700,35 +700,35 @@ VerificationTest[
     TestID -> "Monotone-PSD-SparseRoundoff-NoWarn"
 ]
 
-(* a ket is judged in the computational basis: {1, 0, -1, 0}, in a basis whose two elements for the first
-   qubit are both |0>, is the zero vector there, and warns *)
+(* {1, 0, -1, 0}, in a basis whose two elements for the first qubit are both |0>, is refused: the elements of
+   its basis are not independent *)
 VerificationTest[
     QuantumEntanglementMonotone[
         QuantumState[{1, 0, -1, 0}, QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 0}}], QuantumBasis[2]]],
         "Negativity"
     ],
-    _ ? NumericQ,
-    {QuantumEntanglementMonotone::notphysical},
+    _Failure,
+    {QuantumEntanglementMonotone::dependent},
     SameTest -> MatchQ,
-    TestID -> "Monotone-ZeroKet-DependentBasis-Warns"
+    TestID -> "Monotone-DependentBasis-Refused"
 ]
 
-(* the entropies warn before they check the bipartition, as the other monotones do: a qubit with the
-   eigenvalue -1/5 warns, and the monotone, which needs two qudits, fails *)
+(* the entropies, as every monotone, refuse a single qubit, which has no split, before anything is computed: a
+   qubit with the eigenvalue -1/5 gets that one message, not the warning *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{{0.5, 0.7}, {0.7, 0.5}}], "EntanglementEntropy"],
     _Failure,
-    {QuantumEntanglementMonotone::notphysical},
+    {QuantumEntanglementMonotone::nosplit},
     SameTest -> MatchQ,
-    TestID -> "Monotone-EntanglementEntropy-SingleQudit-Warns"
+    TestID -> "Monotone-EntanglementEntropy-SingleQudit-Refused"
 ]
 
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{{0.5, 0.7}, {0.7, 0.5}}], "RenyiEntropy"],
     _Failure,
-    {QuantumEntanglementMonotone::notphysical},
+    {QuantumEntanglementMonotone::nosplit},
     SameTest -> MatchQ,
-    TestID -> "Monotone-RenyiEntropy-SingleQudit-Warns"
+    TestID -> "Monotone-RenyiEntropy-SingleQudit-Refused"
 ]
 
 (* Exact numbers on which Equal or Positive fails. zR and zR3 are 0 and trig2 is 2: Positive cannot decide
@@ -745,13 +745,13 @@ tA = Sqrt[2 + 10^-200] - Sqrt[2];
 trig2 = 2 (Cos[1] + I Sin[1]) (Cos[1] - I Sin[1]);
 notPhysicalQ = Wolfram`QuantumFramework`PackageScope`numericStateNotPSDQ;
 
-(* a ket whose only nonzero entry is Equal-undecidable zR3 is the zero vector, and warns *)
+(* a ket whose only nonzero entry is Equal-undecidable zR3 is the zero vector, and is refused *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{zR3, 0, 0, 0}, {2, 2}], "Negativity"],
-    _ ? NumericQ,
-    {QuantumEntanglementMonotone::notphysical},
+    _Failure,
+    {QuantumEntanglementMonotone::zero},
     SameTest -> MatchQ,
-    TestID -> "Monotone-ExactZeroKet-Warns"
+    TestID -> "Monotone-ExactZeroKet-Refused"
 ]
 
 (* an exact rational is compared as it is: a ket whose squared norm is 10^-400, below the machine range, is

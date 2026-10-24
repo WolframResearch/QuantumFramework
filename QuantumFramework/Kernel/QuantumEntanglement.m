@@ -32,6 +32,149 @@ QuantumEntangledQ::undecided =
 QuantumEntangledQ::realparameters =
     "The parameters `1` are taken to be real, and only their values for which the state is a density matrix count: the answer holds for all of them, or it is Indeterminate."
 
+QuantumEntangledQ::args = "The arguments `1` after the state are not a split followed by a method."
+
+QuantumEntanglementMonotone::args =
+    "The arguments `1` after the state are not a split followed by a method; MutualInformationJ and Discord also take a QuantumMeasurementOperator before the split."
+
+QuantumEntangledQ::method = QuantumEntanglementMonotone::method = "`1` is not a method; the methods are Automatic and `2`."
+
+QuantumEntangledQ::correlation =
+    "`1` measures all correlations, classical ones included, and is positive on some separable states, so it is no test of entanglement."
+
+QuantumEntangledQ::split = QuantumEntanglementMonotone::split =
+    "`1` is not a split of a state of `2` qudits: give Automatic, a list of distinct qudits that leaves at least one out, or two disjoint nonempty lists of qudits."
+
+QuantumEntangledQ::quditsplit = QuantumEntanglementMonotone::quditsplit =
+    "`1` is not a split of a single qudit of dimension `2`: give Automatic or the dimension of the first part, one of `3`."
+
+QuantumEntangledQ::nosplit = QuantumEntanglementMonotone::nosplit =
+    "A state of dimension `1` on a single qudit has no split into two parts of dimension greater than 1."
+
+QuantumEntangledQ::dependent = QuantumEntanglementMonotone::dependent =
+    "The elements of the state's basis do not form a basis of each qudit's space: they are linearly dependent, too few, or too close to dependent to invert at the precision of their entries."
+
+QuantumEntangledQ::order = QuantumEntanglementMonotone::order =
+    "`1` is not a Renyi order: give a finite nonnegative number, or a real expression in parameters that is not negative for all of them."
+
+QuantumEntangledQ::nodensitymatrix = QuantumEntanglementMonotone::nodensitymatrix =
+    "The state is held in the phase-space picture, which has no density matrix in the computational basis."
+
+QuantumEntangledQ::state = QuantumEntanglementMonotone::state = "The first argument must be a QuantumState; it is `1`."
+
+QuantumEntangledQ::zero = QuantumEntanglementMonotone::zero =
+    "The state has no normalized form: it is a state vector of norm 0, or a density matrix whose trace is 0, for approximate entries within the round-off of its diagonal."
+
+
+(* The methods each function takes besides Automatic: QuantumEntanglementMonotone every monotone and the concurrence
+   vector, QuantumEntangledQ the tests of entanglement, which the correlation measures are not. "RenyiEntanglementEntropy"
+   is another name for "RenyiEntropy", and {"RenyiEntropy", alpha} gives its order. *)
+$correlationMeasures = {"MutualInformationI", "MutualInformationJ", "Discord"};
+
+entanglementMethods[QuantumEntanglementMonotone] := Append[$QuantumEntanglementMonotones, "ConcurrenceVector"]
+entanglementMethods[QuantumEntangledQ] := DeleteCases[$QuantumEntanglementMonotones, Alternatives @@ $correlationMeasures]
+
+methodName["RenyiEntanglementEntropy" | {"RenyiEntanglementEntropy" | "RenyiEntropy", _}] := "RenyiEntropy"
+methodName[name_String] := name
+methodName[_] := None
+
+(* A Renyi order is a nonnegative number, or an expression in parameters of the user's (symbolicParameters), none of
+   them a system symbol such as $Failed, None or Missing, that is not negative, or nonreal, for all real values of
+   them: x + I is refused, 2 + I x, real at x = 0, is read. *)
+renyiOrderQ[alpha_ ? NumericQ] := TrueQ[NonNegative[alpha]]
+renyiOrderQ[alpha_] := FreeQ[alpha, _String | _List] && With[{ps = symbolicParameters[alpha]},
+    ps =!= {} && AllTrue[ps, FreeQ[#, s_Symbol /; Context[s] === "System`" && s =!= Subscript] &] &&
+        ! TrueQ[TimeConstrained[Simplify[alpha < 0 || Im[alpha] != 0, Element[ps, Reals]], 1]]
+]
+
+(* The arguments after the state, read as {split, method}, or as {measurement, split, method} for MutualInformationJ
+   and Discord, which measure the second part. The method is always last: a string, or a list headed by one, is a
+   method, and a split never is. The method, the split and the state are then checked, in that order, and the first
+   problem gives one message and a Failure. *)
+entanglementArguments[head_, qs_, args_List] := With[{
+    read = Replace[args, {
+        {qm : _QuantumMeasurementOperator | Automatic : Automatic, split_ : Automatic, method : "MutualInformationJ" | "Discord"} :>
+            {qm, split, method},
+        {_QuantumMeasurementOperator, ___} -> $Failed,
+        {split : Except[_String | {_String, ___}] : Automatic, method_ : Automatic} :> {split, method},
+        {split_, method_} :> {split, method},
+        _ -> $Failed
+    }]
+},
+    With[{method = If[read === $Failed, None, Last[read]], split = If[read === $Failed, None, read[[-2]]]},
+        Which[
+            read === $Failed,
+            entanglementFailure[head, "InvalidArguments", "args", {args}],
+            head === QuantumEntangledQ && MemberQ[$correlationMeasures, methodName[method]],
+            entanglementFailure[head, "InvalidMethod", "correlation", {method}],
+            MatchQ[method, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_} /; ! renyiOrderQ[alpha]],
+            entanglementFailure[head, "InvalidMethod", "order", {Last[method]}],
+            method =!= Automatic && ! MemberQ[entanglementMethods[head], methodName[method]],
+            entanglementFailure[head, "InvalidMethod", "method", {method, entanglementMethods[head]}],
+            ! TrueQ[splitQ[qs, split]],
+            splitFailure[head, qs, split],
+            qs["Picture"] === "PhaseSpace",
+            entanglementFailure[head, "NoDensityMatrix", "nodensitymatrix", {}],
+            ! TrueQ[independentFrameQ[qs]],
+            entanglementFailure[head, "DependentBasis", "dependent", {}],
+            TrueQ[zeroStateQ[qs]],
+            entanglementFailure[head, "ZeroState", "zero", {}],
+            True,
+            read
+        ]
+    ]
+]
+
+entanglementFailure[head_, tag_, name_, params_] := (
+    Message[MessageName[head, name], Sequence @@ params];
+    Failure[tag, <|"MessageTemplate" :> MessageName[head, name], "MessageParameters" -> params|>]
+)
+
+(* A split: Automatic, the first qudit against the rest; a list of distinct qudits against all the others, of which
+   there is at least one; two disjoint nonempty lists of qudits, every other qudit traced out; or, for a single qudit
+   of dimension D, the dimension d of the first part, a divisor of D with 1 < d < D, which Automatic takes too. *)
+splitQ[qs_, Automatic] := qs["Qudits"] > 1 || quditSplits[qs] =!= {}
+splitQ[qs_, d_Integer] := MemberQ[quditSplits[qs], d]
+splitQ[qs_, qudits : {__Integer}] := Length[qudits] < qs["Qudits"] && DuplicateFreeQ[qudits] && SubsetQ[Range[qs["Qudits"]], qudits]
+splitQ[qs_, {a : {__Integer}, b : {__Integer}}] := DuplicateFreeQ[Join[a, b]] && SubsetQ[Range[qs["Qudits"]], Join[a, b]]
+splitQ[_, _] := False
+
+quditSplits[qs_] := If[qs["Qudits"] == 1, Select[Divisors[qs["Dimension"]], 1 < # < qs["Dimension"] &], {}]
+
+splitFailure[head_, qs_, split_] := Which[
+    qs["Qudits"] > 1, entanglementFailure[head, "InvalidSplit", "split", {split, qs["Qudits"]}],
+    quditSplits[qs] === {}, entanglementFailure[head, "InvalidSplit", "nosplit", {qs["Dimension"]}],
+    True, entanglementFailure[head, "InvalidSplit", "quditsplit", {split, qs["Dimension"], quditSplits[qs]}]
+]
+
+(* Whether the elements of the state's basis form a basis of each qudit's space, a square matrix of full rank
+   (invertibleFrameQ), as in the computational frame, and, for an approximate state, one well enough conditioned that
+   the change to the computational frame, which multiplies its round-off by kappa for a state vector and kappa^2 for a
+   density matrix (frameContext), leaves it a digit. A zero state is left to zeroStateQ. *)
+independentFrameQ[qs_] := qs["ComputationalQ"] || invertibleFrameQ[qs["Basis"]] && ! roundoffSwampedQ[qs]
+
+roundoffSwampedQ[qs_] := qs["NumericQ"] && Precision[qs["State"]] < Infinity && With[{m = Normal @ qs["State"]},
+    Max[Abs[m]] > 0 && TrueQ[frameCondition[qs["Basis"]] ^ If[qs["VectorQ"], 1, 2] qs["Dimension"] 10 ^ -wholeDigits[m] >= 1]
+]
+
+(* A state with no normalized form: a state vector whose coefficients are all 0, or a density matrix of trace 0. Both
+   are read in the frame the state is stored in, which is invertible by now, and for approximate entries conditioned
+   well enough to keep a digit, so they are 0 exactly when the state is.
+   An exact value is 0 when its sign is; an approximate vector must be 0, and an approximate trace lie within the
+   round-off of the diagonal it sums, read relative to its largest entry s: the trace divided by s lies between 0 and
+   n, and falls below the range of machine numbers only when it is 0 relative to s anyway. A symbolic density matrix
+   is 0 when its trace simplifies to 0; a symbolic state vector, whose coefficients would evaluate to 0, is not
+   tested. A machine vector all of whose coefficients lie below the normal range of machine numbers has no norm that
+   can be divided out either. The state is read as stored, a sparse array kept sparse. *)
+zeroStateQ[qs_] := With[{a = qs["State"]},
+    Which[
+        ! qs["NumericQ"], qs["MatrixQ"] && TimeConstrained[Simplify[Tr[a]], $entanglementSignTime / 5, Tr[a]] === 0,
+        Precision[a] === Infinity, quantitySign[If[qs["VectorQ"], Conjugate[a] . a, Abs[Tr[a]]]] === 0,
+        qs["VectorQ"], Max[Abs[a]] == 0 || Precision[a] === MachinePrecision && Max[Abs[a]] < $MinMachineNumber,
+        True, With[{s = Max[Abs[Diagonal[a]]]}, s == 0 || Abs[Tr[a]] / s <= criterionCut[a]]
+    ]
+]
+
 
 (* QuantumEntangledQ answers True when the method's test proves the two-part state entangled, False when a
    separability proof holds for it, and Indeterminate when neither does. Automatic tests the partial transpose in
@@ -40,21 +183,57 @@ QuantumEntangledQ::realparameters =
    proofs: a positive partial transpose where that test is exact (pptSeparableQ), and a purity Tr[rho^2] of at most
    1 / (dA dB - 1), the largest ball of states around the maximally mixed one, all of them separable (Gurvits and
    Barnum, PRA 66, 062311 (2002)). A named method answers with its own test alone: Negativity and LogNegativity
-   with the partial transpose and the proofs it gives, the mutual informations and the discord, positive on
-   separable states too, never, and any other method with a positive value read from QuantumEntanglementMonotone
-   (the realignment value within the time limit that exact and symbolic input get), or a zero value where that
-   method is exact. A symbolic input raises a message naming its parameters, taken to be real; a symbolic state whose
-   physical parameter values cannot be found is Indeterminate. *)
-QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method : _String | Automatic : Automatic] /;
-        method === Automatic || MemberQ[$QuantumEntanglementMonotones, method] :=
+   with the partial transpose and the proofs it gives; the entropies and the concurrence of a pure two-part state with
+   its Schmidt rank; the concurrence of an arbitrary-precision mixed state beyond two qubits with its machine-number
+   value; and any other method with a positive value of its monotone (the realignment value within the time limit
+   that exact and symbolic input get), or a zero value where that method is exact. A symbolic input raises a message naming its parameters, taken to be real; a symbolic state whose
+   physical parameter values cannot be found is Indeterminate. Invalid arguments and states, and the mutual
+   informations and the discord, which are positive on separable states too, are refused before any of this, by
+   entanglementArguments. *)
+QuantumEntangledQ[qs_ ? QuantumStateQ, args___] := With[{a = entanglementArguments[QuantumEntangledQ, qs, {args}]},
+    If[FailureQ[a], a, entangledQ[qs, Sequence @@ a]]
+]
+
+QuantumEntangledQ[args___] /; ! MatchQ[{args}, {_ ? QuantumStateQ, ___}] :=
+    entanglementFailure[QuantumEntangledQ, "InvalidState", "state", {If[{args} === {}, "missing", First[{args}]]}]
+
+entangledQ[qs_, biPartition_, method_] :=
     Enclose @ With[{q = exactSymbolicState[qs]},
         If[! q["NumericQ"], Message[QuantumEntangledQ::realparameters, DeleteDuplicates @ symbolicParameters[Normal @ q["State"]]]];
         With[{bp = ConfirmBy[q["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]},
-            With[{c = numberContext[bp]},
+            With[{c = frameContext[numberContext[bp], q]},
                 If[c["Kind"] === "Symbolic" && ! c["Exists"], Indeterminate, entangledAnswer[method, q, biPartition, bp, c]]
             ]
         ]
     ]
+
+(* An approximate state stored in a frame that is not unitary reaches the computational frame through the frame and its
+   inverse, which multiply its round-off by the frame's condition number kappa, the product over the qudits of the
+   ratio of the largest to the smallest singular value of their elements: kappa for a state vector, and kappa^2 for a
+   density matrix, changed by similarity. Its cut is scaled by that factor, so that amplified round-off proves no sign,
+   and no value is read as zero (a floor of -1): amplified round-off carries a criterion into the floor as readily as
+   out of it. A frame whose kappa is within 10^-6 of 1, unitary up to a scale, changes nothing. *)
+frameContext[c_, qs_] := If[
+    c["Kind"] === "Approximate" && ! qs["ComputationalQ"],
+    With[{k = frameCondition[qs["Basis"]] ^ If[qs["VectorQ"], 1, 2]},
+        If[k < 1 + 10 ^ -6, c, <|c, "Cut" -> k c["Cut"], "Floor" -> -1|>]
+    ],
+    c
+]
+
+(* An exact frame with a nonzero entry outside 10^-290 to 10^290 in size (machineRangeQ) is read with 20 digits; a
+   frame that is not numeric gives 1. *)
+frameCondition[qb_] := Times @@ Map[
+    With[{e = Normal @ #["ReducedMatrix"]},
+        If[ ArrayQ[e, 2, NumericQ],
+            With[{m = If[machineRangeQ[e], N[e], N[e, 20]]},
+                With[{s = SingularValueList[m, Tolerance -> 0]}, If[Length[s] < Length[m] || Min[s] == 0, Infinity, Max[s] / Min[s]]]
+            ],
+            1
+        ]
+    ] &,
+    Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]]
+]
 
 (* A symbolic state with approximate numbers is read with them at their exact binary values, so that a product of
    small coefficients neither underflows nor drops below round-off before the symbolic decision sees it. *)
@@ -78,7 +257,9 @@ entangledAnswer[Automatic, qs_, _, bp_, c_] := (
 
 separabilityProofQ[npt_, bp_, c_] := npt === False && pptSeparableQ[bp, c] || purityBoundQ[bp, c]
 
-realignmentDetectsQ[bp_, c_] := Times @@ bp["Dimensions"] > 6 && criterionSign[realignmentCriterion[bp, c], c] === 1
+(* The realignment value of a pure state, (Sum[s_i])^2 - 1, is twice its Schmidt negativity, already read; it is
+   computed for density matrices only. *)
+realignmentDetectsQ[bp_, c_] := bp["MatrixQ"] && Times @@ bp["Dimensions"] > 6 && criterionSign[realignmentCriterion[bp, c], c] === 1
 
 entangledAnswer["Negativity" | "LogNegativity", qs_, _, bp_, c_] := (
     warnUnphysicalMonotone[qs];
@@ -86,9 +267,6 @@ entangledAnswer["Negativity" | "LogNegativity", qs_, _, bp_, c_] := (
         Which[TrueQ[npt], True, npt === False && pptSeparableQ[bp, c], False, True, Indeterminate]
     ]
 )
-
-(* The correlation measures are positive on separable states too, so their values prove nothing. *)
-entangledAnswer["MutualInformationI" | "MutualInformationJ" | "Discord", ___] := Indeterminate
 
 (* The realignment value is read with the time limit realignmentCriterion gives exact and symbolic input; zero proves
    separability on a pure state only. *)
@@ -99,10 +277,47 @@ entangledAnswer["Realignment", qs_, _, bp_, c_] := (
     ]
 )
 
+(* An entropy or the concurrence of a pure two-part state is positive exactly when its Schmidt rank exceeds 1, which
+   the partial transpose reads: exactly on exact input, for every physical parameter value on symbolic input, and to
+   first order in the smaller Schmidt coefficients on approximate input. The von Neumann entropy is of second order in them, and every entropy is read from the
+   eigenvalues of the reduced state, their squares, which fall below round-off first, as those of the ket
+   |00> + 10^-11 |11> do; a Renyi entropy of an approximate order comes out approximate on exact input too. *)
+entangledAnswer[method_, qs_, _, bp_, c_] /;
+        MatchQ[methodName[method], "EntanglementEntropy" | "RenyiEntropy" | "Concurrence"] && TrueQ[pureTwoPartQ[bp, c]] := (
+    warnUnphysicalMonotone[qs];
+    Replace[schmidtRankAboveOneQ[bp, c], Except[True | False] -> Indeterminate]
+)
+
+(* Whether a pure two-part state has Schmidt rank above 1. An exact density matrix is read through the single scalar
+   Tr[rho]^2 - Tr[rhoA^2], as an exact state vector is, rather than the eigenvalues of its partial transpose. *)
+schmidtRankAboveOneQ[bp_, c_] /; bp["MatrixQ"] && c["Kind"] === "Exact" := With[{m = Normal @ bp["DensityMatrix"], d = bp["Dimensions"]},
+    With[{a = TensorContract[ArrayReshape[m, Join[d, d]], {{2, 4}}]},
+        Replace[quantitySign[Tr[m] ^ 2 - Total[a Transpose[a], 2]], {1 -> True, 0 -> False, _ -> Indeterminate}]
+    ]
+]
+schmidtRankAboveOneQ[bp_, c_] := partialTransposeNegativeQ[bp, c]
+
+(* Beyond two qubits, the mixed-state concurrence of an arbitrary-precision density matrix keeps an error of order
+   10^-18 near the separable states, whatever its precision, while claiming many more digits: isotropic states at their
+   separability boundary read as entangled. So it is read from the matrix in machine numbers, against the larger of
+   their cut and the input's own, and a value within it proves nothing. The matrix is read raw: a QuantumState of it would equal the
+   input, whose cached properties keep the input's precision. The Wootters value of two qubits keeps its digits. *)
+entangledAnswer["Concurrence", qs_, _, bp_, c_] /;
+        c["Kind"] === "Approximate" && bp["MatrixQ"] && Times @@ bp["Dimensions"] > 4 && Precision[bp["DensityMatrix"]] =!= MachinePrecision &&
+            ! pureTwoPartQ[bp, c] := (
+    warnUnphysicalMonotone[qs];
+    With[{m = N[Normal @ bp["DensityMatrix"]]},
+        If[ roundoffSign[Norm @ concurrenceMatrixVector[m, bp["Dimensions"]], With[{mc = approximateContext[m]}, <|mc, "Cut" -> Max[mc["Cut"], c["Cut"]]|>]] === 1,
+            True,
+            Indeterminate
+        ]
+    ]
+)
+
 (* A zero value proves separability where the method is exact: the concurrence on two qubits and on pure states,
    the realignment value and the entropies on pure states. An entropy is read in bits. *)
 entangledAnswer[method_, qs_, biPartition_, bp_, c_] := With[{
-    sign = criterionSign[Replace[QuantumEntanglementMonotone[qs, biPartition, method], Quantity[x_, "Bits"] :> x], c]
+    sign = criterionSign[Replace[entanglementMonotone[qs, biPartition, method], Quantity[x_, "Bits"] :> x], c]
 },
     Which[
         sign === 1, True,
@@ -117,11 +332,17 @@ entangledAnswer[method_, qs_, biPartition_, bp_, c_] := With[{
    a dA x dB matrix, and exact input the sign of Tr[rhoA]^2 - Tr[rhoA^2], 0 on the zero vector. A density matrix is
    read through its partial transpose: the negativity of approximate input, the sign of every eigenvalue of exact
    input, and for symbolic input the coefficients of det(x + rho^T_B), all of them nonnegative exactly when no
-   eigenvalue is negative, for every physical value of the parameters. *)
+   eigenvalue is negative, for every physical value of the parameters. The approximate negativity sums every singular
+   value of the partial transpose of the Hermitian part of rho, small ones included, which the default tolerance would
+   drop: round-off that breaks Hermiticity would add singular values of its own size. It proves a negative
+   eigenvalue above the cut of numberContext, and none at most its floor, and between the two decides nothing. A state
+   vector's is read off its min(dA, dB) Schmidt coefficients as Sum[s_i s_j, i < j], with no cancellation, and their
+   round-off grows far more slowly than n, so its cut and floor take min(dA, dB) Sqrt[max(dA, dB)] in place of n:
+   product kets in 2 x 4096 reach 4 machine epsilons. *)
 partialTransposeNegativeQ[bp_, c_] /; bp["VectorQ"] && c["Kind"] =!= "Symbolic" :=
     With[{m = ArrayReshape[Normal @ bp["StateVector"], bp["Dimensions"]]},
         If[ c["Kind"] === "Approximate",
-            With[{s = SingularValueList[m, Tolerance -> 0]}, Chop[(Total[s] ^ 2 - s . s) / 2] > 0],
+            With[{s = SingularValueList[m, Tolerance -> 0]}, roundoffNegativeQ[Rest[s] . Most[Accumulate[s]], c, 1 / Sqrt[Max[Dimensions[m]]]]],
             Replace[quantitySign[With[{a = m . ConjugateTranspose[m]}, Tr[a] ^ 2 - Total[a Transpose[a], 2]]], {1 -> True, 0 -> False, _ -> Indeterminate}]
         ]
     ]
@@ -129,7 +350,7 @@ partialTransposeNegativeQ[bp_, c_] /; bp["VectorQ"] && c["Kind"] =!= "Symbolic" 
 partialTransposeNegativeQ[bp_, c_] := With[{pt = partialTransposeMatrix[Normal @ bp["DensityMatrix"], bp["Dimensions"]]},
     Switch[c["Kind"],
         "Approximate",
-        Chop[(Total[SingularValueList[pt]] - 1) / 2] > 0,
+        roundoffNegativeQ[(Total[SingularValueList[hermitianPart[pt], Tolerance -> 0]] - 1) / 2, c, 1],
         "Exact",
         With[{signs = quantitySign /@ Eigenvalues[pt]}, Which[MemberQ[signs, -1], True, SubsetQ[{0, 1}, signs], False, True, Indeterminate]],
         "Symbolic",
@@ -139,6 +360,10 @@ partialTransposeNegativeQ[bp_, c_] := With[{pt = partialTransposeMatrix[Normal @
     ]
 ]
 
+roundoffNegativeQ[negativity_, c_, scale_] := Replace[roundoffSign[negativity / scale, c], {1 -> True, 0 | -1 -> False, _ -> Indeterminate}]
+
+hermitianPart[m_] := (m + ConjugateTranspose[m]) / 2
+
 partialTransposeMatrix[m_, {dA_, dB_}] := ArrayReshape[Transpose[ArrayReshape[m, {dA, dB, dA, dB}], {1, 4, 3, 2}], {dA dB, dA dB}]
 
 (* A positive partial transpose proves separability where the test is exact: on 2 x 2 and 2 x 3 (Horodecki,
@@ -146,13 +371,13 @@ partialTransposeMatrix[m_, {dA_, dB_}] := ArrayReshape[Transpose[ArrayReshape[m,
    larger of the ranks of its two marginals (Horodecki, Lewenstein, Vidal and Cirac, PRA 62, 032310 (2000), Thm 1;
    the rank against the local dimensions alone proves nothing, since a state can sit in a larger space). Approximate
    ranks are counted so that an eigenvalue of uncertain size never makes the proof: the rank of rho counts every
-   eigenvalue above round-off, tol = n 10^(2 - p) at precision p, and the ranks of the marginals only those above
-   10^-10. The eigenvalues rho drops lift an eigenvalue of a marginal by at most n tol, so the proof is given only
-   where n tol <= 10^-10, which keeps them from adding to a marginal's rank: up to n = 100 at machine precision. An
-   approximate density matrix is read as pure when its impurity 1 - Tr[rho^2] is at most tol, and only where
-   tol <= 10^-10. The precision p is rounded up to a
-   whole digit, so that the fraction of a digit a normalization costs never moves the cut, and a higher p only makes
-   either proof harder to give. A symbolic density matrix is not ranked. *)
+   eigenvalue above round-off, tol = n 10^(2 - p) (roundoffCut) with p the digits its entries are known to, and the
+   ranks of the marginals only those above 10^-10. The eigenvalues rho drops lift an eigenvalue of a marginal by at
+   most n tol, so the proof is given only where n tol <= 10^-10, which keeps them from adding to a marginal's rank: up
+   to n = 100 at machine precision. An approximate density matrix is read as pure when its impurity 1 - Tr[rho^2] is
+   at most tol, and only where tol <= 10^-10. The digits p are rounded up to a whole one, so that the fraction of a
+   digit a normalization costs never moves the cut, and a higher p only makes either proof harder to give. A symbolic
+   density matrix is not ranked. *)
 pptSeparableQ[bp_, c_] := Times @@ bp["Dimensions"] <= 6 || pureTwoPartQ[bp, c] || lowRankQ[bp, c]
 
 pureTwoPartQ[bp_, c_] := bp["VectorQ"] || With[{m = Normal @ bp["DensityMatrix"]},
@@ -177,26 +402,58 @@ lowRankQ[bp_, c_] := bp["MatrixQ"] && c["Kind"] =!= "Symbolic" && With[{m = Norm
 
 eigenvalueCount[m_, tol_] := Count[Re @ Eigenvalues[(m + ConjugateTranspose[m]) / 2], x_ /; x > tol]
 
-roundoffCut[m_] := Length[m] 10 ^ (2 - Ceiling[Precision[m]])
+roundoffCut[m_] := Length[m] 10 ^ (2 - wholeDigits[m])
+
+(* The cut below which an approximate criterion of an n-dimensional state counts as zero: roundoffCut's n 10^(2 - p),
+   about 45 n machine epsilons, for machine numbers, whose arithmetic adds round-off of a few n machine epsilons of
+   its own, and n 10^-p above machine precision, where the arithmetic tracks its own error and the partial transpose
+   and the realignment of separable states stay far below it. The mixed-state concurrence does not, and is read in
+   machine numbers. *)
+criterionCut[m_] := If[Precision[m] === MachinePrecision, roundoffCut[m], Length[m] 10 ^ -wholeDigits[m]]
+
+(* The context of an approximate array m: its cut, and the floor within which a value is zero, n machine epsilons for
+   machine numbers and the cut above machine precision. *)
+approximateContext[m_] := With[{cut = criterionCut[m]},
+    <|"Kind" -> "Approximate", "Cut" -> cut, "Floor" -> If[Precision[m] === MachinePrecision, Length[m] $MachineEpsilon, cut]|>
+]
+
+(* The digits to which the entries of an approximate array m are known, relative to its largest entry. They are read
+   from its accuracy: an entry that cancelled to zero carries accuracy but no precision, and would make Precision[m]
+   0. The cuts round them up to a whole digit, past the float noise of 10^-6 that this sum can leave on a whole
+   number. *)
+arrayDigits[m_] := Accuracy[m] + Log10[Max[Abs[m]]]
+
+wholeDigits[m_] := Ceiling[arrayDigits[m] - 10 ^ -6]
 
 purityBoundQ[bp_, c_] := bp["MatrixQ"] && With[{m = Normal @ bp["DensityMatrix"]},
     nonnegativeQ[1 / (Times @@ bp["Dimensions"] - 1) - Total[m Transpose[m], 2], c]
 ]
 
 (* The realignment value of the two-part state, given a time limit on exact and symbolic input, whose singular values
-   may not come out in closed form. *)
-realignmentCriterion[bp_, c_] := If[c["Kind"] === "Approximate", realignmentValue[bp], TimeConstrained[realignmentValue[bp], $entanglementSignTime, Indeterminate]]
+   may not come out in closed form, and read from the Hermitian part of an approximate density matrix. *)
+realignmentCriterion[bp_, c_] := Which[
+    c["Kind"] =!= "Approximate", TimeConstrained[realignmentValue[bp], $entanglementSignTime, Indeterminate],
+    bp["MatrixQ"], With[{d = bp["Dimensions"]},
+        Total[SingularValueList[ArrayReshape[Transpose[ArrayReshape[hermitianPart[Normal @ bp["DensityMatrix"]], Join[d, d]], {1, 3, 2, 4}], d ^ 2], Tolerance -> 0]] - 1
+    ],
+    True, realignmentValue[bp]
+]
 
 
-(* The number type of the two-part state bp, with what deciding a sign on it needs: "Approximate", "Exact", or
-   "Symbolic" with the parameters, taken as real, the condition that bp is a density matrix for their values:
-   Hermitian, and every coefficient of det(x + rho) nonnegative, so that no eigenvalue is negative, and whether any
-   value meets it. The condition is $Failed when it is not found within $entanglementSignTime seconds. *)
+(* The number type of the two-part state bp, with what deciding a sign on it needs: "Approximate" with the round-off
+   cut of its numbers, "Exact", or "Symbolic" with the parameters, taken as real, the condition that bp is a density
+   matrix for their values: Hermitian, and every coefficient of det(x + rho) nonnegative, so that no eigenvalue is
+   negative, and whether any value meets it. The condition is $Failed when it is not found within
+   $entanglementSignTime seconds. The cut is criterionCut's: each eigenvalue or singular value a criterion sums
+   carries round-off of order 10^-p at precision p, and an n-dimensional criterion sums at most n of them. A value
+   proves a sign beyond the cut, and is zero within the floor below it: n machine epsilons for machine numbers, whose
+   separable states keep their criteria at about a third of that at most, and the cut itself above machine
+   precision. *)
 numberContext[bp_] := With[{a = If[bp["VectorQ"], bp["StateVector"], bp["DensityMatrix"]]},
     Which[
         ! ArrayQ[a, _, NumericQ], symbolicContext[Normal @ bp["DensityMatrix"]],
         Precision[a] === Infinity, <|"Kind" -> "Exact"|>,
-        True, <|"Kind" -> "Approximate"|>
+        True, approximateContext[Normal @ a]
     ]
 ]
 
@@ -253,23 +510,32 @@ realForm[v_, c_] := TimeConstrained[Simplify[ComplexExpand[v], Element[c["Parame
 
 
 (* The sign, 1, 0 or -1, of a real criterion quantity, or Indeterminate when it cannot be decided. An approximate
-   value within 10^-10 of zero counts as zero. An exact value is read in 60-digit significance arithmetic, by
-   SetPrecision, which raises no N::meprec: N does, with a precision goal on an exact zero, and with an accuracy goal
-   on a sum of large terms that cancel, which it can then read as zero. The reading gives the sign when any of its
-   digits survives the cancellation; a value that keeps none is decided within $entanglementSignTime seconds: by
-   readings at 200 and 1000 digits; then as zero when FullSimplify reduces x to 0 within a fifth of that time; then by
-   a 5000-digit reading, which for a constant such as Khinchin's takes longer than the whole limit; then, when x is
-   algebraic, by the sign of RootReduce[x], 0 for an exact zero. A number built from rationals and Root objects by
-   sums, products, rational powers and Abs is algebraic, as is any that Element proves algebraic. Any other is
-   Indeterminate, with a message, which shows x unevaluated, each integer or rational of more than 20 digits in it
-   replaced by its 6-digit value. The quantity of a symbolic state has a sign when it has that sign for every
-   physical value of the parameters. *)
+   value has a sign beyond the round-off cut of the state's numbers and is zero within its floor, both from
+   numberContext, and is Indeterminate between the two; one read off an exact state is Indeterminate. An exact value is read in 60-digit
+   significance arithmetic, by SetPrecision, which raises no N::meprec: N does, with a precision goal on an exact
+   zero, and with an accuracy goal on a sum of large terms that cancel, which it can then read as zero. The reading
+   gives the sign when any of its digits survives the cancellation; a value that keeps none is decided within
+   $entanglementSignTime seconds: by readings at 200 and 1000 digits; then as zero when FullSimplify reduces x to 0
+   within a fifth of that time; then by a 5000-digit reading, which for a constant such as Khinchin's takes longer
+   than the whole limit; then, when x is algebraic, by the sign of RootReduce[x], 0 for an exact zero. A number built
+   from rationals and Root objects by sums, products, rational powers and Abs is algebraic, as is any that Element
+   proves algebraic. Any other is Indeterminate, with a message, which shows x unevaluated, each integer or rational
+   of more than 20 digits in it replaced by its 6-digit value. The quantity of a symbolic state has a sign when it has
+   that sign for every physical value of the parameters. *)
 $entanglementSignTime = 5;
 
-criterionSign[v_, c_] := If[c["Kind"] === "Symbolic", symbolicSign[realForm[v, c], c], quantitySign[v]]
+criterionSign[v_, c_] := Switch[c["Kind"],
+    "Symbolic", symbolicSign[realForm[v, c], c],
+    "Approximate", roundoffSign[v, c],
+    _, quantitySign[v]
+]
 
-quantitySign[x_ ? NumericQ] /; Precision[x] < Infinity := Sign[Chop[Re[x]]]
-quantitySign[x_ ? NumericQ] := With[{v = Re[SetPrecision[x, 60]]}, If[Precision[v] > 0, Sign[v], exactSign[x]]]
+(* The value is compared by its nominal value, the binary number it holds: the comparison of a low-precision number
+   with the cut would otherwise be tolerant, and read a value above it as within it. *)
+roundoffSign[x_ ? NumericQ, c_] := With[{r = SetPrecision[Re[x], Infinity]}, Which[Abs[r] <= c["Floor"], 0, Abs[r] > c["Cut"], Sign[r], True, Indeterminate]]
+roundoffSign[_, _] := Indeterminate
+
+quantitySign[x_ ? NumericQ] /; Precision[x] === Infinity := With[{v = Re[SetPrecision[x, 60]]}, If[Precision[v] > 0, Sign[v], exactSign[x]]]
 quantitySign[_] := Indeterminate
 
 exactSign[x_] := Replace[
@@ -303,19 +569,24 @@ symbolicSign[v_, c_] := If[FreeQ[v, Alternatives @@ c["Parameters"]],
     Which[forAllQ[c, v > 0], 1, forAllQ[c, v == 0], 0, forAllQ[c, v < 0], -1, True, Indeterminate]
 ]
 
-nonnegativeQ[v_, c_] := If[c["Kind"] === "Symbolic", forAllQ[c, realForm[v, c] >= 0], MatchQ[quantitySign[v], 0 | 1]]
+(* A margin that lies between the floor and the cut, either side of 0, decides nothing. *)
+nonnegativeQ[v_, c_] := If[c["Kind"] === "Symbolic", forAllQ[c, realForm[v, c] >= 0], MatchQ[criterionSign[v, c], 0 | 1]]
 
 
 
-(* The default method is decided on the two-part state, after the split and the partial trace: the concurrence for
+(* The arguments are read and checked once, by entanglementArguments, and each method below receives a valid split.
+   The default method is decided on the two-part state, after the split and the partial trace: the concurrence for
    a pure state and for two qubits, where it is exact, and the negativity for a mixed state beyond two qubits, where
-   the concurrence is only a lower bound that a local unitary can change. A method reaches this head either as a
-   bare string in the second slot (the optional biPartition then defaults) or as the {"RenyiEntropy", alpha} list;
-   both are excluded here so a method spec is never mistaken for a bipartition, which is always Automatic, an
-   integer, or a list of qudit indices, never a method name. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ,
-    biPartition : Except[_String | {"RenyiEntanglementEntropy" | "RenyiEntropy", _}] : Automatic] :=
-    Enclose @ QuantumEntanglementMonotone[qs, biPartition, defaultMonotone[ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ]]]
+   the concurrence is only a lower bound that a local unitary can change. *)
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, args___] := With[{a = entanglementArguments[QuantumEntanglementMonotone, qs, {args}]},
+    If[FailureQ[a], a, entanglementMonotone[qs, Sequence @@ a]]
+]
+
+QuantumEntanglementMonotone[args___] /; ! MatchQ[{args}, {_ ? QuantumStateQ, ___}] :=
+    entanglementFailure[QuantumEntanglementMonotone, "InvalidState", "state", {If[{args} === {}, "missing", First[{args}]]}]
+
+entanglementMonotone[qs_, biPartition_, Automatic] :=
+    Enclose @ entanglementMonotone[qs, biPartition, defaultMonotone[ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ]]]
 
 defaultMonotone[bp_] := If[
     bp["Qudits"] == 2 && (bp["Dimensions"] === {2, 2} || bp["VectorQ"] || pureDensityMatrixQ[Normal @ bp["Normalized"]["DensityMatrix"]]),
@@ -376,24 +647,25 @@ ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] :=
     Enclose @ concurrenceVector[ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Operator"]]
 
 (* The concurrence vector of a normalized two-qudit operator rho. *)
-concurrenceVector[rho_] := Block[{component, d1, d2, y1, y2},
-	{d1, d2} = rho["OutputDimensions"];
-	y1 = Y[d1];
-	y2 = Y[d2];
-	component = If[ approximateNumericArrayQ[rho["Matrix"]],
-		With[{w = densityMatrixFactor[Normal @ rho["Matrix"]]},
+concurrenceVector[rho_] := concurrenceMatrixVector[Normal @ rho["Matrix"], rho["OutputDimensions"]]
+
+(* The concurrence vector of a normalized two-qudit density matrix mat of dimensions {d1, d2}. *)
+concurrenceMatrixVector[mat_, {d1_, d2_}] := With[{
+	component = If[ approximateNumericArrayQ[mat],
+		With[{w = densityMatrixFactor[mat]},
 			Function[{ya, yb}, wootterCombination @ SingularValueList[Transpose[w] . KroneckerProduct[ya, yb] . w, Tolerance -> 0]]
 		],
-		With[{mat = Normal @ rho["Matrix"]}, With[{cmat = Conjugate[mat]},
+		With[{cmat = Conjugate[mat]},
 			Function[{ya, yb}, With[{omat = Normal @ KroneckerProduct[ya, yb]},
 				wootterCombination @ Sqrt[If[NumericQ[#], Max[0, #], #] & /@ Re[Eigenvalues[mat . omat . cmat . omat]]]
 			]]
-		]]
-	];
-	Catenate @ Table[component[yn, ym], {yn, y1}, {ym, y2}]
+		]
+	]
+},
+	Flatten[Outer[component, Y[d1], Y[d2], 1], 1]
 ]
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "ConcurrenceVector"] :=
+entanglementMonotone[qs_, biPartition_, "ConcurrenceVector"] :=
     (warnUnphysicalMonotone[qs]; ConcurrenceVector[qs, biPartition])
 
 (* The concurrence depends only on the state's direction, not its overall scale: the bipartition is
@@ -435,7 +707,7 @@ densityMatrixAmplitudes[m_] := With[{k = First @ Ordering[Re @ Normal @ Diagonal
     Normal[m[[All, k]]] / Sqrt[Re @ m[[k, k]]]
 ]
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] := (
+entanglementMonotone[qs_, biPartition_, "Concurrence"] := (
     warnUnphysicalMonotone[qs];
     Enclose @ With[{bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]},
         Which[
@@ -460,13 +732,13 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
 )
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] := (
+entanglementMonotone[qs_, biPartition_, "Negativity"] := (
     warnUnphysicalMonotone[qs];
     Enclose[(ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"] - 1) / 2]
 )
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogNegativity"] := (
+entanglementMonotone[qs_, biPartition_, "LogNegativity"] := (
     warnUnphysicalMonotone[qs];
     Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"]
 )
@@ -476,7 +748,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogN
    a pure global state. A pure state reads it through its Schmidt weights (vector) or its reduced state
    (density-matrix form); a genuinely mixed state's reduced von Neumann entropy mixes classical ignorance
    into the count, so it is not returned as entanglement. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := (
+entanglementMonotone[qs_, biPartition_, "EntanglementEntropy"] := (
     warnUnphysicalMonotone[qs];
     Enclose @ With[{
         bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
@@ -492,12 +764,12 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Enta
     ]
 )
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
-    QuantumEntanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
+entanglementMonotone[qs_, biPartition_, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
+    entanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
 
 (* The Renyi entanglement entropy is the Renyi entropy of the reduced state, an entanglement measure only
    for a pure global state, so a genuinely mixed input is guarded exactly as EntanglementEntropy is. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] := (
+entanglementMonotone[qs_, biPartition_, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] := (
     warnUnphysicalMonotone[qs];
     Enclose @ With[{
         bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
@@ -511,12 +783,14 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"Ren
     ]
 )
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Realignment"] := (
+entanglementMonotone[qs_, biPartition_, "Realignment"] := (
     warnUnphysicalMonotone[qs];
     Enclose @ realignmentValue @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
 )
 
-realignmentValue[bqs_] := Total @ SingularValueList @ ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2] - 1
+(* Every singular value counts: for approximate input the default tolerance drops those below about 100 machine
+   epsilons of the largest, and with them a small realignment value. *)
+realignmentValue[bqs_] := Total[SingularValueList[ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2], Tolerance -> 0]] - 1
 
 
 (* Quantum Discord *)
@@ -537,12 +811,12 @@ MutualInformationJ[rho_QuantumState, qm : _QuantumMeasurementOperator | Automati
 QuantumDiscord[rho_QuantumState, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic] :=
 	Enclose[Confirm[MutualInformationI[rho, biPartition]] - Confirm[MutualInformationJ[rho, qm, biPartition]]]
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "MutualInformationI"] :=
+entanglementMonotone[qs_, biPartition_, "MutualInformationI"] :=
     (warnUnphysicalMonotone[qs]; MutualInformationI[qs, biPartition])
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic, "MutualInformationJ"] :=
+entanglementMonotone[qs_, qm_, biPartition_, "MutualInformationJ"] :=
     (warnUnphysicalMonotone[qs]; MutualInformationJ[qs, qm, biPartition])
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic, "Discord"] :=
+entanglementMonotone[qs_, qm_, biPartition_, "Discord"] :=
     (warnUnphysicalMonotone[qs]; QuantumDiscord[qs, qm, biPartition])
 
