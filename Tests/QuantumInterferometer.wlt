@@ -1405,4 +1405,188 @@ VerificationTest[
     TestID -> "QI-repeated-permanent-hoisted-rows-exact-coefficient"
 ]
 
+(* Each regression below targets a symbolic correctness or validation failure. *)
+VerificationTest[
+    With[{eps = 1/10^12},
+        With[{bs = QuantumInterferometer[{"BS"[eps, 0] -> {1, 2}}, 2],
+              ps = QuantumInterferometer[{"PS"[eps] -> 1}, 1],
+              sq = QuantumInterferometer[{"S"[eps] -> 1}, 1]},
+            bs["Amplitude", {1, 0} -> {0, 1}] === Sin[eps] &&
+            ps["Amplitude", {1} -> {1}] === Exp[I eps] &&
+            sq["SqueezerCount"] === 1 && Precision[sq["Amplitude", {0} -> {2}]] === Infinity &&
+            Abs[N[sq["Amplitude", {0} -> {2}]/(-Sqrt[Sech[eps]] Tanh[eps]/Sqrt[2]), 40] - 1] < 10^-30
+        ]
+    ],
+    True,
+    TestID -> "QI-fix-1-exact-small-elements-are-retained"
+]
+
+VerificationTest[
+    With[{eps = 1/10^12},
+        With[{w = {{Sqrt[1 - eps^2], -eps}, {eps, Sqrt[1 - eps^2]}}},
+            With[{qi = QuantumInterferometer[w]},
+                qi["Unitary"] === w && qi["Amplitude", {1, 0} -> {0, 1}] === eps &&
+                FullSimplify[(qi["Amplitude", {nx, 0} -> {0, nx}] /. nx -> 1) - eps] === 0 &&
+                AllTrue[Flatten[FullSimplify[QuantumInterferometer[qi["Elements"], 2]["Unitary"] - w]], PossibleZeroQ]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-fix-1-exact-small-matrix-mesh-and-symbolic-route-agree"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[0, Pi/7] -> {1, 2}, "PS"[2 Pi] -> 1, "S"[0] -> 2}, 2]},
+        qi["Elements"] === {} && qi["Unitary"] === IdentityMatrix[2] &&
+        qi["Amplitude", {1, 2} -> {1, 2}] === 1
+    ],
+    True,
+    TestID -> "QI-fix-1-exact-identities-still-drop"
+]
+
+VerificationTest[
+    Map[Function[p,
+        With[{phase = N[1/10^12, p]},
+            With[{qi = QuantumInterferometer[{"PS"[phase] -> 1}, 1, "DropIdentities" -> False, Tolerance -> 0]},
+                With[{actual = qi["Amplitude", {nx} -> {nx}] /. nx -> 2, reference = Exp[2 I phase]},
+                    SameQ[Precision[actual], Precision[reference]] &&
+                    Abs[(actual - 1)/(reference - 1) - 1] < If[p === MachinePrecision, 10^-12, 10^-50]
+                ]
+            ]
+        ]], {MachinePrecision, 60}],
+    {True, True},
+    TestID -> "QI-fix-2-symbolic-small-phase-and-precision-survive"
+]
+
+VerificationTest[
+    With[{parameter = Subscript[\[FormalK], 1]},
+        With[{qi = QuantumInterferometer[{"BS"[parameter, 0] -> {1, 2}}, 2]},
+            With[{formula = qi["Amplitude", {1, 0} -> {tx, 1 - tx}]},
+                FullSimplify[(formula /. {tx -> 1, parameter -> Pi/6}) - Sqrt[3]/2] === 0 &&
+                FullSimplify[(formula /. {tx -> 0, parameter -> Pi/6}) - 1/2] === 0
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-fix-3-user-angle-is-not-captured-by-sum-indices"
+]
+
+VerificationTest[
+    With[{parameter = Subscript[\[FormalK], 1],
+          qi = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
+        With[{formula = qi["Amplitude", {parameter, 0} -> {tx, parameter - tx}]},
+            And @@ Table[
+                TrueQ[TimeConstrained[FullSimplify[
+                    Activate[formula /. {parameter -> 2, tx -> t}] - qi["Amplitude", {2, 0} -> {t, 2 - t}]
+                ], 5, $TimedOut] === 0],
+                {t, 0, 2}
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-fix-3-user-count-is-not-captured-by-sum-indices"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6, Pi/5] -> {1, 2}}, 2],
+          in = QuantumState[SparseArray[{2 -> Exp[I phi] Sin[theta], 4 -> Cos[theta]}, 9], {3, 3},
+              "ParameterSpec" -> {{theta, -Pi, Pi}, {phi, -Pi, Pi}}]},
+        With[{out = qi[in], values = <|theta -> Pi/7, phi -> Pi/11|>},
+            out["ParameterSpec"] === in["ParameterSpec"] &&
+            out[<|theta -> Pi/7|>]["Parameters"] === {phi} &&
+            AllTrue[Normal[FullSimplify[out[values]["StateVector"] - qi[in[values]]["StateVector"]]], PossibleZeroQ] &&
+            AllTrue[Normal[FullSimplify[out[Pi/7, Pi/11]["StateVector"] - out[values]["StateVector"]]], PossibleZeroQ]
+        ]
+    ],
+    True,
+    TestID -> "QI-fix-4-pure-state-retains-parameter-spec-and-binding"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"PS"[I] -> 1}, 1],
+        QuantumInterferometer[{"BS"[I/5, 0] -> {1, 2}}, 2],
+        QuantumInterferometer[{"BeamSplitter"[{Pi/7, I/11}] -> {1, 2}}, 2]
+    },
+    ConstantArray[$Failed, 3],
+    {QuantumInterferometer::angles, QuantumInterferometer::angles, QuantumInterferometer::angles, General::stop},
+    TestID -> "QI-fix-5-rejects-nonreal-passive-angles"
+]
+
+VerificationTest[
+    With[{xi = (2 + I)/7, alpha = {(1 + I)/3, (2 - I)/5},
+          qi = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}}, 2]},
+        With[{sq = QuantumInterferometer[{"S"[xi] -> 1}, 1]},
+            FullSimplify[First[qi["Coherent"[alpha]]] - qi["Unitary"] . alpha] === {0, 0} &&
+            Abs[N[sq["Amplitude", {0} -> {2}] + Exp[I Arg[xi]] Sqrt[Sech[Abs[xi]]] Tanh[Abs[xi]]/Sqrt[2], 40]] < 10^-30 &&
+            FullSimplify[QuantumInterferometer[{"BS"[th, ph] -> {1, 2}, "PS"[al] -> 1}, 2]["Unitary"] .
+                ConjugateTranspose[QuantumInterferometer[{"BS"[th, ph] -> {1, 2}, "PS"[al] -> 1}, 2]["Unitary"]],
+                Element[{th, ph, al}, Reals]] === IdentityMatrix[2]
+        ]
+    ],
+    True,
+    TestID -> "QI-fix-5-real-angle-validation-keeps-complex-light-parameters"
+]
+
+VerificationTest[
+    With[{identity = QuantumInterferometer[{}, 1]["Amplitude", {nx} -> {nx}],
+          bs = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}}, 2]["Amplitude", {nx, nx} -> {tx, 2 nx - tx}]},
+        {
+            (identity /. nx -> #) & /@ {-1, 1/2, I},
+            (bs /. Thread[{nx, tx} -> #]) & /@ {{1/2, 1/2}, {I, 0}, {1, I}},
+            identity /. nx -> 3,
+            bs /. {nx -> 1, tx -> 1}
+        }
+    ],
+    {ConstantArray[0, 3], ConstantArray[0, 3], 1, 1/2},
+    TestID -> "QI-fix-6-symbolic-occupations-have-a-discrete-domain"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
+        With[{formula = qi["Amplitude", {nx, 0} -> {tx, nx - tx}]},
+            (Activate[formula /. Thread[{nx, tx} -> #]] &) /@
+                {{I, 0}, {2, I}, {1/2, 0}, {-1, 0}, {2, -1}, {2, 3}}
+        ]
+    ],
+    ConstantArray[0, 6],
+    TestID -> "QI-fix-6-invalid-substitutions-do-not-evaluate-sum-bounds"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"S"[.2] -> 1}, 1]["Probabilities", {0}, "Cutoff" -> "bad"],
+        QuantumInterferometer[{}, 1]["Probabilities", "Coherent"[{1/3}], "Cutoff" -> "bad"],
+        QuantumInterferometer[{"BS"[Pi/6, 0] -> {1, 2}}, 2]["Probabilities", {1, 0}, "Cutoff" -> -1]
+    },
+    ConstantArray[$Failed, 3],
+    {QuantumInterferometer::cutoff, QuantumInterferometer::cutoff, QuantumInterferometer::cutoff, General::stop},
+    TestID -> "QI-fix-7-probability-distributions-validate-cutoffs"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"S"[.2] -> 1}, 1][{0}, "Cutoff" -> -1],
+        QuantumInterferometer[{"S"[.2] -> 1}, 1][{0}, "Cutoff" -> 1/2],
+        QuantumInterferometer[{}, 1][{1}, "Cutoff" -> "bad"]
+    },
+    ConstantArray[$Failed, 3],
+    {QuantumInterferometer::cutoff, QuantumInterferometer::cutoff, QuantumInterferometer::cutoff, General::stop},
+    TestID -> "QI-fix-7-amplitude-distributions-validate-cutoffs"
+]
+
+VerificationTest[
+    With[{sq = QuantumInterferometer[{"S"[1/5] -> 1}, 1], passive = QuantumInterferometer[{}, 1]},
+        {
+            FullSimplify[Values[sq["Probabilities", {0}, "Cutoff" -> 0]]],
+            passive["Probabilities", "Coherent"[{(1 + I)/3}], "Cutoff" -> 0],
+            passive["Probabilities", {1}, "Cutoff" -> 0] === passive["Probabilities", {1}],
+            sq[{1}, "Cutoff" -> 0]
+        }
+    ],
+    {{Sech[1/5]}, <|QuditName[{0}] -> Exp[-2/9]|>, True, <||>},
+    TestID -> "QI-fix-7-zero-and-below-input-cutoffs-remain-valid"
+]
+
+
 EndTestSection[]

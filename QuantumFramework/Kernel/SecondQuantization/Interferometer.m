@@ -53,6 +53,8 @@ QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only nume
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
 QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"Reck\" or \"CosineSine\".";
 QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p or \"S\"[\[Xi]] -> p.";
+QuantumInterferometer::angles = "beam-splitter and phase-shifter angles `1` must be real";
+QuantumInterferometer::cutoff = "cutoff `1` must be Automatic or a nonnegative integer";
 QuantumInterferometer::modes = "The elements act on mode `1`, outside the `2` modes of the interferometer.";
 QuantumInterferometer::occ = "`1` is not a list of `2` nonnegative photon numbers.";
 QuantumInterferometer::levels = "\"CircuitOperator\" needs the number of Fock levels per mode, as in interferometer[\"CircuitOperator\", d]; n photons need d >= n + 1.";
@@ -113,12 +115,12 @@ elementsUnitary[elements_List, m_Integer] := Developer`ToPackedArray[Fold[applyG
 
 zeroQ[x_, tol_] := If[Precision[x] === Infinity, PossibleZeroQ[x], Abs[x] <= tol]
 
-(* a numeric tolerance, since no symbolic zero test decides high-degree radical angles *)
-identityGateQ["BS"[t_, _] -> _, tol_] := TrueQ[Abs[N[t]] <= tol]
+(* Exact elements are removed only when their action is exactly identity. *)
+identityGateQ["BS"[t_, _] -> _, tol_] := If[Precision[t] === Infinity, TrueQ[t == 0], TrueQ[Abs[t] <= tol]]
 
-identityGateQ["PS"[a_] -> _, tol_] := TrueQ[Abs[N[Exp[I a] - 1]] <= tol]
+identityGateQ["PS"[a_] -> _, tol_] := If[Precision[a] === Infinity, TrueQ[Exp[I a] == 1], TrueQ[Abs[Exp[I a] - 1] <= tol]]
 
-identityGateQ["S"[xi_] -> _, tol_] := TrueQ[Abs[N[xi]] <= tol]
+identityGateQ["S"[xi_] -> _, tol_] := If[Precision[xi] === Infinity, TrueQ[xi == 0], TrueQ[Abs[xi] <= tol]]
 
 unitaryQ[w_, tol_] := If[Precision[w] === Infinity,
     AllTrue[Flatten[w . ConjugateTranspose[w] - IdentityMatrix[Length[w]]], PossibleZeroQ],
@@ -426,7 +428,10 @@ normalizeElement[element_] := (Message[QuantumInterferometer::elem, element]; $F
 
 QuantumInterferometer[elements : {___Rule}, m_Integer ? Positive, opts : OptionsPattern[]] := Enclose[
     With[{items = ConfirmBy[normalizeElement /@ elements, FreeQ[$Failed]]},
-        {top = Max[0, Flatten[items[[All, -1]]]]},
+        {top = Max[0, Flatten[items[[All, -1]]]],
+         nonreal = Select[Catenate @ Cases[items, {("BS" | "PS"), parameters__, _} :> {parameters}],
+             NumericQ[#] && ! TrueQ[Element[#, Reals]] &]},
+        ConfirmAssert[nonreal === {}, Message[QuantumInterferometer::angles, nonreal]];
         ConfirmAssert[top <= m, Message[QuantumInterferometer::modes, top, m]];
         elementsInterferometer[##, m, None] & @@ layoutItems[items, m, OptionValue["DropIdentities"], OptionValue[Tolerance]]
     ],
@@ -537,6 +542,7 @@ QuantumInterferometerProp[qi_, "Probability", s_ -> t_] := Replace[QuantumInterf
 
 QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
     Which[
+        ! cutoffQ[OptionValue["Cutoff"]], $Failed,
         ! FreeQ[in, "Coherent"[_]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
         ! occupationQ[qi, in], $Failed,
         passiveQ[qi], With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
@@ -603,6 +609,11 @@ occupationQ[qi_, s_] := If[
 
 symbolicPatternsQ[qi_, s_, t_] := VectorQ[s] && VectorQ[t] && Length[s] == Length[t] == qi["Modes"] &&
     ! VectorQ[Join[s, t], IntegerQ] && VectorQ[Join[s, t], ! NumericQ[#] || IntegerQ[#] && # >= 0 &]
+
+cutoffQ[cutoff_] := If[MatchQ[cutoff, Automatic | _Integer ? NonNegative],
+    True,
+    Message[QuantumInterferometer::cutoff, cutoff]; False
+]
 
 modeList[occupation_] := Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, occupation]
 
@@ -736,7 +747,7 @@ symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] := With[{
 symbolicFactor[c_, {"PS"[al_] -> {p_}, _}] := E^(I al c[[p]])
 
 symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, free, cs},
-    steps = MapIndexed[{#1, Subscript[\[FormalK], First[#2]]} &, elements];
+    steps = {#, Unique["k"]} & /@ elements;
     counts = FoldList[symbolicCounts, n, steps];
     ks = Cases[steps, {"BS"[__] -> _, k_} :> k];
     eqs = Thread[Most[Last[counts]] == Most[t]];
@@ -748,8 +759,8 @@ symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, f
     ];
     free = DeleteCases[ks, Alternatives @@ Keys[rules]];
     cs = Select[DeleteDuplicates[Expand[Flatten[Rest[counts]] /. rules]], ! NumericQ[#] &];
-    With[{angles = Select[Cases[elements, (("BS"[_, a_] | "PS"[a_]) -> _) :> a], ! NumericQ[#] &]},
-        KroneckerDelta[Total[n], Total[t]] (Eliminate[eqs, ks] /. {Equal -> KroneckerDelta, And -> Times, True -> 1, False -> 0}) *
+    With[{angles = Select[Cases[elements, (("BS"[_, a_] | "PS"[a_]) -> _) :> a], ! NumericQ[#] &], occupations = Join[n, t]},
+        {amplitude = KroneckerDelta[Total[n], Total[t]] (Eliminate[eqs, ks] /. {Equal -> KroneckerDelta, And -> Times, True -> 1, False -> 0}) *
         Inactive[Sum][
             Times @@ MapThread[symbolicFactor, {Most[counts], steps}] /. rules,
             Sequence @@ Table[
@@ -763,9 +774,11 @@ symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, f
             Inactive[Sum][b_] :> b
         } /. {
             Power[-1, x_ /; ! NumericQ[x]] :> (-1) ^ With[{v = Variables[x]}, Mod[x /. Thread[v -> 0], 2] + Mod[Coefficient[x, v], 2] . v],
-            Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Chop[Collect[Expand[x / I], angles]]),
-            WignerD[{j_, m1_, m2_}, angles___] :> WignerD[Together[Expand[{j, m1, m2}]], angles]
-        }
+            Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Collect[Expand[x / I], angles]),
+            WignerD[{j_, m1_, m2_}, eulerAngles___] :> WignerD[Together[Expand[{j, m1, m2}]], eulerAngles]
+        }},
+        (* Hold the formula until the discrete domain is known, before evaluating sum bounds. *)
+        If[Element[occupations, Integers], If[Min[occupations] >= 0, amplitude, 0], 0]
     ]
 ]
 
@@ -793,11 +806,12 @@ autoShells[g_, s_, start_] := With[{
 ]
 
 (qi_QuantumInterferometer ? QuantumInterferometerQ)[s : _List | Ket[_List] | _QuditName, opts : OptionsPattern[{"Cutoff" -> Automatic}]] /;
-    VectorQ[occupation[s], IntegerQ] := With[{in = occupation[s]},
+    VectorQ[occupation[s], IntegerQ] := With[{in = occupation[s], cutoff = OptionValue[{opts, "Cutoff" -> Automatic}, "Cutoff"]},
     Which[
+        ! cutoffQ[cutoff], $Failed,
         ! occupationQ[qi, in], $Failed,
         passiveQ[qi], KeyMap[QuditName, photonAmplitudes[qi["Unitary"], in]],
-        True, gaussianAmplitudes[qi, in, OptionValue["Cutoff"]]
+        True, gaussianAmplitudes[qi, in, cutoff]
     ]
 ]
 
@@ -820,10 +834,10 @@ elementOperator["S"[xi_] -> {p_}, d_] := SqueezeOperator[xi, d, {p}]
 fockComponents[qs_, d_, m_] := {IntegerDigits[#[[1, 1]] - 1, d, m], #[[2]]} & /@
     Most @ ArrayRules[SparseArray[qs["Computational"]["StateVector"]]]
 
-photonSectorState[w_, components_, d_, m_] := With[{
+photonSectorState[w_, components_, d_, m_, parameters_] := With[{
     amplitudes = KeySelect[Merge[#2 photonAmplitudes[w, #1] & @@@ components, Total], Max[#] < d &]
 },
-    QuantumState[SparseArray[KeyValueMap[FromDigits[#1, d] + 1 -> #2 &, amplitudes], d ^ m], ConstantArray[d, m]]
+    QuantumState[SparseArray[KeyValueMap[FromDigits[#1, d] + 1 -> #2 &, amplitudes], d ^ m], ConstantArray[d, m], "ParameterSpec" -> parameters]
 ]
 
 (* A state vector goes through the permanents; a density matrix, or any state when
@@ -841,7 +855,7 @@ photonSectorState[w_, components_, d_, m_] := With[{
             If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
             If[ components === None,
                 qi["CircuitOperator", d][qs],
-                photonSectorState[qi["Unitary"], components, d, m]
+                photonSectorState[qi["Unitary"], components, d, m, qs["ParameterSpec"]]
             ]
         ],
         $Failed &
