@@ -1,0 +1,67 @@
+{
+  "starter_kit": {
+    "url": "https://www.kaggle.com/datasets/sohier/verifiable-circuit-compilation-starter-kit",
+    "version": 4,
+    "license": "Apache-2.0",
+    "release_note_revision": "f02280140eb100d604a077f4c774f85d68e1269f",
+    "inspected_file_sha256": {
+      "starter_kit/data/systems.toml": "b39821c55427b85ddb78e34a1b4c1c7b6bd7a8a0ea2055fa2609e03ec9cae4ed",
+      "starter_kit/dfthc/train_df_thc_sga.py": "9f3aea602f270d7d596504f0af3ec1f5af44247c2dcf5833795dc10bb55d28e5",
+      "starter_kit/dfthc/df_thc_sga.py": "1e22e79ecf9db19042f042aac5844d404987439493f0152b546e4df1f5432fcc",
+      "starter_kit/starter/task1_factorization/check_factorization.py": "5b897b14bad6e874878d81323ee774afa9508ecce8cd6d870cfeb5d71c9d3f76",
+      "starter_kit/starter/task1_factorization/solution_io.py": "682be529a8418696100fc51fe773a32f8499a729c6ec7e78f69344b996fcfe84",
+      "starter_kit/starter/task1_factorization/train_df_thc_qaggle.py": "e51b7559918ac1734d46514fcae7f0f0d789a6ef113bcaebd1b70a925e3918bc",
+      "starter_kit/starter/task2_angles/trees.py": "47429502abc75e1a4360a2591f5df6b8ba56f79c0909d90739c38225ce25ea0c",
+      "starter_kit/starter/task2_angles/encode.py": "cd8eb31056619b2c85ef9e7a1a3743eb2ef621035cda7dd23e6b47208e683745",
+      "starter_kit/baselines/FeMoCo76o113e_65_60_60_ep50000_seed0.npz": "c71274b7836dd4f14b3511c218ebf88a400f5a82404d9ace6a08bcbb84aee007"
+    },
+    "baseline_manifest": [
+      {
+        "name": "starter_kit/baselines/Fe2S2-20o30e_15_20_20_ep50000_seed0.npz",
+        "totalBytes": 60044
+      },
+      {
+        "name": "starter_kit/baselines/Fe4S4-36o54e_32_22_22_ep200000_seed0.npz",
+        "totalBytes": 184160
+      },
+      {
+        "name": "starter_kit/baselines/FeMoCo54o54e_40_40_40_ep50000_seed0.npz",
+        "totalBytes": 639424
+      },
+      {
+        "name": "starter_kit/baselines/FeMoCo76o113e_65_60_60_ep50000_seed0.npz",
+        "totalBytes": 2194984
+      },
+      {
+        "name": "starter_kit/baselines/XVIII100o100e_70_70_70_ep60000_seed0.npz",
+        "totalBytes": 3438836
+      },
+      {
+        "name": "starter_kit/baselines/XVIII150o150e_120_120_120_ep75000_seed0.npz",
+        "totalBytes": 15809964
+      },
+      {
+        "name": "starter_kit/baselines/XVIII56o64e_50_50_50_ep60000_seed0.npz",
+        "totalBytes": 1106424
+      },
+      {
+        "name": "starter_kit/baselines/cpd1X58o63e_40_45_45_ep60000_seed0.npz",
+        "totalBytes": 783768
+      }
+    ]
+  },
+  "public_words": {
+    "url": "https://www.kaggle.com/datasets/dmitriigluzdov/vqcc-femoco-public-factorization",
+    "version": 2,
+    "license": "Apache-2.0",
+    "sha256": "9afd0ca5e90dd1740fe713e4ac1c26736184ea9bc4d4b57a6eeefafd608ee193"
+  },
+  "public_notebook": {
+    "url": "https://www.kaggle.com/code/dmitriigluzdov/quantum-circuit-compilation-from-source",
+    "version": 8,
+    "kernel_id": 140416287,
+    "license_notice": "Apache-2.0 in source",
+    "notebook_json_source_sha256": "e4793278e7fd7f6828cb38a9d0983d2061c91a101e68a9fbb19c3ec44ae962a4",
+    "reviewed_scope": "Pipeline, DFTHC module dependency closure, DQI field/mask adapter entry points, results and attribution. Entire notebook not reproduced."
+  }
+}

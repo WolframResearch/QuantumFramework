@@ -1,0 +1,120 @@
+{
+  "status": "FEASIBILITY_ONLY",
+  "source_sha256": "14d5cc25eb3bf82a9ccb87c811db28d127bef6d28697dd190dc1e875de3bfe69",
+  "analysis_source_sha256": "ab3b780bfcb72e6ed45b045b4b722bf19540b010dedaa817c88c9b15804397e0",
+  "symbolic_sha256": "150019e663e1fa3f0ca452d81250676ab6435dd947c22b2c6d2d1ad2d395ce78",
+  "search": {
+    "rounds": 2,
+    "pairs_per_group": 60,
+    "attempted_pair_rotations": 7800,
+    "accepted_pair_rotations": 5944
+  },
+  "candidates": [
+    {
+      "name": "identity",
+      "status": "OFFICIAL_METRICS_PASS",
+      "metrics": {
+        "error_1": 0.0031851950317938155,
+        "error_2": 0.018639570630973875,
+        "Lambda": 308.4559397330944,
+        "E_SOS": -22144.23882724429,
+        "E_gap": 3.965477244291833,
+        "lambda_eff": 49.30136925057438,
+        "gap_in_domain": true
+      },
+      "score_from_unchanged_circuit_resources": 3355599588.3155365,
+      "improvement": 1.0,
+      "relative_augmented_gram_error": 0.0
+    },
+    {
+      "name": "spectral_control",
+      "status": "OFFICIAL_METRICS_PASS",
+      "metrics": {
+        "error_1": 0.003185195031797916,
+        "error_2": 0.01863957063097409,
+        "Lambda": 334.76242819272534,
+        "E_SOS": -22144.23882724429,
+        "E_gap": 3.965477244291833,
+        "lambda_eff": 51.373734268683116,
+        "gap_in_domain": true
+      },
+      "score_from_unchanged_circuit_resources": 3496650989.2667217,
+      "improvement": 0.9596610009451458,
+      "relative_augmented_gram_error": 9.174360882696258e-16
+    },
+    {
+      "name": "pair_coordinate",
+      "status": "OFFICIAL_METRICS_PASS",
+      "metrics": {
+        "error_1": 0.0031851950317933592,
+        "error_2": 0.018639570630973688,
+        "Lambda": 300.78469451855,
+        "E_SOS": -22144.23882724429,
+        "E_gap": 3.965477244291833,
+        "lambda_eff": 48.68043460482008,
+        "gap_in_domain": true
+      },
+      "score_from_unchanged_circuit_resources": 3313336907.312215,
+      "improvement": 1.0127553225601815,
+      "relative_augmented_gram_error": 3.2140392044921713e-16
+    }
+  ],
+  "best_name": "pair_coordinate",
+  "angle_words_unchanged": true,
+  "factorization_dimensions_unchanged": true,
+  "full_official_best_result": {
+    "status": "PASS",
+    "score": 3313336907.312215,
+    "lambda_eff": 48.68043460482008,
+    "toffoli_count": 93237.0,
+    "num_qubits": 730,
+    "brot": 12,
+    "batch_size": 8,
+    "num_circuits": 10,
+    "reaction_depth": 110,
+    "num_ops": 2060743,
+    "verified_shots": 254464,
+    "submission_sha256": "37adb9d78e4051ff04362d8df2578ba9cf1a20b61fc24954e7c795580cc568c5",
+    "resources": {
+      "brot": 12,
+      "keep_bits": 10,
+      "angles_toffoli_per_pass": 39740.0,
+      "angles_toffoli": 79480.0,
+      "angles_qubits": 119,
+      "angles_selection_qubits": 12,
+      "angles_persistent_qubits": 96,
+      "angles_temporary_qubits": 11,
+      "outer_state_prep_toffoli": 846,
+      "inner_state_prep_toffoli": 9461,
+      "givens_rotations_toffoli": 3450,
+      "outer_state_prep_persistent_qubits": 46,
+      "outer_state_prep_temporary_qubits": 370,
+      "outer_state_prep_qubits": 416,
+      "inner_state_prep_persistent_qubits": 44,
+      "inner_state_prep_temporary_qubits": 544,
+      "inner_state_prep_qubits": 588,
+      "heuristic_persistent_qubits": 90,
+      "heuristic_temporary_qubits": 544,
+      "heuristic_toffoli": 13757,
+      "heuristic_qubits": 634,
+      "persistent_qubits": 186,
+      "temporary_qubits": 544,
+      "toffoli": 93237.0,
+      "qubits": 730,
+      "angles_within_cap": true
+    },
+    "metrics": {
+      "error_1": 0.0031851950317933592,
+      "error_2": 0.018639570630973688,
+      "Lambda": 300.78469451855,
+      "E_SOS": -22144.23882724429,
+      "E_gap": 3.965477244291833,
+      "lambda_eff": 48.68043460482008,
+      "gap_in_domain": true
+    }
+  },
+  "best_improvement": 1.0127553225601815,
+  "local_candidate": "local/mixed-feasibility.npz",
+  "local_candidate_sha256": "ddf53de8d88507d33efd4a2ed66c8acbf91ea9254cf74f09efbb55dd4e85ad51",
+  "elapsed_seconds": 77.3405497079948
+}

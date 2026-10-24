@@ -1,0 +1,43 @@
+{
+  "status": "BUILT_NOT_VERIFIED",
+  "m": 4095,
+  "n": 70,
+  "degree": 12,
+  "num_qubits": 1903,
+  "static_toffoli_count": 4503030,
+  "num_ops": 117029650,
+  "num_bits": 49154,
+  "operation_counts": {
+    "NEG": 1302,
+    "BIT_INVERT": 9739640,
+    "BIT_STORE0": 1504413,
+    "BIT_STORE1": 49140,
+    "X": 828388,
+    "Z": 33744,
+    "R": 5244183,
+    "HMR": 4894917,
+    "CX": 68873498,
+    "CZ": 15553041,
+    "SWAP": 1911816,
+    "CSWAP": 1172616,
+    "CCX": 3330414,
+    "INFO_TAG": 3807944,
+    "POP_CONDITION": 42297,
+    "PUSH_CONDITION": 42297
+  },
+  "arithmetic_calls": {
+    "division_scaffolds": 888,
+    "gf8_multiplications": 58211,
+    "controlled_multiplications": 32408,
+    "inverse_scaffolds": 4095
+  },
+  "circuit_sha256": "bc54c73b8725acbf6d246df5205f6a2dff2ea5783f335154833e57d9d93c8668",
+  "circuit_bytes": 1178484163,
+  "source_sha256": {
+    "generator.py": "20d710351871626915b1325fcc4f8fe055fbb59cf244167355889715b7d53df9",
+    "gf8_backend.py": "73e1bb18b32cc902f5779ec123a3f5d4bf75ff318238b1be91704131a911185a",
+    "certificates.json": "124e09a628d9e187b7eb9782393543e58097cd1c4502607cb3874d180b837c14"
+  },
+  "reference_sha256": "2b8e1b80a806157c333a7e308eaf2499ee09de499efbc05875202c327959959e",
+  "elapsed_seconds": 39.97367529204348
+}

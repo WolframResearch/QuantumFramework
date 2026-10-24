@@ -1,0 +1,70 @@
+{
+  "status": "REVIEWED_FEASIBILITY_ONLY",
+  "date": "2026-10-24",
+  "correctness": {
+    "rounds": 1,
+    "open_issues": 0,
+    "report": "reviews/correctness-1.md"
+  },
+  "quality": {
+    "rounds": 1,
+    "open_issues": 0,
+    "axes": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G"
+    ],
+    "report": "reviews/quality-1.md"
+  },
+  "decision": "DECISION.md",
+  "incumbent_evidence": {
+    "file": "../results/optimized-quadratic-verified.json",
+    "sha256": "8576ee713ef79db0ffcd628af1b67617b6127adbd21b7719bf76061ac41f4109"
+  },
+  "projection": {
+    "invsqrt_verified_factor": 3.9385957568764147,
+    "dfthc_verified_factor": 1.0127553225601815,
+    "dqi_modeled_factor": 1.258063132670707,
+    "aggregate_with_baseline_dqi": 1.585922574373589,
+    "aggregate_with_modeled_dqi": 1.712048747240195,
+    "new_submission_score": false
+  },
+  "candidate": {
+    "ignored": true,
+    "file": "local/mixed-feasibility.npz",
+    "sha256": "ddf53de8d88507d33efd4a2ed66c8acbf91ea9254cf74f09efbb55dd4e85ad51"
+  },
+  "public_file_sha256": {
+    "ComponentMixing.wl": "ab03882e44b707bc03ea779e4d73f980787457a6defff692669388e0b8a1b324",
+    "DECISION.md": "7734980864c25fa8a88ec595b0f4d5820216ed119ed4c1874eeb8188191238c7",
+    "FieldArithmetic.wl": "2473ce4cc50aaf497f065e0fd6fed6f6a1a6d63081351be067e3a3ad90b9459e",
+    "PLAN.md": "f78fcc644796ba91335feeb73788a04c48f779d397050a71689239e071ba34d6",
+    "README.md": "3c0f92a32cf337fd25cd7c1612366ce49617f230a2c880f307040d493f4572b3",
+    "component_mixing.py": "ab3b780bfcb72e6ed45b045b4b722bf19540b010dedaa817c88c9b15804397e0",
+    "dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+    "dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+    "dqi-profile.json": "e3cb8dbeb1c842d0b994b1de9ff18eb3c3eda11a4e33a78910c4392c7fe2d562",
+    "field-results.json": "b3ed9c4a0a17ecad8a1002f44e448cb25d149df0b8a5f1d673dd5d67d0c13c17",
+    "field_probes.py": "2f60c66ac063295920209071cc241e6f8a63af335b461ec1666880d864190ecc",
+    "mixing-results.json": "10a5c7ed96a09111fab3d9a97beabe59f99aa0d7600f1425644590464ba7d193",
+    "profile_baselines.py": "8e309f6be6918af67294b2a7b6d50731f8df4fb528fe21bc8f9fbb7772c813cb",
+    "profile_stages.py": "8d534940331ff356f0a9e8d5e04a2c335c324ffe3b150226dc3446ed60f882c0",
+    "reviews/correctness-1.md": "f25c08d3fa51bd16dd8e44ad202f9928603a7fdac280068ed5344c240e8829c1",
+    "reviews/quality-1.md": "abf649401692c7e2212ed958fac6735d9cf55f4bbb248b678ff6f49874222946",
+    "run-symbolic.wls": "5bfa41f2910d1125702c9add71f8f9cbe393cab05297d5db1ad22d5609098ecf",
+    "symbolic.json": "150019e663e1fa3f0ca452d81250676ab6435dd947c22b2c6d2d1ad2d395ce78",
+    "test_feasibility.py": "003989225f02b3085d540e36cdf1b8ddcf9951c12c9c0df1f7732f9a567858cc",
+    "verify-symbolic.wls": "d0169f88a13f7ef2b80f74795a5400dd62463cf1ff08eda0e9dc08756803ec2e",
+    "wl-checks.json": "44a5b00ec3d39c9d3fdaeacd06995313738ff4bd068a8729602dd51db6b0fe1e"
+  },
+  "scope": {
+    "new_full_dqi_decoder": false,
+    "commit": false,
+    "push": false,
+    "external_competition_data_vendored": false
+  }
+}

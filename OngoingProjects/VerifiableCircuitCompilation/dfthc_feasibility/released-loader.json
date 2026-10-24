@@ -1,0 +1,609 @@
+{
+  "status": "RELEASED_SOURCE_AUDIT_STATIC_RESOURCE_PROJECTION",
+  "source_sha256": {
+    "gauge_qrom.py": "e7d8569a51cb563687f2c7593090ca605de834baa6282b878777ea7ec0b79466",
+    "banked_lab.py": "a77e4819ba4f2b0b059847539b04b137179e82af5d0cea60da533e0012304e2a",
+    "chemistry_refine.py": "83cc9eb7196a01fb729f1934a9fb38dd71b3b53a7331e334bd452e0b737f8539"
+  },
+  "gauge_evidence": {
+    "max_component_drift_up_to_row_sign": 7.771561172376096e-16,
+    "redundant_bit_identity": "bit9 = bit8",
+    "brot": 10
+  },
+  "metrics": {
+    "error_1": 0.013911731985012415,
+    "error_2": 0.01998067964067221,
+    "Lambda": 290.7542054993138,
+    "E_SOS": -22144.18928562151,
+    "E_gap": 3.9159356215095613,
+    "lambda_eff": 47.55854233515931,
+    "gap_in_domain": true
+  },
+  "metric_gates_pass": true,
+  "resource_projection": {
+    "brot": 10,
+    "keep_bits": 10,
+    "angles_toffoli_per_pass": 28225.0,
+    "angles_toffoli": 56450,
+    "angles_qubits": 128,
+    "angles_selection_qubits": 12,
+    "angles_persistent_qubits": 30,
+    "angles_temporary_qubits": 86,
+    "outer_state_prep_toffoli": 627,
+    "inner_state_prep_toffoli": 5317,
+    "givens_rotations_toffoli": 2850,
+    "outer_state_prep_persistent_qubits": 44,
+    "outer_state_prep_temporary_qubits": 185,
+    "outer_state_prep_qubits": 229,
+    "inner_state_prep_persistent_qubits": 44,
+    "inner_state_prep_temporary_qubits": 543,
+    "inner_state_prep_qubits": 587,
+    "heuristic_persistent_qubits": 88,
+    "heuristic_temporary_qubits": 543,
+    "heuristic_toffoli": 8794,
+    "heuristic_qubits": 631,
+    "persistent_qubits": 118,
+    "temporary_qubits": 543,
+    "toffoli": 65244,
+    "qubits": 661,
+    "angles_within_cap": true
+  },
+  "conditional_cost": 2051023203.3721037,
+  "conditional_improvement_over_incumbent": 1.6154555940004633,
+  "circuit_profiles": [
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    },
+    {
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      }
+    }
+  ],
+  "circuit_count": 25,
+  "full_circuit_verification": "NOT_RUN",
+  "submission_written": false,
+  "scope": "No column-gauge optimization or factor training; public factors fixed."
+}

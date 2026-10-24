@@ -1,0 +1,128 @@
+{
+  "status": "REVIEWED_AUDIT_AND_FEASIBILITY_ONLY",
+  "date": "2026-10-24",
+  "head": "e5af45792346a238047199f5a2d41e54d2d4cc8c",
+  "commit": false,
+  "push": false,
+  "submission_written": false,
+  "factor_training": false,
+  "correctness": {
+    "visits": 3,
+    "rounds_per_visit": [
+      3,
+      2,
+      1
+    ],
+    "open_issues": 0,
+    "report": "reviews/correctness-v3-1.md"
+  },
+  "quality": {
+    "rounds": 3,
+    "open_issues": 0,
+    "axes": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G"
+    ],
+    "report": "reviews/quality-3.md"
+  },
+  "pipeline": {
+    "class": "code",
+    "notebook_build_required": false,
+    "quality_to_correctness_back_edges": 2,
+    "bounded_graph_completed": true,
+    "history": "reviews/PIPELINE.md"
+  },
+  "decision": "DECISION.md",
+  "rank_comparison": {
+    "symbolic_checks_passed": 32,
+    "official_cost_rows_crosschecked": 482,
+    "shapes_screened": 12,
+    "minimum_unconstrained_psd_rank_at_20mHa": 290,
+    "paper_shape": [
+      15,
+      57,
+      19
+    ],
+    "paper_shape_rank_cap": 285,
+    "paper_shape_status": "NUMERICALLY_REJECTED",
+    "interval_roundoff_certificate": false
+  },
+  "released_design": {
+    "shape": [
+      65,
+      60,
+      30
+    ],
+    "angle_bits": 10,
+    "four_address_loader": true,
+    "official_metric_gates_pass": true,
+    "full_circuit_verification": false,
+    "static_total_toffoli": 65244,
+    "static_total_qubits": 661,
+    "conditional_cost": 2051023203.3721037,
+    "conditional_improvement_over_incumbent": 1.6154555940004633,
+    "evidence": "released-loader.json"
+  },
+  "aggregate": {
+    "current_verified_local_estimate": 1.7120801622097384,
+    "conditional_estimate_if_released_projection_fully_verifies": 2.0088882102784944,
+    "new_submission_score": false
+  },
+  "local_cache": {
+    "matrix_sha256": "4c7e70360e876c9a13a7ffc3482e5cb7979b18c9cef5fa597923465563ae1efd",
+    "matrix_dimension": 2926,
+    "ignored": true,
+    "raw_matrix_and_spectra_vendored": false
+  },
+  "external_competition_data_vendored": false,
+  "external_source_vendored": false,
+  "privacy_check": {
+    "personal_path_or_credential_marker_hits": 0,
+    "raw_arrays_excluded": true
+  },
+  "prior_evidence_unchanged": {
+    "dqi_gf8": {
+      "manifest_sha256": "4cbfb20e4a72fb071f4642982c8f767b432a5e39f95d858d178dbb0674eefcf7",
+      "public_hashes_verified": 12
+    },
+    "other_tasks": {
+      "manifest_sha256": "a4691824d47068c3ac017d7ada74d3706a01f61bdb01ba6c595ae202440eb04a",
+      "public_hashes_verified": 21
+    },
+    "inverse_sqrt": {
+      "evidence_sha256": "8576ee713ef79db0ffcd628af1b67617b6127adbd21b7719bf76061ac41f4109",
+      "input_hashes_verified": 12
+    }
+  },
+  "public_file_sha256": {
+    "AUDIT.md": "77baa2a09dc91e4d3f010e82d2f694a344b049b045876f019f2e413d5a378195",
+    "DECISION.md": "5a6797b0994691a54c7a2eb0b0adc131c1a7a2a4e9aa188f0c4be9c9377f706e",
+    "DOCUMENTATION.md": "e35682d7d6c20b6d85d3729c6ed4a9a7d584dad605d8905d9d9b15626e7e5514",
+    "PLAN.md": "8a9e8571aa4cb99c0c45efbd6bd5534555dda04e1219f4ead4b091249b001bbf",
+    "README.md": "f09b6826ee3bdcc27c0620797508fa9f2538eff11e632657aace4fcf2e7fd5cf",
+    "RankCost.wl": "016dbf7e9884d762d08bede6b2a4b45fd1aa6853b988dc8b1b031a226f5794e0",
+    "audit_loader.py": "b7947facc9d2eda9e93038002156fa598eda35ed63b5a467907aaf3bdc843184",
+    "comparison.json": "47a7118f2c635fe82113e867d6a79f3cd4f3456e0505f8306bd8dd6e419553ac",
+    "inputs.json": "e6d37f4bbf685562b9e837f9abd48de91e3ca5c2666b57e9140e99aa41e6906f",
+    "prepare.py": "646b4d94e58fec92bd6bd0173676f4a94dce047625750fd98e2f42960a780d50",
+    "public-release-provenance.json": "34eb48a8887bceda16847b21ff4186dce2b3a5cc5ee64306129375748aa6bde2",
+    "released-loader.json": "a045dcccfecfe6bd58746aebeb2ac0a6cffb0444045d52e2016dcd2c9dbbef0f",
+    "released-sources.json": "7463fd40fa460055507186c7e989e63ffe9ebc424c9bf5e8a99eda0ef09ccca9",
+    "reviews/PIPELINE.md": "ee601be70943fe96523f9fa9e3def4693c1d7db32f45bb0890824d96f75312b8",
+    "reviews/correctness-1.md": "c16614eef5b4f6220e9c6d51df1994eb9943ea2a067f69380b649eb4c650c573",
+    "reviews/correctness-2.md": "e0114d3498e3b78c054e7c769e4312baf8ac360bb62b42559e8d850330177c4e",
+    "reviews/correctness-3.md": "9e2657a7009fedca10c370f5d8772e5e67fc0c37e3b5344d1dd50cb2c716cbdb",
+    "reviews/correctness-v2-1.md": "b56797b253ea577b99618b22731191cbced04541fdc76d9854bbf3ee014e2387",
+    "reviews/correctness-v2-2.md": "1d897465aa948407cceecad889e8be7adb3b2d82f72c92a3621f0b3a01aa7f59",
+    "reviews/correctness-v3-1.md": "2880eaf8cd264ad75f29fc6a8b738e3e6f52b3b1759d9e50fe5e48cb391108f1",
+    "reviews/quality-1.md": "e7c10f283853e2f6daa275085cf639ed0446322d38d3b9820ddf4a1cb91d916f",
+    "reviews/quality-2.md": "61b61c3bbeb0b3b618671c469e335be7d9f8918c13f752f1e8f3ca501bc16d4d",
+    "reviews/quality-3.md": "07aa3d0933f09103464cc8167dff0bb71bf996729b8e191bb986beda26bd9a98",
+    "run.wls": "454bd174ca688f604f00e923e3c840c937c7f6ef9fd53423395377ae94affec1"
+  }
+}

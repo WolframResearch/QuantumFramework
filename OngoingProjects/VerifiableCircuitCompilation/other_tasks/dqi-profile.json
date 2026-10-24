@@ -1,0 +1,67 @@
+{
+  "status": "PROFILING_AND_CONDITIONAL_MODELS_ONLY",
+  "stages": [
+    {
+      "label": "gf_iadd (x4)",
+      "approximate_static_toffoli": 0.0
+    },
+    {
+      "label": "initial_shift",
+      "approximate_static_toffoli": 30911.99295744
+    },
+    {
+      "label": "forward_eea",
+      "approximate_static_toffoli": 2109448.772613
+    },
+    {
+      "label": "chien_forney_mbuc",
+      "approximate_static_toffoli": 1444734.201435
+    },
+    {
+      "label": "reverse_eea",
+      "approximate_static_toffoli": 2109448.772613
+    },
+    {
+      "label": "uncompute_initial_shift",
+      "approximate_static_toffoli": 30911.99295744
+    }
+  ],
+  "gf_multiplications_static": 58211,
+  "native_toffoli_per_multiplication": 63,
+  "multiplication_toffoli_fraction": 0.6405236189714679,
+  "substitution_scenarios": [
+    {
+      "name": "subfield-6",
+      "static_toffoli_model": 5725461,
+      "assumed_qubits": 1911,
+      "assumed_repetition_factor": 1.1912604648115832,
+      "modeled_objective": 24907983172193.164,
+      "modeled_improvement": 0.9811897837870002
+    },
+    {
+      "name": "subfield-4",
+      "static_toffoli_model": 4677663,
+      "assumed_qubits": 1905,
+      "assumed_repetition_factor": 1.1912604648115832,
+      "modeled_objective": 20222070441466.74,
+      "modeled_improvement": 1.2085537281672043
+    },
+    {
+      "name": "subfield-3",
+      "static_toffoli_model": 4503030,
+      "assumed_qubits": 1903,
+      "assumed_repetition_factor": 1.1912604648115832,
+      "modeled_objective": 19426257704104.727,
+      "modeled_improvement": 1.258063132670707
+    }
+  ],
+  "limitations": [
+    "No modified decoder was built or verified.",
+    "Static counts include classical conditions; baseline actual mean is separately recorded.",
+    "Modeled peak qubits assume the fragment scratch increase adds to the baseline peak.",
+    "The repetition factor assumes zero errors on the fixed full verification protocol."
+  ],
+  "source_sha256": "8d534940331ff356f0a9e8d5e04a2c335c324ffe3b150226dc3446ed60f882c0",
+  "baseline_sha256": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+  "field_results_sha256": "b3ed9c4a0a17ecad8a1002f44e448cb25d149df0b8a5f1d673dd5d67d0c13c17"
+}

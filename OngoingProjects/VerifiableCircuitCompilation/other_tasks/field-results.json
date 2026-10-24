@@ -1,0 +1,175 @@
+{
+  "status": "ARITHMETIC_FRAGMENTS_ONLY_NOT_DQI_VERIFICATION",
+  "fragments": [
+    {
+      "name": "native",
+      "kind": "multiply",
+      "num_qubits": 36,
+      "toffoli_count": 63,
+      "num_ops": 579,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "native",
+      "kind": "controlled_multiply",
+      "num_qubits": 49,
+      "toffoli_count": 75,
+      "num_ops": 881,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "native",
+      "kind": "inverse_phase",
+      "num_qubits": 72,
+      "toffoli_count": 315,
+      "num_ops": 5369,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-6",
+      "kind": "multiply",
+      "num_qubits": 54,
+      "toffoli_count": 63,
+      "num_ops": 1166,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-6",
+      "kind": "controlled_multiply",
+      "num_qubits": 67,
+      "toffoli_count": 75,
+      "num_ops": 1452,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-6",
+      "kind": "inverse_phase",
+      "num_qubits": 90,
+      "toffoli_count": 315,
+      "num_ops": 8155,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-4",
+      "kind": "multiply",
+      "num_qubits": 48,
+      "toffoli_count": 45,
+      "num_ops": 1130,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-4",
+      "kind": "controlled_multiply",
+      "num_qubits": 61,
+      "toffoli_count": 57,
+      "num_ops": 1416,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-4",
+      "kind": "inverse_phase",
+      "num_qubits": 84,
+      "toffoli_count": 225,
+      "num_ops": 7975,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-3",
+      "kind": "multiply",
+      "num_qubits": 46,
+      "toffoli_count": 42,
+      "num_ops": 1110,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-3",
+      "kind": "controlled_multiply",
+      "num_qubits": 59,
+      "toffoli_count": 54,
+      "num_ops": 1396,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    },
+    {
+      "name": "subfield-3",
+      "kind": "inverse_phase",
+      "num_qubits": 82,
+      "toffoli_count": 210,
+      "num_ops": 7875,
+      "checks": {
+        "shots": 8192,
+        "all_field_elements_covered": true,
+        "scratch_clean": true,
+        "input_restored": true,
+        "phase_correct": true
+      }
+    }
+  ],
+  "source_sha256": "2f60c66ac063295920209071cc241e6f8a63af335b461ec1666880d864190ecc",
+  "symbolic_sha256": "150019e663e1fa3f0ca452d81250676ab6435dd947c22b2c6d2d1ad2d395ce78"
+}

@@ -1,0 +1,69 @@
+{
+  "status": "FULL_OFFICIAL_DQI_PASS_REVIEWED",
+  "date": "2026-10-24",
+  "head": "e5af45792346a238047199f5a2d41e54d2d4cc8c",
+  "commit": false,
+  "push": false,
+  "correctness": {
+    "rounds": 1,
+    "open_issues": 0,
+    "report": "reviews/correctness-1.md",
+    "independent_full_candidate_rerun": true,
+    "fresh_baseline_rerun": false
+  },
+  "quality": {
+    "rounds": 1,
+    "open_issues": 0,
+    "axes": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G"
+    ],
+    "report": "reviews/quality-1.md",
+    "full_simulation_rerun": false
+  },
+  "official_result": {
+    "file": "verified.json",
+    "verified_shots": 102400,
+    "value_errors": 0,
+    "phase_errors": 0,
+    "cost": 19425188366155.996,
+    "improvement": 1.2581323878369532,
+    "cost_reduction_percent": 20.517108559676135
+  },
+  "local_circuit": {
+    "file": "local/dqi-gf8.kmb",
+    "sha256": "bc54c73b8725acbf6d246df5205f6a2dff2ea5783f335154833e57d9d93c8668",
+    "bytes": 1178484163,
+    "ignored": true
+  },
+  "dependency_sha256": {
+    "other_tasks/FieldArithmetic.wl": "2473ce4cc50aaf497f065e0fd6fed6f6a1a6d63081351be067e3a3ad90b9459e",
+    "other_tasks/symbolic.json": "150019e663e1fa3f0ca452d81250676ab6435dd947c22b2c6d2d1ad2d395ce78",
+    "other_tasks/field_probes.py": "2f60c66ac063295920209071cc241e6f8a63af335b461ec1666880d864190ecc",
+    "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+    "other_tasks/evidence-manifest.json": "a4691824d47068c3ac017d7ada74d3706a01f61bdb01ba6c595ae202440eb04a",
+    "results/optimized-quadratic-verified.json": "8576ee713ef79db0ffcd628af1b67617b6127adbd21b7719bf76061ac41f4109"
+  },
+  "public_file_sha256": {
+    "README.md": "0b7cefaf030abb15fd7c93c3527721fcd0148208cf49d7424bfea168f8ef43d0",
+    "__init__.py": "57cd75c4361dce8ad26114416c6c140e92e8708e37c7ff72337538e8031eb2e2",
+    "build.json": "0c5f8610b7d1dbb1ce8c564b419611f7cc65aefb53e7bedc7299d2a451777bbf",
+    "certificates.json": "124e09a628d9e187b7eb9782393543e58097cd1c4502607cb3874d180b837c14",
+    "generator.py": "20d710351871626915b1325fcc4f8fe055fbb59cf244167355889715b7d53df9",
+    "gf8_backend.py": "73e1bb18b32cc902f5779ec123a3f5d4bf75ff318238b1be91704131a911185a",
+    "reviews/correctness-1.md": "f4eb5567d9be26e6a310266bcb9f096422611d43428537e68b79d541fbfaef9d",
+    "reviews/quality-1.md": "910c0afde044fe588508ebd5f562afd8772aa24e68bd27c45caa4b18b1b4bff7",
+    "run-certificates.wls": "7da871ee1559f062f1f3ae7cdb7b472f244f0d8350b2c030734eb095da0a64d6",
+    "test_integration.py": "c6dc4718aa8231cbfcbccbc04eca91a605e714acdccf00a4242c9230710861fa",
+    "verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+    "verify.py": "2290bc7ef11c5162d408a944a593acde56bfd1f7b2306303a7f74471b24cd1af"
+  },
+  "prior_feasibility_and_inverse_sqrt_inputs_unchanged": true,
+  "official_code_modified": false,
+  "external_competition_data_vendored": false
+}
