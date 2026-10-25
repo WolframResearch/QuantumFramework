@@ -1,0 +1,37 @@
+{
+	"status":"PASS",
+	"kernel":"15.0.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+	"symbolic_checks":{
+		"four_address_arbitrary_coefficients":true,
+		"hmr_phase_repaired":true,
+		"anf_phase_linearity":true,
+		"dirty_target_fanout":true,
+		"xor_involution":true,
+		"row_sign_projector":true,
+		"givens_unit_norm":true,
+		"gauge_endpoint_sine":true,
+		"signed_all_512_words":true,
+		"compact_expand_identity":true,
+		"zero_table_limit":true,
+		"constant_table_limit":true,
+		"nontrivial_exact_table":true,
+		"reject_unsigned_gap":true,
+		"reject_empty_table":true,
+		"reject_float_table":true,
+		"reject_negative_word":true
+	},
+	"released_data_checks":{
+		"all_four_address_rows":true,
+		"all_delta_signed_bits":true,
+		"all_forward_batches":true,
+		"all_reverse_batches_clear":true,
+		"all_angle_widths_128":true,
+		"fixed_factors":true
+	},
+	"word_count":298200,
+	"source_sha256":{
+		"LoaderIdentities.wl":"183c80d935f9ce05a255c61fee23771ba75594fbc3890a9408c3ea8d39584e9a",
+		"run.wls":"d87dc6c1eb27ad11d01d059d345c1efff464e7dce909d74b3786188eb4c0774a",
+		"build.json":"3d911ccb95018b64a9389ced0e1400d8f6f3cd3a61caf67c6fb9107456057a54"
+	}
+}

@@ -1,0 +1,718 @@
+{
+  "status": "BUILT_NOT_FULLY_VERIFIED",
+  "public_factor_sha256": "9afd0ca5e90dd1740fe713e4ac1c26736184ea9bc4d4b57a6eeefafd608ee193",
+  "factor_shape": [
+    65,
+    60,
+    30
+  ],
+  "factor_training": false,
+  "fixed_array_sha256": {
+    "W": "9ac6c5dcc7fc063d31b25c6ad8527c1a9e1ddc874d341b530b1c9786af22fe9b",
+    "H2_I": "25de45c29655c10772371fae22277aabbb0d32d3a02ebbb6f616763d421aadc0",
+    "H1_I": "8c2be30dd701bd6977d54382f9ef8dc25f038cda00ae2f7a41508cfee83d321a",
+    "Hsym_lower": "7b55d75b30fae820b83468e05b98d6f2b0137a5c27b0ebaa2bf2ac4e59b8b685",
+    "tree_edges": "d5ac1468e128387647ecb44cd13281e5b254f400ecf8536a3f2d554dceca1729"
+  },
+  "weights_and_offsets_exactly_released": true,
+  "gauge": {
+    "max_vector_drift_up_to_sign": 7.771561172376096e-16,
+    "max_unit_norm_error": 6.661338147750939e-16,
+    "only_row_sign_gauge": true
+  },
+  "metrics": {
+    "error_1": 0.013911731985012415,
+    "error_2": 0.01998067964067221,
+    "Lambda": 290.7542054993138,
+    "E_SOS": -22144.18928562151,
+    "E_gap": 3.9159356215095613,
+    "lambda_eff": 47.55854233515931,
+    "gap_in_domain": true
+  },
+  "metric_gates_pass": true,
+  "words_sha256": "8903db9b02b1c314cb3b6c8b760738791e42d4bbce7a7738170217b95ac84761",
+  "factorization_sha256": "340efa960c4128a67f302cf38a3d24405c7d38c258ce570c263a6899a13c765c",
+  "circuit_count": 25,
+  "profiles": [
+    {
+      "k": 0,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "6cc00e27b56f78bb69ca40f45fe57b4a8328e0c4cc37f8af0b938a4b634c1d70",
+      "bytes": 1158259,
+      "num_ops": 129948,
+      "reaction_depth": 10
+    },
+    {
+      "k": 1,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "108a225439c916348496d374e5ce5452a140cd9abeaa176a48ccd02acbf9c455",
+      "bytes": 1151443,
+      "num_ops": 129188,
+      "reaction_depth": 10
+    },
+    {
+      "k": 2,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "e3091b0c2779a398c998586c43eb734fdc4309c2243917f2f338e4547174fa53",
+      "bytes": 1153510,
+      "num_ops": 129423,
+      "reaction_depth": 10
+    },
+    {
+      "k": 3,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "a48d7f26fc1b170452142d3aa6938f4554e9c317f288cff376356565e456fa1a",
+      "bytes": 1148575,
+      "num_ops": 128868,
+      "reaction_depth": 10
+    },
+    {
+      "k": 4,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "b639446b1e3efc8c3eefc630ea6388d24ae47c771cfea29790f45796621cceb2",
+      "bytes": 1157978,
+      "num_ops": 129919,
+      "reaction_depth": 10
+    },
+    {
+      "k": 5,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "2140c1061a2f2e01db067656818847b4e4ba892816cdb824fb5a523d80d3c896",
+      "bytes": 1153052,
+      "num_ops": 129369,
+      "reaction_depth": 10
+    },
+    {
+      "k": 6,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "211ce282122182aeafd3ce43dff5c5e039a4dbbbbc577839e5e769287f948cf3",
+      "bytes": 1153360,
+      "num_ops": 129401,
+      "reaction_depth": 10
+    },
+    {
+      "k": 7,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "579d46c3131c46e346bf8a9db0ea83f565fdf00036b84990ff0a113ce6258f83",
+      "bytes": 1154401,
+      "num_ops": 129518,
+      "reaction_depth": 10
+    },
+    {
+      "k": 8,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "f13bf934f9c2296da4274e1d70e76d0572f52ad7d2191ec20ae7b347bada01d3",
+      "bytes": 1156915,
+      "num_ops": 129800,
+      "reaction_depth": 10
+    },
+    {
+      "k": 9,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "951a31c552bf3fd2ee02dbe83169a4d83f4bfda0f623b1886e4f36136032569d",
+      "bytes": 1162777,
+      "num_ops": 130450,
+      "reaction_depth": 10
+    },
+    {
+      "k": 10,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "8d731cb690f1319109593d72e39a5cdf2ef1c1f08d8846441a589341ac9d00e1",
+      "bytes": 1154549,
+      "num_ops": 129534,
+      "reaction_depth": 10
+    },
+    {
+      "k": 11,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "395283ed0d2216cfd5a9a5d03c47e63bc467b95df176686239a4a548035472be",
+      "bytes": 1153205,
+      "num_ops": 129390,
+      "reaction_depth": 10
+    },
+    {
+      "k": 12,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "ae22d3c2030c06fe7f95739933e7a2c54556eda5ef94fd7a224d8a18913d4c63",
+      "bytes": 1156198,
+      "num_ops": 129719,
+      "reaction_depth": 10
+    },
+    {
+      "k": 13,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "9bff1f9855937a6a301dd588bad8997dec213bcdcbb678ac190678b227d6b53b",
+      "bytes": 1160344,
+      "num_ops": 130181,
+      "reaction_depth": 10
+    },
+    {
+      "k": 14,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "cc1a49a71cd866d9f47a5973723208e937baf3996e0b90ef8d904f0b58ca8223",
+      "bytes": 1151773,
+      "num_ops": 129226,
+      "reaction_depth": 10
+    },
+    {
+      "k": 15,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "20a6ddcf3cb0b0a35e44f35b15de2ae4886e7d4a95ad3add97154f7712faec37",
+      "bytes": 1157674,
+      "num_ops": 129883,
+      "reaction_depth": 10
+    },
+    {
+      "k": 16,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "fd83f84b5147f3f19d8ca352daa069891a23a4694047784d28f02454110456e0",
+      "bytes": 1159396,
+      "num_ops": 130069,
+      "reaction_depth": 10
+    },
+    {
+      "k": 17,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "2a0f204ded1c90d4d59acf4ee38e1f3897bf2aa4adf1c877dcf3f848b9f049b3",
+      "bytes": 1155344,
+      "num_ops": 129625,
+      "reaction_depth": 10
+    },
+    {
+      "k": 18,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "80366632dbf956a576176552fac45f5b2a889bcc047582fb99e658942784e228",
+      "bytes": 1156735,
+      "num_ops": 129776,
+      "reaction_depth": 10
+    },
+    {
+      "k": 19,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "86a060743dbc76ee0132a7e8a1e1a826c92dbe6e3498cd3392aee3d42f3909dc",
+      "bytes": 1158771,
+      "num_ops": 130004,
+      "reaction_depth": 10
+    },
+    {
+      "k": 20,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "93dea10520740578e157449197e08f10013767dbe6be2a934ca6990513d241e2",
+      "bytes": 1162540,
+      "num_ops": 130425,
+      "reaction_depth": 10
+    },
+    {
+      "k": 21,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "3833ed6285cd5b33dea84add2570f9ba902ba291495668286d49d5fc54045a31",
+      "bytes": 1154937,
+      "num_ops": 129578,
+      "reaction_depth": 10
+    },
+    {
+      "k": 22,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "81c3212cd0bb1065645089799fcdc67a294558268cc0b62aa0ef356c6286f7de",
+      "bytes": 1157186,
+      "num_ops": 129827,
+      "reaction_depth": 10
+    },
+    {
+      "k": 23,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "119377ffd98218f55cfa7e816411d5bc11fccd1f20636d75913d88e4e9715a6d",
+      "bytes": 1154296,
+      "num_ops": 129509,
+      "reaction_depth": 10
+    },
+    {
+      "k": 24,
+      "num_qubits": 128,
+      "static_toffoli": 1129,
+      "table_identity": "PASS",
+      "init": {
+        "monomial_ands": 472,
+        "recomputed_ands": 12,
+        "pebble_sites": 11,
+        "direct_leaf_ands": 511,
+        "scratch": 5
+      },
+      "cleanup": {
+        "address_bits": 10,
+        "low_bits": 5,
+        "high_bits": 5,
+        "retained_products": 26,
+        "traversal_carries": 4,
+        "anf_toffoli": 52,
+        "scratch_count": 30,
+        "anf_table_identity": "PASS"
+      },
+      "sha256": "45eef871de2aecdb13b17bd96cdc2ec2a6993b887dba24fa7ecc2c6cddcd6066",
+      "bytes": 1150686,
+      "num_ops": 129107,
+      "reaction_depth": 10
+    }
+  ],
+  "source_sha256": {
+    "loader.py": "1759ff52b36e4d67075faecffde2056e5c9b602526f2a01c6c718411d4875e6b",
+    "generator.py": "d1c34e6a9397ec960a91ecdaf1b1e67953efd87ead0f9a009453b21daa3ee643"
+  },
+  "elapsed_seconds": 7.5631464589969255
+}
