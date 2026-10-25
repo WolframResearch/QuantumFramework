@@ -1451,7 +1451,8 @@ VerificationTest[
     TestID -> "E28-ExactHighDegreeAlgebraicMargins-Decided"
 ]
 
-(* an exact ket held in the Fourier[3] (x) Fourier[3] frame: every method reads it without a message *)
+(* an exact ket held in the Fourier[3] (x) Fourier[3] frame: every method reads it without a message, but for the one
+   that says the realignment value is no monotone *)
 VerificationTest[
     With[{qs = QuantumState[QuantumState[Normalize[{1, 2, 0, 0, 1, 3, 1, 0, 2}], {3, 3}], QuantumBasis[QuantumTensorProduct[QuditBasis["Fourier"[3]], QuditBasis["Fourier"[3]]]]]},
         With[{t = AbsoluteTiming[{
@@ -1462,8 +1463,8 @@ VerificationTest[
         ]
     ],
     {True, True},
-    {},
-    TestID -> "E29-ExactKetInFourierFrame-NoMessage"
+    {QuantumEntanglementMonotone::realignment},
+    TestID -> "E29-ExactKetInFourierFrame-OnlyRealignmentMessage"
 ]
 
 (* a symbolic ket held in the PauliX frame keeps its coefficients as they are, and its values come as fast *)
@@ -1474,6 +1475,7 @@ VerificationTest[
         ]
     ],
     {True, True},
+    {QuantumEntanglementMonotone::realignment},
     TestID -> "E30-SymbolicKetInPauliXFrame-Bounded"
 ]
 
@@ -1487,7 +1489,8 @@ VerificationTest[
 ]
 
 (* kets held in the Fourier[7] (x) Fourier[2] frame, whose coefficients in the computational frame are sums of 7th
-   roots of unity: the product ket reads as a product, the Bell ket as maximally entangled, with no message *)
+   roots of unity: the product ket reads as a product, the Bell ket as maximally entangled, with no message but the
+   realignment one *)
 VerificationTest[
     With[{frame = QuantumBasis[QuantumTensorProduct[QuditBasis["Fourier"[7]], QuditBasis["Fourier"[2]]]]},
         With[{product = QuantumState[QuantumState[UnitVector[14, 1], {7, 2}], frame], bellLike = QuantumState[QuantumState[Normalize[UnitVector[14, 1] + UnitVector[14, 14]], {7, 2}], frame]},
@@ -1498,8 +1501,8 @@ VerificationTest[
         ]
     ],
     {{0, 0, False}, {0.5, 1., True}},
-    {},
-    TestID -> "E32-ExactKetsInFourier7Frame-NoMessage"
+    {QuantumEntanglementMonotone::realignment},
+    TestID -> "E32-ExactKetsInFourier7Frame-OnlyRealignmentMessage"
 ]
 
 (* a pure product ket of cube roots, whose partial-transpose sign is an exact zero of high algebraic degree: read as
@@ -1864,7 +1867,7 @@ VerificationTest[
 VerificationTest[
     QuantumEntanglementMonotone[mm4, "Realignment"],
     -1/2,
-    {__},
+    {QuantumEntanglementMonotone::realignment},
     TestID -> "F5-RealignmentRawValueWithWarning"
 ]
 

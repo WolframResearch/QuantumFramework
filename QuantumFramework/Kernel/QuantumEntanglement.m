@@ -18,6 +18,9 @@ QuantumEntanglementMonotone::mixedentropy =
 QuantumEntanglementMonotone::notphysical =
     "The input is not a positive-semidefinite density matrix; an entanglement monotone of a non-physical state may be meaningless."
 
+QuantumEntanglementMonotone::realignment =
+    "The realignment value ||R(rho)||_1 - 1 is the statistic of a separability test, not an entanglement monotone: a positive value proves the state entangled, but the value is negative on mixed product states, and local operations can raise it."
+
 (* The physicality test reads numbers only, so a symbolic state is not tested. An exact state held in another frame is
    tested in the computational frame, simplified: the change of basis can leave an exact zero as a sum of radicals or
    roots of unity, on which the test would raise N::meprec. *)
@@ -279,9 +282,10 @@ entangledAnswer["Realignment", qs_, _, bp_, c_] := (
 
 (* An entropy or the concurrence of a pure two-part state is positive exactly when its Schmidt rank exceeds 1, which
    the partial transpose reads: exactly on exact input, for every physical parameter value on symbolic input, and to
-   first order in the smaller Schmidt coefficients on approximate input. The von Neumann entropy is of second order in them, and every entropy is read from the
-   eigenvalues of the reduced state, their squares, which fall below round-off first, as those of the ket
-   |00> + 10^-11 |11> do; a Renyi entropy of an approximate order comes out approximate on exact input too. *)
+   first order in the smaller Schmidt coefficients on approximate input. The entropies of order 1 and above are of
+   second order in them, below the cut of the state's numbers long before they are zero: the von Neumann entropy of
+   the ket |00> + 10^-11 |11> is about 10^-20. A Renyi entropy of an approximate order comes out approximate on exact
+   input too. *)
 entangledAnswer[method_, qs_, _, bp_, c_] /;
         MatchQ[methodName[method], "EntanglementEntropy" | "RenyiEntropy" | "Concurrence"] && TrueQ[pureTwoPartQ[bp, c]] := (
     warnUnphysicalMonotone[qs];
@@ -744,48 +748,201 @@ entanglementMonotone[qs_, biPartition_, "LogNegativity"] := (
 )
 
 
-(* Entanglement entropy is the von Neumann entropy of a reduced state, an entanglement measure only for
-   a pure global state. A pure state reads it through its Schmidt weights (vector) or its reduced state
-   (density-matrix form); a genuinely mixed state's reduced von Neumann entropy mixes classical ignorance
-   into the count, so it is not returned as entanglement. *)
-entanglementMonotone[qs_, biPartition_, "EntanglementEntropy"] := (
-    warnUnphysicalMonotone[qs];
-    Enclose @ With[{
-        bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
-    },
-        Which[
-            bp["VectorQ"],
-                Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["SchmidtBasis"]["Probability"], If[NumericQ[#], # > 0, True] &]], "Bits"],
-            TrueQ[bp["PureStateQ"]],
-                QuantumPartialTrace[bp, {1}]["VonNeumannEntropy"],
-            True,
-                Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
-        ]
-    ]
-)
+(* The entanglement entropy and the Renyi entanglement entropies are entropies of the reduced state, entanglement
+   measures only for a pure two-part state: the reduced entropy of a mixed state mixes classical ignorance into the
+   count, so it is not returned as entanglement. They are read off the Schmidt weights, in bits, and the entanglement
+   entropy, the von Neumann entropy, is the Renyi entropy of order 1. *)
+entanglementMonotone[qs_, biPartition_, "EntanglementEntropy"] := entanglementMonotone[qs, biPartition, {"RenyiEntropy", 1}]
 
 entanglementMonotone[qs_, biPartition_, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
     entanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
 
-(* The Renyi entanglement entropy is the Renyi entropy of the reduced state, an entanglement measure only
-   for a pure global state, so a genuinely mixed input is guarded exactly as EntanglementEntropy is. *)
 entanglementMonotone[qs_, biPartition_, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] := (
     warnUnphysicalMonotone[qs];
     Enclose @ With[{
         bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
     },
-        If[ bp["VectorQ"] || TrueQ[bp["PureStateQ"]],
-            With[{val = (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[QuantumPartialTrace[bp, {1}]["DensityMatrix"], alpha]]},
-                If[NumericQ[val], Re[val], val]
-            ],
-            Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
+        With[{impurity = pureImpurity[qs, bp]},
+            If[ NumericQ[impurity],
+                Quantity[pureStateRenyiEntropy[qs, bp, alpha, impurity], "Bits"],
+                Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
+            ]
         ]
     ]
 )
 
+(* The impurity 1 - Tr[rho^2] up to which the two-part state bp is taken as pure, or $Failed when it is not taken
+   as pure: 0 for a state vector and an exact density matrix, and for an approximate density matrix tol, the round-off
+   of its purity, criterionCut times frameRoundoff, within which its computational purity must be 1. "PureStateQ"
+   compares the purity with 1 by Equal, which accepts impurities well above tol, so a density matrix it reads as pure
+   must meet tol too. It reads the purity only below 2^10 dimensions, and of the matrix as stored: a numeric density
+   matrix of 2^10 dimensions or more, or split from a state stored in another frame, that it does not read as pure is
+   pure when its computational purity is 1, exactly, or within tol where tol <= 10^-10, as for pureTwoPartQ: a larger
+   tol would take mixed states as pure. *)
+pureImpurity[qs_, bp_] := Which[
+    bp["VectorQ"],
+    0,
+    TrueQ[bp["PureStateQ"]],
+    With[{m = Normal @ computationalForm[bp]["DensityMatrix"]},
+        If[ approximateNumericArrayQ[m],
+            With[{tol = frameRoundoff[qs] criterionCut[m]}, If[Abs[1 - Total[m Transpose[m], 2]] <= tol, tol, $Failed]],
+            0
+        ]
+    ],
+    bp["NumericQ"] && (bp["Dimension"] >= 2 ^ 10 || ! qs["ComputationalQ"]),
+    With[{m = Normal @ computationalForm[bp]["DensityMatrix"]},
+        If[ approximateNumericArrayQ[m],
+            With[{e = Abs[1 - Total[m Transpose[m], 2]]},
+                If[e > 10 ^ -10, $Failed, With[{tol = frameRoundoff[qs] criterionCut[m]}, If[tol <= 10 ^ -10 && e <= tol, tol, $Failed]]]
+            ],
+            If[pureDensityMatrixQ[m], 0, $Failed]
+        ]
+    ],
+    True,
+    $Failed
+]
+
+(* The state in the computational frame, which a split state usually is already. *)
+computationalForm[qs_] := If[qs["ComputationalQ"], qs, qs["Computational"]]
+
+(* The factor by which the change from the frame of the approximate state qs to the computational one multiplies its
+   round-off, as in frameContext: kappa for a state vector and kappa^2 for a density matrix, 1 in the computational
+   frame. *)
+frameRoundoff[qs_] := If[qs["ComputationalQ"], 1, frameCondition[qs["Basis"]] ^ If[qs["VectorQ"], 1, 2]]
+
+(* The Renyi entropy of order alpha of the weights p, in bits: Log2[Total[p^alpha]] / (1 - alpha), and at order 1,
+   where that is 0 / 0, its limit, the von Neumann entropy -p . Log2[p], to the precision of the order. An approximate
+   order is read as the number it holds to its own precision, SetPrecision[alpha, Infinity], which is how the callers
+   raise it (1.00001 given with 3 digits is 1), and the formula is taken whenever that number is not 1, with the
+   digits its 1 - alpha cancels added by the callers (orderDigits). A symbolic order gives both, so that the value has
+   that limit when 1 is substituted for the order. *)
+renyiEntropy[p_, alpha_ ? NumericQ] :=
+    If[SetPrecision[alpha, Infinity] == 1, N[- p . Log2[p], Precision[alpha]], Log2[Total[p ^ alpha]] / (1 - alpha)]
+renyiEntropy[p_, alpha_] := Piecewise[{{- p . Log2[p], alpha == 1}}, Log2[Total[p ^ alpha]] / (1 - alpha)]
+
+(* The Renyi entropy of the pure two-part state bp split from qs, taken as pure up to the impurity given, read in the
+   computational frame off its Schmidt weights, the nonzero eigenvalues of its reduced state. *)
+pureStateRenyiEntropy[qs_, bp_, alpha_, impurity_] := With[{c = computationalForm[bp], d = bp["Dimensions"]},
+    With[{a = Normal @ If[c["VectorQ"], c["StateVector"], c["DensityMatrix"]]},
+        Which[
+            approximateNumericArrayQ[a],
+            approximateRenyiEntropy[a, d, alpha, frameRoundoff[qs], impurity],
+            c["VectorQ"], exactRenyiEntropy[With[{m = ArrayReshape[a, d]}, m . ConjugateTranspose[m]], alpha],
+            True, exactRenyiEntropy[TensorContract[ArrayReshape[a, Join[d, d]], {{2, 4}}], alpha]
+        ]
+    ]
+]
+
+(* The weights of an approximate state are its squared Schmidt coefficients s, the singular values of its amplitudes
+   as a dA x dB matrix: those of a state vector, or those a pure density matrix holds in its column with the largest
+   diagonal entry (densityMatrixAmplitudes), which are known to the same digits p relative to the largest. Each
+   amplitude is then off by at most 10^-p times the largest, and a singular value by at most Sqrt[n] 10^-p times the
+   largest of them, n = dA dB, times the factor k = frameRoundoff of the frame the state was given in. A density
+   matrix taken as pure up to an impurity e (pureImpurity) may hold a mixture whose smaller part, of weight at most
+   e / 2, puts at most Sqrt[n] e / 2 into its column. A coefficient within 10 Sqrt[n] Max[k 10^-p, e] times the
+   largest is dropped: an order below 1 would raise its weight w to w^alpha, far above round-off, and read a product
+   state given with 10 digits, or a separable mixture taken as pure, as entangled. Order 0 thus counts the
+   coefficients above that cut. The entropy is evaluated at twice the digits p, and as many more as 1 - alpha cancels
+   (orderDigits), so that a weight of 10^-24 is not lost in the 1 + 10^-24 it enters. The value is a machine number
+   when the state or the order is one. Otherwise it is labeled by the errors it can carry (labeledEntropy): the
+   relative error of the smallest weight kept, twice that of its coefficient, 2 Sqrt[n] k Max[s] / Min[kept] 10^-p,
+   which no entropy amplifies at any order; the entropy that the min(dA, dB) - Length[kept] coefficients below the
+   cut could hold, at most cut / Max[s] each (hiddenEntropy); and the change of the value across the order's own
+   uncertainty (orderSpread). *)
+approximateRenyiEntropy[a_, d_, alpha_, k_, impurity_] := With[{
+    s = SingularValueList[ArrayReshape[If[VectorQ[a], a, densityMatrixAmplitudes[a]], d], Tolerance -> 0],
+    p = If[Precision[a] === MachinePrecision, MachinePrecision, arrayDigits[a]]
+},
+    With[{top = Max[s], cut = 10 Sqrt[Times @@ d] Max[k 10 ^ -p, impurity] Max[s], wp = 2 p + orderDigits[alpha]},
+        With[{kept = Select[s, # == top || # > cut &], order = If[Precision[alpha] < Infinity, SetPrecision[SetPrecision[alpha, Infinity], wp], alpha]},
+            With[{w = # / Total[#] & [SetPrecision[kept, wp] ^ 2]},
+                With[{v = SetPrecision[renyiEntropy[w, order], wp]},
+                    Which[
+                        MemberQ[{p, Precision[alpha]}, MachinePrecision],
+                        N[v, MachinePrecision],
+                        ! NumericQ[alpha],
+                        N[v, p - Log10[2 Sqrt[Times @@ d] k top / Min[kept]]],
+                        True,
+                        labeledEntropy[
+                            v,
+                            hiddenEntropy[Min[d] - Length[kept], cut / top, order, wp] + orderSpread[w, alpha, v, wp],
+                            p - Log10[2 Sqrt[Times @@ d] k top / Min[kept]]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+]
+
+(* The value v, off by at most delta and known to at most prec digits, labeled with its error err, the larger of
+   twice delta (lowering a number's precision also rounds it, by up to half its new error) and |v| 10^-prec: as a
+   precision when v exceeds err; otherwise as an accuracy that covers v itself, 2 (|v| + err), since the number can
+   round to 0 at that accuracy; a zero with no error to prec digits. *)
+labeledEntropy[v_, delta_, prec_] := With[{err = Max[2 delta, Abs[v] 10 ^ -prec]},
+    Which[
+        err == 0, SetAccuracy[v, prec],
+        Abs[v] <= err, SetAccuracy[v, - Log10[2 (Abs[v] + err)]],
+        True, SetPrecision[v, Log10[Abs[v] / err]]
+    ]
+]
+
+(* The Renyi entropy that h Schmidt coefficients of at most c times the largest could hold, the bound on what the
+   coefficients dropped as round-off leave out, with their weights at most equal to the largest one's; 0 at order 0,
+   which counts the coefficients kept, and when none was dropped. *)
+hiddenEntropy[h_, c_, order_, wp_] := If[ h < 1 || SetPrecision[order, Infinity] == 0,
+    0,
+    With[{w = Min[c ^ 2, 1 / (h + 1)]}, Abs[renyiEntropy[SetPrecision[Join[{1 - h w}, ConstantArray[w, h]], wp], order]]]
+]
+
+(* How far the entropy v of the weights w moves when an approximate order alpha moves by its own relative
+   uncertainty 10^-Precision[alpha] either way, evaluated with as many more digits as that cancels; 0 for an exact or
+   symbolic order. The entropy changes with the order by about alpha |Log[w]| times the order's relative change, for
+   the smallest weight w, which can far exceed the order's own uncertainty. *)
+orderSpread[w_, alpha_, v_, wp_] := If[ ! NumericQ[alpha] || Precision[alpha] === Infinity,
+    0,
+    With[{x = SetPrecision[alpha, Infinity], e = 10 ^ -Precision[alpha], wq = wp + Ceiling[Precision[alpha]]},
+        Max[Abs[renyiEntropy[SetPrecision[w, wq], SetPrecision[x (1 + #), wq]] - v] & /@ {e, -e}]
+    ]
+]
+
+(* The weights of an exact or symbolic state are the eigenvalues of its reduced state r that are not zero; an integer
+   order above 1 takes Tr[r^alpha], a polynomial in the entries of r, without them. An approximate order is applied,
+   as the number it holds, to the weights at twice its digits, as many more as 1 - alpha cancels, and as many as the
+   smallest weight needs, so that it is not lost in the 1 + w^alpha it enters; the value is a machine number for a
+   machine order, and otherwise is labeled by its change across the order's own uncertainty (orderSpread). *)
+exactRenyiEntropy[r_, alpha_] := Which[
+    IntegerQ[alpha] && alpha > 1,
+    Log2[Tr[MatrixPower[r, alpha]]] / (1 - alpha),
+    Precision[alpha] < Infinity,
+    With[{w = Select[Eigenvalues[r], ! PossibleZeroQ[#] &]},
+        With[{wp = 2 Precision[alpha] + orderDigits[alpha] + If[VectorQ[w, NumericQ], Max[0, Ceiling[- Log10[Min[N[w]]]]], 0]},
+            With[{wn = N[w, wp]},
+                With[{v = SetPrecision[renyiEntropy[wn, SetPrecision[SetPrecision[alpha, Infinity], wp]], wp]},
+                    If[ Precision[alpha] === MachinePrecision || ! VectorQ[w, NumericQ],
+                        N[v, Precision[alpha]],
+                        labeledEntropy[v, orderSpread[wn, alpha, v, wp], wp]
+                    ]
+                ]
+            ]
+        ]
+    ],
+    True,
+    renyiEntropy[Select[Eigenvalues[r], ! PossibleZeroQ[#] &], alpha]
+]
+
+(* The digits that 1 - alpha cancels, read off the number a numeric order holds to its own precision, for an order
+   other than 1. *)
+orderDigits[alpha_] := With[{x = SetPrecision[alpha, Infinity]}, If[NumericQ[x] && x != 1, Max[0, Ceiling[- Log10[Abs[1 - x]]]], 0]]
+
+(* The realignment value is the statistic of a separability test, not an entanglement monotone, which a direct call
+   says in a message; QuantumEntangledQ reads it through realignmentCriterion, without one. *)
 entanglementMonotone[qs_, biPartition_, "Realignment"] := (
     warnUnphysicalMonotone[qs];
-    Enclose @ realignmentValue @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
+    Enclose @ With[{bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]},
+        Message[QuantumEntanglementMonotone::realignment];
+        realignmentValue[bp]
+    ]
 )
 
 (* Every singular value counts: for approximate input the default tolerance drops those below about 100 machine
@@ -801,11 +958,17 @@ MutualInformationI[rho_QuantumState, biPartition_ : Automatic] := Enclose @ With
 	QuantumPartialTrace[s, {1}]["Entropy"] + QuantumPartialTrace[s, {2}]["Entropy"] - s["Entropy"]
 ]
 
+(* J measures the second part of the split, by default in its computational basis, in its own dimension. It is summed
+   in bits and returned in them, so that symbolic outcome probabilities do not leave a sum of quantities. *)
 MutualInformationJ[rho_QuantumState, qm : _QuantumMeasurementOperator | Automatic : Automatic,biPartition_ : Automatic] := Enclose @ With[
     {s = ConfirmBy[rho["Bipartition", biPartition], QuantumStateQ[#] && #["Qudits"] == 2 &]},
-    {m = QuantumMeasurementOperator[Replace[qm, Automatic :> QuantumMeasurementOperator[]], {2}][s]}, 
+    {m = QuantumMeasurementOperator[Replace[qm, Automatic :> QuantumBasis[Last @ s["Dimensions"]]], {2}][s]},
 
-    QuantumPartialTrace[s, {2}]["Entropy"] - m["ProbabilitiesList"] . (Simplify[QuantumPartialTrace[#, {2}]]["Entropy"] & /@ m["States"])
+    Quantity[
+        QuantityMagnitude[QuantumPartialTrace[s, {2}]["Entropy"]] -
+            m["ProbabilitiesList"] . (QuantityMagnitude[Simplify[QuantumPartialTrace[#, {2}]]["Entropy"]] & /@ m["States"]),
+        "Bits"
+    ]
 ]
 
 QuantumDiscord[rho_QuantumState, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic] :=

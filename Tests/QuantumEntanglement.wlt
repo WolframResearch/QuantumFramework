@@ -418,6 +418,7 @@ VerificationTest[
         ]
     ],
     {0, 0, 0, 0},
+    {QuantumEntanglementMonotone::realignment, QuantumEntanglementMonotone::realignment},
     TestID -> "Monotones-ScaleInvariantAcrossFamily"
 ]
 
@@ -441,6 +442,7 @@ VerificationTest[
 VerificationTest[
     Chop[QuantumEntanglementMonotone[bell, "Realignment"] - 1],
     0,
+    {QuantumEntanglementMonotone::realignment},
     TestID -> "Realignment-Bell"
 ]
 
@@ -467,6 +469,7 @@ VerificationTest[
         QuantumEntanglementMonotone[QuantumState[ccnrMissRho, {2, 2}], "Realignment"] <= 0  (* CCNR blind *)
     },
     {True, True, True},
+    {QuantumEntanglementMonotone::realignment},
     TestID -> "Criterion-CCNR-MissesWhatPPTCatches-2qubit"
 ]
 
@@ -494,6 +497,7 @@ VerificationTest[
         QuantumEntanglementMonotone[QuantumState[N @ horodeckiRho, {3, 3}], "Realignment"] > 0
     },
     {0, True},
+    {QuantumEntanglementMonotone::realignment},
     TestID -> "Criterion-Horodecki-PPTMisses-CCNRCatches"
 ]
 
@@ -558,7 +562,7 @@ VerificationTest[
    so the alpha = 1/2 Renyi entanglement entropy of the Bell state is 1 bit, from both the vector and the
    density-matrix form *)
 VerificationTest[
-    Chop[{QuantumEntanglementMonotone[bell, "RenyiEntropy"], QuantumEntanglementMonotone[bellDM, "RenyiEntropy"]} - 1],
+    Chop[QuantityMagnitude[{QuantumEntanglementMonotone[bell, "RenyiEntropy"], QuantumEntanglementMonotone[bellDM, "RenyiEntropy"]}] - 1],
     {0, 0},
     TestID -> "RenyiEntropy-PureStillComputes"
 ]
