@@ -1,0 +1,101 @@
+{
+  "created_utc": "2026-10-25T04:51:09.525240+00:00",
+  "status": "PASS",
+  "deliverable_class": "code",
+  "design": "compensated-quadratic-192",
+  "source_and_report_sha256": {
+    "CompensatedQuadratic.wl": "c00cb5caf066d09fa1f6f32ae138aa8a1d477574301cfbec5cd0a88a701b543e",
+    "run.wls": "165d8bfb78005c0bf80a7a6e472cfb56fb9e909b1d78b77195c42a101cec2de7",
+    "grid.wls": "8ed16cee7824137d763967984a20de7b0ac013dfdc0e4212ac0b3548f32c1a43",
+    "generator.py": "35bf116960bc425f972fe734e78eea87738cce3ebb60741c1720f932eef9cacb",
+    "screen.py": "50ef2c80bc96a83386a6ae965fb9cca721db83cf4481de2402e73d408b167d1c",
+    "verify.py": "dc3283a50e4f34e0c736f5a2c077c4384b112d80d1b88db8734d0a6dda68b62f",
+    "README.md": "8b88be9dd37cc2377d148d798a851a8472f4ec9e1a3b235b70556aa9f2162173",
+    "PLAN.md": "8611c9f968b201f9a76819a4448ac1a6cf199141ac781a7cf8630be2811e91f8",
+    "coefficients.json": "7f033cfb62fce13e12d40a63405a314e086bcdcd6ec67f7e213e23b431870be2",
+    "grid-certificate.json": "5ce76b02813cf04ff3cb88bff88a885e3c70aa79ab75bed81ce52c17961cb19b",
+    "build.json": "e9f7dbbdad8bcef71fe84e4b5c97a86bd39341659cc12843c3289473c60a0fc1",
+    "screening.json": "0264fa11cb48bb745f5c9e66380a2269cee2722089149bc05e988a9b1cd9fa45",
+    "verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8"
+  },
+  "candidate": {
+    "artifact": "local/compensated-quadratic.kmb",
+    "sha256": "21828cd5ccc1238e688a5b06bdda36316daf65ee8d6b976cecafe8b4bd45c007",
+    "git_ignored": true
+  },
+  "current_reviews": {
+    "correctness": {
+      "report": "reviews/correctness-2.md",
+      "sha256": "dabec9e90ebcbf7662c1d73b7814d5832f1146ebf9b1575b15e8369e389281f1",
+      "completed_rounds": 2,
+      "open_issues": 0
+    },
+    "quality": {
+      "report": "reviews/quality-1.md",
+      "sha256": "c2e8565d3bcb92db8febb75476aa92a2449f4ea34c087947cdd40b5beb38bb8d",
+      "completed_rounds": 1,
+      "open_issues": 0,
+      "axes": {
+        "A": "PASS",
+        "B": "PASS",
+        "C": "PASS",
+        "D": "PASS",
+        "E": "PASS",
+        "F": "PASS",
+        "G": "PASS"
+      }
+    }
+  },
+  "historical_review": {
+    "report": "reviews/correctness-1.md",
+    "sha256": "7931d21baac084ef1898b6728790b8d824ceef806057fe339571fe2a5a68a642",
+    "scope": "Earlier generator defaults and report bytes; current evidence is correctness-2.md."
+  },
+  "official_verification": {
+    "status": "PASS",
+    "verified_shots": 200540928,
+    "score": 506618.35132005374,
+    "num_qubits": 151,
+    "toffoli_count": 3097.0,
+    "toffoli_equivalent": 3355.0884193381044,
+    "rotation_count": 37.0,
+    "verifier_sha256": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a",
+    "official_verifier_modified": false
+  },
+  "comparison": {
+    "baseline_cost": 2076774.233715282,
+    "incumbent_cost": 527287.988387595,
+    "baseline_improvement": 4.099287418831162,
+    "incumbent_improvement": 1.0407992269006523,
+    "incumbent_cost_reduction_percent": 3.9199901235655754,
+    "baseline_cost_reduction_percent": 75.60551632934458,
+    "track_improvements": {
+      "invsqrt": 4.099287418831162,
+      "DQI": 1.2581323878369532,
+      "DFTHC": 1.6360612511835888
+    },
+    "combined_local_estimate": 2.035845221582375,
+    "previous_combined_local_estimate": 2.0088882102784944,
+    "combined_improvement_percent": 1.341887077934678,
+    "reference_score": 8.43991,
+    "reference_score_ratio": 0.24121646102652455,
+    "other_tracks_reverified_in_this_run": false,
+    "new_kaggle_submission": false
+  },
+  "scoring_definition_source": "https://www.kaggle.com/competitions/google-verifiable-quantum-circuit-compilation/overview/evaluation",
+  "scoring_definition": "Geometric mean of the three baseline/current cost ratios; checked on the rendered official evaluation page.",
+  "actions_in_this_task": {
+    "committed": false,
+    "created_branch": false,
+    "pushed": false,
+    "submitted_to_kaggle": false
+  },
+  "privacy_scan": {
+    "scope": "Shareable text files in this deliverable; ignored local outputs and bytecode excluded.",
+    "rules": [
+      "personal_absolute_path",
+      "credential_marker"
+    ],
+    "findings": 0
+  }
+}

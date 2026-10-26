@@ -1,0 +1,19 @@
+root=DirectoryName[$InputFileName];
+Get[FileNameJoin[{root,"CompensatedQuadratic.wl"}]];
+source=FileNameJoin[{DirectoryName[root],"feasibility","B-quadratic-192.json"}];
+If[FileHash[source,"SHA256","HexString"]!="2b768e13c7054d0e58bc4edf7afc0ff64559685aa309ad250b275fd9fd6a4c8d",Exit[1]];
+frozen=Import[source,"RawJSON"]["table"];
+widths={30,23,10};
+rows=CompensatedQuadratic`CompensatedRows[frozen,widths];
+derivation=CompensatedQuadratic`CompensationDerivation[];
+certificate=CompensatedQuadratic`CoefficientCertificate[rows,widths];
+report=<|"kernel"->$Version,"fractional_bits"->widths,"table"->rows,
+  "source_sha256"->FileHash[source,"SHA256","HexString"],
+  "wl_source_sha256"->FileHash[FileNameJoin[{root,"CompensatedQuadratic.wl"}],"SHA256","HexString"],
+  "runner_sha256"->FileHash[$InputFileName,"SHA256","HexString"],
+  "derivation"->derivation,"certificate"->certificate,
+  "status"->If[AllTrue[Values[derivation["checks"]],TrueQ] && TrueQ[certificate["all_capacity_proved"]],"DERIVATION_AND_CAPACITY_PASS","FAIL"]|>;
+Export[FileNameJoin[{root,"coefficients.json"}],report,"RawJSON"];
+Echo[KeyTake[report,{"fractional_bits","status"}]];
+Echo[KeyDrop[certificate,"intervals"]];
+If[report["status"]!="DERIVATION_AND_CAPACITY_PASS",Exit[1]];

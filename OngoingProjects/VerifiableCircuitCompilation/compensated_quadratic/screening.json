@@ -1,0 +1,109 @@
+{
+  "status": "SCREENING_ONLY_NOT_OFFICIAL_VERIFICATION",
+  "model": {
+    "status": "INTEGER_MODEL_PASS",
+    "checked_inputs": 3133452,
+    "phase_failures": 0,
+    "partial_accumulator_violations": 0,
+    "minimum_margin_units": 159224414,
+    "worst_error_over_tolerance": 0.8505589342620424,
+    "worst_x": 1064928
+  },
+  "variants": [
+    {
+      "options": {
+        "arithmetic": "padded",
+        "recycle_coefficient": false,
+        "adder_budget": null
+      },
+      "num_qubits": 151,
+      "toffoli_count": 3097,
+      "rotation_count": 37,
+      "estimated_cost_from_exact_model_margin": 506618.35132005374,
+      "boundary": {
+        "unique_inputs": 4095,
+        "shots": 16380,
+        "seed": 371811,
+        "input_restored": true,
+        "scratch_clean": true,
+        "exact_phase_model_match": true,
+        "register_fit": true,
+        "priced_counts_match": true
+      }
+    },
+    {
+      "options": {
+        "arithmetic": "padded",
+        "recycle_coefficient": true,
+        "adder_budget": null
+      },
+      "num_qubits": 142,
+      "toffoli_count": 3376,
+      "rotation_count": 37,
+      "estimated_cost_from_exact_model_margin": 516040.55554601084,
+      "boundary": {
+        "unique_inputs": 4095,
+        "shots": 16380,
+        "seed": 371811,
+        "input_restored": true,
+        "scratch_clean": true,
+        "exact_phase_model_match": true,
+        "register_fit": true,
+        "priced_counts_match": true
+      }
+    },
+    {
+      "options": {
+        "arithmetic": "padded",
+        "recycle_coefficient": true,
+        "adder_budget": 130
+      },
+      "num_qubits": 130,
+      "toffoli_count": 3812,
+      "rotation_count": 37,
+      "estimated_cost_from_exact_model_margin": 529111.4945139536,
+      "boundary": {
+        "unique_inputs": 4095,
+        "shots": 16380,
+        "seed": 371811,
+        "input_restored": true,
+        "scratch_clean": true,
+        "exact_phase_model_match": true,
+        "register_fit": true,
+        "priced_counts_match": true
+      }
+    },
+    {
+      "options": {
+        "arithmetic": "controlled",
+        "recycle_coefficient": true,
+        "adder_budget": null
+      },
+      "num_qubits": 115,
+      "toffoli_count": 4944,
+      "rotation_count": 37,
+      "estimated_cost_from_exact_model_margin": 598240.168223882,
+      "boundary": {
+        "unique_inputs": 4095,
+        "shots": 16380,
+        "seed": 371811,
+        "input_restored": true,
+        "scratch_clean": true,
+        "exact_phase_model_match": true,
+        "register_fit": true,
+        "priced_counts_match": true
+      }
+    }
+  ],
+  "standalone_default_matches_selected": true,
+  "selected_options": {
+    "arithmetic": "padded",
+    "recycle_coefficient": false,
+    "adder_budget": null
+  },
+  "generator_sha256": "35bf116960bc425f972fe734e78eea87738cce3ebb60741c1720f932eef9cacb",
+  "screen_source_sha256": "50ef2c80bc96a83386a6ae965fb9cca721db83cf4481de2402e73d408b167d1c",
+  "coefficients_sha256": "7f033cfb62fce13e12d40a63405a314e086bcdcd6ec67f7e213e23b431870be2",
+  "verifier_sha256": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a",
+  "circuit_sha256": "21828cd5ccc1238e688a5b06bdda36316daf65ee8d6b976cecafe8b4bd45c007"
+}

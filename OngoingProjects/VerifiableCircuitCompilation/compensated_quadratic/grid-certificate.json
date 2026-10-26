@@ -1,0 +1,23 @@
+{
+	"kernel":"15.0.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+	"coefficient_report_sha256":"7f033cfb62fce13e12d40a63405a314e086bcdcd6ec67f7e213e23b431870be2",
+	"source_sha256":"8ed16cee7824137d763967984a20de7b0ac013dfdc0e4212ac0b3548f32c1a43",
+	"relative_tolerance":"1\/2^24",
+	"grid_denominator":1048576,
+	"continuous_intervals":191,
+	"grid_cases":[
+		{
+			"index":0,
+			"normalized_offsets":16384,
+			"positive_accumulators":true,
+			"relative_phase_bound":true
+		}
+	],
+	"checks":{
+		"grid_indices_match_unproved":true,
+		"all_grid_cases_pass":true,
+		"covers_all_192_intervals":true
+	},
+	"scope":"Exact relative error on every normalized 20-bit input in [1,4). Official uint64 phase rounding and synthesis margin are checked by the full circuit verifier.",
+	"status":"PASS"
+}

@@ -1,0 +1,32 @@
+{
+  "design": "compensated-quadratic-192",
+  "artifact": "compensated-quadratic.kmb",
+  "fractional_bits": [
+    30,
+    23,
+    10
+  ],
+  "physical_coefficient_widths": [
+    30,
+    22,
+    9
+  ],
+  "arithmetic": "padded",
+  "recycle_coefficient": false,
+  "adder_budget": null,
+  "circuit_sha256": "21828cd5ccc1238e688a5b06bdda36316daf65ee8d6b976cecafe8b4bd45c007",
+  "coefficients_sha256": "7f033cfb62fce13e12d40a63405a314e086bcdcd6ec67f7e213e23b431870be2",
+  "generator_sha256": "35bf116960bc425f972fe734e78eea87738cce3ebb60741c1720f932eef9cacb",
+  "dependency_sha256": {
+    "quadratic.py": "62cfa195356f83c7e9cca17898a74b78185fe42e0a1520d0cac8ab1153c55ce2",
+    "optimized_quadratic.py": "9ca63c842c066d957aa8b7d175b93d22eb40d7dadb0ca9fdcbab46cf8a954f36",
+    "feasibility/B-quadratic-192.json": "2b768e13c7054d0e58bc4edf7afc0ff64559685aa309ad250b275fd9fd6a4c8d"
+  },
+  "num_qubits": 151,
+  "toffoli_count": 3097,
+  "t_count": 1,
+  "rotation_count": 37,
+  "reaction_depth": 1393,
+  "num_ops": 34426,
+  "kickmix_version": "0.1"
+}
