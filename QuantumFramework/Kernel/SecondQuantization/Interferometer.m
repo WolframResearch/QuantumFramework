@@ -155,6 +155,21 @@ gaussianData[elements_, m_] := Fold[
 
 (* <0| e^(x.a) U e^(y.a^dag) |0> = c Exp[z.K.z / 2], z = (x, y), so
    <t| U |s> = c Haf(K_{t+s}) / Sqrt[t! s!] with output rows first *)
+(* A = W.diag(s).W^T for complex symmetric A. In a group of equal s, Z = U^dag A U^* / s is symmetric
+   unitary, and its square root fixes the group's basis where column-wise phases cannot. *)
+takagi[a_, tol_] := Module[{u, s, v, w},
+    {u, s, v} = SingularValueDecomposition[a];
+    s = Diagonal[s];
+    w = u;
+    Scan[
+        If[s[[First[#]]] > tol, With[{z = ConjugateTranspose[u[[All, #]]] . a . Conjugate[u[[All, #]]] / s[[First[#]]]},
+            w[[All, #]] = u[[All, #]] . MatrixPower[(z + Transpose[z]) / 2, 1/2]
+        ]] &,
+        Split[Range[Length[s]], Abs[s[[#1]] - s[[#2]]] <= tol Max[1, s[[1]]] &]
+    ];
+    {w, s}
+]
+
 gaussianKernel[QuantumInterferometer[KeyValuePattern["Bogoliubov" -> {a_, b_, c_}]]] := With[{bv = vacuumMatrix[a, b]},
     {ArrayFlatten[{{bv, a + bv . b}, {Transpose[a + bv . b], (Transpose[a] . b + Transpose[b] . a) / 2 + Transpose[b] . bv . b}}], c}
 ]
@@ -486,7 +501,7 @@ $QuantumInterferometerProperties = {
     "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers", "Parameters",
     "Depth", "BeamSplitterCount", "PhaseShifterCount", "SqueezerCount", "ElementTable",
     "Diagram", "MatrixPlot", "CircuitOperator",
-    "Amplitude", "Probability", "Probabilities", "Samples", "SampleCounts", "Dagger"
+    "Amplitude", "Probability", "Probabilities", "Samples", "SampleCounts", "Dagger", "BlochMessiah", "GBSForm"
 };
 
 (qi_QuantumInterferometer ? QuantumInterferometerQ)[prop_String, args___] := With[{result = QuantumInterferometerProp[qi, prop, args]},
@@ -619,6 +634,36 @@ QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceilin
     elementsInterferometer[
         Reverse[inverseElement /@ qi["Elements"]], Reverse[last + 1 - qi["Layers"]], qi["Modes"],
         If[passiveQ[qi], ConjugateTranspose[qi["Unitary"]], None], KeyTake[First[qi], {"Parameters", "DropIdentities"}]
+    ]
+]
+
+(* Both forms reproduce the network up to a global phase, which no element can carry.
+   Bloch-Messiah: alpha = W2 C W1 and beta = W2^* S W1 with C = Cosh[r], S = Sinh[r]; the SVD of alpha
+   fixes W2 and W1 up to a unitary Q on each group of equal r, chosen so that Q^T U^T beta V Q is real diagonal. *)
+QuantumInterferometerProp[qi_, "BlochMessiah"] := Which[
+    passiveQ[qi], qi,
+    ! MatrixQ[N[First[qi]["Bogoliubov"][[1]]], NumericQ], Message[QuantumInterferometer::notnumeric, "\"BlochMessiah\""]; $Failed,
+    True, Module[{u, c, v, q},
+        {u, c, v} = SingularValueDecomposition[N[First[qi]["Bogoliubov"][[1]]]];
+        c = Diagonal[c];
+        q = IdentityMatrix[Length[c]] + 0. I;
+        With[{m0 = Transpose[u] . N[First[qi]["Bogoliubov"][[2]]] . v},
+            Scan[(q[[#, #]] = Conjugate[First[takagi[m0[[#, #]], 10.^-9]]]) &, Split[Range[Length[c]], Abs[c[[#1]] - c[[#2]]] <= 10.^-9 c[[1]] &]]
+        ];
+        QuantumInterferometer[Join[
+            QuantumInterferometer[ConjugateTranspose[q] . ConjugateTranspose[v]]["Elements"],
+            MapIndexed["S"[ArcCosh[Max[1, #1]]] -> First[#2] &, c],
+            QuantumInterferometer[u . q]["Elements"]
+        ], Length[c]]
+    ]
+]
+
+(* vacuum input: the output kernel B = -W Diag[Tanh[r]] W^T gives squeezers r on every mode followed by W *)
+QuantumInterferometerProp[qi_, "GBSForm"] := Which[
+    passiveQ[qi], qi,
+    ! MatrixQ[N[First[qi]["Bogoliubov"][[1]]], NumericQ], Message[QuantumInterferometer::notnumeric, "\"GBSForm\""]; $Failed,
+    True, With[{t = takagi[- vacuumMatrix @@ N[First[qi]["Bogoliubov"][[;; 2]]], 10.^-9]},
+        QuantumInterferometer[Join[MapIndexed["S"[ArcTanh[#1]] -> First[#2] &, t[[2]]], QuantumInterferometer[t[[1]]]["Elements"]], qi["Modes"]]
     ]
 ]
 
