@@ -11,7 +11,7 @@ Keywords: [QuantumInterferometer, linear optics, coherent states, boson sampling
 Beam splitters, coherent light, multiphoton interference, squeezed states, attenuation,
 waveguide arrays, and conditional optical gates: a computation-first tour with the Wolfram Language.
 
-Mads Bahrami (last updated: October 24, 2026)
+Mads Bahrami (last updated: October 26, 2026)
 
 ## Introduction: from optical inputs to measured outputs
 
@@ -28,19 +28,23 @@ Its **occupation pattern**, such as `{2, 0, 1}`, lists the photon number in each
 A **coherent state** has a complex coherent amplitude $\alpha$ and mean photon number $|\alpha|^2$.
 We assume ideal photon-number-resolving detectors throughout.
 
-`QuantumInterferometer` (QI) represents an optical network of beam splitters, phase shifters,
-and optionally squeezers. Passive networks conserve photon number and have a unitary
+`QuantumInterferometer` (QI) represents beam splitters, phase shifters, squeezers, and
+pure-loss channels. Lossless passive networks conserve photon number and have a unitary
 transfer matrix. Their Fock-state transition amplitudes are normalized permanents;
-the squeezed-vacuum examples use hafnians. Transition probabilities are squared moduli
-of amplitudes.
+squeezed-network amplitudes use hafnians. Lossy probabilities sum over the unobserved
+environment outcomes. QI applies pure loss directly to probabilities and finite states.
 
 Individual transition queries need no Fock-space cutoff. Listing coherent-state or
 squeezed-state probabilities requires a total photon-number cutoff. A Fock-space circuit
-instead requires a number of levels per mode. Passive `"Amplitude"` and `"Probability"`
-queries accept symbolic occupations; `"Probabilities"` requires explicit occupations.
-Squeezed networks require explicit occupations but allow symbolic squeezing parameters.
-Symbolic occupation formulas retain their nonnegative-integer domain; explicit assumptions
-let `Refine` display the formula on that domain.
+or channel instead requires a number of levels per mode. Lossless passive transition
+queries accept symbolic occupations. With loss, symbolic occupations are supported for
+independent attenuators; mode mixing requires explicit occupations. Squeezed networks
+require explicit occupations but allow symbolic squeezing parameters.
+
+Symbolic formulas retain their physical domains. Use `Assumptions` in a transition query
+or `Refine` to display a formula on a specified domain. Bare beam splitters act on modes
+1 and 2; bare phase shifters, squeezers, and loss elements act on mode 1.
+The default beam splitter phase is zero, and the mode count is inferred from the elements.
 
 Load the quantum-state and operator tools:
 
@@ -56,7 +60,7 @@ Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
 ### Conventions: transfer matrices, beam splitter phases, and mode ordering
 
-For a passive network, $W_{jk}=\langle1_j|U|1_k\rangle$: column $k$ gives the
+For a lossless passive network, $W_{jk}=\langle1_j|U|1_k\rangle$: column $k$ gives the
 single-photon amplitudes for input mode $k$. We use **transmissivity** $T=\cos^2\theta$
 and **reflectivity** $R=\sin^2\theta$. These are probabilities; transmission and reflection
 amplitudes also carry phases. Beam splitter angles and phase shifts are real;
@@ -65,7 +69,7 @@ coherent amplitudes may be complex. A phase shifter contributes $e^{i\phi}$ per 
 Build a beam splitter with zero reflection phase:
 
 ```wl
-conventionBS = QuantumInterferometer[{"BS"[theta, 0] -> {1, 2}}, 2];
+conventionBS = QuantumInterferometer[{"BS"[\[Theta]]}]
 ```
 
 Draw the beam splitter with its parameters:
@@ -80,11 +84,11 @@ Read its transfer matrix:
 conventionBS["Unitary"]
 ```
 
-The reflected amplitudes have opposite real signs. A reflection phase of `Pi/2`
+The reflected amplitudes have opposite real signs. A reflection phase of `\[Pi]/2`
 gives the symmetric convention used in many textbooks. Build that beam splitter:
 
 ```wl
-symmetricConventionBS = QuantumInterferometer[{"BS"[theta, Pi/2] -> {1, 2}}, 2];
+symmetricConventionBS = QuantumInterferometer[{"BS"[\[Theta], \[Pi]/2]}]
 ```
 
 Draw the beam splitter in the symmetric convention:
@@ -112,10 +116,10 @@ spectrum, and temporal shape. At a balanced beam splitter, the two amplitudes fo
 in each output cancel. Both photons leave in the same output mode: the Hong-Ou-Mandel effect.
 Distinguishable photons instead have coincidence probability $1/2$.
 
-Build a beam splitter with symbolic angle `theta` and reflection phase `phi`:
+Build a beam splitter with symbolic angle `\[Theta]` and reflection phase `\[Phi]`:
 
 ```wl
-hom = QuantumInterferometer[{"BS"[theta, phi] -> {1, 2}}, 2];
+hom = QuantumInterferometer[{"BS"[\[Theta], \[Phi]]}]
 ```
 
 Draw the beam splitter:
@@ -134,14 +138,14 @@ The coincidence outcome is `{1, 1}`. Compute its probability with
 [`FullSimplify`](https://reference.wolfram.com/language/ref/FullSimplify.html), assuming real parameters:
 
 ```wl
-coincidence = FullSimplify[hom["Probability", {1, 1} -> {1, 1}], (theta | phi) ∈ Reals]
+coincidence = FullSimplify[hom["Probability", {1, 1} -> {1, 1}], (\[Theta] | \[Phi]) ∈ Reals]
 ```
 
 The probability is $\cos^2(2\theta)$, independent of the reflection phase.
 Build the balanced beam splitter at $\theta=\pi/4$:
 
 ```wl
-balanced = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2];
+balanced = QuantumInterferometer[{"BS"[\[Pi]/4]}]
 ```
 
 Draw the balanced beam splitter:
@@ -183,9 +187,9 @@ overlap, which is absent from these fixed-mode inputs.
 
 ### 2. Optical meshes: three realizations of one unitary
 
-A passive network on $m$ modes has an $m\times m$ unitary transfer matrix. Beam splitters
+A lossless passive network on $m$ modes has an $m\times m$ unitary transfer matrix. Beam splitters
 and phase shifters can realize it in several layouts: triangular Reck, rectangular Clements,
-or recursive cosine-sine meshes. Compare their component counts, depths, and reconstruction errors.
+or recursive cosine-sine meshes. Compare their component counts and depths.
 
 Set a reproducible random seed:
 
@@ -204,7 +208,7 @@ Decompose the target into the three meshes:
 ```wl
 meshes = AssociationMap[
  QuantumInterferometer[targetUnitary, Method -> #] &,
- {"Clements", "Reck", "CosineSine"}];
+ {"Clements", "Reck", "CosineSine"}]
 ```
 
 Draw the three meshes:
@@ -225,27 +229,14 @@ Depth counts beam splitter layers. Compare the mesh depths:
 Map[#["Depth"] &, meshes]
 ```
 
-Check the decomposition by rebuilding each mesh from its optical elements.
-This tests the elements rather than the stored target matrix. Build the reconstructed networks:
-
-```wl
-rebuiltMeshes = Map[QuantumInterferometer[#["Elements"], 6] &, meshes];
-```
-
-Draw the reconstructed meshes:
-
-```wl
-Column[KeyValueMap[Labeled[#2["Diagram"], #1, Top] &, rebuiltMeshes]]
-```
-
 [`Chop`](https://reference.wolfram.com/language/ref/Chop.html) replaces small numerical
-residuals with zero. Compute the largest matrix-entry error for each reconstruction:
+residuals with zero. Compare each mesh's stored unitary with the target:
 
 ```wl
-Map[Chop[Max[Abs[#["Unitary"] - targetUnitary]]] &, rebuiltMeshes]
+Map[Chop[Max[Abs[#["Unitary"] - targetUnitary]]] &, meshes]
 ```
 
-All three meshes reproduce the target. The Clements mesh uses the fewest layers in this example.
+The Clements mesh uses the fewest layers in this example.
 
 *References:* M. Reck et al., Phys. Rev. Lett. **73**, 58 (1994); W. R. Clements et al., Optica
 **3**, 1460 (2016); I. Dhand, S. K. Goyal, Phys. Rev. A **92**, 043813 (2015).
@@ -260,7 +251,7 @@ Build the three-mode Fourier multiport, called a tritter, with
 [`FourierMatrix`](https://reference.wolfram.com/language/ref/FourierMatrix.html):
 
 ```wl
-tritter = QuantumInterferometer[FourierMatrix[3]];
+tritter = QuantumInterferometer[FourierMatrix[3]]
 ```
 
 Draw the tritter:
@@ -279,7 +270,7 @@ Only `{1, 1, 1}` and the three fully bunched outcomes have nonzero probability.
 All permutations of `{2, 1, 0}` are suppressed. Build the four-mode Fourier multiport:
 
 ```wl
-fourier4 = QuantumInterferometer[FourierMatrix[4]];
+fourier4 = QuantumInterferometer[FourierMatrix[4]]
 ```
 
 Draw the four-mode network:
@@ -291,7 +282,7 @@ fourier4["Diagram", "ShowParameters" -> True]
 Compute its output distribution for one photon per input:
 
 ```wl
-fourierProbabilities = fourier4["Probabilities", {1, 1, 1, 1}];
+fourierProbabilities = fourier4["Probabilities", {1, 1, 1, 1}]
 ```
 
 Count the suppressed occupation patterns:
@@ -321,8 +312,7 @@ prepare a two-mode squeezed vacuum. The two output modes have equal photon numbe
 Build this preparation with a symbolic squeezing parameter `r`:
 
 ```wl
-symbolicPair = QuantumInterferometer[
- {"S"[r] -> 1, "S"[-r] -> 2, "BS"[Pi/4, 0] -> {1, 2}}, 2];
+symbolicPair = QuantumInterferometer[{"S"[r], "S"[-r] -> 2, "BS"[\[Pi]/4]}]
 ```
 
 Draw the squeezed-vacuum preparation:
@@ -361,8 +351,7 @@ Limit[pairLawValues, r -> 0] == {1, 0, 0}
 Set the squeezing parameter to `0.5` for a numerical comparison:
 
 ```wl
-tmsv = QuantumInterferometer[
- {"S"[0.5] -> 1, "S"[-0.5] -> 2, "BS"[Pi/4, 0] -> {1, 2}}, 2];
+tmsv = QuantumInterferometer[{"S"[0.5], "S"[-0.5] -> 2, "BS"[\[Pi]/4]}]
 ```
 
 Draw this squeezed-vacuum preparation:
@@ -387,7 +376,7 @@ Table[Tanh[0.5]^(2 n)/Cosh[0.5]^2, {n, 0, 3}]
 For a four-mode example, prepare one squeezed vacuum in each mode:
 
 ```wl
-squeezers = QuantumInterferometer[Thread["S"[0.6] -> Range[4]]];
+squeezers = QuantumInterferometer[Thread["S"[0.6] -> Range[4]]]
 ```
 
 Draw the four squeezers:
@@ -405,7 +394,7 @@ SeedRandom[1];
 Build a random four-mode passive network:
 
 ```wl
-randomMixer = QuantumInterferometer["Random"[4]];
+randomMixer = QuantumInterferometer["Random"[4]]
 ```
 
 Draw the passive network:
@@ -417,7 +406,7 @@ randomMixer["Diagram"]
 Apply the passive network after the squeezers:
 
 ```wl
-gbs = randomMixer[squeezers];
+gbs = randomMixer[squeezers]
 ```
 
 Draw the combined network:
@@ -436,13 +425,13 @@ gaussianAmplitude = gbs["Amplitude", {0, 0, 0, 0} -> {1, 1, 1, 1}]
 Build the Fock-space circuit with six levels per mode:
 
 ```wl
-gaussianFockCircuit = gbs["CircuitOperator", 6];
+gaussianFockCircuit = gbs["CircuitOperator", 6]
 ```
 
 Apply the circuit to vacuum:
 
 ```wl
-gaussianFockOutput = gaussianFockCircuit[];
+gaussianFockOutput = gaussianFockCircuit[]
 ```
 
 Compute the overlap with the four-photon target:
@@ -466,11 +455,10 @@ algorithm, A. Björklund, B. Gupt, N. Quesada, arXiv:1805.12498.
 ### 5. Mach-Zehnder interferometry: controlling the output with a phase
 
 Two balanced beam splitters and an internal phase shift form a Mach-Zehnder interferometer.
-The phase controls the single-photon output probabilities. Build it with symbolic phase `phi`:
+The phase controls the single-photon output probabilities. Build it with symbolic phase `\[Phi]`:
 
 ```wl
-mz = QuantumInterferometer[
- {"BS"[Pi/4, 0] -> {1, 2}, "PS"[phi] -> 1, "BS"[Pi/4, 0] -> {1, 2}}, 2];
+mz = QuantumInterferometer[{"BS"[\[Pi]/4], "PS"[\[Phi]], "BS"[\[Pi]/4]}]
 ```
 
 Draw the Mach-Zehnder interferometer:
@@ -488,20 +476,19 @@ mz[{1, 0}]
 The first-output probability is $\sin^2(\phi/2)$. Compute it for a real phase:
 
 ```wl
-FullSimplify[mz["Probability", {1, 0} -> {1, 0}], phi ∈ Reals]
+FullSimplify[mz["Probability", {1, 0} -> {1, 0}], \[Phi] ∈ Reals]
 ```
 
 The second-output probability is $\cos^2(\phi/2)$. Compute it:
 
 ```wl
-FullSimplify[mz["Probability", {1, 0} -> {0, 1}], phi ∈ Reals]
+FullSimplify[mz["Probability", {1, 0} -> {0, 1}], \[Phi] ∈ Reals]
 ```
 
 Set the phase to `1.0` for a Fock-space comparison:
 
 ```wl
-mz1 = QuantumInterferometer[
- {"BS"[Pi/4, 0] -> {1, 2}, "PS"[1.0] -> 1, "BS"[Pi/4, 0] -> {1, 2}}, 2];
+mz1 = QuantumInterferometer[{"BS"[\[Pi]/4], "PS"[1.0], "BS"[\[Pi]/4]}]
 ```
 
 Draw the interferometer with this phase:
@@ -519,13 +506,13 @@ mzProbabilities = mz1["Probabilities", {1, 1}]
 Build the Fock-space circuit with three levels per mode:
 
 ```wl
-mzFockCircuit = mz1["CircuitOperator", 3];
+mzFockCircuit = mz1["CircuitOperator", 3]
 ```
 
 Propagate one photon in each input mode:
 
 ```wl
-mzFockOutput = mzFockCircuit[FockState[{1, 1}, 3]];
+mzFockOutput = mzFockCircuit[FockState[{1, 1}, 3]]
 ```
 
 Read the output probabilities:
@@ -549,7 +536,7 @@ Max[Abs[Values[mzProbabilityDifferences]]]
 The distributions agree to machine precision. Construct the inverse interferometer:
 
 ```wl
-inverseMZ = mz["Dagger"];
+inverseMZ = mz["Dagger"]
 ```
 
 Draw the inverse, which reverses the element order and inverts each element:
@@ -561,7 +548,7 @@ inverseMZ["Diagram", "ShowParameters" -> True]
 Apply the inverse after the original interferometer:
 
 ```wl
-roundTripMZ = inverseMZ[mz];
+roundTripMZ = inverseMZ[mz]
 ```
 
 Draw the complete sequence:
@@ -573,7 +560,7 @@ roundTripMZ["Diagram", "ShowParameters" -> True]
 Verify that the combined transfer matrix is the identity:
 
 ```wl
-FullSimplify[roundTripMZ["Unitary"], phi ∈ Reals] == IdentityMatrix[2]
+FullSimplify[roundTripMZ["Unitary"], \[Phi] ∈ Reals] == IdentityMatrix[2]
 ```
 
 ## Part II: Input states and multiphoton interference
@@ -611,7 +598,7 @@ Compute the three output probabilities with exactly two photons:
 
 ```wl
 coherentTwoPhotonProbabilities =
- balanced["Probability", "Coherent"[{1, 0}] -> #] & /@ {{2, 0}, {1, 1}, {0, 2}};
+ balanced["Probability", "Coherent"[{1, 0}] -> #] & /@ {{2, 0}, {1, 1}, {0, 2}}
 ```
 
 Add them to obtain the total two-photon probability:
@@ -642,7 +629,7 @@ A coherent-state distribution has an infinite tail. A finite cutoff omits probab
 it does not justify renormalization. List the probabilities through six total photons:
 
 ```wl
-coherentProbabilities = balanced["Probabilities", "Coherent"[{1, 0}], "Cutoff" -> 6];
+coherentProbabilities = balanced["Probabilities", "Coherent"[{1, 0}], "Cutoff" -> 6]
 ```
 
 Verify that the retained probability equals the Poisson cumulative probability:
@@ -672,10 +659,10 @@ balanced["Probability", {1, 1} -> {2, 0}]
 ```
 
 Coherent-state interference depends on the relative input phase. Give both inputs coherent
-amplitude `alphaLaser` and add phase `laserPhase` to the second. Compute the output amplitudes:
+amplitude `\[Alpha]Laser` and add phase `laserPhase` to the second. Compute the output amplitudes:
 
 ```wl
-coherentOutput = balanced["Coherent"[{alphaLaser, alphaLaser Exp[I laserPhase]}]]
+coherentOutput = balanced["Coherent"[{\[Alpha]Laser, \[Alpha]Laser Exp[I laserPhase]}]]
 ```
 
 `First` extracts the coherent amplitude vector from the `"Coherent"` expression. Its squared moduli
@@ -684,13 +671,13 @@ phase $\chi$. Verify this law:
 
 ```wl
 FullSimplify[Abs[First[coherentOutput]]^2 ==
- Abs[alphaLaser]^2 {1 - Cos[laserPhase], 1 + Cos[laserPhase]}, laserPhase ∈ Reals]
+ Abs[\[Alpha]Laser]^2 {1 - Cos[laserPhase], 1 + Cos[laserPhase]}, laserPhase ∈ Reals]
 ```
 
-The total mean photon number stays fixed. Compare the output amplitudes at relative phases zero and `Pi`:
+The total mean photon number stays fixed. Compare the output amplitudes at relative phases zero and `\[Pi]`:
 
 ```wl
-AssociationMap[FullSimplify[coherentOutput /. laserPhase -> #] &, {0, Pi}]
+AssociationMap[FullSimplify[coherentOutput /. laserPhase -> #] &, {0, \[Pi]}]
 ```
 
 Changing the relative phase exchanges the dark port while preserving the input mean photon number.
@@ -782,14 +769,14 @@ Form the normalized amplitude for the even-output occupation pattern:
 
 ```wl
 twinEvenAmplitude = (-1)^kTwin Binomial[nTwin, kTwin] Sqrt[
- (2 kTwin)! (2 nTwin - 2 kTwin)!]/(2^nTwin nTwin!);
+ (2 kTwin)! (2 nTwin - 2 kTwin)!]/(2^nTwin nTwin!)
 ```
 
 Compute its probability on the physical integer domain:
 
 ```wl
 twinEvenProbability = FullSimplify[Abs[twinEvenAmplitude]^2,
- Element[{nTwin, kTwin}, Integers] && 0 <= kTwin <= nTwin];
+ Element[{nTwin, kTwin}, Integers] && 0 <= kTwin <= nTwin]
 ```
 
 Verify the binomial form of this probability:
@@ -852,7 +839,7 @@ For input `{2, 2}`, suppressing the same output requires a different reflectivit
 Build a beam splitter with symbolic angle:
 
 ```wl
-fourBS = QuantumInterferometer[{"BS"[theta, 0] -> {1, 2}}, 2];
+fourBS = QuantumInterferometer[{"BS"[\[Theta]]}]
 ```
 
 Draw the beam splitter:
@@ -865,13 +852,13 @@ Compute the return amplitude for `{2, 2}`:
 
 ```wl
 fourAmplitude = FullSimplify[
- fourBS["Amplitude", {2, 2} -> {2, 2}], theta ∈ Reals]
+ fourBS["Amplitude", {2, 2} -> {2, 2}], \[Theta] ∈ Reals]
 ```
 
 Verify its expression in terms of transmission and reflection amplitudes:
 
 ```wl
-FullSimplify[fourAmplitude == 1 - 6 Sin[theta]^2 Cos[theta]^2, theta ∈ Reals]
+FullSimplify[fourAmplitude == 1 - 6 Sin[\[Theta]]^2 Cos[\[Theta]]^2, \[Theta] ∈ Reals]
 ```
 
 Writing $R=\sin^2\theta$ gives return amplitude $1-6R(1-R)$.
@@ -886,8 +873,7 @@ suppressionSettings = reflectivity /. Solve[
 Build a beam splitter at each suppression setting:
 
 ```wl
-suppressionDevices = QuantumInterferometer[
- {"BS"[ArcSin[Sqrt[#]], 0] -> {1, 2}}, 2] & /@ suppressionSettings;
+suppressionDevices = QuantumInterferometer[{"BS"[ArcSin[Sqrt[#]]]}] & /@ suppressionSettings
 ```
 
 Draw both beam splitters:
@@ -906,7 +892,7 @@ The settings exchange transmissivity and reflectivity. At either endpoint, the r
 probability is one. Plot the return probability across the full angular range:
 
 ```wl
-Plot[Evaluate[fourAmplitude^2], {theta, 0, Pi/2},
+Plot[Evaluate[fourAmplitude^2], {\[Theta], 0, \[Pi]/2},
  Frame -> True, FrameLabel -> {"Beam splitter angle", "P({2,2} to {2,2})"},
  PlotLabel -> "Four-photon suppression at two unbalanced settings",
  GridLines -> Automatic, PlotRange -> {0, 1}, AspectRatio -> 1/2, ImageSize -> 480]
@@ -918,20 +904,20 @@ twin Fock input `{nReturn, nReturn}`:
 ```wl
 returnAmplitudeFamily = FullSimplify[
  fourBS["Amplitude", {nReturn, nReturn} -> {nReturn, nReturn}],
- Element[nReturn, Integers] && nReturn >= 0 && theta ∈ Reals]
+ Element[nReturn, Integers] && nReturn >= 0 && \[Theta] ∈ Reals]
 ```
 
 Evaluate the amplitude for one, two, and three photons per input:
 
 ```wl
 AssociationMap[
- FullSimplify[returnAmplitudeFamily /. nReturn -> #, theta ∈ Reals] &, {1, 2, 3}]
+ FullSimplify[returnAmplitudeFamily /. nReturn -> #, \[Theta] ∈ Reals] &, {1, 2, 3}]
 ```
 
 The different angular polynomials have different zeros. Verify the four-photon member:
 
 ```wl
-FullSimplify[(returnAmplitudeFamily /. nReturn -> 2) == fourAmplitude, theta ∈ Reals]
+FullSimplify[(returnAmplitudeFamily /. nReturn -> 2) == fourAmplitude, \[Theta] ∈ Reals]
 ```
 
 *Source:* Agarwal, Exercises 5.6 and 5.9, pp. 134-135.
@@ -942,10 +928,10 @@ Coherent inputs remain coherent under passive optics. Adding a Fock-state input 
 nonclassical state preparation by **heralding**: a specified detection outcome in one mode
 selects a conditional state in the other.
 
-Build a beam splitter for one photon in the first input and coherent amplitude `beta` in the second:
+Build a beam splitter for one photon in the first input and coherent amplitude `\[Beta]` in the second:
 
 ```wl
-mixedBS = QuantumInterferometer[{"BS"[theta, 0] -> {1, 2}}, 2];
+mixedBS = QuantumInterferometer[{"BS"[\[Theta]]}]
 ```
 
 Draw the beam splitter; the first output will be measured for the heralding outcome:
@@ -954,34 +940,34 @@ Draw the beam splitter; the first output will be measured for the heralding outc
 mixedBS["Diagram", "ShowParameters" -> True]
 ```
 
-Keep `beta` complex. For one photon detected in the first output, compute the vacuum
+Keep `\[Beta]` complex. For one photon detected in the first output, compute the vacuum
 and one-photon amplitudes in the second:
 
 ```wl
 heraldLeading = FullSimplify[
- Table[mixedBS["Amplitude", {1, "Coherent"[beta]} -> {1, k}], {k, 0, 1}], theta ∈ Reals]
+ Table[mixedBS["Amplitude", {1, "Coherent"[\[Beta]]} -> {1, k}], {k, 0, 1}], \[Theta] ∈ Reals]
 ```
 
 Verify the two unnormalized conditional amplitudes:
 
 ```wl
-FullSimplify[heraldLeading == Exp[-Abs[beta]^2/2] {Cos[theta], beta Cos[2 theta]},
- theta ∈ Reals]
+FullSimplify[heraldLeading == Exp[-Abs[\[Beta]]^2/2] {Cos[\[Theta]], \[Beta] Cos[2 \[Theta]]},
+ \[Theta] ∈ Reals]
 ```
 
 The coherent amplitude controls the relative magnitude and phase of these coefficients.
-Verify that a phase shift of `beta` rotates only the one-photon coefficient:
+Verify that a phase shift of `\[Beta]` rotates only the one-photon coefficient:
 
 ```wl
-FullSimplify[(heraldLeading /. beta -> beta Exp[I heraldDrivePhase]) ==
- heraldLeading {1, Exp[I heraldDrivePhase]}, Element[{theta, heraldDrivePhase}, Reals]]
+FullSimplify[(heraldLeading /. \[Beta] -> \[Beta] Exp[I heraldDrivePhase]) ==
+ heraldLeading {1, Exp[I heraldDrivePhase]}, Element[{\[Theta], heraldDrivePhase}, Reals]]
 ```
 
 Small transmission and coherent amplitudes suppress higher photon numbers. Set the
 transmission amplitude to `1/5`:
 
 ```wl
-heraldBS = QuantumInterferometer[{"BS"[ArcCos[1/5], 0] -> {1, 2}}, 2];
+heraldBS = QuantumInterferometer[{"BS"[ArcCos[1/5]]}]
 ```
 
 Draw the preparation network:
@@ -990,10 +976,10 @@ Draw the preparation network:
 heraldBS["Diagram", "ShowParameters" -> True]
 ```
 
-Set `beta = 1/5` and list joint probabilities through six total photons:
+Set `\[Beta] = 1/5` and list joint probabilities through six total photons:
 
 ```wl
-mixedProbabilities = heraldBS["Probabilities", {1, "Coherent"[1/5]}, "Cutoff" -> 6];
+mixedProbabilities = heraldBS["Probabilities", {1, "Coherent"[1/5]}, "Cutoff" -> 6]
 ```
 
 Select the joint outcomes with one photon in the first output:
@@ -1007,13 +993,13 @@ retain the corresponding amplitudes for zero through eight photons in the second
 
 ```wl
 heraldAmplitudes = Table[
- heraldBS["Amplitude", {1, "Coherent"[1/5]} -> {1, k}], {k, 0, 8}];
+ heraldBS["Amplitude", {1, "Coherent"[1/5]} -> {1, k}], {k, 0, 8}]
 ```
 
 Their squared norm is the retained success probability. Compute it:
 
 ```wl
-heraldSuccess = Total[Abs[heraldAmplitudes]^2];
+heraldSuccess = Total[Abs[heraldAmplitudes]^2]
 ```
 
 Evaluate the retained success probability numerically:
@@ -1025,7 +1011,7 @@ N[heraldSuccess]
 Normalize the selected amplitudes to construct the conditional state:
 
 ```wl
-heraldState = QuantumState[heraldAmplitudes/Sqrt[heraldSuccess], 9];
+heraldState = QuantumState[heraldAmplitudes/Sqrt[heraldSuccess], 9]
 ```
 
 Verify normalization of the conditional state:
@@ -1074,37 +1060,37 @@ A fringe is the phase dependence of a specified outcome for a specified input.
 Compute the single-photon return probability in the Mach-Zehnder interferometer:
 
 ```wl
-fringeOne = FullSimplify[mz["Probability", {1, 0} -> {1, 0}], phi ∈ Reals]
+fringeOne = FullSimplify[mz["Probability", {1, 0} -> {1, 0}], \[Phi] ∈ Reals]
 ```
 
 Verify the single-photon fringe:
 
 ```wl
-FullSimplify[fringeOne == Sin[phi/2]^2, phi ∈ Reals]
+FullSimplify[fringeOne == Sin[\[Phi]/2]^2, \[Phi] ∈ Reals]
 ```
 
 Compute the coincidence fringe for one photon per input:
 
 ```wl
-fringeTwo = FullSimplify[mz["Probability", {1, 1} -> {1, 1}], phi ∈ Reals]
+fringeTwo = FullSimplify[mz["Probability", {1, 1} -> {1, 1}], \[Phi] ∈ Reals]
 ```
 
 Verify the two-photon fringe:
 
 ```wl
-FullSimplify[fringeTwo == Cos[phi]^2, phi ∈ Reals]
+FullSimplify[fringeTwo == Cos[\[Phi]]^2, \[Phi] ∈ Reals]
 ```
 
 Compute the probability of output `{3, 1}` for input `{2, 2}`:
 
 ```wl
-fringeFour = FullSimplify[mz["Probability", {2, 2} -> {3, 1}], phi ∈ Reals]
+fringeFour = FullSimplify[mz["Probability", {2, 2} -> {3, 1}], \[Phi] ∈ Reals]
 ```
 
 Verify the four-photon fringe:
 
 ```wl
-FullSimplify[fringeFour == 3 Sin[2 phi]^2/8, phi ∈ Reals]
+FullSimplify[fringeFour == 3 Sin[2 \[Phi]]^2/8, \[Phi] ∈ Reals]
 ```
 
 The four-photon fringe has a shorter period and a lower detection probability.
@@ -1112,7 +1098,7 @@ A shorter period alone does not establish better phase sensitivity; fluctuations
 and photon resources also matter. Plot the probabilities without rescaling:
 
 ```wl
-Plot[Evaluate[{fringeOne, fringeTwo, fringeFour}], {phi, 0, 2 Pi},
+Plot[Evaluate[{fringeOne, fringeTwo, fringeFour}], {\[Phi], 0, 2 \[Pi]},
  Frame -> True, FrameLabel -> {"Internal phase", "Outcome probability"},
  PlotLegends -> {"{1,0} to {1,0}", "{1,1} to {1,1}", "{2,2} to {3,1}"},
  PlotLabel -> "Multiphoton outcome probabilities", GridLines -> Automatic,
@@ -1125,9 +1111,8 @@ Build the interferometer:
 
 ```wl
 threeMZ = QuantumInterferometer[{
- "BS"[ArcSin[Sqrt[2/3]], Pi/2] -> {1, 2},
- "PS"[-phase3] -> 2,
- "BS"[ArcSin[Sqrt[2/3]], Pi/2] -> {1, 2}}, 2];
+ "BS"[ArcSin[Sqrt[2/3]], \[Pi]/2], "PS"[-phase3] -> 2,
+ "BS"[ArcSin[Sqrt[2/3]], \[Pi]/2]}]
 ```
 
 Draw the three-photon interferometer:
@@ -1154,7 +1139,7 @@ In this three-photon sector, only `{1, 2}` contributes, with factor two.
 Compute the complete output distribution:
 
 ```wl
-threeProbabilities = threeMZ["Probabilities", {2, 1}];
+threeProbabilities = threeMZ["Probabilities", {2, 1}]
 ```
 
 Verify normalization before using the probabilities:
@@ -1167,7 +1152,7 @@ Compute the factorial moment from the occupation patterns:
 
 ```wl
 factorialMoment = Total[KeyValueMap[
- With[{n = #1["Name"]}, #2 n[[1]] n[[2]] (n[[2]] - 1)] &, threeProbabilities]];
+ With[{n = #1["Name"]}, #2 n[[1]] n[[2]] (n[[2]] - 1)] &, threeProbabilities]]
 ```
 
 Verify that the moment is twice the selected outcome probability:
@@ -1180,7 +1165,7 @@ FullSimplify[ComplexExpand[factorialMoment - 2 threeFringe]] == 0
 
 ## Part III: State preparation, loss, and photonic computation
 
-We now reverse a preparation, discard an output mode, and compose larger optical networks.
+We now reverse a preparation, apply pure loss, and compose larger optical networks.
 
 ### 11. Squeezed-state interference: disentangling two modes
 
@@ -1189,7 +1174,7 @@ vacua. Reversing its beam splitter should recover the independent squeezed vacua
 Keep `r > 0` symbolic and construct the inverse beam splitter:
 
 ```wl
-inverseBalanced = balanced["Dagger"];
+inverseBalanced = balanced["Dagger"]
 ```
 
 Draw the inverse beam splitter:
@@ -1201,7 +1186,7 @@ inverseBalanced["Diagram", "ShowParameters" -> True]
 Apply it after the two-mode squeezed-vacuum preparation:
 
 ```wl
-separatedSqueezers = inverseBalanced[symbolicPair];
+separatedSqueezers = inverseBalanced[symbolicPair]
 ```
 
 Draw the full sequence:
@@ -1213,7 +1198,7 @@ separatedSqueezers["Diagram", "ShowParameters" -> True]
 Build the direct preparation with the same squeezing parameter:
 
 ```wl
-directSqueezers = QuantumInterferometer[{"S"[r] -> 1, "S"[-r] -> 2}, 2];
+directSqueezers = QuantumInterferometer[{"S"[r], "S"[-r] -> 2}]
 ```
 
 Draw the direct preparation:
@@ -1266,20 +1251,20 @@ singleSqueezedProbability[0, 0] == 1
 Compute the single-mode probabilities for zero through four photons:
 
 ```wl
-singleSqueezedValues = singleSqueezedProbability[#, r] & /@ Range[0, 4];
+singleSqueezedValues = singleSqueezedProbability[#, r] & /@ Range[0, 4]
 ```
 
 Independent modes have joint probabilities given by an outer product. Form that reference matrix:
 
 ```wl
-independentSqueezedProbabilities = Outer[Times, singleSqueezedValues, singleSqueezedValues];
+independentSqueezedProbabilities = Outer[Times, singleSqueezedValues, singleSqueezedValues]
 ```
 
 Compute the joint probabilities after separation, with rows for mode 1 and columns for mode 2:
 
 ```wl
 separatedSqueezedProbabilities = Table[
- separatedSqueezers["Probability", {0, 0} -> {j, k}], {j, 0, 4}, {k, 0, 4}];
+ separatedSqueezers["Probability", {0, 0} -> {j, k}], {j, 0, 4}, {k, 0, 4}]
 ```
 
 Verify factorization for arbitrary positive `r`:
@@ -1287,6 +1272,83 @@ Verify factorization for arbitrary positive `r`:
 ```wl
 FullSimplify[separatedSqueezedProbabilities == independentSqueezedProbabilities, r > 0]
 ```
+
+#### Gaussian decompositions: equivalent optical networks
+
+Bloch-Messiah decomposition writes a lossless Gaussian unitary as passive optics,
+single-mode squeezers, then passive optics. QI computes it for numerical optical parameters.
+Build a network with mode mixing before and after squeezing:
+
+```wl
+gaussianSequence = QuantumInterferometer[{
+ "BS"[0.3], "S"[0.5], "S"[0.2 I] -> 2, "BS"[0.7, 0.4]}]
+```
+
+Draw this network:
+
+```wl
+gaussianSequence["Diagram", "ShowParameters" -> True]
+```
+
+Compute its Bloch-Messiah form:
+
+```wl
+blochMessiah = gaussianSequence["BlochMessiah"]
+```
+
+Draw the decomposed network:
+
+```wl
+blochMessiah["Diagram", "ShowParameters" -> True]
+```
+
+Equivalent forms can differ by a global phase, so compare probabilities.
+Choose zero through three photons per output mode:
+
+```wl
+formPatterns = Tuples[Range[0, 3], 2];
+```
+
+Compare the two networks for a nonvacuum input:
+
+```wl
+bmDifferences = (gaussianSequence["Probability", {1, 0} -> #] -
+ blochMessiah["Probability", {1, 0} -> #]) & /@ formPatterns;
+```
+
+Verify agreement within numerical precision:
+
+```wl
+Max[Abs[bmDifferences]] < 10^-10
+```
+
+For vacuum input, `"GBSForm"` moves all squeezers before a passive network.
+It preserves the output state for vacuum input, up to a global phase. Compute this form:
+
+```wl
+vacuumForm = gaussianSequence["GBSForm"]
+```
+
+Draw the squeezers followed by passive optics:
+
+```wl
+vacuumForm["Diagram", "ShowParameters" -> True]
+```
+
+Compare the vacuum-input probabilities:
+
+```wl
+gbsDifferences = (gaussianSequence["Probability", {0, 0} -> #] -
+ vacuumForm["Probability", {0, 0} -> #]) & /@ formPatterns;
+```
+
+Verify agreement within numerical precision:
+
+```wl
+Max[Abs[gbsDifferences]] < 10^-10
+```
+
+#### Photon-number cutoffs: retained and omitted probability
 
 The total photon-number cutoff differs from the number of Fock levels per mode.
 Return to `tmsv` at `r = 0.5`: cutoff $C$ retains pairs through $\lfloor C/2\rfloor$.
@@ -1312,179 +1374,309 @@ KeyValueMap[
 ```
 
 The retained probability approaches one without renormalizing the listed outcomes.
-QI computes squeezed-network probabilities directly, but `"Samples"` currently supports
-only passive networks. Gaussian boson sampling here refers to the probability model.
+QI computes squeezed-network probabilities directly. `"Samples"` and `"SampleCounts"`
+support only lossless passive networks. Gaussian boson sampling here refers to the probability model.
 
 *Source:* Agarwal, Section 5.8, p. 109, and Sections 3.1-3.2; Gerry and Knight, Section 7.7.
 
-### 12. Optical attenuation: tracing out an unobserved output
+### 12. Pure loss: attenuation and mixed output states
 
-A beam splitter with vacuum in its second input models attenuation when the second output
-is unobserved. The joint evolution conserves photon number; tracing out the loss mode gives
-the attenuated state. Build a beam splitter with symbolic angle:
+`"Loss"[\[Eta]]` applies a pure-loss channel with **transmissivity** $0\le\eta\le1$.
+A photon survives with probability $\eta$; the coherent amplitude scales by $\sqrt\eta$.
+The environment is in vacuum. QI computes the reduced output directly.
+
+Build a one-mode attenuator, declaring `\[Eta]` for later substitution:
 
 ```wl
-attenuator = QuantumInterferometer[{"BS"[lossAngle, 0] -> {1, 2}}, 2];
+attenuator = QuantumInterferometer[{"Loss"[\[Eta]]}, "Parameters" -> {\[Eta]}]
 ```
 
-Draw the beam splitter with its observed and loss outputs:
+Draw the attenuator:
 
 ```wl
 attenuator["Diagram", "ShowParameters" -> True]
 ```
 
-Send three photons into the first input and vacuum into the second:
+Use `"TransferMatrix"` for a lossy device. Read the retained amplitude transformation:
 
 ```wl
-jointLossState = attenuator[FockState[{3, 0}, 4]];
+attenuator["TransferMatrix"]
 ```
 
-Trace out the second output to obtain the attenuated state:
+This matrix is generally nonunitary. Generic Fock transition amplitudes are unavailable
+for lossy devices because different environment outcomes contribute separate probabilities.
+
+#### Fock inputs: binomial photon loss
+
+For three input photons, the retained photon number ranges from zero to three.
+Compute its distribution on the physical transmissivity domain:
 
 ```wl
-attenuatedState = QuantumPartialTrace[jointLossState, {2}];
+lossProbabilities = Refine[attenuator["Probabilities", {3}], 0 <= \[Eta] <= 1]
 ```
 
-Each photon is transmitted with probability $T=\cos^2\theta$.
-Compute the binomial probabilities for zero through three transmitted photons:
+Verify normalization:
 
 ```wl
-lossProbabilities = PDF[BinomialDistribution[3, Cos[lossAngle]^2], Range[0, 3]]
+FullSimplify[Total[lossProbabilities] == 1, 0 <= \[Eta] <= 1]
 ```
 
-Verify that the reduced density matrix is diagonal with these probabilities:
+The entries are ordered by retained photon number. Verify the mean $3\eta$:
+
+```wl
+FullSimplify[Range[0, 3] . Values[lossProbabilities] == 3 \[Eta], 0 <= \[Eta] <= 1]
+```
+
+At unit transmissivity, all three photons survive. Check this limit:
+
+```wl
+(Values[lossProbabilities] /. \[Eta] -> 1) == {0, 0, 0, 1}
+```
+
+At zero transmissivity, the output is vacuum. Check this limit:
+
+```wl
+(Values[lossProbabilities] /. \[Eta] -> 0) == {1, 0, 0, 0}
+```
+
+A Fock input generally becomes a mixture. Propagate three photons with four Fock levels:
+
+```wl
+attenuatedState = attenuator[FockState[3, 4]]
+```
+
+Verify that the density matrix is diagonal with the calculated probabilities:
 
 ```wl
 FullSimplify[Normal[attenuatedState["DensityMatrix"]] ==
- DiagonalMatrix[lossProbabilities], lossAngle ∈ Reals]
+ DiagonalMatrix[Values[lossProbabilities]], 0 <= \[Eta] <= 1]
 ```
 
-The joint state is pure, but the reduced state is generally mixed.
-Verify normalization of its photon-number distribution:
+Check the purity at transmissivity $1/2$:
 
 ```wl
-FullSimplify[Total[lossProbabilities] == 1, lossAngle ∈ Reals]
+FullSimplify[attenuatedState["Purity"] /. \[Eta] -> 1/2] == 5/16
 ```
 
-Verify that the mean transmitted photon number is `3 T`:
+Independent attenuation also accepts symbolic photon numbers.
+Compute the probability that `nLoss` input photons leave `kLoss` survivors:
 
 ```wl
-FullSimplify[Range[0, 3] . lossProbabilities == 3 Cos[lossAngle]^2, lossAngle ∈ Reals]
+lossCountLaw = attenuator["Probability", {nLoss} -> {kLoss},
+ Assumptions -> Element[{nLoss, kLoss}, Integers] && 0 <= kLoss <= nLoss && 0 < \[Eta] < 1]
 ```
 
-Check perfect transmission:
+Verify the binomial law $P(k\mid n)=\binom nk\eta^k(1-\eta)^{n-k}$:
 
 ```wl
-(lossProbabilities /. lossAngle -> 0) == {0, 0, 0, 1}
-```
-
-Check perfect reflection:
-
-```wl
-(lossProbabilities /. lossAngle -> Pi/2) == {1, 0, 0, 0}
-```
-
-Check the reduced purity at equal transmissivity and reflectivity:
-
-```wl
-FullSimplify[attenuatedState["Purity"] /. lossAngle -> Pi/4] == 5/16
-```
-
-For arbitrary input photon number `nLoss`, let `kLoss` photons be transmitted.
-The loss output contains `nLoss - kLoss` photons. Compute the amplitude on the physical domain:
-
-```wl
-lossAmplitudeFamily = Refine[
- attenuator["Amplitude", {nLoss, 0} -> {kLoss, nLoss - kLoss}],
- Element[{nLoss, kLoss}, Integers] && 0 <= kLoss <= nLoss]
-```
-
-The coefficient of $z_1^kz_2^{n-k}$ in $(\cos\theta\,z_1+\sin\theta\,z_2)^n$,
-with Fock normalization, is $\sqrt{\binom nk}\cos^k\theta\sin^{n-k}\theta$.
-Its squared modulus is binomial. Compute the probability on the physical integer domain:
-
-```wl
-lossCountLaw = FullSimplify[PDF[BinomialDistribution[nLoss, tLoss], kLoss],
- Element[{nLoss, kLoss}, Integers] && 0 <= kLoss <= nLoss && 0 < tLoss < 1]
-```
-
-Substitute explicit occupations into the QI amplitude while keeping the angle symbolic.
-Verify the binomial law for zero through four input photons and $0<\theta<\pi/2$:
-
-```wl
-Table[FullSimplify[
- Abs[lossAmplitudeFamily /. {nLoss -> n, kLoss -> k}]^2 ==
-  (lossCountLaw /. {nLoss -> n, kLoss -> k, tLoss -> Cos[lossAngle]^2}),
- 0 < lossAngle < Pi/2], {n, 0, 4}, {k, 0, n}]
+FullSimplify[lossCountLaw == Binomial[nLoss, kLoss] \[Eta]^kLoss (1 - \[Eta])^(nLoss - kLoss),
+ Element[{nLoss, kLoss}, Integers] && 0 <= kLoss <= nLoss && 0 < \[Eta] < 1]
 ```
 
 Verify normalization for every nonnegative integer input photon number:
 
 ```wl
 Sum[lossCountLaw, {kLoss, 0, nLoss},
- Assumptions -> Element[nLoss, Integers] && nLoss >= 0 && 0 < tLoss < 1] == 1
+ Assumptions -> Element[nLoss, Integers] && nLoss >= 0 && 0 < \[Eta] < 1] == 1
 ```
 
-Compute the mean transmitted photon number from the binomial law:
+Compute the mean retained photon number:
 
 ```wl
 transmittedMean = Sum[kLoss lossCountLaw, {kLoss, 0, nLoss},
- Assumptions -> Element[nLoss, Integers] && nLoss >= 0 && 0 < tLoss < 1];
+ Assumptions -> Element[nLoss, Integers] && nLoss >= 0 && 0 < \[Eta] < 1]
 ```
 
-Verify that the mean is the input photon number times the transmissivity:
+Verify the mean $n\eta$:
 
 ```wl
-FullSimplify[transmittedMean == nLoss tLoss,
- Element[nLoss, Integers] && nLoss >= 0 && 0 < tLoss < 1]
+FullSimplify[transmittedMean == nLoss \[Eta],
+ Element[nLoss, Integers] && nLoss >= 0 && 0 < \[Eta] < 1]
 ```
 
-Two attenuators with transmissivity $1/2$ have net transmissivity $1/4$.
-Use the finite `QuantumState` route to propagate a mixed state through the second stage.
-First, propagate three photons and a vacuum loss input through the balanced beam splitter:
+#### Coherent inputs: reduced amplitude and Poisson statistics
+
+A coherent input remains coherent under pure loss. Compute its output amplitude:
 
 ```wl
-firstLossJoint = balanced[FockState[{3, 0}, 4]];
+lossCoherentOutput = attenuator["Coherent"[{\[Alpha]Loss}]]
 ```
 
-Trace out the first loss output:
+Its mean photon number becomes $\eta|\alpha|^2$. Verify the corresponding vacuum probability:
 
 ```wl
-halfLossState = QuantumPartialTrace[firstLossJoint, {2}];
+FullSimplify[attenuator["Probability", "Coherent"[{\[Alpha]Loss}] -> {0}] ==
+ Exp[-\[Eta] Abs[\[Alpha]Loss]^2], 0 <= \[Eta] <= 1]
 ```
 
-Add a fresh vacuum loss mode for the second stage:
+#### Finite channels: coherences and repeated attenuation
+
+Set the declared transmissivity to $1/2$:
 
 ```wl
-secondLossInput = QuantumTensorProduct[halfLossState, FockState[0, 4]];
+halfLoss = attenuator[1/2]
 ```
 
-Propagate the mixed input through the second beam splitter:
+Draw the resulting device:
 
 ```wl
-secondLossJoint = balanced[secondLossInput];
+halfLoss["Diagram", "ShowParameters" -> True]
 ```
 
-Trace out the second loss output:
+Expose the same map as a `QuantumChannel` with four Fock levels:
 
 ```wl
-twiceAttenuated = QuantumPartialTrace[secondLossJoint, {2}];
+lossChannel = halfLoss["Channel", 4]
 ```
 
-Compute the binomial reference with transmissivity `1/4`:
+Loss also attenuates coherences between photon numbers. Prepare $(|0\rangle+i|1\rangle)/\sqrt2$:
 
 ```wl
-twiceProbabilities = PDF[BinomialDistribution[3, 1/4], Range[0, 3]]
+lossSuperposition = QuantumState[{1, I, 0, 0}/Sqrt[2], 4]
 ```
 
-Verify the density matrix after both stages:
+Apply the channel:
 
 ```wl
-FullSimplify[Normal[twiceAttenuated["DensityMatrix"]] == DiagonalMatrix[twiceProbabilities]]
+lossSuperpositionOutput = lossChannel[lossSuperposition]
 ```
 
-Four levels per mode suffice because the total photon number is at most three.
-The attenuation comes from discarding a mode after unitary evolution.
+Verify normalization of the output:
+
+```wl
+Tr[Normal[lossSuperpositionOutput["DensityMatrix"]]] == 1
+```
+
+Verify the density matrix in the occupied vacuum and one-photon sector:
+
+```wl
+FullSimplify[Normal[lossSuperpositionOutput["DensityMatrix"]][[;; 2, ;; 2]]] ==
+ {{3/4, -I/(2 Sqrt[2])}, {I/(2 Sqrt[2]), 1/4}}
+```
+
+Two pure-loss channels compose by multiplying transmissivities.
+Apply the first half-transmissive stage to three photons:
+
+```wl
+halfLossState = halfLoss[FockState[3, 4]]
+```
+
+Apply the second stage to this mixed state:
+
+```wl
+twiceAttenuated = halfLoss[halfLossState]
+```
+
+Verify the binomial output with net transmissivity $1/4$:
+
+```wl
+Normal[twiceAttenuated["DensityMatrix"]] ==
+ DiagonalMatrix[PDF[BinomialDistribution[3, 1/4], Range[0, 3]]]
+```
+
+Compose the two QI objects directly:
+
+```wl
+twiceAttenuator = halfLoss[halfLoss]
+```
+
+Draw the two loss elements:
+
+```wl
+twiceAttenuator["Diagram", "ShowParameters" -> True]
+```
+
+Verify the net amplitude factor $\sqrt{1/4}=1/2$:
+
+```wl
+twiceAttenuator["TransferMatrix"] == {{1/2}}
+```
+
+#### Two-photon interference: loss and surviving coincidences
+
+Loss can be placed between passive optical elements. With mode mixing, Fock occupations
+must be explicit. Add equal attenuation to both outputs of the balanced beam splitter:
+
+```wl
+lossyHOM = QuantumInterferometer[{
+ "BS"[\[Pi]/4], "Loss"[\[Eta]] -> 1, "Loss"[\[Eta]] -> 2}]
+```
+
+Draw the lossy interferometer:
+
+```wl
+lossyHOM["Diagram", "ShowParameters" -> True]
+```
+
+Compute the distribution for one photon in each input:
+
+```wl
+lossyHOMProbabilities = Refine[lossyHOM["Probabilities", {1, 1}], 0 <= \[Eta] <= 1]
+```
+
+Verify normalization, including vacuum and single-photon outcomes:
+
+```wl
+FullSimplify[Total[lossyHOMProbabilities] == 1, 0 <= \[Eta] <= 1]
+```
+
+The two-photon coincidence remains suppressed. Verify it:
+
+```wl
+lossyHOM["Probability", {1, 1} -> {1, 1}, Assumptions -> 0 <= \[Eta] <= 1] == 0
+```
+
+Sum the probabilities for both photons surviving:
+
+```wl
+twoPhotonSurvival = Total[KeySelect[lossyHOMProbabilities, Total[#["Name"]] == 2 &]]
+```
+
+Verify that this probability is $\eta^2$:
+
+```wl
+FullSimplify[twoPhotonSurvival == \[Eta]^2, 0 <= \[Eta] <= 1]
+```
+
+Equal output loss also models equal detector efficiencies before ideal photon counting.
+
+#### Vacuum environment: an independent construction
+
+Pure loss is equivalent to coupling the signal to a vacuum mode and discarding that output.
+Use a beam splitter with signal transmissivity $\eta$:
+
+```wl
+lossDilation = QuantumInterferometer[{"BS"[ArcCos[Sqrt[\[Eta]]]]}]
+```
+
+Draw the signal and environment modes:
+
+```wl
+lossDilation["Diagram", "ShowParameters" -> True]
+```
+
+Propagate three signal photons and a vacuum environment:
+
+```wl
+jointLossState = lossDilation[FockState[{3, 0}, 4]]
+```
+
+Trace out environment mode 2:
+
+```wl
+dilationOutput = QuantumPartialTrace[jointLossState, {2}]
+```
+
+Verify agreement with the native attenuator:
+
+```wl
+FullSimplify[Normal[dilationOutput["DensityMatrix"]] ==
+ Normal[attenuatedState["DensityMatrix"]], 0 <= \[Eta] <= 1]
+```
+
+Four levels per mode retain every sector in these three-photon examples.
+Native loss uses a vacuum environment. Combining loss with squeezing requires a Gaussian
+noise channel and is not supported by QI.
 
 *Source:* Agarwal, Section 5.10, pp. 111-112.
 
@@ -1500,7 +1692,7 @@ units. The propagator is $W(z)=e^{-izH}$, where $H$ is the single-particle coupl
 Define $H$ for two waveguides:
 
 ```wl
-twoGuideH = {{0, 1}, {1, 0}};
+twoGuideH = {{0, 1}, {1, 0}}
 ```
 
 Compute the propagator with
@@ -1510,11 +1702,10 @@ Compute the propagator with
 twoGuidePropagator = MatrixExp[-I couplingLength twoGuideH]
 ```
 
-Build the equivalent beam splitter with reflection phase `-Pi/2`:
+Build the equivalent beam splitter with reflection phase `-\[Pi]/2`:
 
 ```wl
-twoGuideSplitter = QuantumInterferometer[
- {"BS"[couplingLength, -Pi/2] -> {1, 2}}, 2];
+twoGuideSplitter = QuantumInterferometer[{"BS"[couplingLength, -\[Pi]/2]}]
 ```
 
 Draw the equivalent beam splitter:
@@ -1537,7 +1728,7 @@ Construct the nearest-neighbor Hamiltonian for five waveguides:
 
 ```wl
 arrayHamiltonian = SparseArray[
- {Band[{1, 2}] -> 1, Band[{2, 1}] -> 1}, {5, 5}];
+ {Band[{1, 2}] -> 1, Band[{2, 1}] -> 1}, {5, 5}]
 ```
 
 Verify that the array Hamiltonian is Hermitian:
@@ -1556,7 +1747,7 @@ arrayDevice[length_?NumericQ] :=
 Construct the network at unit propagation length:
 
 ```wl
-arrayAtOne = arrayDevice[1];
+arrayAtOne = arrayDevice[1]
 ```
 
 Draw its equivalent beam splitter mesh:
@@ -1568,7 +1759,7 @@ arrayAtOne["Diagram"]
 Read the transfer matrix:
 
 ```wl
-arrayMatrix = arrayAtOne["Unitary"];
+arrayMatrix = arrayAtOne["Unitary"]
 ```
 
 Verify that the array transfer matrix is unitary:
@@ -1580,7 +1771,7 @@ UnitaryMatrixQ[arrayMatrix]
 Construct the zero-length network:
 
 ```wl
-arrayAtZero = arrayDevice[0];
+arrayAtZero = arrayDevice[0]
 ```
 
 Draw its uncoupled modes:
@@ -1621,10 +1812,10 @@ Abs[Total[arraySingleProbabilities] - 1] < 10^-12
 ```
 
 A coherent input reproduces the same spatial profile in its mean output photon numbers.
-Send symbolic coherent amplitude `arrayAlpha` into the central waveguide:
+Send symbolic coherent amplitude `\[Alpha]Array` into the central waveguide:
 
 ```wl
-arrayClassicalField = arrayAtOne["Coherent"[arrayAlpha UnitVector[5, 3]]]
+arrayClassicalField = arrayAtOne["Coherent"[\[Alpha]Array UnitVector[5, 3]]]
 ```
 
 The mean output photon numbers equal the single-photon probabilities times $|\alpha|^2$.
@@ -1632,7 +1823,7 @@ Verify this relation, using `Chop` for numerical residuals:
 
 ```wl
 Chop[FullSimplify[Abs[First[arrayClassicalField]]^2 -
- Abs[arrayAlpha]^2 arraySingleProbabilities]] == ConstantArray[0, 5]
+ Abs[\[Alpha]Array]^2 arraySingleProbabilities]] == ConstantArray[0, 5]
 ```
 
 Mean photon numbers do not describe two-photon correlations. The normally ordered
@@ -1640,7 +1831,7 @@ correlation $G_{jk}=\langle n_j(n_k-\delta_{jk})\rangle$ counts ordered detectio
 Compute the output distribution for photons entering waveguides two and four:
 
 ```wl
-arrayPairProbabilities = arrayAtOne["Probabilities", {0, 1, 0, 1, 0}];
+arrayPairProbabilities = arrayAtOne["Probabilities", {0, 1, 0, 1, 0}]
 ```
 
 Compute the correlation matrix by averaging over occupation patterns:
@@ -1648,7 +1839,7 @@ Compute the correlation matrix by averaging over occupation patterns:
 ```wl
 arrayCorrelations = Total[KeyValueMap[
  With[{n = #1["Name"]}, #2 (Outer[Times, n, n] - DiagonalMatrix[n])] &,
- arrayPairProbabilities]];
+ arrayPairProbabilities]]
 ```
 
 Two photons give two ordered pairs. Verify that the matrix entries sum to two:
@@ -1675,7 +1866,7 @@ SeedRandom[23];
 Draw three thousand samples from the two-photon input:
 
 ```wl
-arraySampleCounts = arrayAtOne["SampleCounts", {0, 1, 0, 1, 0}, 3000];
+arraySampleCounts = arrayAtOne["SampleCounts", {0, 1, 0, 1, 0}, 3000]
 ```
 
 Verify the number of samples:
@@ -1687,7 +1878,7 @@ Total[arraySampleCounts] == 3000
 Convert the sample counts to relative frequencies:
 
 ```wl
-arrayFrequencies = arraySampleCounts/3000;
+arrayFrequencies = arraySampleCounts/3000
 ```
 
 Subtract the frequencies from the predicted probabilities by occupation pattern:
@@ -1721,7 +1912,7 @@ walkPositions = Range[-4, 4];
 Define the Hadamard coin operation:
 
 ```wl
-walkCoin = {{1, 1}, {1, -1}}/Sqrt[2];
+walkCoin = {{1, 1}, {1, -1}}/Sqrt[2]
 ```
 
 Construct the conditional shift with periodic boundaries:
@@ -1748,7 +1939,7 @@ to obtain a symmetric position distribution. Build the preparation beam splitter
 
 ```wl
 walkPreparation = QuantumInterferometer[
- {"BS"[Pi/4, Pi/2] -> {9, 10}}, 18];
+ {"BS"[\[Pi]/4, \[Pi]/2] -> {9, 10}}, 18]
 ```
 
 Draw the preparation network:
@@ -1766,7 +1957,7 @@ walkTransfer = MatrixPower[walkStep, 4] . walkPreparation["Unitary"];
 Construct the equivalent optical network from this matrix:
 
 ```wl
-walkDevice = QuantumInterferometer[N[walkTransfer]];
+walkDevice = QuantumInterferometer[N[walkTransfer]]
 ```
 
 Draw the eighteen-mode network:
@@ -1778,7 +1969,7 @@ walkDevice["Diagram", ImageSize -> 1000]
 Compute the output distribution for a photon entering mode 9:
 
 ```wl
-walkProbabilities = walkDevice["Probabilities", UnitVector[18, 9]];
+walkProbabilities = walkDevice["Probabilities", UnitVector[18, 9]]
 ```
 
 Sum over the two coin states at each position to obtain the position distribution:
@@ -1835,7 +2026,7 @@ A phase shifter multiplies an $n$-photon Fock state by $e^{in\phi}$.
 Build a one-mode phase shifter with a symbolic phase:
 
 ```wl
-ordinaryPhase = QuantumInterferometer[{"PS"[phaseNS] -> 1}, 1];
+ordinaryPhase = QuantumInterferometer[{"PS"[phaseNS]}]
 ```
 
 Draw the phase shifter:
@@ -1859,10 +2050,10 @@ FullSimplify[phaseAmplitude == Exp[I phasePhotons phaseNS],
  Element[phasePhotons, Integers] && phasePhotons >= 0 && phaseNS ∈ Reals]
 ```
 
-At phase `Pi/2`, read the vacuum, one-photon, and two-photon amplitudes:
+At phase `\[Pi]/2`, read the vacuum, one-photon, and two-photon amplitudes:
 
 ```wl
-Table[phaseAmplitude /. {phaseNS -> Pi/2, phasePhotons -> n}, {n, 0, 2}]
+Table[phaseAmplitude /. {phaseNS -> \[Pi]/2, phasePhotons -> n}, {n, 0, 2}]
 ```
 
 The two-photon amplitude changes sign, but the one-photon amplitude also changes.
@@ -1878,7 +2069,7 @@ the same auxiliary output occupation pattern `{1, 0}`. Construct the three-mode 
 nsMatrix = {
  {1 - Sqrt[2], 2^(-1/4), Sqrt[3/Sqrt[2] - 2]},
  {2^(-1/4), 1/2, (1 - Sqrt[2])/2},
- {Sqrt[3/Sqrt[2] - 2], (1 - Sqrt[2])/2, Sqrt[2] - 1/2}};
+ {Sqrt[3/Sqrt[2] - 2], (1 - Sqrt[2])/2, Sqrt[2] - 1/2}}
 ```
 
 The matrix is real. Verify unitarity using its transpose:
@@ -1892,7 +2083,7 @@ Photon-number conservation preserves the signal photon number on success.
 Build the network from the transfer matrix:
 
 ```wl
-nsGate = QuantumInterferometer[nsMatrix];
+nsGate = QuantumInterferometer[nsMatrix]
 ```
 
 Draw the network before heralding:
@@ -1927,19 +2118,19 @@ sectors because the total input photon number is at most three. Prepare the sign
 $|c_0|^2+|c_1|^2+|c_2|^2=1$, declaring its coefficients for later substitution:
 
 ```wl
-nsSignal = QuantumState[{c0, c1, c2, 0}, 4, "Parameters" -> {c0, c1, c2}];
+nsSignal = QuantumState[{c0, c1, c2, 0}, 4, "Parameters" -> {c0, c1, c2}]
 ```
 
 Add the one-photon and vacuum auxiliary inputs:
 
 ```wl
-nsInput = QuantumTensorProduct[nsSignal, FockState[1, 4], FockState[0, 4]];
+nsInput = QuantumTensorProduct[nsSignal, FockState[1, 4], FockState[0, 4]]
 ```
 
 Propagate the full input state:
 
 ```wl
-nsOutput = nsGate[nsInput];
+nsOutput = nsGate[nsInput]
 ```
 
 Verify that propagation preserves the parameter declarations:
@@ -1958,7 +2149,7 @@ Auxiliary photon numbers one and zero select indices two and one.
 Extract the unnormalized conditional signal vector:
 
 ```wl
-nsSelected = nsOutputTensor[[All, 2, 1]];
+nsSelected = nsOutputTensor[[All, 2, 1]]
 ```
 
 Verify the conditional vector before normalization:
@@ -1970,7 +2161,7 @@ FullSimplify[nsSelected == {c0, c1, -c2, 0}/2]
 Compute the success probability:
 
 ```wl
-nsSuccess = Total[Abs[nsSelected]^2];
+nsSuccess = Total[Abs[nsSelected]^2]
 ```
 
 Verify success probability `1/4` for every normalized input in the gate subspace:
@@ -1983,7 +2174,7 @@ Normalize the selected vector and carry its parameter declarations into the cond
 
 ```wl
 nsConditionalState = QuantumState[nsSelected/Sqrt[nsSuccess], 4,
- "ParameterSpec" -> nsOutput["ParameterSpec"]];
+ "ParameterSpec" -> nsOutput["ParameterSpec"]]
 ```
 
 Read the conditional state vector under the input normalization constraint:
@@ -2002,7 +2193,7 @@ Bind a normalized complex input through the conditional state's parameter interf
 
 ```wl
 nsExampleState = nsConditionalState[
- <|c0 -> 1/Sqrt[3], c1 -> I/Sqrt[3], c2 -> -1/Sqrt[3]|>];
+ <|c0 -> 1/Sqrt[3], c1 -> I/Sqrt[3], c2 -> -1/Sqrt[3]|>]
 ```
 
 Verify that the two-photon coefficient changes sign:
@@ -2029,27 +2220,18 @@ nsBeyondAmplitude != 1/2 && nsBeyondAmplitude != -1/2
 Section 6.2.2, Exercise 6.4 and Figure 6.5, pp. 183-186. QI computes the unitary evolution;
 projection onto the heralding outcome gives the conditional gate.
 
-### Consistency checks: normalization, limits, and independent calculations
-
-When changing an example, revisit the relevant checks:
-
-| Regime | Examples |
-|---|---|
-| General symbolic | Optical phases, coherent amplitudes, twin Fock inputs, squeezed-state factorization, binomial attenuation, gate superpositions |
-| Exact special case | Hong-Ou-Mandel suppression, geometric pair-number distribution, nonlinear sign gate |
-| Limit | Vacuum, zero squeezing, zero coherent amplitude, perfect transmission or reflection, zero propagation |
-| Numerical comparison | Hafnian and permanent amplitudes versus Fock-space circuits; sample frequencies versus probabilities |
-| Boundary | Omitted probability, distinguishable photons, factorial moments, periodic walk boundaries, gate inputs above two photons |
-
 ### Scope and further experiments
 
-QI supports symbolic coherent amplitudes in passive networks, symbolic passive Fock-state
-transition queries, and finite `QuantumState` superpositions and mixtures. Passive propagation
-preserves declared state parameters for later substitution. Squeezed networks
-allow symbolic optical parameters with explicit occupations. A Gaussian state specified only
-by its mean vector and covariance matrix is not a native input; its Fock-space representation
-can use the finite-state route.
+QI supports lossless passive and squeezed networks, and passive networks with pure loss.
+Lossy devices provide Fock probabilities, pure coherent outputs, finite-state propagation,
+and finite channels. Symbolic occupations work for lossless passive transition queries and
+independent attenuators. Mode mixing with loss requires explicit occupations.
 
-Homodyne detection, temporal wave-packet overlap, detector imperfections, and adaptive
-feed-forward require additional modeling. Change one input, optical parameter, or heralding
-outcome at a time, then rerun the normalization and limiting-case checks.
+Loss with squeezing, lossy Fock transition amplitudes, and lossy sampling are unsupported.
+Mixed Fock/coherent transition inputs require lossless passive optics. A Gaussian state
+specified only by its mean vector and covariance matrix is not a native input; its
+Fock-space representation can use the finite-state route.
+
+Thermal environments, homodyne detection, temporal wave-packet overlap, dark counts, and
+adaptive feed-forward require additional modeling. Change one input, optical parameter,
+or heralding outcome at a time, then rerun the normalization and limiting-case checks.
