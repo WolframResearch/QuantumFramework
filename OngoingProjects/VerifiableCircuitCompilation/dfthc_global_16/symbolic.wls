@@ -1,0 +1,14 @@
+root=DirectoryName[$InputFileName];
+Get[FileNameJoin[{root,"GramCores.wl"}]];
+Get[FileNameJoin[{root,"GlobalRefit.wl"}]];
+core=DFTHCGram`GramSymbolicChecks[];
+offset=DFTHCGram`OffsetCompressionChecks[];
+rescale=DFTHCGram`SchurRescaleChecks[];
+global=DFTHCGlobal`GlobalSymbolicChecks[];
+checks=Join[core["checks"],offset,rescale,global];
+report=<|"status"->If[AllTrue[Values[checks],TrueQ],"PASS","FAIL"],
+ "kernel"->$Version,"checks"->checks,
+ "source_sha256"->AssociationMap[FileHash[FileNameJoin[{root,#}],"SHA256","HexString"]&,
+   {"GramCores.wl","GlobalRefit.wl","symbolic.wls"}]|>;
+Export[FileNameJoin[{root,"symbolic.json"}],report,"RawJSON"];
+Echo[report];If[report["status"]=!="PASS",Exit[1]];

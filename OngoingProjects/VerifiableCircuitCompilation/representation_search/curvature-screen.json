@@ -1,0 +1,131 @@
+{
+  "scope": "EXHAUSTIVE_INTEGER_MODEL_ONLY_NO_CIRCUIT",
+  "source_sha256": "821a6119382eaa0d7329688ae833444fc5c39a6196bf3ace84ec50ec6a91f0f3",
+  "inputs": 3133452,
+  "coefficient_source_sha256": "2b768e13c7054d0e58bc4edf7afc0ff64559685aa309ad250b275fd9fd6a4c8d",
+  "official_verifier_sha256": "ddef520dec6b68d1cf0a6f328ddd36d79eb84570b9192cf3f7acaf073f06733a",
+  "h": "1/64",
+  "candidates": [
+    {
+      "name": "curvature-f8-naive",
+      "fractional_bits": [
+        30,
+        23,
+        8
+      ],
+      "physical_widths": [
+        30,
+        22,
+        7
+      ],
+      "failed_inputs": 1590097,
+      "nonpositive_accumulators": 0,
+      "overflow_accumulators": 0,
+      "worst_error_over_tolerance": 15.393277545924576,
+      "worst_x": 987134,
+      "status": "REJECT",
+      "circuit_built": false
+    },
+    {
+      "name": "curvature-f8-compensated",
+      "fractional_bits": [
+        30,
+        23,
+        8
+      ],
+      "physical_widths": [
+        30,
+        22,
+        7
+      ],
+      "failed_inputs": 385356,
+      "nonpositive_accumulators": 0,
+      "overflow_accumulators": 0,
+      "worst_error_over_tolerance": 2.052203423643849,
+      "worst_x": 987134,
+      "status": "REJECT",
+      "circuit_built": false
+    },
+    {
+      "name": "curvature-f9-compensated",
+      "fractional_bits": [
+        30,
+        23,
+        9
+      ],
+      "physical_widths": [
+        30,
+        22,
+        8
+      ],
+      "failed_inputs": 186,
+      "nonpositive_accumulators": 0,
+      "overflow_accumulators": 0,
+      "worst_error_over_tolerance": 1.0799668796765516,
+      "worst_x": 1015792,
+      "status": "REJECT",
+      "circuit_built": false
+    },
+    {
+      "name": "curvature-f10-compensated",
+      "fractional_bits": [
+        30,
+        23,
+        10
+      ],
+      "physical_widths": [
+        30,
+        22,
+        9
+      ],
+      "failed_inputs": 0,
+      "nonpositive_accumulators": 0,
+      "overflow_accumulators": 0,
+      "worst_error_over_tolerance": 0.8505589342620424,
+      "worst_x": 1064928,
+      "status": "MATHEMATICAL_MODEL_PASS",
+      "circuit_built": false
+    },
+    {
+      "name": "curvature-f11-compensated",
+      "fractional_bits": [
+        30,
+        23,
+        11
+      ],
+      "physical_widths": [
+        30,
+        22,
+        10
+      ],
+      "failed_inputs": 0,
+      "nonpositive_accumulators": 0,
+      "overflow_accumulators": 0,
+      "worst_error_over_tolerance": 0.7464338467124986,
+      "worst_x": 1052630,
+      "status": "MATHEMATICAL_MODEL_PASS",
+      "circuit_built": false
+    },
+    {
+      "name": "curvature-f12-compensated",
+      "fractional_bits": [
+        30,
+        23,
+        12
+      ],
+      "physical_widths": [
+        30,
+        22,
+        11
+      ],
+      "failed_inputs": 0,
+      "nonpositive_accumulators": 0,
+      "overflow_accumulators": 0,
+      "worst_error_over_tolerance": 0.7464338467124986,
+      "worst_x": 1052630,
+      "status": "MATHEMATICAL_MODEL_PASS",
+      "circuit_built": false
+    }
+  ],
+  "raw_tables_ignored": true
+}

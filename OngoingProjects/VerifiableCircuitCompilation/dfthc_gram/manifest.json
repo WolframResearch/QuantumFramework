@@ -1,0 +1,87 @@
+{
+  "status": "FEASIBILITY_REPORTED_QUALITY_OPEN",
+  "created_utc": "2026-10-26T02:48:27.304472+00:00",
+  "scope": "Symbolic mathematics, bounded decoded-word feasibility and conditional whole-DFTHC resource estimates only.",
+  "source_and_evidence_sha256": {
+    ".gitignore": "94e8e70ea7f42be858f927964c68ef42501f2bc6509708d53baa01486a5f58fa",
+    "GramCores.wl": "fb1f66cf2373916551906e5b322930ffcda04980ac3a01171e69721fae5143b7",
+    "PLAN.md": "c550cafcedc179c0131d6a5acd3201176a1e029ef7b72a26448840a73d39edee",
+    "README.md": "57c5f4f122dab5504a0d02d072e2ce6767679c128d6d4f363947f232348d12f2",
+    "RESULTS.md": "719ab9d5c3f7a34c60f595b543eb99659e506b892637f9cc7a51cbc6606f4384",
+    "inputs.json": "3673549c1dfe5ac9e98a65a2d67201faaa2d954840f1655ee019b37d6fdac0ef",
+    "results.json": "236e43934444529e7ddf60072893b811c46ff7f105fccc973b2637061799e232",
+    "reviews/quality-round-2.md": "d689461f712a42680a131dde1356a750c124af1e9ac4526d82dcaa45311538d2",
+    "reviews/quality-round-3.md": "28c4211510fc114df2a979cc0c175597f59ba4bb6a5f29acc63d6aeb4efd77d5",
+    "reviews/verify-round-1.md": "885227f57b081a76312d3b5f7e8db2c7513f13fed05fc7281f48e4fe3fb1cb15",
+    "reviews/verify-round-2.md": "fed5069228aee3f98edc2ab492d329084bbbf534f48d01b7e6d5781214d3d7a9",
+    "reviews/verify-round-3.md": "7dd4d73180f7fce1e002be98351a84e05e8e7be4c0a5247f1ab9c533baeac867",
+    "run.wls": "c2c3a5559f5c653a1b82da634b1b4729ea6b39c0ed628d03949e83de05f1c8fd",
+    "study.py": "a54810f785b530e1e810aab45c26abef8cc299253a74b0279e649bedf66e2221",
+    "symbolic.json": "27dbd3127159eb336adb20b77b227ed35e62a1b6bd69cd6e6987c0bef0697d7d",
+    "test_study.py": "45d74c2f50998cc3464f8b0daba1110354f2349213897b79abc95e1070836c14",
+    "verify-data.wls": "e61b74c4b549986f5828e3f800a0fc3e38971058823db41bab304a61e50ccd20",
+    "wl-data-checks.json": "2e110636be41aa932c2c2393313feecc743f8ccb5b3cbb2246ff348babf5939a"
+  },
+  "correctness": {
+    "rounds_used": 3,
+    "status": "PASS",
+    "open_issues": 0,
+    "report": "reviews/verify-round-3.md"
+  },
+  "quality": {
+    "rounds_used": 3,
+    "status": "OPEN",
+    "open_issues": 1,
+    "report": "reviews/quality-round-3.md",
+    "incomplete_rounds": [
+      {
+        "round": 1,
+        "reason": "Model-capacity interruption before a verdict."
+      }
+    ],
+    "remaining_issue": "The saved projector-gradient derivation fixes numeric weights; retain symbolic weights to cover all cross terms. Independent reviewer differentiation confirms the generic formula."
+  },
+  "evidence": {
+    "exact_wl_checks": 37,
+    "data_blocks": 65,
+    "python_unit_tests": 5,
+    "candidate_word_metric_evaluations": 8,
+    "candidate_metric_passes": 0,
+    "reference_cost_rows": 21,
+    "unchanged_loader_cost_rows": 1
+  },
+  "incumbent_dfthc_cost": 2051023203.3721037,
+  "unchanged_combined_local_estimate": 2.035845221582375,
+  "recorded_score_report_sha256": {
+    "results/baseline-verified.json": "2eb7fd500e2cd3efaff5e97b02ee61027f36a37661924b7108ad727634d2ccbb",
+    "compensated_quadratic/verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8",
+    "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+    "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+    "other_tasks/dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+    "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5"
+  },
+  "official_input_sha256": {
+    "sample_submission/dfthcsos/submission.npz": "14d5cc25eb3bf82a9ccb87c811db28d127bef6d28697dd190dc1e875de3bfe69",
+    "verifiers/dfthcsos/FeMoCo76o113e.fcidump": "e5a48af746fd075026dec9e8f5df2d363802a121e8c53af9a0b984bde695e1bd",
+    "verifiers/dfthcsos/FeMoCo76o113e.fixed_shifts.npz": "7b7facf63fe35a9d9d3d00787ffdb700c863fa845fe4724d7f7c54778151cd87",
+    "verifiers/dfthcsos/verify.py": "0775be7a528922367caebe9e4d051d6199811f1aefeaa4b793eaaa4621b8ec9d",
+    "verifiers/dfthcsos/scoreinfra/costs_prepare.py": "7f1e190c42fc5325f3e6689fbbef51f95b0cb12f1c828cda92b6c088e72206da",
+    "verifiers/dfthcsos/scoreinfra/dfthc_math.py": "ae82898d47a7a86b96378fb906e0f8a9f46003065cf19c7c09952a123b5b5af8"
+  },
+  "private_arrays_sha256": "424fc61f788365b810c0d01ef84cd9d0cef58adcf5cad27bee48e997d010b3a5",
+  "private_data_excluded_by_gitignore": true,
+  "privacy_scan": {
+    "files_scanned": 19,
+    "findings": []
+  },
+  "post_review_metadata_updates": [
+    "RESULTS.md",
+    "manifest.json"
+  ],
+  "implementation_and_generated_numerical_evidence_unchanged_after_final_reviews": true,
+  "circuits_implemented": false,
+  "new_full_circuit_verifier_run": false,
+  "new_competition_score": null,
+  "committed": false,
+  "pushed": false
+}

@@ -1,0 +1,110 @@
+{
+  "scope": "FINITE_AFFINE_ROUNDING_SEARCH_NO_CIRCUIT",
+  "source_sha256": "8bd41280d90b06e502101977b3e088b1c66af8612b8d9eff012e3de8933c35de",
+  "candidate_source_sha256": "08d535cb3a8aec6262afb7fbea6d5541db6ba858f2fa8cc355ac2961b71df355",
+  "inputs": 3133452,
+  "fractional_bits": [
+    30,
+    23,
+    9
+  ],
+  "B_offsets": [
+    -32,
+    -31,
+    -30,
+    -29,
+    -28,
+    -27,
+    -26,
+    -25,
+    -24,
+    -23,
+    -22,
+    -21,
+    -20,
+    -19,
+    -18,
+    -17,
+    -16,
+    -15,
+    -14,
+    -13,
+    -12,
+    -11,
+    -10,
+    -9,
+    -8,
+    -7,
+    -6,
+    -5,
+    -4,
+    -3,
+    -2,
+    -1,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32
+  ],
+  "modified_rows": [
+    [
+      2,
+      3,
+      0
+    ],
+    [
+      7,
+      -1,
+      0
+    ],
+    [
+      158,
+      -1,
+      0
+    ],
+    [
+      183,
+      0,
+      1
+    ],
+    [
+      184,
+      -2,
+      0
+    ]
+  ],
+  "unresolved_intervals": [
+    170
+  ],
+  "status": "REJECT",
+  "note": "Empty A-interval at all searched B offsets rejects only this finite search, not every possible B or another C."
+}

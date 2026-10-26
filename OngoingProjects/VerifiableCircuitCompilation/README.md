@@ -1,7 +1,17 @@
-# Inverse-square-root phasing: QF / kickmix prototype
+# Verifiable quantum circuit compilation
 
-The [reduced-width quadratic circuit](OPTIMIZED.md) is the latest verified
-implementation. WL certifies rounded representations of the fixed source
+The current verified implementations are the [compensated quadratic inverse-square-root circuit](compensated_quadratic/README.md), [GF(8) DQI integration](dqi_gf8/README.md), and [C30 DFTHC loader](dfthc_c30/RESULTS.md). Their recorded local results give a combined improvement estimate of **2.0358452216**; this is not a new Kaggle leaderboard submission.
+
+The subsequent [augmented Gram study](dfthc_gram/RESULTS.md) and [global (16,32,20) refit](dfthc_global_16/RESULTS.md) found no accurate replacement for C30. The latter repairs the symbolic gradient coverage and passes fresh wl-verify and wl-quality reviews, but its best two-body error is **280.233521 mHa**, above the **20 mHa** gate. Its lower modeled costs therefore produce no score improvement.
+
+The [earlier representation search](representation_search/RESULTS.md) records the compensated-curvature derivation and DQI alternatives whose reversible implementation remains unresolved.
+
+Research is paused. The saved [next research plan](NEXT_STEPS.md) diagnoses the failed representation, derives more general augmented cores with WL, and proposes gradual compression from the verified solution. Raw competition files and generated factor and word tables remain excluded from publication.
+
+## Earlier inverse-square-root prototypes
+
+The earlier [reduced-width quadratic circuit](OPTIMIZED.md) uses
+WL-certified rounded representations of the fixed source
 coefficients at fractional widths `(30,23,16)`. Shorter registers and reused
 scratch reduce qubits from **220 to 142**. The full **200,540,928-shot** official
 local verifier passed with actual cost **527,287.99**, a **49.4557% reduction**

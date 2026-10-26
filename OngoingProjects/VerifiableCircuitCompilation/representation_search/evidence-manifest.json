@@ -1,0 +1,71 @@
+{
+  "scope": "MATHEMATICAL_REPRESENTATION_SEARCH_ONLY",
+  "status": "SEARCH_COMPLETE_WITH_FORMAL_VERIFICATION_LIMITATION",
+  "files_sha256": {
+    "Representations.wl": "85817e6845e6dfaf53673e9773d2b5ca168ebbb2be0c56e611e081e45ed50a19",
+    "ProjectiveDecoder.wl": "4b15a77c2cda15f57cd30e93cf08313bc90c1201e8e172bc8cb0f434fe35fd16",
+    "run.wls": "2d85571bb326105edf2a47c2969a78cbcafe3c69487156cde8bd2c34a6cec205",
+    "curvature_screen.py": "821a6119382eaa0d7329688ae833444fc5c39a6196bf3ace84ec50ec6a91f0f3",
+    "affine_rounding.py": "8bd41280d90b06e502101977b3e088b1c66af8612b8d9eff012e3de8933c35de",
+    "table_screen.py": "60b730ca9286d2e2e6935a1308ec618ca123e5d7321d76103cb77004f7e1d051",
+    "RESULTS.md": "9498310af24638addfd28cf2a12a5ffc0c5dc563c4ff23d36b3a6d2c6e6cc328",
+    "PLAN.md": "4d2c0833bd60bd73d921aa54dfe2e83151447a2c7332a1ccf4e0084dfda6a745",
+    "symbolic-checks.json": "e8cdfee7631ff37b982ced8d7d4b95e47abb3b6f9f1ce7b2726d24824cd42622",
+    "curvature-screen.json": "9e8e79ecfbc3390a26595ac9168062139f3a28e97c86ae3bd9b981f21dd3174d",
+    "affine-rounding.json": "baa761187fb066ee3e9b3266b41b7225847f04340d5636c9dbfac2dbd722402b",
+    "table-screen.json": "a2ba5abfbe00d5e4b0ee8e8d1b10325eb304c9f0eafaf7ad1c0071ed2813cda5",
+    "reviews/correctness-1.md": "7f6566d4acdd688e1cbbda4b1a8d2ab78104dcf16c722805649e0845f2268375",
+    "reviews/correctness-2.md": "61f91d2316045f7244fb31ba88ccefdf3a133f520f3f7c69e109fa7132cc99c3",
+    "reviews/correctness-3.md": "5adfb778cc1cd73082dee52d61b1fe00b6c192c8bbc31734b156dd41704ee3a1",
+    "reviews/quality-1.md": "1fd491352036fa80154416c1f3e5d9b3b72f2cc4f94bb4111d7b56ce507048d1",
+    "reviews/quality-2.md": "001ce92756d3bff50d8dc7698f9cdb4f77886f1220b2025b776b7f28fa44ddc9"
+  },
+  "wl_checks": {
+    "true": 36,
+    "status": "PASS"
+  },
+  "wl_verify": {
+    "rounds": 3,
+    "converged": false,
+    "final_mathematical_or_code_findings": 0,
+    "final_procedural_open_issues": 1,
+    "limitation": "Final reviewer accidentally saw excerpts of prior reviews. Fresh-kernel and independent data checks reproduced, but pristine context independence was compromised. No fourth round was started."
+  },
+  "wl_quality": {
+    "rounds": 2,
+    "converged": true,
+    "final_open_issues": 0
+  },
+  "decisions": {
+    "invsqrt": "Compensated curvature passes the full integer model with physical coefficient widths [30,22,9], versus [30,22,15]. No compiled cost or peak-qubit saving asserted.",
+    "DQI": "Exact cached quotient and projective recurrence checked; reversible setup, native projective adapter, history, tails and workspace remain unresolved.",
+    "DFTHC": "Invalid-address completion and invertible output-basis changes cannot reduce current ANF support. No better general Boolean or physical factorization found."
+  },
+  "incumbent_integrity": {
+    "C30_prior_reviewed_files_unchanged": 16,
+    "frozen_coefficient_sha256": "2b768e13c7054d0e58bc4edf7afc0ff64559685aa309ad250b275fd9fd6a4c8d",
+    "verified_reports_sha256": {
+      "results/optimized-quadratic-verified.json": "8576ee713ef79db0ffcd628af1b67617b6127adbd21b7719bf76061ac41f4109",
+      "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+      "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5"
+    }
+  },
+  "privacy": {
+    "personal_absolute_paths_or_credential_markers_found": false,
+    "raw_tables_git_ignored": true,
+    "third_party_raw_data_copied_to_public_candidates": false
+  },
+  "new_circuit": false,
+  "new_score": false,
+  "commit": false,
+  "push": false,
+  "incumbent_combined_local_estimate": 2.0088882102784944,
+  "publication_edits": [
+    {
+      "file": "reviews/correctness-3.md",
+      "original_sha256": "ad6a40e9e4e9a2103f9fc8100b9c9da12f603cc58aaafd36a5a62d10e9902f0b",
+      "published_sha256": "5adfb778cc1cd73082dee52d61b1fe00b6c192c8bbc31734b156dd41704ee3a1",
+      "change": "Replace absolute temporary paths with the SCRATCH environment variable; preserve all findings and verdicts."
+    }
+  ]
+}

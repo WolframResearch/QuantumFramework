@@ -1,0 +1,92 @@
+{
+  "c30_factorization_hash_unchanged": "340efa960c4128a67f302cf38a3d24405c7d38c258ce570c263a6899a13c765c",
+  "candidate_accuracy_status": "ALL_REJECTED",
+  "circuit_implementation": false,
+  "combined_local_estimate_unchanged": 2.035845221582375,
+  "committed": false,
+  "dependency_sha256": {
+    "dfthc_feasibility/RankCost.wl": "016dbf7e9884d762d08bede6b2a4b45fd1aa6853b988dc8b1b031a226f5794e0",
+    "dfthc_gram/study.py": "a54810f785b530e1e810aab45c26abef8cc299253a74b0279e649bedf66e2221"
+  },
+  "evidence_audit_status": "PASS",
+  "evidence_counts": {
+    "exact_wl_checks": 53,
+    "python_tests": 9,
+    "whole_task_candidate_cost_rows": 5,
+    "wl_data_checks": 11
+  },
+  "fresh_reviews": {
+    "quality": {
+      "open_issues": 0,
+      "report": "reviews/quality-round-1.md",
+      "round": 1,
+      "sha256": "0cdac6b0ae611607188cca8ce27d6ddc5d44c98c395de26fa09b7985df9d1a18"
+    },
+    "verify": {
+      "open_issues": 0,
+      "report": "reviews/verify-round-1.md",
+      "round": 1,
+      "sha256": "f6b50573a65ae8244e560d749dfe005400f45828d7f15f9ef33d62c1c77a184a"
+    }
+  },
+  "full_circuit_verifier_run": false,
+  "historical_score_report_hashes_unchanged": {
+    "compensated_quadratic/verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8",
+    "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5",
+    "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+    "other_tasks/dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+    "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+    "results/baseline-verified.json": "2eb7fd500e2cd3efaff5e97b02ee61027f36a37661924b7108ad727634d2ccbb"
+  },
+  "new_competition_score": false,
+  "privacy_scan": {
+    "credential_patterns_found": 0,
+    "personal_absolute_paths_found": 0,
+    "public_files_checked": 17
+  },
+  "private_npz_sha256": {
+    "local/float-released.npz": "2b94ac2a3a058b11d0d43187ca13e9f78795efe1e3f4ae2a87825b25ceea368a",
+    "local/float-spectral.npz": "e6f44c3b2f89f848825a589bced0101799f801927c0370181042248abd9a479b",
+    "local/global-beta10.npz": "d0e10b716a6582051ef111f164f44231486d6e8bcc063432389f830fefdfb174",
+    "local/global-beta12.npz": "6a25bfb7368845abcc7c0915034a01842040968541e519c8af9c8f4538c246da",
+    "local/global-beta14.npz": "3534b9634ed1c55166fd4959e193eeb18ba886431b5c855c730cb66d3524cd78",
+    "local/global-beta16.npz": "ae540719005bd1d4e2e485f62ab1fae5452504d080dcc76433e35ed123e26b97",
+    "local/global-gauged-beta16.npz": "212e978c77e0aeb21feffb4c39b12aa89041c4bdac1aea099979973ecca53f55",
+    "local/prepared.npz": "82ecb5350c26a63e74132b27129168efe08277841ea00d5769d1daffeff771bb"
+  },
+  "pushed": false,
+  "quality_axes_confirmed": [
+    "documented APIs and live signatures",
+    "idiomatic functional WL",
+    "terse physics reasoning",
+    "physical invariants",
+    "nontrivial examples",
+    "symbolic-first derivations",
+    "general, special, limiting, numerical and failure regimes"
+  ],
+  "raw_outputs_git_ignored": true,
+  "reviewed_file_sha256": {
+    ".gitignore": "67a0547b0544fa8f5cc45a66abcd9ceb4a936767c88f5d665677f81b23b7e288",
+    "GlobalRefit.wl": "07add79d663704ab760f85c52e01b1f89585651607dbe50665cf15d54cc74fe7",
+    "GramCores.wl": "22bf2e954f5d9fbd9a0c0858ee67cc7c7c4c232b6e55e0491863e1143436b85a",
+    "PLAN.md": "0b8c37a94d234f02a15558420ff5adf346cb39ea7899cb8976accd12d1035789",
+    "README.md": "013450f62ca5753bc39b20b328f9725ba716b0ffe85da0a85a22363af33de177",
+    "RESULTS.md": "3afe9a71e93c9df146ad71e3fef4b3a4108a2ca55e723e25127ee3ec468582ff",
+    "inputs.json": "c247984e59ed08ac77811ae9c01fc6d98dbe6bfb39b61fc9bb3e0d9580502301",
+    "refit.py": "ab9470cc115946f1e5c0e36580e393c873901e057dbe56a1d7b32779aae0a07c",
+    "results.json": "58f5bb25229d9b602ebd7a8894476a8bb2d0ae0b1ab747f6d41d7e7ec2fde4cf",
+    "reviews/quality-round-1.md": "0cdac6b0ae611607188cca8ce27d6ddc5d44c98c395de26fa09b7985df9d1a18",
+    "reviews/verify-round-1.md": "f6b50573a65ae8244e560d749dfe005400f45828d7f15f9ef33d62c1c77a184a",
+    "symbolic.json": "34293df5acbc87e02e944103ad6fcccaa0a5ef5c5fc8c9dcc2ca3646e6333426",
+    "symbolic.wls": "485b16cc63bc6ade3ae397da9a8ff20ff4bca18ceb0fe8c454e3dc38f5b8e5b0",
+    "test_refit.py": "e27b349b5f10a32ce79edcc54295030c3a8727511a695ab8a2f8b3081c27da5b",
+    "verify-data.wls": "79ec4236ba7ecb3f5e862b1428ec3e2ded9edee603e96dbf1e060663b8dcc56c",
+    "wl-data-checks.json": "f68e09593b3fd4416e1b49b6505d99fab712fc435283498ebec77378e97fd8d4"
+  },
+  "scope_limit": "Two capped local fits in a restricted offset-preserving family; no impossibility or global-optimality claim.",
+  "shape": [
+    16,
+    32,
+    20
+  ]
+}

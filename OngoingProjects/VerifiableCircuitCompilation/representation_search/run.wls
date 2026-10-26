@@ -1,0 +1,11 @@
+root=DirectoryName[$InputFileName];
+Get[FileNameJoin[{root,"Representations.wl"}]];
+Get[FileNameJoin[{root,"ProjectiveDecoder.wl"}]];
+checks=Join[CompilationRepresentations`RepresentationChecks[],ProjectiveDecoderRepresentations`ProjectiveChecks[]];
+report=<|"kernel"->$Version,"checks"->checks,
+  "status"->If[AllTrue[DeleteCases[Values[checks],_String],TrueQ],"PASS","FAIL"],
+  "source_sha256"->AssociationMap[IntegerString[FileHash[FileNameJoin[{root,#}],"SHA256"],16,64]&,
+    {"Representations.wl","ProjectiveDecoder.wl"}]|>;
+Export[FileNameJoin[{root,"symbolic-checks.json"}],report,"RawJSON"];
+Echo[report];
+If[report["status"]!="PASS",Exit[1]];

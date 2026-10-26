@@ -1,0 +1,1231 @@
+{
+  "status": "FEASIBILITY_ONLY_NO_CIRCUITS",
+  "source_sha256": {
+    "study.py": "a54810f785b530e1e810aab45c26abef8cc299253a74b0279e649bedf66e2221",
+    "GramCores.wl": "fb1f66cf2373916551906e5b322930ffcda04980ac3a01171e69721fae5143b7",
+    "run.wls": "c2c3a5559f5c653a1b82da634b1b4729ea6b39c0ed628d03949e83de05f1c8fd",
+    "inputs.json": "3673549c1dfe5ac9e98a65a2d67201faaa2d954840f1655ee019b37d6fdac0ef",
+    "symbolic.json": "27dbd3127159eb336adb20b77b227ed35e62a1b6bd69cd6e6987c0bef0697d7d"
+  },
+  "provenance": {
+    "official": {
+      "sample_submission/dfthcsos/submission.npz": "14d5cc25eb3bf82a9ccb87c811db28d127bef6d28697dd190dc1e875de3bfe69",
+      "verifiers/dfthcsos/FeMoCo76o113e.fcidump": "e5a48af746fd075026dec9e8f5df2d363802a121e8c53af9a0b984bde695e1bd",
+      "verifiers/dfthcsos/FeMoCo76o113e.fixed_shifts.npz": "7b7facf63fe35a9d9d3d00787ffdb700c863fa845fe4724d7f7c54778151cd87",
+      "verifiers/dfthcsos/verify.py": "0775be7a528922367caebe9e4d051d6199811f1aefeaa4b793eaaa4621b8ec9d",
+      "verifiers/dfthcsos/scoreinfra/costs_prepare.py": "7f1e190c42fc5325f3e6689fbbef51f95b0cb12f1c828cda92b6c088e72206da",
+      "verifiers/dfthcsos/scoreinfra/dfthc_math.py": "ae82898d47a7a86b96378fb906e0f8a9f46003065cf19c7c09952a123b5b5af8"
+    },
+    "c30_factorization": "340efa960c4128a67f302cf38a3d24405c7d38c258ce570c263a6899a13c765c",
+    "shifted_pair_matrix": "4c7e70360e876c9a13a7ffc3482e5cb7979b18c9cef5fa597923465563ae1efd",
+    "incumbent_report": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5",
+    "recorded_score_reports": {
+      "results/baseline-verified.json": "2eb7fd500e2cd3efaff5e97b02ee61027f36a37661924b7108ad727634d2ccbb",
+      "compensated_quadratic/verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8",
+      "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+      "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+      "other_tasks/dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+      "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5"
+    }
+  },
+  "versions": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1"
+  },
+  "baseline_cost": 2051023203.3721037,
+  "baseline_lambda_eff": 47.55854233515931,
+  "candidates": [
+    {
+      "name": "dictionary-B59",
+      "shape": [
+        65,
+        59,
+        30
+      ],
+      "metrics": {
+        "error_1": 0.013346779541265176,
+        "error_2": 0.07209889194326,
+        "Lambda": 291.6606537554828,
+        "E_SOS": -22146.382548511163,
+        "E_gap": 6.109198511163413,
+        "lambda_eff": 59.38268566616944,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": true,
+      "private_candidate_sha256": "b80ad11dc404f70db7d4a2fc704afb182c22d115f4ee21adb015bae066b054c5",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "fit": {
+        "steps": 0,
+        "squared_factor_error": 0.006925335926507018
+      },
+      "initial_dictionary_indices_sha256": "c0e8501b0114003f162d73b892ac06d47622f684bce341614c4d8c13ba72f00d",
+      "reference_loader": {
+        "shape": [
+          65,
+          59,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 62544,
+        "toffoli": 71330,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5309,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8786,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 59.38268566616944,
+        "conditional_cost": 3096345654.023111
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "dictionary-B56",
+      "shape": [
+        65,
+        56,
+        30
+      ],
+      "metrics": {
+        "error_1": 0.017697577924397214,
+        "error_2": 0.21404513341034545,
+        "Lambda": 296.08605240983536,
+        "E_SOS": -22156.09078366404,
+        "E_gap": 15.817433664040436,
+        "lambda_eff": 95.48011194989259,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": true,
+      "private_candidate_sha256": "09ec89601536c8a42a96662211387fc952456f2fb02fda35ce21416616413e42",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "fit": {
+        "steps": 0,
+        "squared_factor_error": 0.04128293405617728
+      },
+      "initial_dictionary_indices_sha256": "0492e7e813f3c7ab66837de7202de6e337cb34804b7f86245d2fee70cc4e64cb",
+      "reference_loader": {
+        "shape": [
+          65,
+          56,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 59424,
+        "toffoli": 68186,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5285,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8762,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 95.48011194989259,
+        "conditional_cost": 4759107453.70664
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "dictionary-B48",
+      "shape": [
+        65,
+        48,
+        30
+      ],
+      "metrics": {
+        "error_1": 0.027981255981326204,
+        "error_2": 0.5273763273131761,
+        "Lambda": 312.55516884153747,
+        "E_SOS": -22186.36942118304,
+        "E_gap": 46.096071183041204,
+        "lambda_eff": 163.3716096651494,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": true,
+      "private_candidate_sha256": "4b3cd9975bd4b5496efa48cb0f5df18fd40d6cb17f72fa0d4f433c78ad71098c",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "fit": {
+        "steps": 50,
+        "accepted_block_steps": 3250,
+        "initial_squared_factor_error": 0.3001046872970893,
+        "final_squared_factor_error": 0.1456168075691224,
+        "loss_history": [
+          0.3001046872970893,
+          0.2743318137216383,
+          0.2613944887484787,
+          0.25215866085673344,
+          0.24470272730828782,
+          0.23835226216920563,
+          0.2327801162165445,
+          0.2277953826662325,
+          0.22327393876989918,
+          0.21912938007989555,
+          0.2152986616629854,
+          0.2117341574154049,
+          0.20839890238102907,
+          0.20526357076645807,
+          0.20230446722518958,
+          0.19950214415903988,
+          0.19684042164329815,
+          0.1943056763846312,
+          0.19188631500196957,
+          0.1895723772178621,
+          0.1873552321112393,
+          0.18522734255620893,
+          0.18318208017211335,
+          0.18121357840541644,
+          0.17931661462099935,
+          0.1774865146255339,
+          0.17571907463618652,
+          0.17401049701198656,
+          0.17235733689169533,
+          0.17075645758490124,
+          0.1692049930151554,
+          0.16770031590876686,
+          0.1662400106811299,
+          0.1648218502021088,
+          0.16344377577517152,
+          0.16210387980232493,
+          0.16080039070111274,
+          0.15953165972444946,
+          0.1582961493930986,
+          0.15709242330449336,
+          0.1559191371193937,
+          0.1547750305628799,
+          0.15365892030127115,
+          0.15256969357934566,
+          0.15150630251962122,
+          0.15046775900063306,
+          0.14945313004294009,
+          0.14846153364238918,
+          0.14749213499809669,
+          0.14654414309033714,
+          0.1456168075691224
+        ],
+        "global_optimality_claim": false
+      },
+      "initial_dictionary_indices_sha256": "8c65aa12b6f6d78b00be695f86407f7ffa1c3f8e7f9bef1040d3210d8605dc7c",
+      "reference_loader": {
+        "shape": [
+          65,
+          48,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 51104,
+        "toffoli": 59802,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5221,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8698,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 163.3716096651494,
+        "conditional_cost": 7141832719.873738
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "dictionary-B32",
+      "shape": [
+        65,
+        32,
+        30
+      ],
+      "metrics": {
+        "error_1": 0.06658717814557284,
+        "error_2": 1.6043406111840097,
+        "Lambda": 373.0034442579634,
+        "E_SOS": -22298.096492951896,
+        "E_gap": 157.82314295189644,
+        "lambda_eff": 304.6785311736517,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": true,
+      "private_candidate_sha256": "be6927f4d1e5def950757163db24d3839862e2b52f0875704d6f92a92e14dc34",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "fit": {
+        "steps": 50,
+        "accepted_block_steps": 3250,
+        "initial_squared_factor_error": 1.773480582048304,
+        "final_squared_factor_error": 0.7120643704702331,
+        "loss_history": [
+          1.773480582048304,
+          1.585825090552675,
+          1.482579009963709,
+          1.4094176627291055,
+          1.351507090096801,
+          1.3030411156780133,
+          1.2611569322003187,
+          1.2242112740473416,
+          1.1911527402387903,
+          1.1612547390978067,
+          1.1339868569796978,
+          1.108946390156019,
+          1.085818615557486,
+          1.0643521164690417,
+          1.0443425262987762,
+          1.025621346146988,
+          1.0080479588285676,
+          0.9915037791088326,
+          0.9758878670921373,
+          0.9611135871227533,
+          0.9471060211955004,
+          0.9337999435401744,
+          0.9211382137452725,
+          0.9090704895054157,
+          0.897552183771001,
+          0.8865436126895794,
+          0.8760092928467667,
+          0.8659173575688179,
+          0.8562390685291141,
+          0.8469484049254948,
+          0.838021716051003,
+          0.8294374263775899,
+          0.8211757842774149,
+          0.813218647365222,
+          0.8055492986240909,
+          0.7981522885731948,
+          0.7910132994713351,
+          0.7841190282350328,
+          0.7774570852386489,
+          0.7710159066182329,
+          0.7647846780422775,
+          0.7587532682282873,
+          0.7529121707309511,
+          0.7472524527534623,
+          0.7417657099160497,
+          0.7364440260807206,
+          0.7312799374673447,
+          0.7262664004184376,
+          0.7213967622716998,
+          0.7166647348896115,
+          0.7120643704702331
+        ],
+        "global_optimality_claim": false
+      },
+      "initial_dictionary_indices_sha256": "f6707703e21541f1496a99e6c86f1d16a39bed771803f0eeb70cabeec2cf1634",
+      "reference_loader": {
+        "shape": [
+          65,
+          32,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 34464,
+        "toffoli": 43001,
+        "qubits": 699,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5060,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 43,
+          "inner_state_prep_temporary_qubits": 512,
+          "inner_state_prep_qubits": 555,
+          "persistent_qubits": 87,
+          "temporary_qubits": 512,
+          "toffoli": 8537,
+          "qubits": 599
+        },
+        "assumed_lambda_eff": 304.6785311736517,
+        "conditional_cost": 9157935581.779741
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "copies-C29",
+      "shape": [
+        65,
+        60,
+        29
+      ],
+      "metrics": {
+        "error_1": 0.01380328694885712,
+        "error_2": 0.0203373834168838,
+        "Lambda": 341.94150247322494,
+        "E_SOS": -22144.189347881373,
+        "E_gap": 3.915997881373187,
+        "lambda_eff": 51.601834842091684,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": false,
+      "private_candidate_sha256": "1a1a48ae9b1832621fb3c6e4bdde163a16167fd0a6ff722f143baa6cb0532ddc",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          29
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 72222,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 617,
+          "inner_state_prep_toffoli": 5171,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8638,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 51.601834842091684,
+        "conditional_cost": 2724281820.370814
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "copies-C24",
+      "shape": [
+        65,
+        60,
+        24
+      ],
+      "metrics": {
+        "error_1": 0.01369242533696777,
+        "error_2": 0.024583186575680746,
+        "Lambda": 340.35109226023167,
+        "E_SOS": -22144.202397550573,
+        "E_gap": 3.9290475505731592,
+        "lambda_eff": 51.56620827737153,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": false,
+      "private_candidate_sha256": "0fdd55cb44e1053a173b75ec49e4cde66917af72e4d484f65d5b3a4bdaabda2d",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          24
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 71439,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 566,
+          "inner_state_prep_toffoli": 4439,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 7855,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 51.56620827737153,
+        "conditional_cost": 2692885836.135943
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "copies-C16",
+      "shape": [
+        65,
+        60,
+        16
+      ],
+      "metrics": {
+        "error_1": 0.012795049668035671,
+        "error_2": 0.062355836369329724,
+        "Lambda": 335.5062518045848,
+        "E_SOS": -22144.524914870544,
+        "E_gap": 4.251564870544826,
+        "lambda_eff": 53.24262751022556,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": true,
+      "all_angle_words_unchanged": false,
+      "weights_refitted_after_quantization": false,
+      "private_candidate_sha256": "eb6094fa8eff37f385514ea16f9d8250243d29caf8aa5ca10f5e4389615083ea",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          16
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 70187,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 484,
+          "inner_state_prep_toffoli": 3269,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 6603,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 53.24262751022556,
+        "conditional_cost": 2731703357.151007
+      },
+      "valid_competition_score": false
+    },
+    {
+      "name": "offset-preserving-C29",
+      "shape": [
+        65,
+        60,
+        29
+      ],
+      "metrics": {
+        "error_1": 0.013911731985007331,
+        "error_2": 0.020271423640563186,
+        "Lambda": 293.0226916347831,
+        "E_SOS": -22144.189285621513,
+        "E_gap": 3.9159356215131993,
+        "lambda_eff": 47.744962460733106,
+        "gap_in_domain": true
+      },
+      "metric_gates_pass": false,
+      "precision": 10,
+      "one_body_rows_recomputed": false,
+      "all_angle_words_unchanged": true,
+      "weights_refitted_after_quantization": false,
+      "private_candidate_sha256": "d75e4b8e6462826dfd9991cc82aa9100e1d46a4f91a757c4df5770e8543410ed",
+      "verification_scope": "OFFICIAL_DECODED_WORD_METRICS_ONLY_NO_CIRCUITS",
+      "fit": {
+        "iterations": 200,
+        "optimizer_success": false,
+        "initial_predicted_error": 0.020337570403483607,
+        "before_schur_rescale_error": 0.02033079427434853,
+        "final_predicted_error": 0.020271423640563037,
+        "schur_scale_range": [
+          0.9997476209006996,
+          1.5226543969606157
+        ],
+        "schur_nnls_kkt_error": 3.469446951953614e-17,
+        "schur_nnls_residual": 0.0,
+        "baseline_pair_residual": 0.01998067964067161,
+        "max_offset_coefficient_drift": 8.881784197001252e-16,
+        "max_offset_norm_drift": 2.842170943040401e-14,
+        "global_optimality_claim": false
+      },
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          29
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 72222,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 617,
+          "inner_state_prep_toffoli": 5171,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8638,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.744962460733106,
+        "conditional_cost": 2520661012.2313576
+      },
+      "unchanged_loader_estimate": {
+        "toffoli": 65088.0,
+        "qubits": 661,
+        "angle_qubits": 128,
+        "cost": 2054139541.1018138,
+        "scope": "Existing verified ANGLE family unchanged; new factors have word metrics only, no new full circuit verification."
+      },
+      "valid_competition_score": false
+    }
+  ],
+  "fixed_dictionary_bounds": {
+    "dictionary-B32": {
+      "dictionary_projectors": 2080,
+      "span_dimension": 2080,
+      "relaxed_rank_cap": 1950,
+      "error_lower_bound": 0.13469057200509507,
+      "numerical_guard": 1e-08,
+      "orthogonality_residual": 1.3776833850179002e-13,
+      "screen": "REJECT_THIS_FIXED_DICTIONARY",
+      "scope": "Global target; fixed projector directions; all block constraints relaxed. Not a bound on reoptimized dictionaries."
+    }
+  },
+  "shape_estimates": [
+    {
+      "shape": [
+        65,
+        60,
+        30
+      ],
+      "rank_cap": 1950,
+      "psd_error_lower_bound": 0.00029764979019508735,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 72378,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5317,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8794,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2516242481.485071
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        59,
+        30
+      ],
+      "rank_cap": 1950,
+      "psd_error_lower_bound": 0.00029764979019508735,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          59,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 62544,
+        "toffoli": 71330,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5309,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8786,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2479808452.9046135
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        56,
+        30
+      ],
+      "rank_cap": 1950,
+      "psd_error_lower_bound": 0.00029764979019508735,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          56,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 59424,
+        "toffoli": 68186,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5285,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8762,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2370506367.163241
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        48,
+        30
+      ],
+      "rank_cap": 1950,
+      "psd_error_lower_bound": 0.00029764979019508735,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          48,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 51104,
+        "toffoli": 59802,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5221,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8698,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2079034138.519581
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        32,
+        30
+      ],
+      "rank_cap": 1950,
+      "psd_error_lower_bound": 0.00029764979019508735,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          32,
+          30
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 34464,
+        "toffoli": 43001,
+        "qubits": 699,
+        "heuristic": {
+          "outer_state_prep_toffoli": 627,
+          "inner_state_prep_toffoli": 5060,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 43,
+          "inner_state_prep_temporary_qubits": 512,
+          "inner_state_prep_qubits": 555,
+          "persistent_qubits": 87,
+          "temporary_qubits": 512,
+          "toffoli": 8537,
+          "qubits": 599
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 1429500350.3889756
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        60,
+        29
+      ],
+      "rank_cap": 1885,
+      "psd_error_lower_bound": 0.0002976497947742193,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          29
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 72222,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 617,
+          "inner_state_prep_toffoli": 5171,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 8638,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2510819095.551339
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        60,
+        24
+      ],
+      "rank_cap": 1560,
+      "psd_error_lower_bound": 0.00029764998078784133,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          24
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 71439,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 566,
+          "inner_state_prep_toffoli": 4439,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 7855,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2483597869.9993367
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        65,
+        60,
+        16
+      ],
+      "rank_cap": 1040,
+      "psd_error_lower_bound": 0.00029776023489200737,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          65,
+          60,
+          16
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 123,
+        "angle_toffoli": 63584,
+        "toffoli": 70187,
+        "qubits": 731,
+        "heuristic": {
+          "outer_state_prep_toffoli": 484,
+          "inner_state_prep_toffoli": 3269,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 44,
+          "outer_state_prep_temporary_qubits": 185,
+          "outer_state_prep_qubits": 229,
+          "inner_state_prep_persistent_qubits": 44,
+          "inner_state_prep_temporary_qubits": 543,
+          "inner_state_prep_qubits": 587,
+          "persistent_qubits": 88,
+          "temporary_qubits": 543,
+          "toffoli": 6603,
+          "qubits": 631
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 2440071721.3516912
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        32,
+        32,
+        16
+      ],
+      "rank_cap": 512,
+      "psd_error_lower_bound": 0.0011395875376777798,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          32,
+          32,
+          16
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 121,
+        "angle_toffoli": 17568,
+        "toffoli": 22732,
+        "qubits": 693,
+        "heuristic": {
+          "outer_state_prep_toffoli": 378,
+          "inner_state_prep_toffoli": 1936,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 42,
+          "outer_state_prep_temporary_qubits": 96,
+          "outer_state_prep_qubits": 138,
+          "inner_state_prep_persistent_qubits": 41,
+          "inner_state_prep_temporary_qubits": 510,
+          "inner_state_prep_qubits": 551,
+          "persistent_qubits": 83,
+          "temporary_qubits": 510,
+          "toffoli": 5164,
+          "qubits": 593
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 749202843.5634491
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        20,
+        48,
+        24
+      ],
+      "rank_cap": 480,
+      "psd_error_lower_bound": 0.001629533587722215,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          20,
+          48,
+          24
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 121,
+        "angle_toffoli": 16544,
+        "toffoli": 21724,
+        "qubits": 725,
+        "heuristic": {
+          "outer_state_prep_toffoli": 369,
+          "inner_state_prep_toffoli": 1961,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 42,
+          "outer_state_prep_temporary_qubits": 96,
+          "outer_state_prep_qubits": 138,
+          "inner_state_prep_persistent_qubits": 42,
+          "inner_state_prep_temporary_qubits": 541,
+          "inner_state_prep_qubits": 583,
+          "persistent_qubits": 84,
+          "temporary_qubits": 541,
+          "toffoli": 5180,
+          "qubits": 625
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 749042285.9245256
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        16,
+        32,
+        20
+      ],
+      "rank_cap": 320,
+      "psd_error_lower_bound": 0.011743128105747225,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          16,
+          32,
+          20
+        ],
+        "beta": 10,
+        "batch": 10,
+        "angle_qubits": 119,
+        "angle_toffoli": 9376,
+        "toffoli": 14037,
+        "qubits": 690,
+        "heuristic": {
+          "outer_state_prep_toffoli": 307,
+          "inner_state_prep_toffoli": 1504,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 40,
+          "outer_state_prep_temporary_qubits": 90,
+          "outer_state_prep_qubits": 130,
+          "inner_state_prep_persistent_qubits": 40,
+          "inner_state_prep_temporary_qubits": 510,
+          "inner_state_prep_qubits": 550,
+          "persistent_qubits": 80,
+          "temporary_qubits": 510,
+          "toffoli": 4661,
+          "qubits": 590
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 460629688.54345554
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        10,
+        32,
+        30
+      ],
+      "rank_cap": 300,
+      "psd_error_lower_bound": 0.016697067692467097,
+      "rank_screen": "NOT_RULED_OUT",
+      "reference_loader": {
+        "shape": [
+          10,
+          32,
+          30
+        ],
+        "beta": 10,
+        "batch": 11,
+        "angle_qubits": 127,
+        "angle_toffoli": 5516,
+        "toffoli": 10126,
+        "qubits": 700,
+        "heuristic": {
+          "outer_state_prep_toffoli": 301,
+          "inner_state_prep_toffoli": 1459,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 40,
+          "outer_state_prep_temporary_qubits": 90,
+          "outer_state_prep_qubits": 130,
+          "inner_state_prep_persistent_qubits": 40,
+          "inner_state_prep_temporary_qubits": 510,
+          "inner_state_prep_qubits": 550,
+          "persistent_qubits": 80,
+          "temporary_qubits": 510,
+          "toffoli": 4610,
+          "qubits": 590
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 337104459.7800762
+      },
+      "normalization_is_assumed_not_fitted": true
+    },
+    {
+      "shape": [
+        8,
+        32,
+        32
+      ],
+      "rank_cap": 256,
+      "psd_error_lower_bound": 0.03376848165684026,
+      "rank_screen": "REJECT",
+      "reference_loader": {
+        "shape": [
+          8,
+          32,
+          32
+        ],
+        "beta": 10,
+        "batch": 11,
+        "angle_qubits": 127,
+        "angle_toffoli": 4620,
+        "toffoli": 9115,
+        "qubits": 443,
+        "heuristic": {
+          "outer_state_prep_toffoli": 287,
+          "inner_state_prep_toffoli": 1358,
+          "givens_rotations_toffoli": 2850,
+          "outer_state_prep_persistent_qubits": 40,
+          "outer_state_prep_temporary_qubits": 90,
+          "outer_state_prep_qubits": 130,
+          "inner_state_prep_persistent_qubits": 39,
+          "inner_state_prep_temporary_qubits": 254,
+          "inner_state_prep_qubits": 293,
+          "persistent_qubits": 79,
+          "temporary_qubits": 254,
+          "toffoli": 4495,
+          "qubits": 333
+        },
+        "assumed_lambda_eff": 47.55854233515931,
+        "conditional_cost": 192038778.22954485
+      },
+      "normalization_is_assumed_not_fitted": true
+    }
+  ],
+  "feasible_word_metric_candidates": 0,
+  "numerical_guard": 1e-08,
+  "recorded_score_context": {
+    "report_sha256": {
+      "results/baseline-verified.json": "2eb7fd500e2cd3efaff5e97b02ee61027f36a37661924b7108ad727634d2ccbb",
+      "compensated_quadratic/verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8",
+      "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+      "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+      "other_tasks/dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+      "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5"
+    },
+    "tracks": {
+      "invsqrt": {
+        "baseline_cost": 2076774.233715282,
+        "current_cost": 506618.35132005374,
+        "improvement": 4.099287418831162,
+        "report_paths": [
+          "results/baseline-verified.json",
+          "compensated_quadratic/verified.json"
+        ]
+      },
+      "DQI": {
+        "baseline_cost": 24439458623294.45,
+        "current_cost": 19425188366155.996,
+        "improvement": 1.2581323878369532,
+        "report_paths": [
+          "other_tasks/dqi-baseline.json",
+          "dqi_gf8/verified.json"
+        ]
+      },
+      "DFTHC": {
+        "baseline_cost": 3355599588.3155365,
+        "current_cost": 2051023203.3721037,
+        "improvement": 1.6360612511835888,
+        "report_paths": [
+          "other_tasks/dfthcsos-baseline.json",
+          "dfthc_c30/verified.json"
+        ]
+      }
+    },
+    "combined_local_estimate": 2.035845221582375,
+    "formula": "geometric mean of the three baseline/current cost ratios",
+    "other_tracks_reverified_in_this_study": false,
+    "new_competition_score": false
+  },
+  "current_combined_local_estimate": 2.035845221582375,
+  "new_competition_score": null,
+  "circuit_implementation": false,
+  "pushed": false
+}

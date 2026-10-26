@@ -1,0 +1,82 @@
+{
+  "status": "PINNED_INPUTS",
+  "shape": [
+    16,
+    32,
+    20
+  ],
+  "provenance": {
+    "official": {
+      "sample_submission/dfthcsos/submission.npz": "14d5cc25eb3bf82a9ccb87c811db28d127bef6d28697dd190dc1e875de3bfe69",
+      "verifiers/dfthcsos/FeMoCo76o113e.fcidump": "e5a48af746fd075026dec9e8f5df2d363802a121e8c53af9a0b984bde695e1bd",
+      "verifiers/dfthcsos/FeMoCo76o113e.fixed_shifts.npz": "7b7facf63fe35a9d9d3d00787ffdb700c863fa845fe4724d7f7c54778151cd87",
+      "verifiers/dfthcsos/verify.py": "0775be7a528922367caebe9e4d051d6199811f1aefeaa4b793eaaa4621b8ec9d",
+      "verifiers/dfthcsos/scoreinfra/costs_prepare.py": "7f1e190c42fc5325f3e6689fbbef51f95b0cb12f1c828cda92b6c088e72206da",
+      "verifiers/dfthcsos/scoreinfra/dfthc_math.py": "ae82898d47a7a86b96378fb906e0f8a9f46003065cf19c7c09952a123b5b5af8"
+    },
+    "c30_factorization": "340efa960c4128a67f302cf38a3d24405c7d38c258ce570c263a6899a13c765c",
+    "shifted_pair_matrix": "4c7e70360e876c9a13a7ffc3482e5cb7979b18c9cef5fa597923465563ae1efd",
+    "incumbent_report": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5",
+    "recorded_score_reports": {
+      "results/baseline-verified.json": "2eb7fd500e2cd3efaff5e97b02ee61027f36a37661924b7108ad727634d2ccbb",
+      "compensated_quadratic/verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8",
+      "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+      "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+      "other_tasks/dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+      "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5"
+    }
+  },
+  "helper_sha256": "a54810f785b530e1e810aab45c26abef8cc299253a74b0279e649bedf66e2221",
+  "source_sha256": "ab9470cc115946f1e5c0e36580e393c873901e057dbe56a1d7b32779aae0a07c",
+  "private_arrays_sha256": "82ecb5350c26a63e74132b27129168efe08277841ea00d5769d1daffeff771bb",
+  "offset_eigenvalue_range": [
+    -12.319681639798967,
+    -6.100522580293882
+  ],
+  "offset_norm_squared": 1078.6600249861988,
+  "offset_matrix_frobenius": 87.22099070254794,
+  "baseline_cost": 2051023203.3721037,
+  "recorded_score_context": {
+    "report_sha256": {
+      "results/baseline-verified.json": "2eb7fd500e2cd3efaff5e97b02ee61027f36a37661924b7108ad727634d2ccbb",
+      "compensated_quadratic/verified.json": "b3f7d53e053d992f647572461922dc5514310e315ebe005c5658b95db2b8efb8",
+      "other_tasks/dqi-baseline.json": "86f3134485e054806407e51b1cd34fadd89ece5a09871d4fe370ea7f750915bc",
+      "dqi_gf8/verified.json": "3bbe0bac3b0dde8d1b591afffd8e8bb04085047609e53ad8b6b8e1d9de97d5fc",
+      "other_tasks/dfthcsos-baseline.json": "c714c2c36862305e7aedb420def79361ac3bb767d924f148bcc83f14161205fc",
+      "dfthc_c30/verified.json": "8412005457b6ee96e17460309d3906b15d3da7843022f18a33a0ae6c787a2ef5"
+    },
+    "tracks": {
+      "invsqrt": {
+        "baseline_cost": 2076774.233715282,
+        "current_cost": 506618.35132005374,
+        "improvement": 4.099287418831162,
+        "report_paths": [
+          "results/baseline-verified.json",
+          "compensated_quadratic/verified.json"
+        ]
+      },
+      "DQI": {
+        "baseline_cost": 24439458623294.45,
+        "current_cost": 19425188366155.996,
+        "improvement": 1.2581323878369532,
+        "report_paths": [
+          "other_tasks/dqi-baseline.json",
+          "dqi_gf8/verified.json"
+        ]
+      },
+      "DFTHC": {
+        "baseline_cost": 3355599588.3155365,
+        "current_cost": 2051023203.3721037,
+        "improvement": 1.6360612511835888,
+        "report_paths": [
+          "other_tasks/dfthcsos-baseline.json",
+          "dfthc_c30/verified.json"
+        ]
+      }
+    },
+    "combined_local_estimate": 2.035845221582375,
+    "formula": "geometric mean of the three baseline/current cost ratios",
+    "other_tracks_reverified_in_this_study": false,
+    "new_competition_score": false
+  }
+}
