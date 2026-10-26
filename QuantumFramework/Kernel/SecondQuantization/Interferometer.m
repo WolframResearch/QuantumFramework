@@ -44,10 +44,12 @@ PackageScope["QuantumInterferometerQ"]
 QuantumInterferometer::usage = "QuantumInterferometer[u] decomposes the m\[Times]m unitary u into a mesh of beam splitters and phase shifters.
 QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"Reck\" or \"CosineSine\" mesh.
 QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters and phase shifters.
+Bare beam splitters act on modes {1, 2}; bare phase shifters and squeezers act on mode 1. Omitted beam-splitter phase is 0; omitted mode count is inferred from the normalized elements.
 QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
 Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
 interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
-\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions.";
+\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions.
+Transition queries accept Assumptions -> assumptions or an enclosing Assuming to refine the result on that domain; unproved photon constraints remain guarded.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
@@ -411,6 +413,11 @@ QuantumInterferometer[w_ ? SquareMatrixQ, opts : OptionsPattern[]] := With[{
 ]
 
 
+(* Bare elements use the same normalization and validation as explicit mode rules. *)
+normalizeElement[gate : ("BS" | "BeamSplitter")[___]] := normalizeElement[gate -> {1, 2}]
+
+normalizeElement[gate : ("PS" | "PhaseShift" | "S" | "Squeeze")[___]] := normalizeElement[gate -> 1]
+
 normalizeElement[("BS" | "BeamSplitter")[{t_, f_}] -> modes_] := normalizeElement["BS"[t, f] -> modes]
 
 normalizeElement[("BS" | "BeamSplitter")[t_, f_ : 0] -> {p_Integer ? Positive, q_Integer ? Positive}] /; p != q := {"BS", t, f, {p, q}}
@@ -421,11 +428,20 @@ normalizeElement[("S" | "Squeeze")[xi_] -> (p_Integer ? Positive | {p_Integer ? 
 
 normalizeElement[element_] := (Message[QuantumInterferometer::elem, element]; $Failed)
 
-QuantumInterferometer[elements : {___Rule}, m_Integer ? Positive, opts : OptionsPattern[]] := Enclose[
+(* Matrix rows stay on the matrix-constructor path. Normalize element specifications
+   before inferring mode count, including modes of elements later dropped as identities. *)
+QuantumInterferometer[elements : {Except[_List]...}, m_Integer ? Positive, opts : OptionsPattern[]] :=
+    elementInputInterferometer[elements, m, opts]
+
+QuantumInterferometer[elements : {Except[_List]..}, opts : OptionsPattern[]] :=
+    elementInputInterferometer[elements, Automatic, opts]
+
+elementInputInterferometer[elements_, requested_, opts : OptionsPattern[QuantumInterferometer]] := Enclose[
     With[{items = ConfirmBy[normalizeElement /@ elements, FreeQ[$Failed]]},
         {top = Max[0, Flatten[items[[All, -1]]]],
          nonreal = Select[Catenate @ Cases[items, {("BS" | "PS"), parameters__, _} :> {parameters}],
              NumericQ[#] && ! TrueQ[Element[#, Reals]] &]},
+        {m = Replace[requested, Automatic :> Max[1, top]]},
         ConfirmAssert[nonreal === {}, Message[QuantumInterferometer::angles, nonreal]];
         ConfirmAssert[top <= m, Message[QuantumInterferometer::modes, top, m]];
         elementsInterferometer[##, m, None, parameterData[OptionValue["Parameters"], OptionValue["DropIdentities"]]] & @@
@@ -451,10 +467,6 @@ elementsInterferometer[elements_, layers_, m_, unitary_, extra_Association : <||
         extra
     ]
 ]
-
-QuantumInterferometer[elements : {__Rule}, opts : OptionsPattern[]] :=
-    QuantumInterferometer[elements, Max[1, Cases[Flatten[{elements[[All, 2]]}], _Integer]], opts]
-
 
 QuantumInterferometer["Random"[m_Integer ? Positive], opts : OptionsPattern[]] :=
     QuantumInterferometer[RandomVariate[CircularUnitaryMatrixDistribution[m]], opts]
@@ -532,16 +544,30 @@ QuantumInterferometerProp[qi_, "CircuitOperator"] := (Message[QuantumInterferome
 
 (* Photon patterns are occupation lists {n1, n2, ...}, Ket[{n1, n2, ...}] or QuditName[{n1, n2, ...}];
    results are keyed by QuditName, as QuantumState["Probabilities"] is. *)
-QuantumInterferometerProp[qi_, "Amplitude", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
-    Which[
-        ! FreeQ[{in, out}, "Coherent"[_]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
-        symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
-        occupationQ[qi, in] && occupationQ[qi, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
-        True, $Failed
+QuantumInterferometerProp[qi_, "Amplitude", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
+    transitionValue[qi, pattern, Identity, OptionValue[Assumptions]]
+
+QuantumInterferometerProp[qi_, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
+    transitionValue[qi, pattern, Abs[#] ^ 2 &, OptionValue[Assumptions]]
+
+(* Build the guarded transition independently of ambient assumptions. Explicit query
+   assumptions replace $Assumptions and remove only constraints they prove; a refined
+   formula is valid on that supplied domain. Keep sums inactive and precision unchanged. *)
+transitionValue[qi_, s_ -> t_, f_, assumptions_] := Block[{$Assumptions = True},
+    With[{amplitude = interferometerAmplitude[qi, occupation[s], occupation[t]]},
+        {value = If[amplitude === $Failed, $Failed, f[amplitude]]},
+        If[value === $Failed || assumptions === True, value,
+            Check[Refine[value, Assumptions -> assumptions], $Failed, Refine::fas]
+        ]
     ]
 ]
 
-QuantumInterferometerProp[qi_, "Probability", s_ -> t_] := Replace[QuantumInterferometerProp[qi, "Amplitude", s -> t], a : Except[$Failed] :> Abs[a] ^ 2]
+interferometerAmplitude[qi_, in_, out_] := Which[
+    ! FreeQ[{in, out}, "Coherent"[_]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
+    symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
+    occupationQ[qi, in] && occupationQ[qi, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
+    True, $Failed
+]
 
 QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
     Which[

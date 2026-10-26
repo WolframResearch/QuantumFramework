@@ -1589,4 +1589,381 @@ VerificationTest[
 ]
 
 
+(* Assumptions narrow the returned formula's domain; unspecified photon constraints stay guarded. *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx},
+            Assumptions -> Element[{nx, kx}, Integers] && nx >= 0 && 0 <= kx <= 2 nx]
+    ],
+    WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0],
+    TestID -> "QI-assumptions-compact-HOM-WignerD"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[theta, phi] -> {1, 2}}, 2]},
+        With[{a = qi["Amplitude", {nx, ny} -> {kx, nx + ny - kx},
+                Assumptions -> Element[{nx, ny, kx}, Integers] && nx >= 0 && ny >= 0 && 0 <= kx <= nx + ny]},
+            MatchQ[a, _WignerD] &&
+            FullSimplify[a - WignerD[{(nx + ny)/2, (nx - ny)/2, kx - (nx + ny)/2}, phi, 2 theta, -phi]] === 0 &&
+            And @@ Flatten @ Table[
+                FullSimplify[(a /. {nx -> n, ny -> 0, kx -> k, theta -> Pi/6, phi -> Pi/7}) -
+                    QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}}, 2]["Amplitude", {n, 0} -> {k, n - k}]] === 0,
+                {n, {1, 3}}, {k, 0, n}]
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-general-two-mode-identity-includes-half-integer-spin"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2], before = $Assumptions},
+        Assuming[Element[{nx, kx}, Integers] && nx >= 0 && 0 <= kx <= 2 nx,
+            qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}]] === WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0] &&
+        $Assumptions === before &&
+        (qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}] /. {nx -> 1/2, kx -> 0}) === 0
+    ],
+    True,
+    TestID -> "QI-assumptions-ambient-Assuming-is-scoped"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        With[{unrestricted = Block[{$Assumptions = True}, qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}]]},
+            Assuming[Element[{nx, kx}, Integers] && nx == 0 && kx == 0,
+                qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> True]] === unrestricted
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-explicit-True-overrides-ambient-domain"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2],
+          domain = Element[{nx, kx}, Integers] && nx >= 0 && 0 <= kx <= 2 nx},
+        Assuming[nx == I,
+            qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, {Assumptions :> domain}]] ===
+            WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0]
+    ],
+    True,
+    TestID -> "QI-assumptions-explicit-domain-and-delayed-option-override-ambient"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        With[{a = qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> Element[{nx, kx}, Integers]]},
+            ((a /. Thread[{nx, kx} -> #]) & /@ {{-1, 0}, {2, -1}, {2, 5}, {1, 0}}) === {0, 0, 0, 1/Sqrt[2]}
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-integer-domain-does-not-imply-physical-range"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        With[{a = qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> Element[nx, Reals] && nx >= 0]},
+            ((a /. Thread[{nx, kx} -> #]) & /@ {{1/2, 0}, {2, I}, {2, 1/2}, {1, 0}}) === {0, 0, 0, 1/Sqrt[2]}
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-real-counts-do-not-imply-integer-counts"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {2, 3}, "PS"[Pi/5] -> 1}, 3]},
+        With[{a = qi["Amplitude", {nx, 1, 0} -> {tx, uy, uz},
+                Assumptions -> Element[{nx, tx, uy, uz}, Integers] && Min[nx, tx, uy, uz] >= 0]},
+            {
+                a /. {nx -> 2, tx -> 1, uy -> 1, uz -> 1},
+                a /. {nx -> 2, tx -> 2, uy -> 0, uz -> 0},
+                FullSimplify[(a /. {nx -> 2, tx -> 2, uy -> 0, uz -> 1}) -
+                    qi["Amplitude", {2, 1, 0} -> {2, 0, 1}]]
+            }
+        ]
+    ],
+    {0, 0, 0},
+    TestID -> "QI-assumptions-preserve-total-and-untouched-mode-conservation"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
+        With[{a = qi["Amplitude", {nx, 0} -> {kx, nx - kx},
+                Assumptions -> Element[nx, Integers] && nx >= 0]},
+            ! FreeQ[a, Inactive[Sum]] &&
+            ((Activate[a /. {nx -> 2, kx -> #}] &) /@ {I, 1/2, -1, 3}) === {0, 0, 0, 0} &&
+            And @@ Table[FullSimplify[Activate[a /. {nx -> 2, kx -> k}] -
+                qi["Amplitude", {2, 0} -> {k, 2 - k}]] === 0, {k, 0, 2}]
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-partial-domain-keeps-sums-inactive-and-invalid-bounds-held"
+]
+
+VerificationTest[
+    Map[Function[p,
+        With[{qi = QuantumInterferometer[{"BS"[N[3/10, p], N[7/11, p]] -> {1, 2}}, 2]},
+            With[{a = qi["Amplitude", {nx, ny} -> {kx, nx + ny - kx},
+                    Assumptions -> Element[{nx, ny, kx}, Integers] && nx >= 0 && ny >= 0 && 0 <= kx <= nx + ny],
+                  guarded = qi["Amplitude", {nx, ny} -> {kx, nx + ny - kx}]},
+                With[{v = a /. {nx -> 2, ny -> 3, kx -> 1},
+                      old = guarded /. {nx -> 2, ny -> 3, kx -> 1},
+                      direct = qi["Amplitude", {2, 3} -> {1, 4}]},
+                    v === old && Precision[v] === Precision[old] &&
+                    Abs[v - direct] < If[p === MachinePrecision, 10^-12, 10^(-p + 5)] &&
+                    qi["Amplitude", {2, 3} -> {1, 4}, Assumptions -> nx > 0] === direct
+                ]
+            ]
+        ]], {MachinePrecision, 80}],
+    {True, True},
+    TestID -> "QI-assumptions-preserve-machine-and-arbitrary-precision"
+]
+
+VerificationTest[
+    With[{eps = 1/10^12},
+        With[{bs = QuantumInterferometer[{"BS"[eps, 0] -> {1, 2}}, 2],
+              ps = QuantumInterferometer[{"PS"[eps] -> 1}, 1]},
+            With[{a = bs["Amplitude", {nx, 0} -> {0, nx}, Assumptions -> Element[nx, Integers] && nx >= 0],
+                  b = ps["Amplitude", {nx} -> {nx}, Assumptions -> Element[nx, Integers] && nx >= 0]},
+                (a /. nx -> 1) === Sin[eps] && Precision[a /. nx -> 1] === Infinity &&
+                (b /. nx -> 2) === Exp[2 I eps] && Precision[b /. nx -> 2] === Infinity
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-preserve-exact-small-angles-and-phases"
+]
+
+VerificationTest[
+    With[{ps = QuantumInterferometer[{"PS"[alpha] -> 1}, 1], identity = QuantumInterferometer[{}, 1]},
+        {
+            ps["Probability", {2} -> {2}, Assumptions -> Element[alpha, Reals]],
+            FullSimplify[identity["Amplitude", "Coherent"[{drive}] -> {1}, Assumptions -> Im[drive] > 0] /.
+                drive -> (1 + I)/3],
+            FullSimplify[identity["Probability", "Coherent"[{drive}] -> {1}, Assumptions -> Element[theta, Reals]] /.
+                drive -> (1 + I)/3]
+        }
+    ],
+    {1, (1 + I) Exp[-1/9]/3, 2 Exp[-2/9]/9},
+    TestID -> "QI-assumptions-probability-refinement-keeps-unspecified-parameters-complex"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[theta, phi] -> {1, 2}}, 2]},
+        With[{a = qi["Amplitude", {nx, ny} -> {kx, nx + ny - kx},
+                Assumptions -> Element[{nx, ny, kx}, Integers] && nx >= 0 && ny >= 0 && 0 <= kx <= nx + ny]},
+            With[{sector = Table[a /. {nx -> 2, ny -> 1, kx -> k}, {k, 0, 3}]},
+                FullSimplify[{Total[Abs[sector]^2], sector /. theta -> 0, sector /. theta -> Pi/2},
+                    Element[{theta, phi}, Reals]] === {1, {0, 0, 1, 0}, {0, -Exp[I phi], 0, 0}} &&
+                (a /. {nx -> 0, ny -> 0, kx -> 0}) === 1
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-physical-sector-normalization-vacuum-and-splitter-limits"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]["Amplitude", {1/2, 0} -> {1/2, 0}, Assumptions -> True],
+        QuantumInterferometer[{"S"[1/5] -> 1}, 1]["Amplitude", {nx} -> {nx}, Assumptions -> Element[nx, Integers] && nx >= 0]
+    },
+    {$Failed, $Failed},
+    {QuantumInterferometer::occ, QuantumInterferometer::squeezed},
+    TestID -> "QI-assumptions-cannot-bypass-direct-occupation-or-active-network-guards"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> False],
+    $Failed,
+    {Refine::fas},
+    TestID -> "QI-assumptions-inconsistent-assumptions-do-not-return-an-amplitude"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        With[{a = qi["Amplitude", {nx, nx} -> {kx, 2 nx - kx}]},
+            ((a /. Thread[{nx, kx} -> #]) & /@ {{-1, 0}, {1/2, 0}, {I, 0}, {2, I}, {2, -1}, {2, 5}, {1, 0}}) ===
+                Join[ConstantArray[0, 6], {1/Sqrt[2]}]
+        ]
+    ],
+    True,
+    TestID -> "QI-assumptions-default-query-retains-the-original-physical-domain"
+]
+
+(* Bare elements are normalized before inferring modes; all calculations use the existing paths. *)
+VerificationTest[
+    With[{a = QuantumInterferometer[{"BS"[theta]}], b = QuantumInterferometer[{"BS"[theta, 0]}],
+          explicit = QuantumInterferometer[{"BS"[theta, 0] -> {1, 2}}, 2]},
+        a === explicit && b === explicit && a["Modes"] === 2 &&
+        a["Amplitude", {1, 0} -> {0, 1}] === Sin[theta] &&
+        a["Amplitude", {nx, nx} -> {kx, 2 nx - kx},
+            Assumptions -> Element[{nx, kx}, Integers] && nx >= 0 && 0 <= kx <= 2 nx] ===
+            WignerD[{nx, 0, kx - nx}, 0, 2 theta, 0]
+    ],
+    True,
+    TestID -> "QI-defaults-bare-splitter-and-phase-default-preserve-symbolic-amplitudes"
+]
+
+VerificationTest[
+    With[{specs = {{"BS"[{theta, phi}]}, {"BeamSplitter"[theta, phi]},
+                  {"BeamSplitter"[{theta, phi}]}, {"BeamSplitter"[theta]}},
+          phased = QuantumInterferometer[{"BS"[theta, phi] -> {1, 2}}, 2],
+          real = QuantumInterferometer[{"BS"[theta, 0] -> {1, 2}}, 2]},
+        (QuantumInterferometer /@ specs) === {phased, phased, phased, real} &&
+        phased["Amplitude", {0, 1} -> {1, 0}] === -Exp[-I phi] Sin[theta]
+    ],
+    True,
+    TestID -> "QI-defaults-splitter-aliases-and-parameter-pairs-share-normalization"
+]
+
+VerificationTest[
+    With[{devices = QuantumInterferometer /@ {{"PS"[alpha]}, {"PhaseShift"[alpha]}, {"PS"[100]}}},
+        (#["Modes"] & /@ devices) === {1, 1, 1} &&
+        (#["Amplitude", {2} -> {2}] & /@ devices) === {Exp[2 I alpha], Exp[2 I alpha], Exp[200 I]}
+    ],
+    True,
+    TestID -> "QI-defaults-phase-shifters-use-mode-one-not-the-parameter"
+]
+
+VerificationTest[
+    With[{xi = (2 + I)/7},
+        With[{a = QuantumInterferometer[{"S"[xi]}], b = QuantumInterferometer[{"Squeeze"[xi]}]},
+            a === b && a["Modes"] === 1 && a["SqueezerCount"] === 1 &&
+            Precision[a["Amplitude", {0} -> {2}]] === Infinity &&
+            Abs[N[a["Amplitude", {0} -> {2}] +
+                Exp[I Arg[xi]] Sqrt[Sech[Abs[xi]]] Tanh[Abs[xi]]/Sqrt[2], 40]] < 10^-30 &&
+            FullSimplify[a["Probability", {0} -> {0}] - Sech[Abs[xi]]] === 0
+        ]
+    ],
+    True,
+    TestID -> "QI-defaults-squeezer-aliases-preserve-complex-phase-and-exactness"
+]
+
+VerificationTest[
+    With[{mixed = QuantumInterferometer[{"BS"[Pi/6], "PS"[Pi/7] -> 4,
+              "PhaseShift"[Pi/11], "BeamSplitter"[Pi/5, Pi/13] -> {4, 2}}],
+          explicit = QuantumInterferometer[{"BS"[Pi/6, 0] -> {1, 2}, "PS"[Pi/7] -> 4,
+              "PS"[Pi/11] -> 1, "BS"[Pi/5, Pi/13] -> {4, 2}}, 4]},
+        mixed === explicit && mixed["Modes"] === 4 &&
+        FullSimplify[mixed["Amplitude", {1, 0, 0, 0} -> {0, 0, 0, 1}] + Exp[-I Pi/13] Sin[Pi/5]/2] === 0
+    ],
+    True,
+    TestID -> "QI-defaults-mixed-elements-infer-modes-and-preserve-explicit-port-order"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6], "BeamSplitter"[Pi/5]}]},
+        qi["Modes"] === 2 && qi["Layers"] === {1, 2} &&
+        FullSimplify[qi["Unitary"] - {{Cos[11 Pi/30], -Sin[11 Pi/30]}, {Sin[11 Pi/30], Cos[11 Pi/30]}}] === ConstantArray[0, {2, 2}]
+    ],
+    True,
+    TestID -> "QI-defaults-repeated-bare-elements-act-sequentially-on-the-same-modes"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6], "PS"[Pi/7]}, 5]},
+        qi["Modes"] === 5 && qi["Unitary"][[3 ;;, 3 ;;]] === IdentityMatrix[3] &&
+        qi["Amplitude", {0, 0, 0, 0, 1} -> {0, 0, 0, 0, 1}] === 1 &&
+        qi["Amplitude", {0, 0, 0, 0, 1} -> {1, 0, 0, 0, 0}] === 0
+    ],
+    True,
+    TestID -> "QI-defaults-explicit-mode-count-preserves-spectator-modes"
+]
+
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[0]}], sq = QuantumInterferometer[{"S"[0]}],
+          mixed = QuantumInterferometer[{"BS"[0], "PS"[0] -> 7}]},
+        {bs["Modes"], sq["Modes"], mixed["Modes"]} === {2, 1, 7} &&
+        {bs["Elements"], sq["Elements"], mixed["Elements"]} === {{}, {}, {}} &&
+        bs["Unitary"] === IdentityMatrix[2] && sq["Unitary"] === {{1}} && mixed["Unitary"] === IdentityMatrix[7]
+    ],
+    True,
+    TestID -> "QI-defaults-infer-modes-before-dropping-identity-elements"
+]
+
+VerificationTest[
+    With[{exact = FourierMatrix[3], machine = N[{{Cos[1/3], -Sin[1/3]}, {Sin[1/3], Cos[1/3]}}]},
+        QuantumInterferometer[{{1}}]["Unitary"] === {{1}} &&
+        QuantumInterferometer[exact]["Unitary"] === exact && QuantumInterferometer[machine]["Unitary"] === machine &&
+        QuantumInterferometer[{}, 4]["Unitary"] === IdentityMatrix[4]
+    ],
+    True,
+    TestID -> "QI-defaults-element-routing-keeps-matrix-and-empty-device-constructors"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BeamSplitter"[theta]}, "Parameters" -> {theta}, "DropIdentities" -> False],
+          eps = N[1/10^12]},
+        qi["Parameters"] === {theta} && qi[0]["BeamSplitterCount"] === 1 && qi[0]["Modes"] === 2 &&
+        qi[Pi/6]["Amplitude", {1, 0} -> {0, 1}] === 1/2 &&
+        QuantumInterferometer[{"BS"[eps]}, Tolerance -> 0]["BeamSplitterCount"] === 1 &&
+        QuantumInterferometer[{"BS"[eps]}]["BeamSplitterCount"] === 0 &&
+        QuantumInterferometer[{"BS"[eps]}]["Modes"] === 2
+    ],
+    True,
+    TestID -> "QI-defaults-options-and-parameter-binding-reach-the-shared-constructor"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"BS"[theta]}, 1],
+        QuantumInterferometer[{"BS"[theta], "PS"[alpha] -> 4}, 3],
+        QuantumInterferometer[{"BS"[theta] -> {1, 1}}]
+    },
+    {$Failed, $Failed, $Failed},
+    {QuantumInterferometer::modes, QuantumInterferometer::modes, QuantumInterferometer::elem},
+    TestID -> "QI-defaults-preserve-out-of-range-and-repeated-mode-guards"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"PS"[alpha] -> 0}], QuantumInterferometer[{"BS"[theta], "BS"[theta] -> {1, 3/2}}]},
+    {$Failed, $Failed},
+    {QuantumInterferometer::elem, QuantumInterferometer::elem},
+    TestID -> "QI-defaults-reject-invalid-mode-indices-before-inference"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"BeamSplitter"[Pi/6, I]}], QuantumInterferometer[{"PhaseShift"[I/3]}]},
+    {$Failed, $Failed},
+    {QuantumInterferometer::angles, QuantumInterferometer::angles},
+    TestID -> "QI-defaults-preserve-nonreal-passive-angle-guards"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"BS"[]}], QuantumInterferometer[{"PS"[alpha, beta]}]},
+    {$Failed, $Failed},
+    {QuantumInterferometer::elem, QuantumInterferometer::elem},
+    TestID -> "QI-defaults-reject-malformed-bare-splitter-and-phase-shifter"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"Squeeze"[]}], QuantumInterferometer[{"UnknownElement"[theta]}]},
+    {$Failed, $Failed},
+    {QuantumInterferometer::elem, QuantumInterferometer::elem},
+    TestID -> "QI-defaults-reject-malformed-squeezers-and-unknown-elements"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{{1, 1}, {0, 1}}], QuantumInterferometer[{{a, b}, {c, d}}]},
+    {$Failed, $Failed},
+    {QuantumInterferometer::nonunitary, QuantumInterferometer::symbolic},
+    TestID -> "QI-defaults-matrix-errors-stay-on-the-matrix-validation-path"
+]
+
+VerificationTest[
+    With[{eps = 1/10^12},
+        QuantumInterferometer[{"BS"[eps]}]["Amplitude", {1, 0} -> {0, 1}] === Sin[eps] &&
+        QuantumInterferometer[{"PS"[eps]}]["Amplitude", {1} -> {1}] === Exp[I eps] &&
+        And @@ Map[Function[p,
+            With[{t = N[3/10, p], f = N[7/11, p]},
+                With[{a = QuantumInterferometer[{"BS"[t], "PS"[f]}],
+                      b = QuantumInterferometer[{"BS"[t, 0] -> {1, 2}, "PS"[f] -> 1}, 2]},
+                    a === b && a["Amplitude", {2, 1} -> {1, 2}] === b["Amplitude", {2, 1} -> {1, 2}] &&
+                    Precision[a["Amplitude", {2, 1} -> {1, 2}]] === Precision[b["Amplitude", {2, 1} -> {1, 2}]]
+                ]
+            ]], {MachinePrecision, 80}]
+    ],
+    True,
+    TestID -> "QI-defaults-preserve-exact-small-parameters-and-machine-arbitrary-precision"
+]
+
 EndTestSection[]
