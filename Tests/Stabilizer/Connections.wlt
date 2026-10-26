@@ -582,15 +582,18 @@ VerificationTest[
     TestID -> "Conn12-qcoApplyPS-NonClifford-Fails"
 ]
 
-(* The engine folds gates only: a measurement operator inside the circuit is    *)
-(* refused with the same message, on a tableau as on a state under Method ->   *)
-(* "Stabilizer". A Pauli measurement on a tableau is qmo[ps] (HybridInterop).  *)
+(* A computational measurement inside the circuit gives every record with its   *)
+(* post-measurement tableau, on a tableau as on a state under Method ->         *)
+(* "Stabilizer" (MidCircuitMeasurement.wlt). A Pauli measurement on a tableau   *)
+(* alone is qmo[ps] (HybridInterop).                                            *)
 VerificationTest[
     With[{qco = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, QuantumMeasurementOperator["Z", {1}]}]},
-        {qco[$ps00], qco[QuantumState["00"], Method -> "Stabilizer"]}
+        With[{a = qco[$ps00], b = qco[QuantumState["00"], Method -> "Stabilizer"]},
+            {Keys[a], Keys[b], #["Generators"] & /@ Values[a], (#["Generators"] & /@ Values[a]) === (#["Generators"] & /@ Values[b])}
+        ]
     ],
-    {$Failed, $Failed},
-    {PauliStabilizer::nonclifford, PauliStabilizer::nonclifford},
+    {{{0}, {1}}, {{0}, {1}}, {{"ZI", "ZZ"}, {"-ZI", "ZZ"}}, True},
+    {},
     TestID -> "Conn12-qcoApplyPS-MeasurementGate-NotFolded"
 ]
 

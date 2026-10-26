@@ -12,6 +12,7 @@ PackageScope[stabilizerGateSpecSeqQ]
 PackageScope[stabilizerDefaultTarget]
 PackageScope[stabilizerNormalizeSpec]
 PackageScope[stabilizerGateFold]
+PackageScope[stabilizerRefusal]
 PackageScope[stabilizerWireRangeQ]
 PackageScope[psDimensionsQ]
 
@@ -204,7 +205,17 @@ ps_PauliStabilizer[specs__] /; stabilizerGateSpecSeqQ[{specs}] := ps[{specs}]
 (* (preserves Method -> "Stabilizer" wire compatibility for QuantumCircuitOperator)  *)
 (* ============================================================================ *)
 
-Options[PauliStabilizerApply] = {"Compress" -> None};
+Options[PauliStabilizerApply] = {"Compress" -> None, "MaxBranches" -> Automatic, "Shots" -> None, "States" -> False};
+
+(* A circuit with a measurement returns every record with its post-measurement *)
+(* tableau (Stabilizer/CircuitMeasurement.m), which checks its own wires.       *)
+PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic, opts : OptionsPattern[]] /;
+    stabilizerMeasurementCircuitQ[qco] := stabilizerMeasurementApply[qco, qs, opts]
+
+(* "Shots" and "States" sample measurement records; without a measurement they *)
+(* are refused rather than ignored, as is an invalid "MaxBranches".             *)
+PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic, opts : OptionsPattern[]] /;
+    stabilizerSamplingOptionsQ[opts] := stabilizerSamplingWithoutMeasurement[opts]
 
 (* A tableau's wires are its qubits, indexed from 1, so a gate wire below 1 has  *)
 (* nothing to land on and the gate kernels would index past the tableau edge:   *)

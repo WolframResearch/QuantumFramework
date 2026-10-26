@@ -481,12 +481,14 @@ VerificationTest[
 ]
 
 (* A non-Pauli basis on a symbolic-sign tableau matches no interop rule (symbolic *)
-(* signs cannot be materialized) and takes the generic circuit route, where the *)
-(* stabilizer engine cannot fold a measurement gate.                            *)
+(* signs cannot be materialized) and takes the generic circuit route, where a   *)
+(* circuit with a measurement needs numeric signs.                              *)
 VerificationTest[
-    QuantumMeasurementOperator[QuantumBasis["Computational"], {1}][PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]],
-    $Failed,
-    {PauliStabilizer::nonclifford},
+    With[{f = QuantumMeasurementOperator[QuantumBasis["Computational"], {1}][PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]]},
+        {Head[f], f["Reason"]}
+    ],
+    {Failure, "SymbolicSigns"},
+    {},
     TestID -> "Phase7-QMO-NonPauli-on-SymbolicPS-GenericRoute"
 ]
 
