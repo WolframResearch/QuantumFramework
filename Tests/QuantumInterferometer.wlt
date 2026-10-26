@@ -1101,3 +1101,509 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumInterferometer: native pure loss"]
+
+(* Native vacuum loss: independent count laws, preserved coherences and unitary
+   dilations test a channel, rather than treating attenuation as a state vector. *)
+VerificationTest[
+    With[{a = QuantumInterferometer[{"Loss"[2/3]}],
+          b = QuantumInterferometer[{"Loss"[2/3] -> {1}}],
+          c = QuantumInterferometer[{"Loss"[1] -> 5}]},
+        a === b && a["Modes"] === 1 && a["TransferMatrix"] === {{Sqrt[2/3]}} &&
+            a["LossCount"] === 1 && c["Modes"] === 5 && c["Unitary"] === IdentityMatrix[5]
+    ],
+    True,
+    TestID -> "QI-loss-normalization-default-mode-and-inference-before-pruning"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {-1/3, 4/3},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-out-of-range-transmissivities"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {I, 1 + I},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-nonreal-transmissivities"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"Loss"[]}], QuantumInterferometer[{"Loss"[1/2, 0]}]},
+    {$Failed, $Failed}, {QuantumInterferometer::elem, QuantumInterferometer::elem},
+    TestID -> "QI-loss-preserves-element-arity-validation"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"Loss"[1/2] -> 0}], QuantumInterferometer[{"Loss"[1/2] -> 3}, 2]},
+    {$Failed, $Failed}, {QuantumInterferometer::elem, QuantumInterferometer::modes},
+    TestID -> "QI-loss-preserves-mode-validation"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[2/5]}]},
+        Table[qi["Probability", {3} -> {k}], {k, 0, 4}] === {27/125, 54/125, 36/125, 8/125, 0} &&
+            Total[qi["Probabilities", {3}]] === 1 &&
+            qi["Probability", {0} -> {0}] === 1 && qi["Probability", {0} -> {1}] === 0
+    ],
+    True,
+    TestID -> "QI-loss-three-photon-binomial-law-vacuum-and-no-photon-creation"
+]
+
+VerificationTest[
+    TimeConstrained[
+        QuantumInterferometer[{"Loss"[3/4]}]["Probability", {80} -> {79}] === 20 (3/4)^79,
+        5, $TimedOut
+    ],
+    True,
+    TestID -> "QI-loss-large-occupation-uses-direct-count-law-without-cutoff"
+]
+
+VerificationTest[
+    Module[{eta, n, k},
+        With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
+            FullSimplify[qi["Probability", {n} -> {k},
+                Assumptions -> Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] ==
+                Binomial[n, k] eta^k (1 - eta)^(n - k),
+                Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] &&
+            With[{guarded = qi["Probability", {n} -> {k}]},
+                (guarded /. {n -> -1, k -> 0, eta -> 1/2}) === 0 &&
+                (guarded /. {n -> 1/2, k -> 0, eta -> 1/2}) === 0 &&
+                (guarded /. {n -> 2, k -> 3, eta -> 1/2}) === 0 &&
+                (guarded /. {n -> 2, k -> 1, eta -> 1/2}) === 1/2
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-count-law-retains-nonnegative-integer-guards"
+]
+
+VerificationTest[
+    Module[{eta},
+        With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
+            ! FreeQ[qi["Probability", {1} -> {0}], ConditionalExpression] &&
+            qi["Probability", {1} -> {0}, Assumptions -> 0 <= eta <= 1] === 1 - eta &&
+            Assuming[0 <= eta <= 1, qi["Probability", {1} -> {0}]] === 1 - eta
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-transmissivity-domain-and-native-assumptions"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[1/2]}]["Probability", {1} -> {0}, Assumptions -> False],
+    $Failed,
+    {Refine::fas},
+    TestID -> "QI-loss-probability-rejects-false-assumptions"
+]
+
+VerificationTest[
+    With[{a = QuantumInterferometer[{"Loss"[2/3]}], b = QuantumInterferometer[{"Loss"[3/5]}]},
+        b[a]["TransferMatrix"] === {{Sqrt[2/5]}} &&
+            Table[b[a]["Probability", {3} -> {k}], {k, 0, 3}] === {27/125, 54/125, 36/125, 8/125}
+    ],
+    True,
+    TestID -> "QI-loss-composition-multiplies-transmissivities"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/3]}], alpha = (1 + 2 I)/3},
+        qi["Coherent"[{alpha}]] === "Coherent"[{alpha/Sqrt[3]}] &&
+            FullSimplify[qi["Probability", "Coherent"[{alpha}] -> {4}] - Exp[-5/27] (5/27)^4/4!] === 0 &&
+            qi["Amplitude", "Coherent"[{alpha}] -> "Coherent"[{alpha/Sqrt[3]}]] === 1 &&
+            FullSimplify[Abs[qi["Amplitude", "Coherent"[{alpha}] -> {1}]]^2 - Exp[-5/27] 5/27] === 0
+    ],
+    True,
+    TestID -> "QI-loss-complex-coherent-input-stays-pure-with-Poisson-counts"
+]
+
+VerificationTest[
+    Module[{eta},
+        FullSimplify[Normal[QuantumInterferometer[{"Loss"[eta]}][QuantumState[{1, I}/Sqrt[2], 2]]["DensityMatrix"]] ==
+            {{1 - eta/2, -I Sqrt[eta]/2}, {I Sqrt[eta]/2, eta/2}}, 0 < eta < 1]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-superposition-coherences-scale-by-square-root"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[2/5]}], rho = {{3/5, I/10}, {-I/10, 2/5}}},
+        With[{out = Normal[qi[QuantumState[rho, 2]]["DensityMatrix"]]},
+            out === {{21/25, I Sqrt[2/5]/10}, {-I Sqrt[2/5]/10, 4/25}} &&
+                Tr[out] === 1 && out === ConjugateTranspose[out] && Min[Eigenvalues[out]] > 0
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-mixed-state-trace-Hermiticity-positivity-and-coherences"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/3] -> 2}, 2],
+          input = QuantumState[{0, I, 1, 0}/Sqrt[2], {2, 2}],
+          survivor = {0, I/Sqrt[3], 1, 0}/Sqrt[2]},
+        FullSimplify[Normal[qi[input]["DensityMatrix"]] -
+            (Outer[Times, survivor, Conjugate[survivor]] + DiagonalMatrix[{1/3, 0, 0, 0}])] === ConstantArray[0, {4, 4}]
+    ],
+    True,
+    TestID -> "QI-loss-target-mode-and-entangled-spectator-coherences"
+]
+
+VerificationTest[
+    Module[{a, b},
+        With[{input = QuantumState[{a, b}, 2, "Parameters" -> {a, b}], qi = QuantumInterferometer[{"Loss"[1/2]}]},
+            With[{out = qi[input]},
+                out["ParameterSpec"] === input["ParameterSpec"] &&
+                    FullSimplify[Normal[out[<|a -> 1/Sqrt[2], b -> I/Sqrt[2]|>]["DensityMatrix"]] -
+                        {{3/4, -I/(2 Sqrt[2])}, {I/(2 Sqrt[2]), 1/4}}] === ConstantArray[0, {2, 2}]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-state-parameters-survive-and-bind-after-propagation"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[2/5]}], input = QuantumState[{1, I, -1}/Sqrt[3], 3]},
+        FullSimplify[Normal[qi["Channel", 3][input]["DensityMatrix"]] - Normal[qi[input]["DensityMatrix"]]] === ConstantArray[0, {3, 3}]
+    ],
+    True,
+    TestID -> "QI-loss-native-QuantumChannel-interop-preserves-bosonic-dimension"
+]
+
+VerificationTest[
+    With[{before = QuantumInterferometer[{"Loss"[1/2] -> 1, "BS"[Pi/4]}],
+          after = QuantumInterferometer[{"BS"[Pi/4], "Loss"[1/2] -> 1}]},
+        {before["Probability", {1, 0} -> {0, 0}], after["Probability", {1, 0} -> {0, 0}],
+         before["Probability", {1, 0} -> {0, 1}], after["Probability", {1, 0} -> {0, 1}]} === {1/2, 1/4, 1/4, 1/2}
+    ],
+    True,
+    TestID -> "QI-loss-cannot-commute-mode-dependent-attenuation-through-mixing"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6, Pi/2], "Loss"[2/3] -> 2,
+            "BS"[Pi/4, Pi/2], "Loss"[3/5] -> 1}],
+          dilation = QuantumInterferometer[{"BS"[Pi/6, Pi/2] -> {1, 2},
+            "BS"[ArcCos[Sqrt[2/3]], 0] -> {2, 3}, "BS"[Pi/4, Pi/2] -> {1, 2},
+            "BS"[ArcCos[Sqrt[3/5]], 0] -> {1, 4}}, 4]},
+        And @@ Map[Function[in,
+            With[{reference = Merge[KeyValueMap[<|Take[#1["Name"], 2] -> #2|> &,
+                    dilation["Probabilities", PadRight[in, 4]]], Total],
+                  direct = qi["Probabilities", in]},
+                FullSimplify[Total[direct]] === 1 &&
+                    AllTrue[KeyValueMap[FullSimplify[#2 - Lookup[reference, Key[#1["Name"]], 0]] === 0 &, direct], TrueQ] &&
+                    AllTrue[KeyValueMap[FullSimplify[qi["Probability", in -> #1["Name"]] - #2] === 0 &, direct], TrueQ]
+            ]], {{2, 0}, {1, 2}}]
+    ],
+    True,
+    TestID -> "QI-loss-colliding-multimode-probabilities-match-independent-vacuum-dilation"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6, Pi/2], "Loss"[2/3] -> 2, "BS"[Pi/4, 0], "Loss"[3/5] -> 1}],
+          input = FockState[{1, 1}, 3]},
+        With[{rho = Normal[qi[input]["DensityMatrix"]], channelRho = Normal[qi["Channel", 3][input]["DensityMatrix"]]},
+            FullSimplify[rho - channelRho] === ConstantArray[0, {9, 9}] &&
+                AllTrue[KeyValueMap[FullSimplify[rho[[fockIndex[#1["Name"], 3], fockIndex[#1["Name"], 3]]] - #2] === 0 &,
+                    qi["Probabilities", {1, 1}]], TrueQ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-interleaved-state-channel-and-count-routes-agree"
+]
+
+VerificationTest[
+    With[{zero = QuantumInterferometer[{"Loss"[0]}], one = QuantumInterferometer[{"Loss"[1]}, "DropIdentities" -> False]},
+        zero["Probability", {3} -> {0}] === 1 && zero["Probability", {3} -> {1}] === 0 &&
+            Normal[zero[QuantumState[{1, I, 1}/Sqrt[3], 3]]["DensityMatrix"]] === DiagonalMatrix[{1, 0, 0}] &&
+            one["Amplitude", {3} -> {3}] === 1 && one["Dagger"]["Unitary"] === {{1}} &&
+            zero["Probability", {0} -> {0}] === 1
+    ],
+    True,
+    TestID -> "QI-loss-endpoints-reset-or-identity-without-zero-powers"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/2]}]}, {qi["Amplitude", {1} -> {0}], qi[{1}]}],
+    {$Failed, $Failed}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
+    TestID -> "QI-loss-does-not-invent-unconditional-Fock-amplitudes"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/2]}]}, {qi["Unitary"], qi["Dagger"]}],
+    {$Failed, $Failed}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
+    TestID -> "QI-loss-does-not-invent-unitarity-or-an-inverse"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/2]}]}, {qi["Samples", {1}, 2], QuantumInterferometer[qi]}],
+    {$Failed, $Failed}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
+    TestID -> "QI-loss-does-not-pretend-to-support-sampling-or-unitary-remeshing"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"S"[1/5], "Loss"[1/2]}], QuantumInterferometer[{"Loss"[1/2], "S"[1/5]}]},
+    {$Failed, $Failed}, {QuantumInterferometer::lossactive, QuantumInterferometer::lossactive},
+    TestID -> "QI-loss-with-squeezing-is-rejected-in-both-element-orders"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{"S"[1/5]}][QuantumInterferometer[{"Loss"[1/2]}]],
+     QuantumInterferometer[{"Loss"[1/2]}][QuantumInterferometer[{"S"[1/5]}]]},
+    {$Failed, $Failed}, {QuantumInterferometer::lossactive, QuantumInterferometer::lossactive},
+    TestID -> "QI-loss-with-squeezing-is-rejected-in-both-composition-orders"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/2]}]},
+        {qi["Probability", {-1} -> {0}], qi["Probability", {1/2} -> {0}]}],
+    {$Failed, $Failed}, {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-loss-preserves-nonnegative-integer-occupation-guards"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[1/2]}]},
+        {qi["Probability", {1} -> {0, 0}], qi["Probabilities", {1}, "Cutoff" -> -1],
+         qi["Probability", {1, "Coherent"[1]} -> {0}]}],
+    {$Failed, $Failed, $Failed}, {QuantumInterferometer::occ, QuantumInterferometer::cutoff, QuantumInterferometer::occ},
+    TestID -> "QI-loss-preserves-occupation-length-and-cutoff-guards"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"BS"[Pi/4], "Loss"[1/2] -> 1}]["Probability", {1, "Coherent"[1]} -> {1, 0}],
+    $Failed,
+    {QuantumInterferometer::losscoherent},
+    TestID -> "QI-loss-does-not-treat-mixed-Fock-coherent-input-as-pure"
+]
+
+VerificationTest[
+    Module[{eta, theta},
+        With[{qi = QuantumInterferometer[{"BS"[theta], "Loss"[eta] -> 2},
+                "Parameters" -> {theta, eta}, "DropIdentities" -> False]},
+            qi[<|theta -> 0, eta -> 1|>]["Unitary"] === IdentityMatrix[2] &&
+                qi[Pi/4, 1/2]["Probability", {1, 0} -> {0, 0}] === 1/4 &&
+                qi[Pi/4, 1/2]["Parameters"] === {}
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-parameter-binding-revalidates-and-restores-lossless-limit"
+]
+
+VerificationTest[
+    With[{delta = 10^-40},
+        QuantumInterferometer[{"Loss"[1 - delta]}]["Probability", {1} -> {0}] === delta &&
+            QuantumInterferometer[{"BS"[Pi/4], "Loss"[1 - delta] -> 1}]["Probability", {1, 0} -> {0, 0}] === delta/2 &&
+            Precision[QuantumInterferometer[{"Loss"[1 - delta]}]["TransferMatrix"]] === Infinity
+    ],
+    True,
+    TestID -> "QI-loss-exact-weak-attenuation-is-never-pruned-by-tolerance"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[.31, .27], "Loss"[.8] -> 1,
+            "BS"[.49, -.38], "Loss"[.6] -> 2}]},
+        Max[Abs[ConjugateTranspose[qi["TransferMatrix"]] . qi["TransferMatrix"] +
+            First[qi]["LossGram"] - IdentityMatrix[2]]] < 10^-14 &&
+            Abs[Total[qi["Probabilities", {2, 1}]] - 1] < 10^-13 &&
+            Min[Values[qi["Probabilities", {2, 1}]]] >= -10^-14
+    ],
+    True,
+    TestID -> "QI-loss-compact-Gram-completeness-and-machine-probability-normalization"
+]
+
+VerificationTest[
+    And @@ Table[
+        With[{eta = N[2/5, p], theta = N[Pi/6, p]},
+            With[{qi = QuantumInterferometer[{"BS"[theta, 0], "Loss"[eta] -> 1}],
+                  reference = N[3 (2/5)^2 (3/4)^2 (1/4), p]},
+                With[{prob = qi["Probability", {3, 0} -> {2, 1}]},
+                    Abs[prob - reference] < If[p === MachinePrecision, 10^-13, 10^(-p + 8)] &&
+                        If[p === MachinePrecision, MachineNumberQ[prob], Precision[prob] >= p - 6]
+                ]
+            ]
+        ], {p, {MachinePrecision, 60, 80}}],
+    True,
+    TestID -> "QI-loss-machine-and-arbitrary-precision-agree-with-analytic-nonzero-reference"
+]
+
+VerificationTest[
+    With[{eta = N[1 - 10^-40, 80]},
+        With[{prob = QuantumInterferometer[{"BS"[N[Pi/4, 80]], "Loss"[eta] -> 1}]["Probability", {1, 0} -> {0, 0}]},
+            prob > 0 && Abs[prob/(10^-40/2) - 1] < 10^-35 && Accuracy[prob] > 70
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-Gram-accumulation-preserves-weak-arbitrary-precision-loss"
+]
+
+VerificationTest[
+    Module[{theta},
+        With[{qi = QuantumInterferometer[{"BS"[theta[1], 0], "Loss"[.5] -> 1}]},
+            With[{p = qi["Probability", {1, 0} -> {0, 0}]},
+                FreeQ[p, theta[1.]] && ! FreeQ[p, theta[1]] &&
+                    Abs[(p /. theta[1] -> Pi/6) - 3/8] < 10^-14
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-numerical-precision-work-never-rewrites-indexed-symbolic-parameters"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {{1/2}, "bad"},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-nonscalar-and-nonnumeric-parameter-data"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {Infinity, Indeterminate},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-infinite-and-indeterminate-transmissivity"
+]
+
+VerificationTest[
+    With[{eta = 1. - 2^-50},
+        With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
+            qi["LossCount"] === 1 && qi["Probability", {1} -> {0}] > 0 &&
+                qi["Probability", {1} -> {0}] === 1. - eta
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-representable-machine-weak-loss-is-not-an-approximate-identity"
+]
+
+VerificationTest[
+    Module[{eta, theta},
+        With[{reference = Block[{$Assumptions = True}, QuantumInterferometer[{"BS"[theta], "Loss"[eta] -> 1}]]},
+            Block[{$Assumptions = eta < 0 && theta == 0},
+                QuantumInterferometer[{"BS"[theta], "Loss"[eta] -> 1}] === reference &&
+                    FullSimplify[reference["Probability", {1, 0} -> {0, 0},
+                        Assumptions -> 0 < eta < 1 && Element[theta, Reals]] - (1 - eta) Cos[theta]^2,
+                        Assumptions -> 0 < eta < 1 && Element[theta, Reals]] === 0
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-construction-and-explicit-query-domain-ignore-conflicting-ambient-assumptions"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {SparseArray[{1/2, 0}], SparseArray[{{1/2}}]},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-sparse-vector-and-matrix-transmissivities"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {NumericArray[{.5}, "Real64"], Quantity[1/2, "Meters"]},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-numeric-arrays-and-dimensional-quantities"
+]
+
+VerificationTest[
+    Module[{eta},
+        With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
+            With[{probabilities = qi["Probabilities", "Coherent"[{1}], "Cutoff" -> 2]},
+                And @@ Table[Lookup[probabilities, QuditName[{k}]] ===
+                    qi["Probability", "Coherent"[{1}] -> {k}], {k, 0, 2}] &&
+                    Values[probabilities /. eta -> 2] === ConstantArray[Undefined, 3] &&
+                    Values[probabilities /. eta -> 0] === {1, 0, 0}
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-coherent-probability-table-retains-the-scalar-physical-domain"
+]
+
+VerificationTest[
+    Module[{eta},
+        FullSimplify[QuantumInterferometer[{"Loss"[eta[1]]}]["Probability", {2} -> {1}] -
+            2 eta[1] (1 - eta[1]), Assumptions -> 0 < eta[1] < 1] === 0 &&
+            FullSimplify[QuantumInterferometer[{"Loss"[Sin[eta]]}]["Probability", {2} -> {1}] -
+                2 Sin[eta] (1 - Sin[eta]), Assumptions -> 0 < eta < Pi/2] === 0
+    ],
+    True,
+    TestID -> "QI-loss-scalar-validation-preserves-indexed-and-native-symbolic-expressions"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {VectorSymbol["v", 2], MatrixSymbol["M", {2, 3}]},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-native-symbolic-vector-and-matrix-transmissivities"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {
+        ArraySymbol["A", {2, 3, 4}], Inactive[TensorProduct][{{1/2, 0}, {0, 1/2}}, {{1/3, 0}, {0, 1/3}}]},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-symbolic-tensors-and-array-valued-structural-expressions"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"Loss"[#]}] & /@ {
+        ByteArray[{1, 2}], Wolfram`Arrays`ArrayObject[SparseArray[{1/2, 0}]]},
+    {$Failed, $Failed}, {QuantumInterferometer::loss, QuantumInterferometer::loss},
+    TestID -> "QI-loss-rejects-wrapped-array-transmissivities"
+]
+
+VerificationTest[
+    Module[{eta},
+        With[{reference = QuantumInterferometer[{"Loss"[eta]}]},
+            Block[{$Assumptions = Element[eta, Matrices[{2, 2}]]},
+                QuantumInterferometer[{"Loss"[eta]}] === reference &&
+                    reference["Probability", {1} -> {0}, Assumptions -> 0 < eta < 1] === 1 - eta
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-scalar-construction-is-independent-of-ambient-array-assumptions"
+]
+
+VerificationTest[
+    Module[{eta},
+        With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
+            {qi["Probability", {1} -> {0}, Assumptions -> eta == I],
+             qi["Probability", {1} -> {0}] /. eta -> I,
+             Values[qi["Probabilities", {1}] /. eta -> I],
+             Values[qi["Probabilities", "Coherent"[{1}], "Cutoff" -> 1] /. eta -> I]}
+        ]
+    ],
+    {$Failed, Undefined, {Undefined, Undefined}, {Undefined, Undefined}}, {Refine::fas},
+    TestID -> "QI-loss-nonreal-assumptions-fail-and-probability-substitutions-are-undefined"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"Loss"[2/5], "BS"[Pi/6]}]},
+        ContainsAll[qi["Properties"], {"Channel", "LossCount", "BlochMessiah", "GBSForm"}] &&
+            DuplicateFreeQ[qi["Properties"]]
+    ],
+    True,
+    TestID -> "QI-loss-integration-preserves-upstream-and-channel-property-discovery"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi/6], "Loss"[2/5] -> 2}]},
+        {qi["BlochMessiah"], qi["GBSForm"]}
+    ],
+    {$Failed, $Failed}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
+    TestID -> "QI-loss-unitary-normal-forms-reject-numeric-attenuation"
+]
+
+VerificationTest[
+    Module[{eta},
+        With[{qi = QuantumInterferometer[{"Loss"[eta], "BS"[Pi/6]},
+                "Parameters" -> {eta}, "DropIdentities" -> False]},
+            {qi["BlochMessiah"], qi["GBSForm"],
+             With[{lossless = qi[1]},
+                lossless["BlochMessiah"] === lossless && lossless["GBSForm"] === lossless &&
+                    lossless["LossCount"] === 1 && Precision[lossless["Unitary"]] === Infinity &&
+                    lossless["Unitary"] === QuantumInterferometer[{"BS"[Pi/6]}]["Unitary"]
+             ]}
+        ]
+    ],
+    {$Failed, $Failed, True}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
+    TestID -> "QI-loss-unitary-normal-forms-guard-symbolic-loss-and-recover-identity-limit"
+]
+
+EndTestSection[]

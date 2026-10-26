@@ -6,6 +6,8 @@ PackageImport["Wolfram`QuantumFramework`"]
 
 PackageImport["Wolfram`QuantumFramework`PackageScope`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageExport["QuantumInterferometer"]
 
 PackageScope["QuantumInterferometerQ"]
@@ -49,9 +51,15 @@ QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] g
 Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
 interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
 \"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions.
-Transition queries accept Assumptions -> assumptions or an enclosing Assuming to refine the result on that domain; unproved photon constraints remain guarded.";
+Transition queries accept Assumptions -> assumptions or an enclosing Assuming to refine the result on that domain; unproved photon constraints remain guarded.
+Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. Loss supports passive optics, Fock probabilities, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
+QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
+QuantumInterferometer::lossactive = "loss combined with squeezing needs a Gaussian noise channel and is not supported";
+QuantumInterferometer::lossy = "`1` needs a lossless interferometer; use probability queries or a finite channel for loss";
+QuantumInterferometer::lossoccupation = "mode mixing with loss needs explicit nonnegative integer occupations";
+QuantumInterferometer::losscoherent = "loss supports pure coherent inputs; mixed Fock/coherent transition inputs are not supported";
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
 QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"Reck\" or \"CosineSine\".";
 QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p or \"S\"[\[Xi]] -> p.";
@@ -123,6 +131,12 @@ unitaryQ[w_, tol_] := If[Precision[w] === Infinity,
     AllTrue[Flatten[w . ConjugateTranspose[w] - IdentityMatrix[Length[w]]], PossibleZeroQ],
     UnitaryMatrixQ[w, Tolerance -> tol]
 ]
+
+identityGateQ["Loss"[eta_] -> _, _] := TrueQ[eta - 1 == 0]
+
+applyGate[w_, "Loss"[eta_] -> {p_}] := ReplacePart[w, p -> Sqrt[eta] w[[p]]]
+
+bogoliubov["Loss"[eta_] -> {p_}, m_] := {ReplacePart[IdentityMatrix[m], {p, p} -> Sqrt[eta]], ConstantArray[0, {m, m}]}
 
 normalAngle[x_] := If[NumericQ[x] && Precision[x] =!= Infinity, Mod[x, 2 Pi, - Pi], x]
 
@@ -371,7 +385,7 @@ placeStep[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[
     Sow[{"BS"[t, f] -> {p, q}, k}]
 ]
 
-placeStep[last_, {kind : "PS" | "S", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2},
+placeStep[last_, {kind : "PS" | "S" | "Loss", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2},
     last[[p]] = x;
     Sow[{kind[a] -> {p}, x}]
 ]
@@ -431,7 +445,7 @@ QuantumInterferometer[w_ ? SquareMatrixQ, opts : OptionsPattern[]] := With[{
 (* Bare elements use the same normalization and validation as explicit mode rules. *)
 normalizeElement[gate : ("BS" | "BeamSplitter")[___]] := normalizeElement[gate -> {1, 2}]
 
-normalizeElement[gate : ("PS" | "PhaseShift" | "S" | "Squeeze")[___]] := normalizeElement[gate -> 1]
+normalizeElement[gate : ("PS" | "PhaseShift" | "S" | "Squeeze" | "Loss")[___]] := normalizeElement[gate -> 1]
 
 normalizeElement[("BS" | "BeamSplitter")[{t_, f_}] -> modes_] := normalizeElement["BS"[t, f] -> modes]
 
@@ -440,6 +454,8 @@ normalizeElement[("BS" | "BeamSplitter")[t_, f_ : 0] -> {p_Integer ? Positive, q
 normalizeElement[("PS" | "PhaseShift")[a_] -> (p_Integer ? Positive | {p_Integer ? Positive})] := {"PS", a, p}
 
 normalizeElement[("S" | "Squeeze")[xi_] -> (p_Integer ? Positive | {p_Integer ? Positive})] := {"S", xi, p}
+
+normalizeElement["Loss"[eta_] -> (p_Integer ? Positive | {p_Integer ? Positive})] := {"Loss", eta, p}
 
 normalizeElement[element_] := (Message[QuantumInterferometer::elem, element]; $Failed)
 
@@ -459,6 +475,9 @@ elementInputInterferometer[elements_, requested_, opts : OptionsPattern[QuantumI
         {m = Replace[requested, Automatic :> Max[1, top]]},
         ConfirmAssert[nonreal === {}, Message[QuantumInterferometer::angles, nonreal]];
         ConfirmAssert[top <= m, Message[QuantumInterferometer::modes, top, m]];
+        ConfirmAssert[NoneTrue[Cases[items, {"Loss", eta_, _} :> eta],
+            ! lossParameterQ[#] &],
+            Message[QuantumInterferometer::loss, Cases[items, {"Loss", eta_, _} :> eta]]];
         elementsInterferometer[##, m, None, parameterData[OptionValue["Parameters"], OptionValue["DropIdentities"]]] & @@
             layoutItems[items, m, OptionValue["DropIdentities"], OptionValue[Tolerance]]
     ],
@@ -469,7 +488,23 @@ parameterData[{}, _] := <||>
 
 parameterData[params_List, drop_] := <|"Parameters" -> params, "DropIdentities" -> drop|>
 
-elementsInterferometer[elements_, layers_, m_, unitary_, extra_Association : <||>] := With[{passive = FreeQ[elements, "S"[_] -> _]},
+elementsInterferometer[elements_, layers_, m_, unitary_, extra_Association : <||>] := With[{
+    passive = FreeQ[elements, "S"[_] -> _],
+    lossy = AnyTrue[Cases[elements, ("Loss"[eta_] -> _) :> eta], ! TrueQ[# - 1 == 0] &]
+},
+    If[lossy,
+        If[passive,
+            With[{channel = lossData[elements, m]},
+                QuantumInterferometer @ Join[<|"Unitary" -> None, "TransferMatrix" -> channel[[1]], "LossGram" -> channel[[2]],
+                    "Modes" -> m, "Method" -> None, "Elements" -> elements, "Layers" -> layers|>, extra]
+            ],
+            Message[QuantumInterferometer::lossactive]; $Failed
+        ],
+        losslessElementsInterferometer[elements, layers, m, unitary, extra]
+    ]
+]
+
+losslessElementsInterferometer[elements_, layers_, m_, unitary_, extra_Association] := With[{passive = FreeQ[elements, "S"[_] -> _]},
     QuantumInterferometer @ Join[
         <|
             "Unitary" -> If[passive, Replace[unitary, None :> elementsUnitary[elements, m]], None],
@@ -493,14 +528,15 @@ QuantumInterferometer[name : "Random" | "Fourier", m_Integer ? Positive, opts : 
     QuantumInterferometer[name[m], opts]
 
 QuantumInterferometer[qi_QuantumInterferometer ? QuantumInterferometerQ, opts : OptionsPattern[]] :=
-    If[passiveQ[qi], QuantumInterferometer[qi["Unitary"], opts], Message[QuantumInterferometer::squeezed, "Re-meshing"]; $Failed]
+    If[lossyQ[qi], Message[QuantumInterferometer::lossy, "Re-meshing"]; $Failed,
+        If[passiveQ[qi], QuantumInterferometer[qi["Unitary"], opts], Message[QuantumInterferometer::squeezed, "Re-meshing"]; $Failed]]
 
 
 
 $QuantumInterferometerProperties = {
     "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers", "Parameters",
     "Depth", "BeamSplitterCount", "PhaseShifterCount", "SqueezerCount", "ElementTable",
-    "Diagram", "MatrixPlot", "CircuitOperator",
+    "Diagram", "MatrixPlot", "CircuitOperator", "Channel", "LossCount",
     "Amplitude", "Probability", "Probabilities", "Samples", "SampleCounts", "Dagger", "BlochMessiah", "GBSForm"
 };
 
@@ -515,9 +551,13 @@ QuantumInterferometerProp[QuantumInterferometer[data_], key : "Modes" | "Method"
 QuantumInterferometerProp[QuantumInterferometer[data_], "Parameters"] := Lookup[data, "Parameters", {}]
 
 QuantumInterferometerProp[qi : QuantumInterferometer[data_], "Unitary"] :=
-    If[passiveQ[qi], data["Unitary"], Message[QuantumInterferometer::squeezed, "\"Unitary\""]; $Failed]
+    If[lossyQ[qi], Message[QuantumInterferometer::lossy, "\"Unitary\""]; $Failed,
+        If[passiveQ[qi], data["Unitary"], Message[QuantumInterferometer::squeezed, "\"Unitary\""]; $Failed]]
 
-QuantumInterferometerProp[qi_, "TransferMatrix"] := qi["Unitary"]
+QuantumInterferometerProp[qi : QuantumInterferometer[data_], "TransferMatrix"] :=
+    If[lossyQ[qi], data["TransferMatrix"], qi["Unitary"]]
+
+QuantumInterferometerProp[qi_, "LossCount"] := Count[qi["Elements"], "Loss"[_] -> _]
 
 QuantumInterferometerProp[qi_, "Depth"] := Max[0, Pick[qi["Layers"], MatchQ["BS"[__] -> _] /@ qi["Elements"]]]
 
@@ -535,8 +575,8 @@ QuantumInterferometerProp[qi_, "ElementTable"] := Dataset @ Map[
 QuantumInterferometerProp[qi_, "Diagram", opts : OptionsPattern[]] := interferometerDiagram[qi, opts]
 
 QuantumInterferometerProp[qi_, "MatrixPlot", opts : OptionsPattern[]] := Which[
-    ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "\"MatrixPlot\""]; $Failed,
-    MatrixQ[qi["Unitary"], NumericQ], With[{w = N[qi["Unitary"]]},
+    ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "\"MatrixPlot\""]; $Failed,
+    MatrixQ[qi["TransferMatrix"], NumericQ], With[{w = N[qi["TransferMatrix"]]},
         Row[{
             ArrayPlot[Abs[w] ^ 2, opts,
                 ColorFunction -> (Blend[{White, RGBColor[0.05, 0.25, 0.6]}, #] &), ColorFunctionScaling -> False,
@@ -557,6 +597,10 @@ QuantumInterferometerProp[qi_, "CircuitOperator", d_Integer ? Positive] := Quant
 
 QuantumInterferometerProp[qi_, "CircuitOperator"] := (Message[QuantumInterferometer::levels]; $Failed)
 
+QuantumInterferometerProp[qi_, "Channel", d_Integer ? Positive] := QuantumChannel[qi["CircuitOperator", d]["QuantumOperator"]]
+
+QuantumInterferometerProp[qi_, "Channel"] := (Message[QuantumInterferometer::levels]; $Failed)
+
 (* Photon patterns are occupation lists {n1, n2, ...}, Ket[{n1, n2, ...}] or QuditName[{n1, n2, ...}];
    results are keyed by QuditName, as QuantumState["Probabilities"] is. *)
 QuantumInterferometerProp[qi_, "Amplitude", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
@@ -564,6 +608,9 @@ QuantumInterferometerProp[qi_, "Amplitude", pattern_Rule, opts : OptionsPattern[
 
 QuantumInterferometerProp[qi_, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
     transitionValue[qi, pattern, Abs[#] ^ 2 &, OptionValue[Assumptions]]
+
+QuantumInterferometerProp[qi_ ? lossyQ, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
+    lossTransitionValue[qi, pattern, OptionValue[Assumptions]]
 
 (* Build the guarded transition independently of ambient assumptions. Explicit query
    assumptions replace $Assumptions and remove only constraints they prove; a refined
@@ -579,21 +626,24 @@ transitionValue[qi_, s_ -> t_, f_, assumptions_] := Block[{$Assumptions = True},
 
 interferometerAmplitude[qi_, in_, out_] := Which[
     ! FreeQ[{in, out}, "Coherent"[_]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
+    lossyQ[qi], Message[QuantumInterferometer::lossy, "Fock transition amplitudes"]; $Failed,
     symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
     occupationQ[qi, in] && occupationQ[qi, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
     True, $Failed
 ]
 
 QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
-    Which[
+    {probabilities = Which[
         ! cutoffQ[OptionValue["Cutoff"]], $Failed,
         ! FreeQ[in, "Coherent"[_]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
         ! occupationQ[qi, in], $Failed,
+        lossyQ[qi], KeyMap[QuditName, lossFockProbabilities[qi, in]],
         passiveQ[qi], With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
             Association @ Map[QuditName[#] -> Abs[Lookup[amplitudes, Key[#], 0]] ^ 2 &, photonPatterns[Total[in], qi["Modes"]]]
         ],
         True, Replace[gaussianAmplitudes[qi, in, OptionValue["Cutoff"]], a_Association :> Abs[a] ^ 2]
-    ]
+    ]},
+    If[lossyQ[qi] && AssociationQ[probabilities], lossProbabilityDomain[qi, #] & /@ probabilities, probabilities]
 ]
 
 (* Clifford and Clifford, arXiv:1706.01260, Algorithm B: with the input photons in random order, photon k
@@ -601,6 +651,7 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
 QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{in = occupation[s]},
     Which[
         ! occupationQ[qi, in], $Failed,
+        lossyQ[qi], Message[QuantumInterferometer::lossy, "Sampling"]; $Failed,
         ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
         ! MatrixQ[N[qi["Unitary"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
         True, With[{w = N[qi["Unitary"]][[All, modeList[in]]], m = qi["Modes"], n = Total[in]},
@@ -630,6 +681,10 @@ inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes
 
 inverseElement[(kind : "PS" | "S")[a_] -> modes_] := kind[- a] -> modes
 
+inverseElement[element : ("Loss"[_] -> _)] := element
+
+QuantumInterferometerProp[qi_ ? lossyQ, "Dagger"] := (Message[QuantumInterferometer::lossy, "An inverse interferometer"]; $Failed)
+
 QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceiling[Max[0, qi["Layers"]] - 1/2]]},
     elementsInterferometer[
         Reverse[inverseElement /@ qi["Elements"]], Reverse[last + 1 - qi["Layers"]], qi["Modes"],
@@ -641,6 +696,7 @@ QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceilin
    Bloch-Messiah: alpha = W2 C W1 and beta = W2^* S W1 with C = Cosh[r], S = Sinh[r]; the SVD of alpha
    fixes W2 and W1 up to a unitary Q on each group of equal r, chosen so that Q^T U^T beta V Q is real diagonal. *)
 QuantumInterferometerProp[qi_, "BlochMessiah"] := Which[
+    lossyQ[qi], Message[QuantumInterferometer::lossy, "\"BlochMessiah\""]; $Failed,
     passiveQ[qi], qi,
     ! MatrixQ[N[First[qi]["Bogoliubov"][[1]]], NumericQ], Message[QuantumInterferometer::notnumeric, "\"BlochMessiah\""]; $Failed,
     True, Module[{u, c, v, q},
@@ -660,6 +716,7 @@ QuantumInterferometerProp[qi_, "BlochMessiah"] := Which[
 
 (* vacuum input: the output kernel B = -W Diag[Tanh[r]] W^T gives squeezers r on every mode followed by W *)
 QuantumInterferometerProp[qi_, "GBSForm"] := Which[
+    lossyQ[qi], Message[QuantumInterferometer::lossy, "\"GBSForm\""]; $Failed,
     passiveQ[qi], qi,
     ! MatrixQ[N[First[qi]["Bogoliubov"][[1]]], NumericQ], Message[QuantumInterferometer::notnumeric, "\"GBSForm\""]; $Failed,
     True, With[{t = takagi[- vacuumMatrix @@ N[First[qi]["Bogoliubov"][[;; 2]]], 10.^-9]},
@@ -756,7 +813,7 @@ permanentAmplitude[w_, s_, t_, {p_, block_, in_, out_, forward_}] :=
 photonAmplitudes[w_, s_] := Module[{x},
     With[{vars = Array[x, Length[w]]},
         Association @ ReverseSortBy[First] @ Map[
-            #[[1]] -> #[[2]] Sqrt[Times @@ (#[[1]]!) / Times @@ (s!)] &,
+            #[[1]] -> #[[2]] Sqrt[Times @@ (#[[1]]!) / (Times @@ (s!))] &,
             CoefficientRules[Expand[Times @@ (vars . w[[All, #]] & /@ modeList[s])], vars]
         ]
     ]
@@ -778,9 +835,10 @@ coherentInput[_] := {None, None}
 
 (* outputs: a list of photon patterns, "Coherent"[{g1, ..}], or an integer or Automatic cutoff for every pattern up to it *)
 coherentAmplitudes[qi_, s_, outs_, f_] := Enclose[
-    ConfirmAssert[passiveQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]];
-    With[{m = qi["Modes"], n = coherentInput[s][[1]], a = coherentInput[s][[2]], w = qi["Unitary"]},
+    ConfirmAssert[passiveQ[qi] || lossyQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]];
+    With[{m = qi["Modes"], n = coherentInput[s][[1]], a = coherentInput[s][[2]], w = qi["TransferMatrix"]},
         ConfirmAssert[ListQ[a] && Length[a] == m && occupationQ[qi, n], Message[QuantumInterferometer::occ, s, m]];
+        ConfirmAssert[! lossyQ[qi] || Total[n] == 0, Message[QuantumInterferometer::losscoherent]];
         With[{b = w . a},
             Replace[outs, {
                 {"Coherent"[g_List]} :> (
@@ -819,6 +877,8 @@ symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] := With[{
 ]
 
 symbolicFactor[c_, {"PS"[al_] -> {p_}, _}] := E^(I al c[[p]])
+
+symbolicFactor[_, {"Loss"[_] -> _, _}] := 1
 
 symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, free, cs},
     steps = {#, Unique["k"]} & /@ elements;
@@ -884,6 +944,7 @@ autoShells[g_, s_, start_] := With[{
     Which[
         ! cutoffQ[cutoff], $Failed,
         ! occupationQ[qi, in], $Failed,
+        lossyQ[qi], Message[QuantumInterferometer::lossy, "An output amplitude association"]; $Failed,
         passiveQ[qi], KeyMap[QuditName, photonAmplitudes[qi["Unitary"], in]],
         True, gaussianAmplitudes[qi, in, cutoff]
     ]
@@ -891,14 +952,16 @@ autoShells[g_, s_, start_] := With[{
 
 (* a passive network keeps a coherent state coherent: |a> -> |W a> *)
 (qi_QuantumInterferometer ? QuantumInterferometerQ)["Coherent"[a_List]] := Which[
-    ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
+    ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
     Length[a] != qi["Modes"], Message[QuantumInterferometer::occ, "Coherent"[a], qi["Modes"]]; $Failed,
-    True, "Coherent"[qi["Unitary"] . a]
+    True, "Coherent"[qi["TransferMatrix"] . a]
 ]
 
 
 
 elementOperator["BS"[t_, f_] -> {p_, q_}, d_] := BeamSplitterOperator[{t, f}, d, {p, q}, Method -> "Recurrence"]
+
+elementOperator["Loss"[eta_] -> {p_}, d_] := QuantumChannel[lossKraus[eta, d], {p}, d]
 
 elementOperator["PS"[a_] -> {p_}, d_] := PhaseShiftOperator[a, d, {p}]
 
@@ -927,15 +990,151 @@ photonSectorState[w_, components_, d_, m_, parameters_] := With[{
                 Max[0, Total /@ components[[All, 1]]]
             ]},
             If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
-            If[ components === None,
+            If[lossyQ[qi], lossState[qi, qs, d, m], If[ components === None,
                 qi["CircuitOperator", d][qs],
                 photonSectorState[qi["Unitary"], components, d, m, qs["ParameterSpec"]]
-            ]
+            ]]
         ],
         $Failed &
     ]
 ]
 
+
+
+(* Vacuum loss is a channel on the retained modes.  Accumulate the input loss Gram
+   G alongside K: K^dag.K + G = I.  The rank-one update preserves weak losses
+   without subtracting nearly equal matrices.  No environment state is formed. *)
+lossyQ[QuantumInterferometer[data_]] := KeyExistsQ[data, "LossGram"]
+
+lossParameterQ[eta_] := ! MatchQ[eta, _List | _Quantity | _Association | _String | _Rule |
+    _RuleDelayed | _Missing | _Failure | _Function | _DirectedInfinity | Indeterminate | True | False | Null] &&
+    Block[{$Assumptions = True}, ! ArrayContainerQ[eta]] &&
+    (! NumericQ[eta] || TrueQ[Element[eta, Reals] && 0 <= eta <= 1])
+
+lossDomain[elements_] := And @@ Cases[elements, ("Loss"[eta_] -> _) :> Element[eta, Reals] && 0 <= eta <= 1]
+
+opticalDomain[elements_] := lossDomain[elements] && Element[
+    Catenate @ Cases[elements, (("BS"[parameters__] | "PS"[parameters__]) -> _) :> {parameters}], Reals]
+
+lossStep[{w_, g_}, "Loss"[eta_] -> {p_}] := {
+    ReplacePart[w, p -> Sqrt[eta] w[[p]]],
+    g + (1 - eta) Outer[Times, Conjugate[w[[p]]], w[[p]]]
+}
+
+lossStep[{w_, g_}, element_] := {applyGate[w, element], g}
+
+lossData[elements_, m_] := Developer`ToPackedArray /@ Refine[
+    Fold[lossStep, {IdentityMatrix[m], ConstantArray[0, {m, m}]}, elements], Assumptions -> opticalDomain[elements]]
+
+lossRates[elements_, m_] := Fold[
+    ReplacePart[#1, #2[[2, 1]] -> #2[[1, 1]] #1[[#2[[2, 1]]]]] &,
+    ConstantArray[1, m], Cases[elements, HoldPattern["Loss"[_] -> _]]]
+
+(* Form the native PDF symbolically before substituting eta.  BinomialDistribution
+   otherwise rounds a representable machine transmissivity near 1 to its endpoint. *)
+lossCountProbability[n_, eta_, k_] := Module[{transmissivity},
+    PDF[BinomialDistribution[n, transmissivity], k] /. transmissivity -> eta
+]
+
+(* Both indices repeat with the input occupations.  The z^t coefficient of
+   Per((G + K^dag.diag(z).K)_{s,s}) / Prod s! is P(t|s), including lost photons.
+   Occupied indices are selected before constructing the photon-sized matrix. *)
+lossPolynomial[QuantumInterferometer[data_], s_, rows_, vars_] := With[{
+    cols = Pick[Range[Length[s]], Unitize[s], 1], p = Precision[{data["TransferMatrix"], data["LossGram"]}]
+},
+    {in = s[[cols]], k = data["TransferMatrix"][[rows, cols]], g = data["LossGram"][[cols, cols]]},
+    {matrices = If[p === Infinity || ! MatrixQ[Join[k, g], NumericQ], {k, g}, SetPrecision[{k, g}, p + Total[s]]]},
+    {b = matrices[[2]] + If[rows === {}, 0, ConjugateTranspose[matrices[[1]]] . DiagonalMatrix[vars] . matrices[[1]]]},
+    Permanent[b[[modeList[in], modeList[in]]]] / (Times @@ (s!))
+]
+
+lossProbabilityValue[value_, p_] := If[p === Infinity || ! NumericQ[value], value, N[Re[value], p]]
+
+lossFockProbability[qi_, s_, t_] := Which[
+    Total[t] > Total[s], 0,
+    Total[s] == 0, 1,
+    FreeQ[qi["Elements"], "BS"[__] -> _],
+        Times @@ MapThread[lossCountProbability, {s, lossRates[qi["Elements"], qi["Modes"]], t}],
+    True, Module[{z},
+        With[{rows = Pick[Range[Length[t]], Unitize[t], 1], p = Precision[qi["TransferMatrix"]]},
+            {vars = Array[z, Length[rows]]},
+            lossProbabilityValue[Fold[Coefficient[#1, #2[[1]], #2[[2]]] &,
+                lossPolynomial[qi, s, rows, vars], Transpose[{vars, t[[rows]]}]], p]
+        ]
+    ]
+]
+
+lossFockProbabilities[qi_, s_] := With[{
+    patterns = Catenate[photonPatterns[#, qi["Modes"]] & /@ Range[0, Total[s]]]
+},
+    Which[
+        Total[s] == 0 || FreeQ[qi["Elements"], "BS"[__] -> _],
+            AssociationMap[lossFockProbability[qi, s, #] &, patterns],
+        True, Module[{z},
+            With[{vars = Array[z, qi["Modes"]], p = Precision[qi["TransferMatrix"]]},
+                {coefficients = Association[CoefficientRules[Expand[lossPolynomial[qi, s, Range[qi["Modes"]], vars]], vars]]},
+                AssociationMap[lossProbabilityValue[Lookup[coefficients, Key[#], 0], p] &, patterns]
+            ]
+        ]
+    ]
+]
+
+(* General symbolic occupations are retained for independent attenuators.  With
+   mode mixing, constructing a permanent needs explicit integer occupations. *)
+lossTransitionProbability[qi_, in_, out_] := Which[
+    ! FreeQ[{in, out}, "Coherent"[_]],
+        Replace[coherentAmplitudes[qi, in, {out}, Abs[#] ^ 2 &], {p_} :> p],
+    symbolicPatternsQ[qi, in, out],
+        If[FreeQ[qi["Elements"], "BS"[__] -> _],
+            With[{occupations = Join[in, out]},
+                If[Element[occupations, Integers], If[Min[occupations] >= 0,
+                    Times @@ MapThread[lossCountProbability, {in, lossRates[qi["Elements"], qi["Modes"]], out}], 0], 0]
+            ],
+            Message[QuantumInterferometer::lossoccupation]; $Failed
+        ],
+    occupationQ[qi, in] && occupationQ[qi, out], lossFockProbability[qi, in, out],
+    True, $Failed
+]
+
+lossProbabilityDomain[qi_, value_] := ConditionalExpression[
+    Refine[value, Assumptions -> opticalDomain[qi["Elements"]]], lossDomain[qi["Elements"]]]
+
+lossTransitionValue[qi_, s_ -> t_, assumptions_] := Block[{$Assumptions = True},
+    With[{value = lossTransitionProbability[qi, occupation[s], occupation[t]]},
+        If[value === $Failed, $Failed,
+            Check[Refine[lossProbabilityDomain[qi, value], Assumptions -> assumptions], $Failed, Refine::fas]
+        ]
+    ]
+]
+
+(* <n-l|A_l|n> = Sqrt[Binomial[n,l] (1-eta)^l eta^(n-l)].
+   Explicit zero powers keep both physical endpoints free of 0^0. *)
+lossKraus[eta_, d_] := Table[
+    SparseArray[Table[{n - l + 1, n + 1} -> Sqrt[Binomial[n, l]]
+        If[l == 0, 1, (1 - eta) ^ (l / 2)] If[n == l, 1, eta ^ ((n - l) / 2)],
+        {n, l, d - 1}], {d, d}],
+    {l, 0, d - 1}
+]
+
+lossStateStep[qs_, "Loss"[eta_] -> {p_}, d_, m_] := With[{
+    rho = qs["Computational"]["DensityMatrix"],
+    operators = KroneckerProduct[IdentityMatrix[d ^ (p - 1), SparseArray], #,
+        IdentityMatrix[d ^ (m - p), SparseArray]] & /@ lossKraus[eta, d]
+},
+    QuantumState[Refine[Total[# . rho . ConjugateTranspose[#] & /@ operators], Assumptions -> 0 <= eta <= 1],
+        ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]
+]
+
+lossStateStep[qs_, element_, d_, _] := elementOperator[element, d][qs]
+
+lossState[qi_, qs_, d_, m_] := Fold[lossStateStep[#1, #2, d, m] &, qs, qi["Elements"]]
+
+lossPrimitive[{x_, p_, eta_}, labelQ_] := Tooltip[
+    {EdgeForm[GrayLevel[0.25]], FaceForm[GrayLevel[0.85]], Disk[{x, -p}, .12],
+        Black, Text[Style["L", 8], {x, -p}],
+        If[labelQ, Text[Style[parameterForm[eta], 8], {x, -p - .3}], Nothing]},
+    Row[{"transmissivity = ", eta, ", mode ", p}]
+]
 
 
 modePositions[qi_] := Merge[MapThread[Thread[modeSpan[#1] -> #2] &, {qi["Elements"], qi["Layers"]}], Identity]
@@ -1036,6 +1235,7 @@ interferometerDiagram[qi_, opts : OptionsPattern[{interferometerDiagram, Graphic
             beamSplitterPrimitive[#, labelQ] & /@ splitters,
             phasePrimitive[#, labelQ] & /@ Cases[placed, {"PS"[a_] -> {p_}, x_} :> {x, p, a}],
             squeezerPrimitive[#, labelQ] & /@ Cases[placed, {"S"[xi_] -> {p_}, x_} :> {x, p, xi}],
+            lossPrimitive[#, labelQ] & /@ Cases[placed, {"Loss"[eta_] -> {p_}, x_} :> {x, p, eta}],
             If[ Replace[OptionValue["ModeLabels"], Automatic -> m <= 30],
                 Table[Text[Style[p, 10, GrayLevel[0.4]], {x0 - 0.1, - p}, {1, 0}], {p, m}],
                 Nothing
