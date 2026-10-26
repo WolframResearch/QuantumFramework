@@ -1825,3 +1825,379 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+BeginTestSection["QuantumMeasurement - from outcome probabilities and branch states"]
+
+(* QuantumMeasurement[<|r -> p_r, ...|>, {psi_r, ...}] is the measurement whose outcome r
+   has probability w_r = p_r / Sum_s p_s and leaves the ket psi_r: the joint record (x)
+   system ket is Sum_r Sqrt[w_r] |r> (x) |psi_r> for normalized kets, branch r has density
+   matrix w_r |psi_r><psi_r|, and the post-measurement state is Sum_r w_r |psi_r><psi_r|.
+   qmBranchResidual is the difference between what the constructor gives and these
+   formulas for the probabilities, every branch and the post-measurement state, all read
+   in the computational basis. *)
+
+qmDensity[qs_] := Normal[qs["Computational"]["DensityMatrix"]]
+
+qmBranchResidual[proba_, states_, assumptions_ : True] := With[{
+    qm = QuantumMeasurement[proba, states],
+    w = Values[proba] / Total[Values[proba]],
+    rho = qmDensity /@ states
+},
+    Simplify[
+        Flatten[{
+            qm["ProbabilitiesList"] - w,
+            (qmDensity /@ qm["States"]) - w rho,
+            qmDensity[qm["PostMeasurementState"]] - Total[w rho]
+        }],
+        assumptions
+    ]
+]
+
+(* Branch states that are not orthogonal tell the outcome register apart from the
+   system: with the two swapped, |0>,|0> read probabilities {1, 0} and |0>,|+> read
+   {3/4, 1/4}. *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1/3, 1 -> 2/3|>, {QuantumState["0"], QuantumState["0"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{1/3, 2/3}, {{{1/3, 0}, {0, 0}}, {{2/3, 0}, {0, 0}}}},
+    TestID -> "ProbabilityStates-EqualBranchStates"
+]
+
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1/2, 1 -> 1/2|>, {QuantumState["0"], QuantumState["+"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"], qmDensity[qm["PostMeasurementState"]]}
+    ],
+    {{1/2, 1/2}, {{{1/2, 0}, {0, 0}}, {{1/4, 1/4}, {1/4, 1/4}}}, {{3/4, 1/4}, {1/4, 1/4}}},
+    TestID -> "ProbabilityStates-OverlappingBranchStates"
+]
+
+(* orthogonal computational branch states: a projective measurement, the case that read
+   correctly with the two swapped *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1/3, 1 -> 2/3|>, {QuantumState["0"], QuantumState["1"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{1/3, 2/3}, {{{1/3, 0}, {0, 0}}, {{0, 0}, {0, 2/3}}}},
+    TestID -> "ProbabilityStates-OrthogonalBranchStates"
+]
+
+(* two-qubit branch states keep their own qubit order behind the outcome register *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|"a" -> 1/4, "b" -> 3/4|>, {QuantumState["PhiPlus"], QuantumState["01"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {
+        {1/4, 3/4},
+        {
+            {{1/8, 0, 0, 1/8}, {0, 0, 0, 0}, {0, 0, 0, 0}, {1/8, 0, 0, 1/8}},
+            {{0, 0, 0, 0}, {0, 3/4, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}
+        }
+    },
+    TestID -> "ProbabilityStates-TwoQubitBranchStates"
+]
+
+(* Kets stored in the X basis, in either slot: the system wire is stored in the
+   computational basis, so the outcomes stay 0, 1 and do not take the X-basis names of the
+   first ket. *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1/3, 1 -> 2/3|>, {QuantumState["0"], QuantumState[{1, 0}, QuantumBasis["X"]]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{1/3, 2/3}, {{{1/3, 0}, {0, 0}}, {{1/3, 1/3}, {1/3, 1/3}}}},
+    TestID -> "ProbabilityStates-NonComputationalBranchState"
+]
+
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1/3, 1 -> 2/3|>, {QuantumState[{1, 0}, QuantumBasis["X"]], QuantumState["0"]}]},
+        {qm["Outcomes"], qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{QuditName[0, "Dual" -> False], QuditName[1, "Dual" -> False]}, {1/3, 2/3}, {{{1/6, 1/6}, {1/6, 1/6}}, {{2/3, 0}, {0, 0}}}},
+    TestID -> "ProbabilityStates-NonComputationalFirstBranchState"
+]
+
+(* a ket stored in a basis that is not orthonormal: its unit-norm coefficients are not a
+   unit-norm vector, |0> + (|0> + |1>)/Sqrt[2] has squared norm 2 + Sqrt[2], so the branch
+   takes the normalized computational amplitudes *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1, 1 -> 1|>, {QuantumState[{1, 1}, QuantumBasis[{{1, 0}, {1, 1} / Sqrt[2]}]], QuantumState["1"]}]},
+        {
+            Simplify[qm["ProbabilitiesList"]],
+            Simplify[(qmDensity /@ qm["States"]) - {
+                With[{v = {1 + 1 / Sqrt[2], 1 / Sqrt[2]}}, Outer[Times, v, v] / (2 (2 + Sqrt[2]))],
+                {{0, 0}, {0, 1/2}}
+            }]
+        }
+    ],
+    {{1/2, 1/2}, ConstantArray[0, {2, 2, 2}]},
+    TestID -> "ProbabilityStates-NonOrthonormalBasisKet"
+]
+
+VerificationTest[
+    qmDensity /@ QuantumMeasurement[<|0 -> 1/3, 1 -> 2/3|>, {QuantumState[{1, 0}, QuantumBasis["X"]], QuantumState[{0, 1}, QuantumBasis["X"]]}]["States"],
+    {{{1/6, 1/6}, {1/6, 1/6}}, {{1/3, -1/3}, {-1/3, 1/3}}},
+    TestID -> "ProbabilityStates-AllBranchStatesInXBasis"
+]
+
+(* outcomes given out of order are read in key order, each with its own weight and ket; the
+   one-argument form pairs each weight with the basis state of its sorted position *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|1 -> 1/4, 0 -> 3/4|>, {QuantumState["1"], QuantumState["+"]}]},
+        {qm["Probabilities"], qmDensity /@ qm["States"]}
+    ],
+    {
+        <|QuditName[0, "Dual" -> False] -> 3/4, QuditName[1, "Dual" -> False] -> 1/4|>,
+        {{{3/8, 3/8}, {3/8, 3/8}}, {{0, 0}, {0, 1/4}}}
+    },
+    TestID -> "ProbabilityStates-KeysOutOfOrder"
+]
+
+(* three outcomes, keys given out of order: outcomes, weights and kets in sorted-key order *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|"d" -> 1, "c" -> 2, "b" -> 3|>, {QuantumState["0"], QuantumState["1"], QuantumState["+"]}]},
+        {qm["Outcomes"], qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {
+        {QuditName["b", "Dual" -> False], QuditName["c", "Dual" -> False], QuditName["d", "Dual" -> False]},
+        {1/2, 1/3, 1/6},
+        {{{1/4, 1/4}, {1/4, 1/4}}, {{0, 0}, {0, 1/3}}, {{1/6, 0}, {0, 0}}}
+    },
+    TestID -> "ProbabilityStates-ThreeOutcomesKeysOutOfOrder"
+]
+
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|1 -> 1/4, 0 -> 3/4|>]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{3/4, 1/4}, {{{3/4, 0}, {0, 0}}, {{0, 0}, {0, 1/4}}}},
+    TestID -> "Probabilities-KeysOutOfOrder"
+]
+
+(* a ket on one four-level qudit and a ket on two qubits share the four-dimensional space *)
+VerificationTest[
+    With[{bell = QuantumState[{0, 1, 0, 0}, QuantumBasis["Bell"]]},
+        AllTrue[qmBranchResidual[<|0 -> 1/2, 1 -> 1/2|>, {bell, QuantumState["00"]}], PossibleZeroQ] &&
+            qmDensity[bell] =!= qmDensity[QuantumState["00"]]
+    ],
+    True,
+    TestID -> "ProbabilityStates-SameDimensionDifferentQudits"
+]
+
+(* the joint ket, not only its branches: the record's reduced state carries the
+   coherences Sqrt[w_r w_s] <psi_s|psi_r>, which no branch and no post-measurement state
+   can see *)
+VerificationTest[
+    Simplify[
+        qmDensity @ QuantumPartialTrace[
+            QuantumMeasurement[<|0 -> 1/3, 1 -> 2/3|>, {QuantumState["+"], QuantumState[{Cos[t], Exp[I phi] Sin[t]}]}]["QuantumOperator"]["State"],
+            {2}
+        ],
+        Element[{t, phi}, Reals]
+    ],
+    {{1/3, (Cos[t] + Exp[- I phi] Sin[t]) / 3}, {(Cos[t] + Exp[I phi] Sin[t]) / 3, 2/3}},
+    TestID -> "ProbabilityStates-RecordCoherences"
+]
+
+(* general case: a symbolic outcome probability, and a symbolic complex ket *)
+VerificationTest[
+    AllTrue[qmBranchResidual[<|0 -> p, 1 -> 1 - p|>, {QuantumState["0"], QuantumState["+"]}, 0 < p < 1], PossibleZeroQ],
+    True,
+    TestID -> "ProbabilityStates-SymbolicProbability"
+]
+
+VerificationTest[
+    AllTrue[qmBranchResidual[<|0 -> a, 1 -> b|>, {QuantumState["0"], QuantumState["+"]}, a > 0 && b > 0], PossibleZeroQ],
+    True,
+    TestID -> "ProbabilityStates-SymbolicUnnormalizedWeights"
+]
+
+VerificationTest[
+    Simplify[
+        qmDensity @ QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>, {QuantumState["0"], QuantumState["+"]}]["PostMeasurementState"],
+        0 < p < 1
+    ],
+    {{(1 + p) / 2, (1 - p) / 2}, {(1 - p) / 2, (1 - p) / 2}},
+    TestID -> "ProbabilityStates-SymbolicProbability-PostMeasurementState"
+]
+
+VerificationTest[
+    AllTrue[qmBranchResidual[<|0 -> 1/2, 1 -> 1/2|>, {QuantumState["0"], QuantumState[{Cos[t], Exp[I phi] Sin[t]}]}, Element[{t, phi}, Reals]], PossibleZeroQ],
+    True,
+    TestID -> "ProbabilityStates-SymbolicKet"
+]
+
+(* limit p -> 1: the other branch has zero weight and the post-measurement state is the
+   pure ket of the certain outcome *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1, 1 -> 0|>, {QuantumState["+"], QuantumState["0"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"], qmDensity[qm["PostMeasurementState"]]}
+    ],
+    {{1, 0}, {{{1/2, 1/2}, {1/2, 1/2}}, {{0, 0}, {0, 0}}}, {{1/2, 1/2}, {1/2, 1/2}}},
+    TestID -> "ProbabilityStates-CertainOutcome"
+]
+
+(* weights are normalized to probabilities, and kets to unit norm *)
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1, 1 -> 3|>, {QuantumState["0"], QuantumState["+"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{1/4, 3/4}, {{{1/4, 0}, {0, 0}}, {{3/8, 3/8}, {3/8, 3/8}}}},
+    TestID -> "ProbabilityStates-UnnormalizedWeights"
+]
+
+VerificationTest[
+    With[{qm = QuantumMeasurement[<|0 -> 1/2, 1 -> 1/2|>, {QuantumState[{1, 1}], QuantumState["0"]}]},
+        {qm["ProbabilitiesList"], qmDensity /@ qm["States"]}
+    ],
+    {{1/2, 1/2}, {{{1/4, 1/4}, {1/4, 1/4}}, {{1/2, 0}, {0, 0}}}},
+    TestID -> "ProbabilityStates-UnnormalizedKet"
+]
+
+(* numerical reference, independent of the formula: the measurement of qubit 1 of a random
+   two-qubit state, rebuilt from its own probabilities and branch kets, joint record (x)
+   system state included. The rebuilt measurement targets both qubits, so its
+   post-measurement state is not the reduced state of qubit 1 that ref gives. *)
+VerificationTest[
+    BlockRandom[
+        SeedRandom[3];
+        With[{ref = QuantumMeasurementOperator[{1}][QuantumState[Normalize[RandomComplex[{-1 - I, 1 + I}, 4]]]]},
+            With[{qm = QuantumMeasurement[AssociationThread[{0, 1}, ref["ProbabilitiesList"]], ref["States"]]},
+                Max @ Abs @ Flatten[{
+                    ref["ProbabilitiesList"] - qm["ProbabilitiesList"],
+                    (qmDensity /@ ref["States"]) - (qmDensity /@ qm["States"]),
+                    qmDensity[ref["QuantumOperator"]["State"]] - qmDensity[qm["QuantumOperator"]["State"]]
+                }]
+            ]
+        ]
+    ],
+    _ ? (# < 10^-12 &),
+    SameTest -> MatchQ,
+    TestID -> "ProbabilityStates-AgreesWithMeasurementOperator"
+]
+
+(* random kets, three outcomes on a qutrit and four on three qubits *)
+VerificationTest[
+    BlockRandom[
+        SeedRandom[7];
+        Max @ Abs @ Join[
+            qmBranchResidual[
+                AssociationThread[Range[0, 2], Normalize[RandomReal[1, 3], Total]],
+                QuantumState[Normalize[RandomComplex[{-1 - I, 1 + I}, 3]], 3] & /@ Range[3]
+            ],
+            qmBranchResidual[
+                AssociationThread[{"a", "b", "c", "d"}, Normalize[RandomReal[1, 4], Total]],
+                QuantumState[Normalize[RandomComplex[{-1 - I, 1 + I}, 8]]] & /@ Range[4]
+            ]
+        ]
+    ],
+    _ ? (# < 10^-12 &),
+    SameTest -> MatchQ,
+    TestID -> "ProbabilityStates-RandomKets"
+]
+
+(* refusals, each with its reason *)
+VerificationTest[
+    Map[
+        Replace[QuantumMeasurement @@ #, f_Failure :> f["Information"]] &,
+        {
+            {<|0 -> 1/2, 1 -> 1/2|>, {QuantumState["0"], QuantumState[IdentityMatrix[2] / 2]}},
+            {<|0 -> 1/2, 1 -> 1/2|>, {QuantumState[{1, 0}, QuantumBasis[{}, {2}]], QuantumState[{0, 1}, QuantumBasis[{}, {2}]]}},
+            {<|0 -> 1/2, 1 -> 1/2|>, {QuantumState["0"], QuantumState["00"]}},
+            {<|0 -> 1/3, 1 -> 1/3, 2 -> 1/3|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> 1|>, {QuantumState["+"]}},
+            {<|0 -> 1/2, 1 -> 1/2|>, {QuantumState["+"], QuantumState[{0, 0}]}},
+            {<|0 -> 0, 1 -> 0|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> -1, 1 -> 2|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> I, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> Infinity, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> "x", 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> Overflow[], 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> Missing[], 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> QuantumState["0"], 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> Interval[{1, 2}], 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> Around[1, 0.1], 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> True, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> $Failed, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> Undefined, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|1 -> 1, {1} -> 2|>, {QuantumState["0"], QuantumState["1"]}},
+            {<|0 -> 1, 1 -> 1|>, {QuantumState[{Indeterminate, 1}], QuantumState["1"]}},
+            {<|0 -> 1/2, 1 -> 1/2|>, {QuantumState[{1}, 1], QuantumState[{1}, 1]}}
+        }
+    ],
+    {
+        "Branch states must be kets: a density matrix has no amplitudes to place on a branch",
+        "Branch states must be kets: a density matrix has no amplitudes to place on a branch",
+        "Branch states must have the same dimension",
+        "There must be one branch state per outcome",
+        "A measurement needs at least two outcomes",
+        "Branch states must be nonzero kets",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcome weights must be nonnegative and not all zero",
+        "Outcomes must have distinct names",
+        "Branch states must have finite amplitudes",
+        "Branch states must have dimension at least two"
+    },
+    TestID -> "ProbabilityStates-Refusals"
+]
+
+(* weights that are real and nonnegative in any written form are accepted: a machine
+   number with a zero imaginary part, and an exact zero written unsimplified *)
+VerificationTest[
+    {
+        QuantumMeasurement[<|0 -> 1., 1 -> 1. + 0. I|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"],
+        QuantumMeasurement[<|0 -> Sin[1]^2 + Cos[1]^2 - 1, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"],
+        QuantumMeasurement[<|0 -> 1 + I (Sin[1]^2 + Cos[1]^2 - 1), 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"]
+    },
+    {{0.5, 0.5}, {0, 1}, {1/2, 1/2}},
+    SameTest -> (Chop[N[#1 - #2]] === {{0, 0}, {0, 0}, {0, 0}} &),
+    TestID -> "ProbabilityStates-RealWeightsInAnyForm"
+]
+
+(* weights written as indexed, user-function, formal or algebraic expressions are scalars *)
+VerificationTest[
+    {
+        Simplify[QuantumMeasurement[<|0 -> Subscript[p, 1], 1 -> Subscript[p, 2]|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"], Subscript[p, 1] > 0 && Subscript[p, 2] > 0],
+        Simplify[QuantumMeasurement[<|0 -> \[FormalP], 1 -> 1 - \[FormalP]|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"], 0 < \[FormalP] < 1],
+        QuantumMeasurement[<|0 -> g[p], 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}]["ValidQ"],
+        RootReduce[QuantumMeasurement[<|0 -> Root[#^3 - 2 &, 1], 1 -> 2^(1/3)|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"]]
+    },
+    {
+        {Subscript[p, 1] / (Subscript[p, 1] + Subscript[p, 2]), Subscript[p, 2] / (Subscript[p, 1] + Subscript[p, 2])},
+        {\[FormalP], 1 - \[FormalP]},
+        True,
+        {1/2, 1/2}
+    },
+    TestID -> "ProbabilityStates-SymbolicScalarWeights"
+]
+
+(* the qubit weights of a rotation, and weights with rational and complex coefficients *)
+VerificationTest[
+    {
+        Simplify[QuantumMeasurement[<|0 -> Cos[t / 2]^2, 1 -> Sin[t / 2]^2|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"], Element[t, Reals]],
+        Simplify[QuantumMeasurement[<|0 -> p / 2, 1 -> 1 - p / 2|>, {QuantumState["0"], QuantumState["+"]}]["ProbabilitiesList"], 0 < p < 1],
+        QuantumMeasurement[<|0 -> Sqrt[p], 1 -> Exp[- p / 2]|>, {QuantumState["0"], QuantumState["1"]}]["ValidQ"]
+    },
+    {{Cos[t / 2]^2, Sin[t / 2]^2}, {p / 2, 1 - p / 2}, True},
+    TestID -> "ProbabilityStates-SymbolicWeightsWithRationalCoefficients"
+]
+
+(* weights at the edge of machine range: no underflow on the way to the amplitudes *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> $MaxMachineNumber, 1 -> 1|>, {QuantumState["0"], QuantumState["1"]}]["ProbabilitiesList"],
+    {1., 0.},
+    SameTest -> (Chop[#1 - #2] === {0, 0} &),
+    TestID -> "ProbabilityStates-MachineRangeWeights"
+]
+
+EndTestSection[]

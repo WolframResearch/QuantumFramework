@@ -23,31 +23,68 @@ QuantumMeasurement[qs_ ? QuantumStateQ, target_ ? targetQ] := QuantumMeasurement
 
 QuantumMeasurement[qo_ ? QuantumFrameworkOperatorQ, target_ ? targetQ] := QuantumMeasurement[QuantumMeasurementOperator[qo, target]]
 
-QuantumMeasurement[proba_Association] := Enclose @ QuantumMeasurement[proba, QuantumBasis[2, ConfirmBy[Log2[Length[proba]], IntegerQ]]["BasisStates"]]
+QuantumMeasurement[proba_Association] := Enclose @ QuantumMeasurement[KeySort[proba], QuantumBasis[2, ConfirmBy[Log2[Length[proba]], IntegerQ]]["BasisStates"]]
 
-QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] /;
-    Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] :=
-QuantumMeasurement[
-    QuantumOperator[
-        QuantumState[
-            QuantumState[
-                Flatten @ Transpose[
-                    Sqrt[Values[proba]] * Through[states["Tensor"]],
-                    Cycles[{RotateRight @ Reverse @ Range[First[states]["Qudits"] + 1]}]
+(* Outcome r with weight p_r leaves the ket psi_r: with w_r = p_r / Sum_s p_s, the joint
+   record (x) system ket is Sum_r Sqrt[w_r] |r> (x) |psi_r> / |psi_r|, the record on wire 0
+   and outcome r the r-th key in sorted order; the record basis is named by the keys, which
+   must give distinct names. "Tensor" gives each ket's computational amplitudes, which are
+   normalized there, so the system wire is stored in the computational basis, on the qudits
+   of the first ket, whatever basis (orthonormal or not) the kets carry. A weight is a
+   scalar: symbolic, or numeric, real and nonnegative, kept as its real part. *)
+
+(* A numeric weight is finite, real and nonnegative. A symbolic one is a scalar expression:
+   its leaves are numbers or symbols that may stand for a number (Pi, a user symbol, a
+   formal symbol), and its heads are numeric functions, Subscript or user functions. *)
+weightSymbolQ[s_Symbol] := NumericQ[s] || Context[s] =!= "System`" ||
+    StringStartsQ[ToString[Unevaluated[s], InputForm, CharacterEncoding -> "ASCII"], "\\[Formal"]
+weightSymbolQ[_] := False
+
+weightHeadQ[h_Symbol] := MemberQ[Attributes[h], NumericFunction] || h === Subscript || Context[h] =!= "System`"
+weightHeadQ[_] := False
+
+measurementWeightQ[w_ ? NumericQ] := FreeQ[w, Overflow[] | Underflow[]] && (PossibleZeroQ[w] || PossibleZeroQ[Im[w]] && TrueQ[Re[w] > 0])
+measurementWeightQ[w_] :=
+    AllTrue[If[AtomQ[w], {w}, Level[w, {-1}]], NumberQ[#] || weightSymbolQ[#] &] &&
+    AllTrue[Cases[w, x_ /; ! AtomQ[x] :> Head[x], {0, Infinity}, Heads -> True], weightHeadQ]
+
+measurementWeight[w_] := Which[! NumericQ[w], w, PossibleZeroQ[w], 0, True, ComplexExpand[Re[w]]]
+
+QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] := Enclose[
+    ConfirmAssert[Length[proba] == Length[states], "There must be one branch state per outcome"];
+    ConfirmAssert[Length[proba] >= 2, "A measurement needs at least two outcomes"];
+    ConfirmAssert[DuplicateFreeQ[QuditName /@ Keys[proba]], "Outcomes must have distinct names"];
+    ConfirmAssert[AllTrue[states, #["VectorQ"] && #["InputDimensions"] === {} &],
+        "Branch states must be kets: a density matrix has no amplitudes to place on a branch"];
+    ConfirmAssert[SameQ @@ Through[states["Dimension"]], "Branch states must have the same dimension"];
+    ConfirmAssert[First[states]["Dimension"] >= 2, "Branch states must have dimension at least two"];
+    ConfirmAssert[AllTrue[states, FreeQ[Normal[#["Tensor"]], Indeterminate | Undefined | _DirectedInfinity | Overflow[] | Underflow[]] &],
+        "Branch states must have finite amplitudes"];
+    ConfirmAssert[NoneTrue[states, PossibleZeroQ[Norm[Flatten[#["Tensor"]]]] &], "Branch states must be nonzero kets"];
+    ConfirmAssert[AllTrue[Values[proba], measurementWeightQ] && ! PossibleZeroQ[Total[Values[proba]]],
+        "Outcome weights must be nonnegative and not all zero"];
+    With[{weights = measurementWeight /@ Values[proba], s = First[states]},
+    With[{
+        branches = KeySort @ AssociationThread[Keys[proba], Transpose[{weights, states}]],
+        total = Total[weights]
+    },
+        ConfirmBy[
+            QuantumMeasurement[
+                QuantumOperator[
+                    QuantumState[
+                        Flatten[Sqrt[#1] / Sqrt[total] Normalize[Flatten[#2["Tensor"]]] & @@@ Values[branches]],
+                        QuantumTensorProduct[
+                            QuantumBasis[QuditName /@ Keys[branches]],
+                            QuantumBasis[s["OutputDimensions"]]
+                        ]
+                    ],
+                    {Prepend[Range[s["Qudits"]], 0], {}}
                 ],
-                QuantumTensorProduct[
-                    QuantumBasis[QuditName /@ Keys[proba]],
-                    QuantumBasis[First[states]["OutputDimensions"], First[states]["InputDimensions"]]
-                ]
+                Range[s["Qudits"]]
             ],
-            QuantumTensorProduct[
-                QuantumBasis[QuditName /@ Keys[proba]],
-                First[states]["Basis"]
-            ]
-        ],
-        {Prepend[Range[First[states]["FullOutputQudits"]], 0], Range[First[states]["FullInputQudits"]]}
-    ],
-    Range[First[states]["Qudits"]]
+            QuantumMeasurementQ
+        ]
+    ]]
 ]
 
 
