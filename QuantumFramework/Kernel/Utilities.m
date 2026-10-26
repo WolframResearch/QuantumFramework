@@ -55,6 +55,8 @@ PackageScope["valuelessEntriesQ"]
 PackageScope["exactZeroQ"]
 PackageScope["zeroBaseQ"]
 PackageScope["machineRangeQ"]
+PackageScope["hermitianSpectrum"]
+PackageScope["undecidedSpectrumQ"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 
@@ -1057,11 +1059,13 @@ hermitianSpectrum[m_, p_] := With[
    alone. (The
    accuracy goal is reached on an entry that holds a zero not written as 0, such as
    4/3 + (GoldenRatio - (1 + Sqrt[5]) / 2), and the precision goal on a huge entry, as
-   Exp[10^7], without all of its digits; neither goal is negative.) *)
+   Exp[10^7], without all of its digits; neither goal is negative.) The exponent of the
+   largest entry is read by RealExponent, whose value Floor reads without the
+   Floor::meprec that Log10 of an exact entry just below a power of 10 raises. *)
 roundedEntries[m_, p_] := With[
     {entries = DeleteDuplicates[Cases[m, Except[_ ? gaussianRationalQ], {2}]]},
     {digits = Max[N[p], 20] + 3},
-    {accuracy = digits - Floor[Log10[Max[Abs[Cases[m, _ ? gaussianRationalQ, {2}]], Replace[settledValue[#, Abs] & /@ entries, _Missing -> 0, {1}], 10 ^ -3200]]]},
+    {accuracy = digits - Floor[RealExponent[Max[Abs[Cases[m, _ ? gaussianRationalQ, {2}]], Replace[settledValue[#, Abs] & /@ entries, _Missing -> 0, {1}], 10 ^ -3200]]]},
     N[Replace[m, Dispatch[(# -> valueWithin[#, Identity, {digits, Max[accuracy, digits]}]) & /@ entries], {2}], p]
 ]
 

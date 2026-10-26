@@ -604,10 +604,12 @@ VerificationTest[
     TestID -> "A33-NearlyParallelApproximateFrames"
 ]
 
-(* decimals that carry round-off beyond one rounding: a separable state plus an anti-Hermitian residue of 10^-13 or
-   10^-12, and separable states stored in machine frames {{1, 0}, {1, e}} on both qubits, e = 1/100 and 1/1000
-   (condition numbers about 200 and 2000 per qubit), whose round-off the change back to the computational frame
-   multiplies, are never read as entangled; the Bell and Werner 2/5 states in the same frames are *)
+(* decimals that carry round-off beyond one rounding: a separable state plus an anti-Hermitian residue of 10^-15
+   (2 x 2) or 10^-14 (3 x 3), within the round-off of machine numbers, and separable states stored in machine frames
+   {{1, 0}, {1, e}} on both qubits, e = 1/100 and 1/1000 (condition numbers about 200 and 2000 per qubit), whose
+   round-off the change back to the computational frame multiplies, are never read as entangled; the Bell and Werner
+   2/5 states in the same frames are. Residues of 10^-13 and 10^-12 leave a matrix that is not Hermitian at machine
+   precision, no state, and it is refused *)
 VerificationTest[
     SeedRandom[113];
     With[{
@@ -621,11 +623,13 @@ VerificationTest[
             QuantumEntangledQ[QuantumState[sep33 + 10.^-12 I herm[9], {3, 3}], Automatic, #] =!= True & /@ {Automatic, "Negativity", "Realignment"},
             QuantumEntangledQ[QuantumState[QuantumState[sep22, {2, 2}], frame[#]]] =!= True & /@ {1/100, 1/1000},
             QuantumEntangledQ[QuantumState[QuantumState[N @ Flatten @ KroneckerProduct[{1, 2}, {3, -1}] / Sqrt[50], {2, 2}], frame[#]]] =!= True & /@ {1/100, 1/1000},
-            QuantumEntangledQ[QuantumState[QuantumState[#1, {2, 2}], frame[#2]]] & @@@ {{N[{1, 0, 0, 1} / Sqrt[2]], 1/1000}, {N @ werner[2/5], 1/100}}
+            QuantumEntangledQ[QuantumState[QuantumState[#1, {2, 2}], frame[#2]]] & @@@ {{N[{1, 0, 0, 1} / Sqrt[2]], 1/1000}, {N @ werner[2/5], 1/100}},
+            QuantumEntangledQ[QuantumState[sep22 + 10.^-15 I herm[4], {2, 2}], Automatic, #] =!= True & /@ {Automatic, "Negativity", "Realignment"},
+            QuantumEntangledQ[QuantumState[sep33 + 10.^-14 I herm[9], {3, 3}], Automatic, #] =!= True & /@ {Automatic, "Negativity", "Realignment"}
         }
     ],
-    {{True, True, True}, {True, True, True}, {True, True}, {True, True}, {True, True}},
-    {},
+    {{True, True, True}, {True, True, True}, {True, True}, {True, True}, {True, True}, {True, True, True}, {True, True, True}},
+    {QuantumEntangledQ::notphysical, QuantumEntangledQ::notphysical, QuantumEntangledQ::notphysical, General::stop},
     TestID -> "A34-RoundoffFromFramesAndResidues-NeverTrue"
 ]
 
@@ -2013,6 +2017,185 @@ VerificationTest[
     ConstantArray[True, 6],
     {__},
     TestID -> "F20-CorrelationMeasuresWithoutDensityMatrix-Failure"
+]
+
+
+(* ========== H. Physical states (contract of 2026-10-25) and faults on them ========== *)
+
+(* A state is a state vector of nonzero norm, or a density matrix whose form in the computational basis is Hermitian
+   and positive semidefinite with a nonzero trace, judged at the precision of its entries; anything else is refused
+   with one message and a Failure, before any value is computed. *)
+
+(* a density matrix stored directly in the frame {|0>, (|0> + |1>)/Sqrt[2]} (x) {|0>, |1>} has the computational form
+   B.rho.B^-1, which is not Hermitian: no state, refused by both functions. A state vector is a state in any frame:
+   the coefficients (1, 0, 0, 1)/Sqrt[2] in {|0>, |+>} (x) {|0>, |+>} give negativity 1/6 and the entanglement
+   entropy of the Schmidt weights of that vector *)
+VerificationTest[
+    SeedRandom[26];
+    With[{
+        qs = QuantumState[randomMixed[4], QuantumBasis[{QuditBasis[<|"e" -> {1, 0}, "f" -> {1, 1} / Sqrt[2]|>], QuditBasis[2]}]],
+        ket = QuantumState[Normalize[{1, 0, 0, 1}], skewLocalFrame[{2, 2}]],
+        v = Normalize[{1, 0, 0, 0} + Flatten[KroneckerProduct[{1, 1}, {1, 1}]] / 2]
+    },
+        {
+            FailureQ @ QuantumEntanglementMonotone[qs, "Negativity"],
+            FailureQ @ QuantumEntangledQ[qs],
+            within[QuantumEntanglementMonotone[ket, "Negativity"], 1/6, 10^-12],
+            within[QuantityMagnitude @ QuantumEntanglementMonotone[ket, "EntanglementEntropy"], entropyBits[trB[proj[v], {2, 2}]], 10^-12]
+        }
+    ],
+    {True, True, True, True},
+    {QuantumEntanglementMonotone::notphysical, QuantumEntangledQ::notphysical},
+    TestID -> "H1-SkewFrameDensityMatrixRefusedKetRead"
+]
+
+(* Hermitian matrices with a negative eigenvalue are no states: in machine numbers the eigenvalue -1/5; exact, a
+   negative trace, or the eigenvalue -10^-30 or -10^-100, which no machine reading resolves *)
+VerificationTest[
+    With[{phiP = proj[{1, 0, 0, 1} / Sqrt[2]], phiM = proj[{1, 0, 0, -1} / Sqrt[2]]},
+        {
+            FailureQ @ QuantumEntanglementMonotone[QuantumState[{{0.5, 0, 0, 0.7}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0.7, 0, 0, 0.5}}, {2, 2}], "Negativity"],
+            FailureQ @ QuantumEntanglementMonotone[QuantumState[-werner[4/5], {2, 2}], "Negativity"],
+            FailureQ @ QuantumEntangledQ[QuantumState[(1 + 10^-30) phiP - 10^-30 phiM, {2, 2}]],
+            FailureQ @ QuantumEntangledQ[QuantumState[(1 + 10^-100) phiP - 10^-100 phiM, {2, 2}]]
+        }
+    ],
+    {True, True, True, True},
+    {QuantumEntanglementMonotone::notphysical, QuantumEntanglementMonotone::notphysical, QuantumEntangledQ::notphysical, QuantumEntangledQ::notphysical},
+    TestID -> "H2-NegativeEigenvalue-Refused"
+]
+
+(* the precision of the entries is the scale: a machine rank-2 separable 3 x 3 mixture has an eigenvalue of order
+   -10^-17, round-off of machine numbers, and is a state; given with 30 digits by SetPrecision, that eigenvalue is
+   about two trillion times the round-off cut of 30 digits, and the matrix is no state. The exact separable mixture
+   given with 30 digits by N is a state, and so are machine product states, near-boundary separable mixtures and pure
+   states turned by local unitaries, whose zero eigenvalues come out as round-off, and a machine Werner state changed
+   into the frame {{1, 0}, {1, 1/100}} on both qubits, whose round-off that frame multiplies: none is refused. The same
+   holds in other frames at 30 digits: a pure state in the PauliX frame and the exact separable mixture in the
+   Fourier and skew frames are read, the mixture given by SetPrecision is refused in the Fourier frame. Exact entries
+   are judged at their exact values: conjugate entries that are equal radicals written differently, 1/(1 + Sqrt[2])
+   and Sqrt[2] - 1, make a Hermitian matrix, and the state is read *)
+VerificationTest[
+    SeedRandom[5];
+    With[{sep = N[(proj[Flatten @ KroneckerProduct[randomKet[3], randomKet[3]]] + proj[Flatten @ KroneckerProduct[randomKet[3], randomKet[3]]]) / 2]},
+        {
+            FailureQ @ QuantumEntangledQ[QuantumState[SetPrecision[sep, 30], {3, 3}]],
+            FailureQ @ QuantumEntanglementMonotone[QuantumState[SetPrecision[sep, 30], {3, 3}], "Negativity"],
+            FailureQ @ QuantumEntangledQ[QuantumState[sep, {3, 3}]],
+            FailureQ @ QuantumEntangledQ[QuantumState[N[exactSep33, 30], {3, 3}]],
+            FailureQ @ QuantumEntangledQ[QuantumState[QuantumState[N @ werner[4/5], {2, 2}], QuantumTensorProduct[QuantumBasis[N[{{1, 0}, {1, 1/100}}]], QuantumBasis[N[{{1, 0}, {1, 1/100}}]]]]],
+            FailureQ @ QuantumEntangledQ[inLocalFrame[N[proj[Normalize[{1, 2, 0, 3}]], 30], {2, 2}, QuantumBasis["PauliX", 2]]],
+            FailureQ @ QuantumEntangledQ[inLocalFrame[N[exactSep33, 30], {3, 3}, First @ namedFrames[{3, 3}]]],
+            FailureQ @ QuantumEntangledQ[inLocalFrame[N[exactSep33, 30], {3, 3}, skewLocalFrame[{3, 3}]]],
+            FailureQ @ QuantumEntangledQ[inLocalFrame[SetPrecision[sep, 30], {3, 3}, First @ namedFrames[{3, 3}]]],
+            FailureQ @ QuantumEntangledQ[QuantumState[KroneckerProduct[{{1/2, 1 / (2 (1 + Sqrt[2]))}, {(Sqrt[2] - 1) / 2, 1/2}}, {{1/3, 0}, {0, 2/3}}], {2, 2}]],
+            Count[
+                QuantumEntangledQ /@ Join[
+                    productDMs[], nearBoundaryStates[],
+                    (SeedRandom[131]; Table[QuantumState[localUnitary[proj[randomKet[16]], haarU /@ {4, 4}], {4, 4}], 20])
+                ],
+                _Failure
+            ]
+        }
+    ],
+    {True, True, False, False, False, False, False, False, True, False, 0},
+    {QuantumEntangledQ::notphysical, QuantumEntanglementMonotone::notphysical, QuantumEntangledQ::notphysical},
+    TestID -> "H3-JudgedAtThePrecisionOfTheEntries"
+]
+
+(* symbolic entries are read for real values of the parameters: the matrix with coherence 1 + x^2 between |00> and
+   |11> and populations 1/2 has the eigenvalue -1/2 - x^2 for every real x, and is refused, with no message on the
+   parameters; the Werner family, a state for -1/3 <= p <= 1, is read as before, and so is a symbolic state holding
+   machine numbers, diag(a, 1 - a) (x) a machine rank-2 separable 3 x 3 mixture, whose round-off no exact decision
+   reads. -x^2 |Phi+><Phi+| is a state for no real x, the zero matrix at x = 0 having no trace to divide out, and is
+   refused *)
+VerificationTest[
+    SeedRandom[5];
+    Block[{x, p, a},
+        With[{
+            m = {{1/2, 0, 0, 1 + x^2}, {0, 0, 0, 0}, {0, 0, 0, 0}, {1 + x^2, 0, 0, 1/2}},
+            sep = N[(proj[Flatten @ KroneckerProduct[randomKet[3], randomKet[3]]] + proj[Flatten @ KroneckerProduct[randomKet[3], randomKet[3]]]) / 2]
+        },
+            {
+                FailureQ @ QuantumEntangledQ[QuantumState[m, {2, 2}]],
+                FailureQ @ QuantumEntanglementMonotone[QuantumState[m, {2, 2}], "Negativity"],
+                QuantumEntangledQ[QuantumState[werner[p], {2, 2}]],
+                FailureQ @ QuantumEntangledQ[QuantumState[KroneckerProduct[{{a, 0}, {0, 1 - a}}, sep], {2, 3, 3}]],
+                FailureQ @ QuantumEntangledQ[QuantumState[-x^2 proj[{1, 0, 0, 1} / Sqrt[2]], {2, 2}]]
+            }
+        ]
+    ],
+    {True, True, Indeterminate, False, True},
+    {QuantumEntangledQ::notphysical, QuantumEntanglementMonotone::notphysical, QuantumEntangledQ::realparameters, QuantumEntangledQ::realparameters, QuantumEntangledQ::notphysical},
+    TestID -> "H4-SymbolicStatesReadForRealParameters"
+]
+
+(* entropies of ten qubits and more: the maximally mixed state of ten qubits has 10 bits; a machine pure state of ten
+   qubits held as a density matrix is pure, of entropy 0; I/256 (x) |Phi+> on ten qubits, split as qubits 1-9 against
+   qubit 10, has mutual information 2 bits, of which J, with qubit 10 measured in the computational basis, is 1 bit and
+   the discord 1 bit; the exact product of ten copies of a mixed qubit state, not diagonal, has ten times its entropy *)
+VerificationTest[
+    SeedRandom[137];
+    With[{pure = QuantumState[proj[randomKet[1024]], ConstantArray[2, 10]], qs = QuantumState[N @ KroneckerProduct[IdentityMatrix[256] / 256, proj[{1, 0, 0, 1} / Sqrt[2]]], ConstantArray[2, 10]]},
+        {
+            QuantumState[IdentityMatrix[1024] / 1024, ConstantArray[2, 10]]["VonNeumannEntropy"],
+            pure["PureStateQ"],
+            pure["VonNeumannEntropy"],
+            Max[Abs[QuantityMagnitude[QuantumEntanglementMonotone[qs, {Range[9], {10}}, #] & /@ {"MutualInformationI", "MutualInformationJ", "Discord"}] - {2, 1, 1}]] < 10^-8,
+            With[{q = {{2/3, 1/5}, {1/5, 1/3}}},
+                within[QuantityMagnitude @ QuantumState[KroneckerProduct @@ ConstantArray[q, 10], ConstantArray[2, 10]]["VonNeumannEntropy"], 10 entropyBits[N[q]], 10^-10]
+            ]
+        }
+    ],
+    {Quantity[10, "Bits"], True, Quantity[0, "Bits"], True, True},
+    TestID -> "H5-EntropiesOfTenQubits"
+]
+
+(* a symbolic pure density matrix written without Conjugate, Outer[Times, v, v] with v = (Cos[t], 0, 0, Sin[t]), is for
+   real t the state Outer[Times, v, Conjugate[v]]: its entanglement entropy and Renyi entropy of order 2 are those of
+   the Schmidt weights Cos[t]^2 and Sin[t]^2. With v = (Cos[t], 0, 0, I Sin[t]) the matrix is not Hermitian for real t
+   but at multiples of Pi/2, is not taken as pure, and has no entanglement entropy; nor has diag(1, s^2, -s^2/(1 + s^2), 0),
+   Hermitian with Tr[rho^2] = Tr[rho]^2 but a negative eigenvalue for every real s other than 0 *)
+VerificationTest[
+    Block[{t},
+        With[{qs = QuantumState[Outer[Times, #, #] & @ {Cos[t], 0, 0, Sin[t]}, {2, 2}]},
+            With[{values = QuantityMagnitude[QuantumEntanglementMonotone[qs, #] & /@ {"EntanglementEntropy", {"RenyiEntropy", 2}}]},
+                {
+                    Max @ Table[
+                        Abs[N[values /. t -> s] - {entropyBits[DiagonalMatrix[{Cos[s]^2, Sin[s]^2}]], - Log2[Cos[s]^4 + Sin[s]^4]}],
+                        {s, {0.3, 1.1, 2.5}}
+                    ] < 10^-12,
+                    QuantumEntanglementMonotone[QuantumState[Outer[Times, #, #] & @ {Cos[t], 0, 0, I Sin[t]}, {2, 2}], "EntanglementEntropy"],
+                    Block[{s}, QuantumEntanglementMonotone[QuantumState[DiagonalMatrix[{1, s^2, -s^2 / (1 + s^2), 0}], {2, 2}], "EntanglementEntropy"]]
+                }
+            ]
+        ]
+    ],
+    {True, Indeterminate, Indeterminate},
+    {QuantumEntanglementMonotone::mixedentropy, QuantumEntanglementMonotone::mixedentropy},
+    TestID -> "H6-SymbolicPureDensityMatrixWithoutConjugate"
+]
+
+(* a measurement given to J and the discord measures the second part: a qubit measurement on a qutrit part is refused;
+   a qutrit measurement there gives the reference J, and on two qubits a measurement of X on the second, given on
+   both parts with the second as its target, gives J for the X basis *)
+xBasisJ[rho_] := With[{branches = Function[u, With[{pb = KroneckerProduct[IdentityMatrix[2], proj[u]]}, pb . rho . pb]] /@ {{1, 1} / Sqrt[2], {1, -1} / Sqrt[2]}},
+    entropyBits[trB[rho, {2, 2}]] - Total[If[Re[Tr[#]] > 10^-13, Re[Tr[#]] entropyBits[trB[# / Tr[#], {2, 2}]], 0] & /@ branches]
+];
+
+VerificationTest[
+    SeedRandom[139];
+    With[{rho23 = randomMixed[6], rho22 = randomMixed[4]},
+        {
+            FailureQ @ QuantumEntanglementMonotone[QuantumState[rho23, {2, 3}], QuantumMeasurementOperator[QuantumBasis[2]], "MutualInformationJ"],
+            FailureQ @ QuantumEntanglementMonotone[QuantumState[rho23, {2, 3}], QuantumMeasurementOperator[QuantumBasis[2]], "Discord"],
+            within[QuantityMagnitude @ QuantumEntanglementMonotone[QuantumState[rho23, {2, 3}], QuantumMeasurementOperator[QuantumBasis[3]], "MutualInformationJ"], First @ discordRefs[rho23, {2, 3}], 10^-10],
+            within[QuantityMagnitude @ QuantumEntanglementMonotone[QuantumState[rho22, {2, 2}], QuantumMeasurementOperator[QuantumOperator["IX"], {2}], "MutualInformationJ"], xBasisJ[rho22], 10^-10]
+        }
+    ],
+    {True, True, True, True},
+    {QuantumEntanglementMonotone::measurement, QuantumEntanglementMonotone::measurement},
+    TestID -> "H7-GivenMeasurementMeasuresTheSecondPart"
 ]
 
 
