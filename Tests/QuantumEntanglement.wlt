@@ -568,22 +568,21 @@ VerificationTest[
 ]
 
 
-(* ========== Non-physical (non-PSD) input warning ========== *)
+(* ========== Non-physical input refused ========== *)
 
-(* a Hermitian 2-qubit matrix with a negative eigenvalue is not a physical state; a monotone still returns
-   a number but warns, since the value is meaningless there *)
+(* a Hermitian 2-qubit matrix with a negative eigenvalue is not a physical state, and a monotone refuses it *)
 VerificationTest[
     QuantumEntanglementMonotone[
         QuantumState[{{0.5, 0, 0, 0.7}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0.7, 0, 0, 0.5}}, {2, 2}],
         "Negativity"
     ],
-    _ ? NumericQ,
+    _Failure,
     {QuantumEntanglementMonotone::notphysical},
     SameTest -> MatchQ,
-    TestID -> "Monotone-NonPSD-Warns"
+    TestID -> "Monotone-NonPSD-Refused"
 ]
 
-(* a physical mixed state does not warn *)
+(* a physical mixed state is read without a message *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[N @ werner[4/5], {2, 2}], "Negativity"],
     _ ? NumericQ,
@@ -592,47 +591,45 @@ VerificationTest[
     TestID -> "Monotone-PSD-NoWarn"
 ]
 
-(* A monotone computes from its input divided by the trace (a state vector divided by its norm), so the
-   warning is judged on that matrix: a non-physical matrix warns and a physical one is silent at any scale,
-   a machine one for a machine matrix and a rational one for a matrix of exact rational or complex rational
-   entries, at which the entries and a state vector's squared norm stay in the normal range of machine
-   numbers and no quantity compared with a tolerance moves across it by round-off. A matrix that is not
-   Hermitian is not a state even with a positive spectrum, and neither is one whose trace is 0, negative,
-   or not real. Each warning test makes one call, so the declared message is pinned to that call. *)
+(* A monotone computes from its input divided by the trace (a state vector divided by its norm), and the
+   matrix is judged relative to its own scale: a non-physical matrix is refused and a physical one is read
+   without a message at any scale, a machine one for a machine matrix and a rational one for a matrix of exact
+   rational or complex rational entries. A matrix that is not Hermitian is not a state even with a positive
+   spectrum, and neither is one whose trace is 0, negative, or not real. Each refusal test makes one call, so
+   the declared message is pinned to that call. *)
 
 nonHermitian = KroneckerProduct[#, #] &[{{1/2, 1}, {0, 1/2}}];   (* trace 1, the eigenvalue 1/4 four times *)
 pureDM = Outer[Times, #, Conjugate[#]] &[Normalize[{1, 2, 3, 4 I}]];   (* a pure state as a density matrix *)
 
-(* the non-physical matrix above, scaled by 10^-9, still warns and gives its unscaled negativity *)
+(* the non-physical matrix above, scaled by 10^-9, is refused as well *)
 VerificationTest[
-    Chop[
-        QuantumEntanglementMonotone[
-            QuantumState[1.*^-9 {{0.5, 0, 0, 0.7}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0.7, 0, 0, 0.5}}, {2, 2}],
-            "Negativity"
-        ] - 7/10
+    QuantumEntanglementMonotone[
+        QuantumState[1.*^-9 {{0.5, 0, 0, 0.7}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0.7, 0, 0, 0.5}}, {2, 2}],
+        "Negativity"
     ],
-    0,
+    _Failure,
     {QuantumEntanglementMonotone::notphysical},
-    TestID -> "Monotone-NonPSD-Scaled-Warns"
+    SameTest -> MatchQ,
+    TestID -> "Monotone-NonPSD-Scaled-Refused"
 ]
 
-(* a matrix that is not Hermitian warns though its eigenvalues are positive *)
+(* a matrix that is not Hermitian is refused though its eigenvalues are positive *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[nonHermitian, {2, 2}], "Negativity"],
-    _ ? NumericQ,
+    _Failure,
     {QuantumEntanglementMonotone::notphysical},
     SameTest -> MatchQ,
-    TestID -> "Monotone-NonHermitian-Warns"
+    TestID -> "Monotone-NonHermitian-Refused"
 ]
 
-(* in machine numbers and scaled by 10^-9 it still warns: every entry of the scaled matrix lies below the
-   10^-8 tolerance of the Hermiticity test, which therefore runs on the matrix divided by its trace *)
+(* in machine numbers and scaled by 10^-9 it is refused as well: every entry of the scaled matrix lies below
+   10^-8, and the Hermiticity test reads it relative to its largest entry *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[1.*^-9 N[nonHermitian], {2, 2}], "Negativity"],
-    _ ? NumericQ,
+    _Failure,
     {QuantumEntanglementMonotone::notphysical},
     SameTest -> MatchQ,
-    TestID -> "Monotone-NonHermitian-Scaled-Warns"
+    TestID -> "Monotone-NonHermitian-Scaled-Refused"
 ]
 
 (* a zero trace cannot be divided out: the zero vector is refused *)
@@ -644,13 +641,14 @@ VerificationTest[
     TestID -> "Monotone-ZeroKet-Refused"
 ]
 
-(* a negative trace warns at any scale: -10^-9 times the Werner state has no eigenvalue below -10^-8, and the
-   division by its trace hands the monotone the Werner state itself, so it returns the Werner negativity *)
+(* a negative trace is refused at any scale: -10^-9 times the Werner state has no eigenvalue below -10^-8, but
+   every one of its nonzero eigenvalues is negative *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[-10^-9 werner[4/5], {2, 2}], "Negativity"],
-    7/20,
+    _Failure,
     {QuantumEntanglementMonotone::notphysical},
-    TestID -> "Monotone-NegativeTrace-Warns"
+    SameTest -> MatchQ,
+    TestID -> "Monotone-NegativeTrace-Refused"
 ]
 
 (* a physical state is silent at any scale: the Werner state times 10^-9, and a pure state times 10^9, whose
@@ -667,8 +665,8 @@ VerificationTest[
 ]
 
 (* 10^-300 times the Werner state lies in the normal range of machine numbers, and its trace is judged
-   against its scale without forming a number below that range: the monotone neither warns nor raises
-   General::munfl *)
+   against its scale without forming a number below that range: the monotone reads it without a message and
+   raises no General::munfl *)
 VerificationTest[
     Chop[QuantumEntanglementMonotone[QuantumState[1.*^-300 N @ werner[4/5], {2, 2}], "Negativity"] - 7/20],
     0,
@@ -678,7 +676,7 @@ VerificationTest[
 
 (* a trace whose sign Positive cannot decide is not taken for a negative or non-real one: the density matrix
    of the ket (1 + I Sqrt[2]) |00> + |11> has the trace (1 + I Sqrt[2]) (1 - I Sqrt[2]) + 1, which is 4,
-   and gives the negativity of the normalized ket without a warning *)
+   and gives the negativity of the normalized ket without a message *)
 VerificationTest[
     Chop[
         N @ QuantumEntanglementMonotone[
@@ -718,7 +716,7 @@ VerificationTest[
 ]
 
 (* the entropies, as every monotone, refuse a single qubit, which has no split, before anything is computed: a
-   qubit with the eigenvalue -1/5 gets that one message, not the warning *)
+   qubit with the eigenvalue -1/5 gets that one message, not the refusal of a non-physical state *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{{0.5, 0.7}, {0.7, 0.5}}], "EntanglementEntropy"],
     _Failure,
@@ -739,9 +737,9 @@ VerificationTest[
    the sign of zR or trig2, and Equal cannot decide zR3 == 0 until RootReduce reduces it. QuantumState stores
    the ket {zR, zR, zR, 1} in a SparseArray whose default element is zR, and the helper reads it as the
    nonzero vector it is. The sign of a trace scaled by trig2 stays undecided, and the matrix is then judged
-   as given. tA is positive, of order 10^-200, so the trace 1 + I tA is not real. These pin the helper's
-   verdict, which decides the warning, without the messages the monotones' own arithmetic on such entries
-   gives. *)
+   as given. tA is positive, of order 10^-200, so the trace 1 + I tA is not real. These pin the verdict of
+   QuantumDistance's helper, which decides its notphysical warning, without the messages the monotones' own
+   arithmetic on such entries gives. *)
 
 zR = Sqrt[3 + 2 Sqrt[2]] - 1 - Sqrt[2];
 zR3 = Expand[(Sqrt[3 + 2 Sqrt[2]] - Sqrt[2])^2] - 1;
@@ -759,7 +757,7 @@ VerificationTest[
 ]
 
 (* an exact rational is compared as it is: a ket whose squared norm is 10^-400, below the machine range, is
-   physical, and neither warns nor raises General::munfl *)
+   physical, is read without a message and raises no General::munfl *)
 VerificationTest[
     QuantumEntanglementMonotone[QuantumState[{10^-200, 0, 0, 0}, {2, 2}], "Negativity"],
     _ ? NumericQ,

@@ -283,6 +283,11 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result = Enclose @ Which[
         qs["StateType"] === "Vector",
         computableState[qs],
+        (* a pure density matrix of 2^10 dimensions or more, whose eigensystem takes seconds, or a minute when exact, gives
+           a state vector v with v.v^dagger = rho directly: its column with the largest diagonal entry, divided by the
+           square root of that entry *)
+        qs["PureStateQ"] && qs["Dimension"] >= 2 ^ 10,
+        With[{m = qs["DensityMatrix"]}, With[{k = First @ Ordering[Abs @ Normal @ Diagonal[m], -1]}, SparseArray[m[[All, k]] / Sqrt[m[[k, k]]]]]],
         qs["PureStateQ"],
         Module[{eigenvalues = Chop[qs["Eigenvalues"]], pick},
             pick = ConfirmBy[Map[# =!= 0 &, eigenvalues], Apply[Or]];
@@ -606,18 +611,29 @@ QuantumStateProp[qs_, "Eigenstates", opts___] := QuantumState[#, qs["Basis"]] & 
 
 (* entropy *)
 
-QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := Enclose[With[{
-        matrix = qs["NormalizedDensityMatrix"]
-    },
+(* The entropy is read off the eigenvalues of the density matrix: those of a diagonal matrix are its diagonal entries,
+   which spares the exact eigenvalue computation of a large one. A numeric matrix of 2^10 dimensions or more is read
+   in machine numbers, since its exact eigenvalues are out of reach and Simplify of an exact sum of that many distinct
+   logarithms takes up to a minute; a diagonal one whose entries take at most 16 values, the maximally mixed state of
+   ten qubits among them, is read exactly, its sum having at most 16 distinct terms. Any other matrix is read in its
+   dense form, of which Eigenvalues gives every eigenvalue without the message it gives on a large sparse array. A
+   symbolic matrix of 2^10 dimensions or more is not read: its entropy is Indeterminate. *)
+QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := Enclose[
     If[
         qs["PureStateQ"],
         0,
-        ConfirmAssert[qs["Dimension"] < 2 ^ 10];
-        Chop[Simplify[Total[- # Log[logBase, #]] & @ Normalize[Select[qs["Eigenvalues"], ! NumericQ[#] || # != 0 &], Total]]]
-    ]
-],
+        ConfirmAssert[qs["Dimension"] < 2 ^ 10 || qs["NumericQ"]];
+        Chop[Simplify[Total[- # Log[logBase, #]] & @ Normalize[Select[densityMatrixEigenvalues[qs["DensityMatrix"]], ! NumericQ[#] || # != 0 &], Total]]]
+    ],
     Indeterminate &
 ]
+
+densityMatrixEigenvalues[m_] := With[{diagonalQ = DiagonalMatrixQ[m, Tolerance -> 0]}, Which[
+    diagonalQ && (Length[m] < 2 ^ 10 || Length[DeleteDuplicates[Diagonal[m]]] <= 16), Diagonal[m],
+    diagonalQ, Diagonal[N[m]],
+    Length[m] >= 2 ^ 10, Eigenvalues[N[Normal[m]]],
+    True, Eigenvalues[Normal[m]]
+]]
 
 QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy"] := Quantity[qs["VonNeumannEntropy", 2], "Bits"]
 
@@ -629,11 +645,18 @@ QuantumStateProp[qs_, "LogicalEntropy"] := 1 - Tr[MatrixPower[qs["NormalizedDens
 
 (* purity *)
 
+(* Tr[rho^2], summed over the entries as Total[rho Transpose[rho], 2], which takes n^2 products where the matrix square
+   takes n^3. A numeric matrix of 2^10 dimensions or more is summed in machine numbers: Simplify of an exact sum of
+   that many terms, the exponentials of a thermal state among them, takes minutes, and "Type" and "PureStateQ" read
+   the purity. A symbolic matrix of that size is not read, its purity is Indeterminate: Simplify of its sum takes
+   minutes when its diagonal entries are distinct parameters. *)
 QuantumStateProp[qs_, "Purity"] := Enclose[
     If[ qs["StateType"] === "Vector",
         1,
-        ConfirmAssert[qs["Dimension"] < 2 ^ 10];
-        Simplify @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]]
+        ConfirmAssert[qs["Dimension"] < 2 ^ 10 || qs["NumericQ"]];
+        With[{m = ConfirmBy[If[qs["Dimension"] < 2 ^ 10, qs["NormalizedDensityMatrix"], normalizeMatrix[N[qs["DensityMatrix"]]]], MatrixQ]},
+            Simplify @ Abs[Total[m Transpose[m], 2]]
+        ]
     ],
     Indeterminate &
 ]
