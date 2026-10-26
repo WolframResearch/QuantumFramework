@@ -17,8 +17,10 @@ Package["Wolfram`QuantumFramework`"]
 (* formalism's O(n^2) advantage. UpValues stay in the tableau when they can.    *)
 (*                                                                              *)
 (* Dispatch ladder for qmo[ps]:                                                 *)
-(*   1. QMO basis is a Pauli string  -> ps["M", pauli], stays in tableau,       *)
-(*                                       concrete or symbolic signs alike.      *)
+(*   1. QMO basis is a Pauli string  -> ps["M", pauli] for the joint parity,    *)
+(*                                       ps["M", {p_1, ...}] one wire at a time *)
+(*                                       for the resolved eigenbasis; stays in  *)
+(*                                       tableau, concrete or symbolic signs.   *)
 (*   2. QMO basis is non-Pauli, concrete signs -> emits                         *)
 (*                                       PauliStabilizer::nonpaulibasis and     *)
 (*                                       materializes through qmo[ps["State"]]. *)
@@ -38,6 +40,7 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope[stabilizerPauliLabelFromQMO]
 PackageScope[stabilizerPauliRegisterLabel]
+PackageScope[stabilizerPauliMeasurementLabel]
 PackageScope[stabilizerPauliFromMatrix]
 PackageScope[$stabilizerPauliMatrixSearchMaxQubits]
 
@@ -188,6 +191,49 @@ stabilizerPauliLabelMatchesMatrixQ[label_String, matrix_, target_List] := With[{
         stabilizerArrayZeroQ[SparseArray[matrix] - stabilizerPauliSparseMatrix[stabilizerPauliLabelReorder[label, target, Sort[target]]]]
 ]
 
+(* A two-outcome qubit instrument with eigenvalues -1 and 1, the form          *)
+(* "Lueders"[QuantumOperator[pauli]] builds, measures the joint Pauli string    *)
+(* P when its Kraus operator of eigenvalue v is the projector (1 + v P) / 2.    *)
+(* Its operator stacks the two projectors over the eigenvalue qudit, indexed by *)
+(* sorted wires. The candidate P comes from the label "Eigen"[label] when that  *)
+(* parses, and otherwise from the capped matrix search on the observable        *)
+(* Sum_v v (1 + v P) / 2 = P; either way the projectors decide.                 *)
+stabilizerPauliParityMatchQ[label_String, blocks_List, values_List, target_List] := With[{n = Length[target]},
+    Length[Last[stabilizerPauliSignLetters[label]]] == n &&
+        With[{p = stabilizerPauliSparseMatrix[stabilizerPauliLabelReorder[label, target, Sort[target]]]},
+            AllTrue[Transpose[{blocks, values}], stabilizerArrayZeroQ[First[#] - (IdentityMatrix[2 ^ n, SparseArray] + Last[#] p) / 2] &]
+        ]
+]
+
+stabilizerPauliParityLabel[qmo_QuantumMeasurementOperator] := With[{op = qmo["Operator"], target = qmo["InputOrder"]},
+    If[ ! AllTrue[op["InputDimensions"], EqualTo[2]] || op["OutputDimensions"] =!= Prepend[op["InputDimensions"], 2] ||
+            Sort[First /@ qmo["EigenvalueVectors"]] =!= {-1, 1},
+        $unmatchedPauliLabel,
+        With[{
+            d = 2 ^ Length[target],
+            m = SparseArray[op["MatrixRepresentation"]],
+            values = First /@ qmo["EigenvalueVectors"]
+        },
+            With[{blocks = {m[[;; d]], m[[d + 1 ;;]]}},
+                Replace[
+                    Replace[op["Label"], {"Eigen"[inner_] :> stabilizerPauliLabelParse[inner], _ -> $unmatchedPauliLabel}],
+                    {
+                        label_String /; stabilizerPauliParityMatchQ[label, blocks, values, target] :> label,
+                        _ :> Replace[
+                            If[Length[target] <= $stabilizerPauliMatrixSearchMaxQubits, stabilizerPauliFromMatrix[values . blocks, Length[target]], $unmatchedPauliLabel],
+                            {
+                                hit_String /; stabilizerPauliParityMatchQ[stabilizerPauliLabelReorder[hit, Sort[target], target], blocks, values, target] :>
+                                    stabilizerPauliLabelReorder[hit, Sort[target], target],
+                                _ -> $unmatchedPauliLabel
+                            }
+                        ]
+                    }
+                ]
+            ]
+        ]
+    ]
+]
+
 stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
     op, matched, matrix, target, n, matSearch
 },
@@ -218,6 +264,10 @@ stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
             If[StringQ[matSearch], Return[stabilizerPauliLabelReorder[matSearch, Sort[target], target]]]
         ]
     ];
+
+    (* A two-outcome Pauli parity instrument ("Lueders"[QuantumOperator[pauli]]). *)
+    matched = stabilizerPauliParityLabel[qmo];
+    If[StringQ[matched], Return[matched]];
 
     Missing["NonPauliBasis"]
 ]
@@ -256,6 +306,46 @@ stabilizerPauliRegisterLabel[qmo_QuantumMeasurementOperator, n_Integer] := With[
 
 
 (* ============================================================================ *)
+(* Helper: the Pauli measurement the tableau performs for a Pauli QMO.          *)
+(*                                                                              *)
+(* A QMO's operator stacks one Kraus operator per level of an eigenvalue qudit  *)
+(* in front of its input qudits, and the number of levels says what it reads.   *)
+(* QF's Pauli-named measurement QuantumMeasurementOperator["P1...Pk", wires]    *)
+(* resolves the eigenbasis: one level per product eigenvector, the product of   *)
+(* the input dimensions, so it reads each wire's letter on its own, and an "I"  *)
+(* letter reads the computational basis, as Z does. Its outcomes run over the   *)
+(* wires in sorted order, the first sorted wire most significant, "+" before    *)
+(* "-": on a Bell pair "ZZ" has the four outcomes z+z+, z+z-, z-z+, z-z- and    *)
+(* dephases the pair. For a square observable, or a two-outcome parity         *)
+(* instrument ("Lueders"[QuantumOperator[pauli]], recognized by its projectors  *)
+(* in stabilizerPauliParityLabel), the tableau measures the joint Pauli string, *)
+(* one parity bit, which leaves the Bell pair intact.                           *)
+(*                                                                              *)
+(* stabilizerPauliMeasurementLabel gives the register label of the joint        *)
+(* measurement, or, for the resolved measurement, the list of single-letter     *)
+(* register labels, one per wire in sorted order, which ps["M", {...}] measures *)
+(* in turn with keys {b_1, ..., b_k} in that order. On one wire the two         *)
+(* readings are one measurement, so a signed one-letter label (a two-outcome    *)
+(* "Lueders"[-P]) stays the joint register label; a signed label on the         *)
+(* resolved shape of two or more wires names no product basis and comes back as *)
+(* Missing[]; $Failed and every other Missing[] from                            *)
+(* stabilizerPauliRegisterLabel pass through.                                   *)
+(* ============================================================================ *)
+
+stabilizerPauliResolvedQ[qmo_QuantumMeasurementOperator] := With[{dims = qmo["Operator"]["InputDimensions"]},
+    qmo["Operator"]["OutputDimensions"] === Prepend[dims, Times @@ dims]
+]
+
+stabilizerPauliMeasurementLabel[qmo_QuantumMeasurementOperator, n_Integer] := Replace[stabilizerPauliRegisterLabel[qmo, n], {
+    label_String /; stabilizerPauliResolvedQ[qmo] :> Replace[stabilizerPauliSignLetters[label], {
+        {"", letters_} :> (stabilizerPauliLabelOnRegister[Replace[letters[[#]], "I" -> "Z"], {#}, n] & /@ Sort[qmo["InputOrder"]]),
+        _ /; Length[qmo["InputOrder"]] == 1 :> label,
+        _ :> Missing["SignedResolvedLabel"]
+    }]
+}]
+
+
+(* ============================================================================ *)
 (* PauliStabilizer::nonpaulibasis -- fired when a non-Pauli QMO/channel acts    *)
 (* on a stabilizer-form input. Currently falls back to the generic              *)
 (* PauliStabilizerApply circuit-conversion path. A future StabilizerFrame       *)
@@ -275,14 +365,18 @@ PauliStabilizer::target = "Hybrid interop: measurement wires `1` do not fit the 
 (*   PauliStabilizer)                                                           *)
 (*                                                                              *)
 (* Fast path: when the QMO's Operator label parses as a Pauli string, pad it  *)
-(* to the tableau's register (stabilizerPauliRegisterLabel) and route to       *)
-(* ps["M", pauliString], the existing AG measurement primitive                 *)
+(* to the tableau's register (stabilizerPauliMeasurementLabel) and route to    *)
+(* ps["M", pauliString], or for the resolved eigenbasis to one single-letter   *)
+(* ps["M", ...] per wire in sorted order, the existing AG measurement           *)
+(* primitive                                                                    *)
 (* (Stabilizer/PauliMeasure.m), which carries symbolic signs (SymPhase         *)
-(* states) as well as concrete ones. Stays in the tableau, O(n^2), for any     *)
-(* Pauli operator whose label names it; checking a square observable's label   *)
-(* against its matrix costs time proportional to the matrix's 2^n stored       *)
-(* entries. A label-free matrix operator is identified by the capped matrix    *)
-(* search first.                                                               *)
+(* states) as well as concrete ones. Stays in the tableau for any Pauli        *)
+(* operator whose label names it: each single-letter or joint measurement is   *)
+(* O(n^2) per kept branch, and the resolved measurement on k wires keeps up to *)
+(* 2^k branches, one per outcome of nonzero probability. Checking a square     *)
+(* observable's label against its matrix costs time proportional to the       *)
+(* matrix's 2^n stored entries. A label-free matrix operator is identified by  *)
+(* the capped matrix search first.                                            *)
 (*                                                                              *)
 (* Fallback: a non-Pauli basis on a concrete tableau emits ::nonpaulibasis and *)
 (* materializes through the dense state-vector path. Symbolic signs cannot be  *)
@@ -291,10 +385,14 @@ PauliStabilizer::target = "Hybrid interop: measurement wires `1` do not fit the 
 (* ============================================================================ *)
 
 qmo_QuantumMeasurementOperator[ps_PauliStabilizer] ^:= With[{
-    label = stabilizerPauliRegisterLabel[qmo, ps["Qubits"]]
+    label = stabilizerPauliMeasurementLabel[qmo, ps["Qubits"]]
 },
     Replace[label, {
         pauli_String :> ps["M", pauli],
+        (* Resolved measurement: one wire keeps the keys 0, 1; k wires measure  *)
+        (* their letters in sorted-wire order, keyed {b_1, ..., b_k}.          *)
+        {pauli_String} :> ps["M", pauli],
+        paulis : {__String} :> ps["M", paulis],
         (* A wire outside the register: PauliStabilizer::target has fired.       *)
         $Failed -> $Failed,
         (* Non-Pauli basis: fire a single PauliStabilizer::nonpaulibasis notice *)
@@ -302,7 +400,7 @@ qmo_QuantumMeasurementOperator[ps_PauliStabilizer] ^:= With[{
         (* through PauliStabilizerApply (which would also emit ::nonclifford   *)
         (* for the same input).                                                 *)
         _ :> (Message[PauliStabilizer::nonpaulibasis]; qmo[ps["State"]])
-    }] /; StringQ[label] || FailureQ[label] || ConcretePauliStabilizerQ[ps]
+    }] /; StringQ[label] || MatchQ[label, {__String}] || FailureQ[label] || ConcretePauliStabilizerQ[ps]
 ]
 
 

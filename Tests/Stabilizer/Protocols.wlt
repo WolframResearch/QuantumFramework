@@ -50,8 +50,14 @@ $stabilizerInputs = {
 };
 stabilizerInput[name_String] := SelectFirst[$stabilizerInputs, First[#] === name &]
 
-(* Sorted outcome keys of a Pauli measurement operator on the named wires. *)
-outcomeBits[ps_, label_String, wires_List] := Sort @ Keys @ QuantumMeasurementOperator[label, wires][ps]
+(* Sorted outcome keys of the parity measurement ("Lueders") of the Pauli string *)
+(* label placed on the named wires, one letter per wire: one bit, 0 for +1.      *)
+outcomeBits[ps_, label_String, wires_List] := Sort @ Keys @ QuantumMeasurementOperator["Lueders"[QuantumOperator[label, wires]]][ps]
+
+(* Sorted outcome keys of a logical operator spanning the whole register, read  *)
+(* with the tableau's own joint measurement ps["M", label], which builds no     *)
+(* 2^n-dimensional instrument.                                                  *)
+logicalBits[ps_, label_String] := Sort @ Keys @ ps["M", label]
 
 (* Signed Pauli strings for reference tableaux: an n-letter string from a       *)
 (* wire -> letter association (identity elsewhere), and a sign prefix.           *)
@@ -464,7 +470,7 @@ VerificationTest[
                 tableauSymplecticQ[cluster],
                 DeleteDuplicates @ Table[outcomeBits[cluster, "XZZ", {k, k - 1, k + 1}], {k, 2, n - 1}],
                 DeleteDuplicates @ Table[outcomeBits[cluster, "XZZ", {k - 1, k, k + 1}], {k, 2, n - 1}],
-                AllTrue[Flatten @ Table[Values @ QuantumMeasurementOperator["XZZ", {k - 1, k, k + 1}][cluster], {k, 2, n - 1}], tableauSymplecticQ],
+                AllTrue[Flatten @ Table[Values @ QuantumMeasurementOperator["Lueders"[QuantumOperator["XZZ", {k - 1, k, k + 1}]]][cluster], {k, 2, n - 1}], tableauSymplecticQ],
                 Table[cluster["Entropy", cut], {cut, $clusterCuts}]
             }
         ]
@@ -479,8 +485,9 @@ VerificationTest[
 (* STEANE CODE -- the [[7,1,3]] CSS code on the Hamming supports {1,3,5,7},     *)
 (* {2,3,6,7}, {4,5,6,7}: column j of the parity-check matrix is the binary      *)
 (* expansion of j. Encoding by the synthesized circuit through the bracket      *)
-(* form; syndrome extraction by six four-letter measurements, each on its own   *)
-(* four wires of the seven, carrying the post-measurement tableau forward;      *)
+(* form; syndrome extraction by six four-letter parity measurements            *)
+(* ("Lueders"), each on its own four wires of the seven, carrying the           *)
+(* post-measurement tableau forward;                                            *)
 (* single-qubit Pauli errors injected as one-gate circuits on each of the       *)
 (* logical states |0_L>, |1_L> and |+_L> (transversal H on |0_L>); correction   *)
 (* by the decoded Pauli. The syndrome never depends on the logical state.       *)
@@ -490,8 +497,8 @@ $hammingSupports = {{1, 3, 5, 7}, {2, 3, 6, 7}, {4, 5, 6, 7}};
 
 (* The three Z-type checks, then the three X-type checks. *)
 $steaneChecks = Join[
-    QuantumMeasurementOperator["ZZZZ", #] & /@ $hammingSupports,
-    QuantumMeasurementOperator["XXXX", #] & /@ $hammingSupports
+    QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZZZ", #]]] & /@ $hammingSupports,
+    QuantumMeasurementOperator["Lueders"[QuantumOperator["XXXX", #]]] & /@ $hammingSupports
 ];
 
 (* Sequential syndrome extraction: <|"Syndrome" -> six sorted key lists,        *)
@@ -522,7 +529,7 @@ $steaneLogicalStates = With[{code = PauliStabilizer["SteaneCode"]},
 VerificationTest[
     With[{code = $steaneLogicalStates["0L"]},
         With[{encoded = code["Circuit"][PauliStabilizer[7]]},
-            {closedFormOverlap[encoded, code], steaneExtract[encoded]["Syndrome"], outcomeBits[encoded, "ZZZZZZZ", Range[7]], tableauSymplecticQ[encoded]}
+            {closedFormOverlap[encoded, code], steaneExtract[encoded]["Syndrome"], logicalBits[encoded, "ZZZZZZZ"], tableauSymplecticQ[encoded]}
         ]
     ],
     {1, Table[{0}, {6}], {0}, True},
@@ -538,7 +545,7 @@ VerificationTest[
         {
             closedFormOverlap[states["0L"], states["1L"]],
             closedFormOverlap[states["+L"], states["0L"]], closedFormOverlap[states["+L"], states["1L"]],
-            outcomeBits[states["+L"], "XXXXXXX", Range[7]], outcomeBits[states["1L"], "ZZZZZZZ", Range[7]],
+            logicalBits[states["+L"], "XXXXXXX"], logicalBits[states["1L"], "ZZZZZZZ"],
             Table[steaneExtract[states[name]]["Syndrome"], {name, {"0L", "1L", "+L"}}]
         }
     ],
@@ -582,7 +589,7 @@ VerificationTest[
                 With[{hidden = steaneExtract[QuantumCircuitOperator[Thread["X" -> pair]][code]]},
                     With[{decoded = steaneRecover[hidden]},
                         {pair, hidden["Syndrome"], $steaneDecoder[hidden["Syndrome"]], steaneExtract[decoded]["Syndrome"],
-                            outcomeBits[decoded, "ZZZZZZZ", Range[7]],
+                            logicalBits[decoded, "ZZZZZZZ"],
                             closedFormOverlap[decoded, $steaneLogicalStates["1L"]], closedFormOverlap[decoded, code]}
                     ]
                 ],

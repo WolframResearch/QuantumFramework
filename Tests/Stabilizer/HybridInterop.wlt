@@ -31,19 +31,26 @@ symplecticQ[ps_] := With[{n = ps["Qubits"]},
     ]
 ]
 
+(* A Pauli-named QMO resolves the eigenbasis, one bit per wire in sorted-wire   *)
+(* order; the eigenvalue of the joint Pauli string is the parity of the bits on *)
+(* its non-identity letters (an "I" letter is read in Z and does not count).    *)
+resolvedParity[qmo_, key_List] := With[{letters = Characters[stabilizerPauliLabelFromQMO[qmo]]},
+    Mod[Total @ Pick[key, # =!= "I" & /@ letters[[Ordering[qmo["InputOrder"]]]]], 2]
+]
+
 
 (* ============================================================================ *)
 (* TIER A -- Pauli-basis fast path: qmo[ps] -> ps["M", pauliString]            *)
 (* ============================================================================ *)
 
-(* Two-qubit Z-on-q1 measurement on |00>: deterministic outcome 0.
+(* Two-qubit ZI measurement on |00>: both wires read in Z, deterministic {0, 0}.
    Note: a 1-qubit Z measurement currently exposes ROADMAP A.11 (the single-
    element KroneckerProduct in pauliStringMatrix), so we test on n=2. *)
 VerificationTest[
     With[{ps = PauliStabilizer[2], qmo = QuantumMeasurementOperator["ZI", {1, 2}]},
         Sort @ Keys @ qmo[ps]
     ],
-    {0},
+    {{0, 0}},
     {},
     TestID -> "Phase7-QMO-ZI-on-zero-Deterministic"
 ]
@@ -58,35 +65,36 @@ VerificationTest[
     TestID -> "Phase7-QMO-Z-on-Plus-NonDeterministic"
 ]
 
-(* Two-qubit Pauli-string measurement: Bell ZZ gives deterministic outcome 0. *)
+(* Resolved ZZ on Bell: each wire read in Z, the two bits always equal. *)
 VerificationTest[
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]],
           qmo = QuantumMeasurementOperator["ZZ", {1, 2}]},
         Sort @ Keys @ qmo[psBell]
     ],
-    {0},
+    {{0, 0}, {1, 1}},
     {},
     TestID -> "Phase7-QMO-ZZ-on-Bell-Deterministic"
 ]
 
-(* 5Q-code stabilizer measurement gives deterministic outcome 0. *)
+(* 5Q-code stabilizer letters read wire by wire: every branch has stabilizer *)
+(* parity 0, the eigenvalue +1 of XZZXI on the code state.                    *)
 VerificationTest[
     With[{ps5 = PauliStabilizer["5QubitCode"],
           qmo = QuantumMeasurementOperator["XZZXI", Range[5]]},
-        Sort @ Keys @ qmo[ps5]
+        DeleteDuplicates[resolvedParity[qmo, #] & /@ Keys[qmo[ps5]]]
     ],
     {0},
     {},
     TestID -> "Phase7-QMO-XZZXI-on-5Q-Deterministic"
 ]
 
-(* Pauli-basis QMO returns the same Association as ps["M", pauliString] -- this
-   is the direct equivalence test that distinguishes the fast path from the
-   fallback. *)
+(* Pauli-basis QMO returns the same Association as the native per-wire
+   measurement ps["M", {"XI", "IX"}]: the direct equivalence test that
+   distinguishes the fast path from the fallback. *)
 VerificationTest[
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]],
           qmo = QuantumMeasurementOperator["XX", {1, 2}]},
-        Keys @ qmo[psBell] === Keys @ psBell["M", "XX"]
+        qmo[psBell] === psBell["M", {"XI", "IX"}]
     ],
     True,
     {},
@@ -128,17 +136,18 @@ VerificationTest[
 (* Unsorted multi-qubit targets: QuantumMeasurementOperator["XZ", {3, 1}] puts X *)
 (* on wire 3 and Z on wire 1, the operator's own convention                     *)
 (* (QuantumOperator["XZ", {3, 1}] sends |+00> to |-01>). On |0>|0>|+> both       *)
-(* factors are +1, so the joint outcome is deterministic; the other wire        *)
-(* assignment is random.                                                        *)
+(* factors are +1, so the outcome is deterministic and is the native            *)
+(* measurement of Z on wire 1, then X on wire 3; the other wire assignment      *)
+(* reads both wires at random.                                                  *)
 VerificationTest[
     With[{ps = PauliStabilizer[3][{"H" -> 3}]},
         {
             Sort @ Keys @ QuantumMeasurementOperator["XZ", {3, 1}][ps],
-            QuantumMeasurementOperator["XZ", {3, 1}][ps] === ps["M", "ZIX"],
+            QuantumMeasurementOperator["XZ", {3, 1}][ps] === ps["M", {"ZII", "IIX"}],
             Sort @ Keys @ QuantumMeasurementOperator["XZ", {1, 3}][ps]
         }
     ],
-    {{0}, True, {0, 1}},
+    {{{0, 0}}, True, {{0, 0}, {0, 1}, {1, 0}, {1, 1}}},
     {},
     TestID -> "Phase7-QMO-UnsortedTargets-XZ-on-31-LettersFollowWires"
 ]
@@ -296,7 +305,7 @@ VerificationTest[
 (* Beyond any dense reference: on the 60-qubit GHZ tableau a single-qubit Z is   *)
 (* uniformly random and each branch is then certain of that same Z (the sign    *)
 (* bookkeeping), each branch keeps the symplectic pairing of its generators     *)
-(* (the tableau bookkeeping), the Z_1 Z_2 parity is certain from the start, and *)
+(* (the tableau bookkeeping), Z read on wires 1 and 2 gives two equal bits, and *)
 (* a mixed three-letter Pauli on far-apart wires, parsed from its CircleTimes   *)
 (* label, is measured in the tableau as well.                                   *)
 VerificationTest[
@@ -313,7 +322,7 @@ VerificationTest[
             ]
         ]
     ],
-    {{0, 1}, {True, True}, {True, True}, {0}, {0, 1}},
+    {{0, 1}, {True, True}, {True, True}, {{0, 0}, {1, 1}}, {0, 1}},
     {},
     TestID -> "Phase7-QMO-Partial-GHZ60-BeyondDense"
 ]
@@ -447,8 +456,8 @@ VerificationTest[
 (* symbolic tableau stays in the tableau. On a Bell pair whose first qubit was  *)
 (* measured symbolically (outcome s), Z on the partner qubit is certain and     *)
 (* keyed by s itself (the Bell correlation), s really is the recorded Z outcome *)
-(* of qubit 1, the tableau is unchanged, the Z Z parity is certain, and X on    *)
-(* the measured qubit is uniformly random.                                       *)
+(* of qubit 1, the tableau is unchanged, ZZ read wire by wire gives s twice,  *)
+(* and X on the measured qubit is uniformly random.                             *)
 VerificationTest[
     With[{psSym = PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["SymbolicMeasure", 1]},
         With[{
@@ -461,12 +470,12 @@ VerificationTest[
                 (* s is the Z outcome of qubit 1: substituting s = b lands on the dense branch b, |bb>. *)
                 Table[rayEqQ[Normal @ psSym["SubstituteOutcomes", s -> b]["State"]["StateVector"], Normal @ dense[[b + 1]]["StateVector"]], {b, 0, 1}],
                 res[s]["Tableau"] === psSym["Tableau"],
-                Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][psSym],
+                Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][psSym] === {{s, s}},
                 Sort @ Keys @ QuantumMeasurementOperator["X", {1}][psSym]
             }
         ]
     ],
-    {True, {True, True}, True, {0}, {0, 1}},
+    {True, {True, True}, True, True, {0, 1}},
     {},
     TestID -> "Phase7-QMO-on-SymbolicPS-StaysInTableau"
 ]
@@ -486,14 +495,14 @@ VerificationTest[
 (* TIER E -- Pauli-string QMO on named QEC code states                         *)
 (* ============================================================================ *)
 
-(* Steane-7Q stabilizer measurement: deterministic outcome 0 on |0_L>.
+(* Steane-7Q stabilizer letters read wire by wire: stabilizer parity 0 on every branch.
    Use the actual stabilizers from the kernel (avoids hand-coding the X/Z
    layout). Pick a known stabilizer row (e.g. the last "XXXXXXX"). *)
 VerificationTest[
     With[{ps = PauliStabilizer["SteaneCode"]},
         With[{stab = ps["Stabilizers"][[7]],   (* "XXXXXXX" by API.md *)
               qmo = QuantumMeasurementOperator[ps["Stabilizers"][[7]], Range[7]]},
-            Sort @ Keys @ qmo[ps]
+            DeleteDuplicates[resolvedParity[qmo, #] & /@ Keys[qmo[ps]]]
         ]
     ],
     {0},
@@ -501,36 +510,35 @@ VerificationTest[
     TestID -> "Phase7-QMO-Steane-Stabilizer-Deterministic"
 ]
 
-(* GHZ-3 measured in the ZZI Pauli basis: ZZI is in the stabilizer group <ZZI, IZZ, XXX>?
-   For GHZ-3 with stabilizer {XXX, ZZI, IZZ}, the operator ZZI is one of the generators
-   so the measurement is deterministic with outcome 0. *)
+(* GHZ-3 read wire by wire in the ZZI letters: ZZI is one of the generators of
+   GHZ-3 {XXX, ZZI, IZZ}, so its parity is 0 on every branch. *)
 VerificationTest[
     With[{psGHZ = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}},
           qmo = QuantumMeasurementOperator["ZZI", {1, 2, 3}]},
-        Sort @ Keys @ qmo[psGHZ]
+        DeleteDuplicates[resolvedParity[qmo, #] & /@ Keys[qmo[psGHZ]]]
     ],
     {0},
     {},
     TestID -> "Phase7-QMO-GHZ3-Stab-ZZI-Deterministic"
 ]
 
-(* GHZ-3 measured against XXX: deterministic outcome 0 (XXX is a stabilizer). *)
+(* GHZ-3 read wire by wire in X: parity 0 on every branch (XXX is a stabilizer). *)
 VerificationTest[
     With[{psGHZ = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}},
           qmo = QuantumMeasurementOperator["XXX", {1, 2, 3}]},
-        Sort @ Keys @ qmo[psGHZ]
+        DeleteDuplicates[resolvedParity[qmo, #] & /@ Keys[qmo[psGHZ]]]
     ],
     {0},
     {},
     TestID -> "Phase7-QMO-GHZ3-Stab-XXX-Deterministic"
 ]
 
-(* GHZ-3 measured against an anticommuting Pauli (XII anticommutes with ZZI):
-   outcome must be non-deterministic (both 0 and 1 keys present). *)
+(* GHZ-3 read in the letters of an anticommuting Pauli (XII anticommutes with ZZI):
+   the X_1 parity takes both values. *)
 VerificationTest[
     With[{psGHZ = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}},
           qmo = QuantumMeasurementOperator["XII", {1, 2, 3}]},
-        Sort @ Keys @ qmo[psGHZ]
+        Sort @ DeleteDuplicates[resolvedParity[qmo, #] & /@ Keys[qmo[psGHZ]]]
     ],
     {0, 1},
     {},
@@ -610,13 +618,13 @@ VerificationTest[
 (* TIER G -- QMO direct equivalence to ps["M", ...] across multiple states     *)
 (* ============================================================================ *)
 
-(* Build a 2-qubit state via H1 + S1 + H2 then measure ZZ via QMO and via ps["M"];
-   compare keys and post-state stabilizer sets. *)
+(* Build a 2-qubit state via H1 + S1 + H2 then measure ZZ via QMO and via the
+   native per-wire ps["M", {"ZI", "IZ"}]; compare keys. *)
 VerificationTest[
     Module[{ps, qmo},
         ps = PauliStabilizer[2]["H", 1]["S", 1]["H", 2];
         qmo = QuantumMeasurementOperator["ZZ", {1, 2}];
-        Sort[Keys[qmo[ps]]] === Sort[Keys[ps["M", "ZZ"]]]
+        Sort[Keys[qmo[ps]]] === Sort[Keys[ps["M", {"ZI", "IZ"}]]]
     ],
     True,
     {},
@@ -630,7 +638,7 @@ VerificationTest[
         AllTrue[
             Table[
                 Module[{ps = PauliStabilizer["Random", 3], qmo = QuantumMeasurementOperator["XYZ", {1, 2, 3}]},
-                    Sort[Keys[qmo[ps]]] === Sort[Keys[ps["M", "XYZ"]]]
+                    qmo[ps] === ps["M", {"XII", "IYI", "IIZ"}]
                 ],
                 {12}
             ],
@@ -873,16 +881,17 @@ VerificationTest[
     TestID -> "Phase7.4-MatrixNegXX-on-Bell-Deterministic-FastPath"
 ]
 
-(* Matrix-form ZZ-measurement on Bell: Bell state has stabilizers {XX, ZZ} so
-   ZZ measurement is deterministic outcome 0. Tests the matrix path matches the
-   string path. *)
+(* Matrix-form ZZ-measurement on Bell: a square observable, so the tableau
+   measures the joint ZZ, deterministic outcome 0 (Bell stabilizers {XX, ZZ}),
+   while the named "ZZ" reads each wire. *)
 VerificationTest[
     With[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
           qmoMat = QuantumMeasurementOperator[
               QuantumOperator[KroneckerProduct[PauliMatrix[3], PauliMatrix[3]]], {1, 2}
           ],
           qmoStr = QuantumMeasurementOperator["ZZ", {1, 2}]},
-        Sort[Keys[qmoMat[psBell]]] === Sort[Keys[qmoStr[psBell]]]
+        Sort[Keys[qmoMat[psBell]]] === Sort[Keys[psBell["M", "ZZ"]]] &&
+            Sort[Keys[qmoStr[psBell]]] === Sort[Keys[psBell["M", {"ZI", "IZ"}]]]
     ],
     True,
     {},
@@ -929,8 +938,8 @@ VerificationTest[
     TestID -> "Phase7.4-Detector-MaxQubitCap-DefaultRejects"
 ]
 
-(* Cross-check: the matrix-iteration detector agrees with the string-form fast
-   path on a battery of seeded random Cliffords. *)
+(* Cross-check on a battery of seeded random Cliffords: the matrix-iteration
+   detector finds the joint XYZ, and the string form reads the three letters. *)
 VerificationTest[
     Block[{},
         SeedRandom[20260507];
@@ -945,7 +954,7 @@ VerificationTest[
                     ];
                     sStr = Sort[Keys[qmoStr[ps]]];
                     sMat = Sort[Keys[qmoMat[ps]]];
-                    sStr === sMat
+                    sStr === Sort[Keys[ps["M", {"XII", "IYI", "IIZ"}]]] && sMat === Sort[Keys[ps["M", "XYZ"]]]
                 ],
                 {12}
             ],
@@ -974,4 +983,213 @@ VerificationTest[
     Missing["DimMismatch"],
     {},
     TestID -> "Phase7.4-Detector-NonSquareMatrix-DimMismatch"
+]
+
+
+(* ============================================================================ *)
+(* TIER I -- Resolved eigenbasis vs joint parity                                *)
+(* ============================================================================ *)
+
+(* QuantumMeasurementOperator["P1...Pk", wires] resolves the eigenbasis: its    *)
+(* eigenvalue qudit has 2^k levels, one per product eigenvector, so each wire's *)
+(* letter is read on its own and a Bell pair is dephased. The tableau measures  *)
+(* the letters one wire at a time in sorted-wire order, keyed {b_1, ..., b_k}, *)
+(* and every branch it keeps is equally likely, 2^-(number of random letters). *)
+(* Placed on the dense outcome grid (index FromDigits[key, 2] + 1, the first   *)
+(* sorted wire most significant), those probabilities are the dense ones, and   *)
+(* each kept branch is the dense post-measurement state (which QF writes in the *)
+(* measured basis, so it is read in the computational one) up to a global phase.*)
+(* Cases: Bell under ZZ, XX, YY and IZ (an "I" letter reads the computational   *)
+(* basis), GHZ-3 under ZZZ and XXX, and XZ on the unsorted wires {3, 1} of      *)
+(* GHZ-3 and of |1>|0>|+>.                                                      *)
+tableauOutcomeProbabilities[qmo_, ps_] := With[{res = qmo[ps]},
+    Normal @ SparseArray[(FromDigits[Flatten[{#}], 2] + 1 -> 1 / Length[res]) & /@ Keys[res], {2 ^ Length[qmo["InputOrder"]]}]
+]
+
+VerificationTest[
+    With[{
+        bell = PauliStabilizer[{"XX", "ZZ"}],
+        ghz = PauliStabilizer[{"XXX", "ZZI", "IZZ"}],
+        product = PauliStabilizer[QuantumTensorProduct[QuantumState["1"], QuantumState["0"], QuantumState["+"]]]
+    },
+        Map[
+            Apply[{label, wires, ps} |-> With[{qmo = QuantumMeasurementOperator[label, wires]},
+                With[{dense = qmo[ps["State"]], res = qmo[ps]},
+                    {
+                        tableauOutcomeProbabilities[qmo, ps] === dense["ProbabilitiesList"],
+                        AllTrue[Keys[res],
+                            rayEqQ[Normal @ res[#]["State"]["StateVector"], Normal @ dense["States"][[FromDigits[#, 2] + 1]]["Computational"]["StateVector"]] &
+                        ]
+                    }
+                ]
+            ]],
+            {
+                {"ZZ", {1, 2}, bell}, {"XX", {1, 2}, bell}, {"YY", {1, 2}, bell}, {"IZ", {1, 2}, bell},
+                {"ZZZ", {1, 2, 3}, ghz}, {"XXX", {1, 2, 3}, ghz},
+                {"XZ", {3, 1}, ghz}, {"XZ", {3, 1}, product}
+            }
+        ]
+    ],
+    ConstantArray[{True, True}, 8],
+    {},
+    TestID -> "Phase7-QMO-Resolved-MatchesDense-Bell-GHZ3-Unsorted"
+]
+
+(* The keys themselves: ZZ on a Bell pair has the correlated outcomes {0, 0}    *)
+(* and {1, 1}, XX on GHZ-3 is random on the first two wires and fixed by them  *)
+(* on the third, and XZ on {3, 1} of |1>|0>|+> reads wire 1 (Z, outcome 1)      *)
+(* before wire 3 (X, outcome 0).                                                *)
+VerificationTest[
+    {
+        Sort @ Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][PauliStabilizer[{"XX", "ZZ"}]],
+        Sort @ Keys @ QuantumMeasurementOperator["XXX", {1, 2, 3}][PauliStabilizer[{"XXX", "ZZI", "IZZ"}]],
+        Keys @ QuantumMeasurementOperator["XZ", {3, 1}][PauliStabilizer[QuantumTensorProduct[QuantumState["1"], QuantumState["0"], QuantumState["+"]]]]
+    },
+    {{{0, 0}, {1, 1}}, {{0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0}}, {{1, 0}}},
+    {},
+    TestID -> "Phase7-QMO-Resolved-Keys-SortedWireOrder"
+]
+
+(* The labels the tableau measures: one single-letter register label per wire  *)
+(* in sorted order for the resolved measurement ("I" read as "Z"), one          *)
+(* register label for a square observable, whose matrix names the joint Pauli   *)
+(* string.                                                                      *)
+VerificationTest[
+    {
+        stabilizerPauliMeasurementLabel[QuantumMeasurementOperator["XZ", {3, 1}], 3],
+        stabilizerPauliMeasurementLabel[QuantumMeasurementOperator["IZ", {1, 2}], 2],
+        stabilizerPauliMeasurementLabel[QuantumMeasurementOperator["Z", {2}], 3],
+        stabilizerPauliMeasurementLabel[QuantumMeasurementOperator[QuantumOperator["ZZ"]], 2]
+    },
+    {{"ZII", "IIX"}, {"ZI", "IZ"}, {"IZI"}, "ZZ"},
+    {},
+    TestID -> "Phase7-QMO-Resolved-MeasurementLabels"
+]
+
+(* The parity instrument is a different measurement: "Lueders"[ZZ] has one      *)
+(* outcome per eigenvalue of ZZ, so on a Bell pair the -1 outcome never occurs  *)
+(* and the +1 outcome is certain, on the dense state and on the tableau, which  *)
+(* measures the joint ZZ and keys the eigenvalue v by the bit (1 - v) / 2; the  *)
+(* resolved "ZZ" on the same pair has two random outcomes.                      *)
+VerificationTest[
+    With[{bell = PauliStabilizer[{"XX", "ZZ"}], lueders = QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ"]]]},
+        {
+            lueders[bell["State"]]["ProbabilitiesList"],
+            lueders[bell] === bell["M", "ZZ"],
+            Keys @ lueders[bell],
+            Length @ QuantumMeasurementOperator["ZZ", {1, 2}][bell]
+        }
+    ],
+    {{0, 1}, True, {0}, 2},
+    {},
+    TestID -> "Phase7-QMO-LuedersParity-OneOutcome-vs-Resolved"
+]
+
+(* "Lueders"[QuantumOperator[P]] for a Pauli string P is recognized by its two  *)
+(* projectors, (1 + v P) / 2 for v = -1, 1, so the tableau measures the joint P *)
+(* with no state built: the label names P when it parses (plain, unsorted on    *)
+(* {3, 1}, which Lueders stores sorted as Z on 1 and X on 3, signed, on a wire  *)
+(* subset), the capped matrix search finds it for a label-free matrix, and a    *)
+(* non-Pauli observable (H, diag(1, -1, -1, -1) with a degenerate -1, or a     *)
+(* qutrit observable with eigenvalues 1, -1) stays unrecognized.                *)
+VerificationTest[
+    stabilizerPauliLabelFromQMO /@ {
+        QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ"]]],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator["XZ", {3, 1}]]],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator[-"YY", {2, 1}]]],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZZZ"]], {1, 3, 5, 7}],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]]]],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator["H"]]],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator[DiagonalMatrix[{1, -1, -1, -1}]]]],
+        QuantumMeasurementOperator["Lueders"[QuantumOperator[DiagonalMatrix[{1, -1, -1}], {1}, 3]]]
+    },
+    {"ZZ", "ZX", "-YY", "ZZZZ", "XZ", Missing["NonPauliBasis"], Missing["NonPauliBasis"], Missing["NonPauliBasis"]},
+    {},
+    TestID -> "Phase7-QMO-Lueders-PauliRecognizedByProjectors"
+]
+
+(* On the tableau the Lueders parity has the dense outcome probabilities: the   *)
+(* eigenvalue v has probability 1 / (number of kept keys) when the key          *)
+(* (1 - v) / 2 is kept and 0 otherwise, and each kept branch is the dense       *)
+(* post-measurement state up to a global phase. Cases: Bell, GHZ-3, the         *)
+(* unsorted and signed forms, a parity on a wire subset of a larger register,   *)
+(* and seeded random signed strings of 1 to 4 letters on random 3- and 4-qubit  *)
+(* stabilizer states.                                                           *)
+VerificationTest[
+    BlockRandom[
+        SeedRandom[20261024];
+        Map[
+            Apply[{op, ps} |-> With[{qmo = QuantumMeasurementOperator["Lueders"[op]]},
+                With[{
+                    dense = qmo[ps["State"]],
+                    res = qmo[ps],
+                    values = First /@ qmo["EigenvalueVectors"]
+                },
+                    {
+                        AssociationQ[res],
+                        (If[KeyExistsQ[res, (1 - #) / 2], 1 / Length[res], 0] & /@ values) === dense["ProbabilitiesList"],
+                        AllTrue[Keys[res],
+                            rayEqQ[
+                                Normal @ res[#]["State"]["StateVector"],
+                                Normal @ dense["States"][[First @ FirstPosition[values, 1 - 2 #]]]["Computational"]["StateVector"]
+                            ] &
+                        ]
+                    }
+                ]
+            ]],
+            Join[
+                {
+                    {QuantumOperator["ZZ"], PauliStabilizer[{"XX", "ZZ"}]},
+                    {QuantumOperator["XZ"], PauliStabilizer[{"XX", "ZZ"}]},
+                    {QuantumOperator["ZZ", {1, 2}], PauliStabilizer[{"XXX", "ZZI", "IZZ"}]},
+                    {QuantumOperator["XZ", {3, 1}], PauliStabilizer[{"XXX", "ZZI", "IZZ"}]},
+                    {QuantumOperator[-"YY", {2, 1}], PauliStabilizer[{"XX", "ZZ"}]}
+                },
+                Table[
+                    With[{n = RandomChoice[{3, 4}]},
+                        With[{k = RandomInteger[{1, n}]},
+                            {QuantumOperator[RandomChoice[{1, -1}] StringJoin @ RandomChoice[{"X", "Y", "Z"}, k], RandomSample[Range[n], k]], PauliStabilizer["Random", n]}
+                        ]
+                    ],
+                    {8}
+                ]
+            ]
+        ]
+    ],
+    ConstantArray[{True, True, True}, 13],
+    {},
+    TestID -> "Phase7-QMO-Lueders-MatchesDense-Bell-GHZ3-Random"
+]
+
+(* The parity stays in the tableau past any dense reference and on symbolic    *)
+(* signs: on the 60-qubit GHZ tableau Z_17 Z_43 is certain while the resolved  *)
+(* reading of the same letters has two random outcomes, and on a Bell pair     *)
+(* whose first qubit was measured symbolically the ZZ parity is still certain. *)
+VerificationTest[
+    With[{
+        ghz = PauliStabilizer[60][Prepend[Table["CNOT" -> {q, q + 1}, {q, 59}], "H" -> 1]],
+        psSym = PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["SymbolicMeasure", 1]
+    },
+        {
+            Keys @ QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ", {17, 43}]]][ghz],
+            Length @ QuantumMeasurementOperator["ZZ", {17, 43}][ghz],
+            Keys @ QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ"]]][psSym]
+        }
+    ],
+    {{0}, 2, {0}},
+    {},
+    TestID -> "Phase7-QMO-Lueders-GHZ60-and-SymbolicPS-StayInTableau"
+]
+
+(* Symbolic signs: on a Bell pair whose first qubit was measured symbolically  *)
+(* (outcome s), the resolved ZZ stays in the tableau and reads s on both wires. *)
+VerificationTest[
+    With[{psSym = PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["SymbolicMeasure", 1]},
+        With[{s = First @ Cases[psSym["Signs"], _\[FormalS], Infinity]},
+            Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][psSym] === {{s, s}}
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Phase7-QMO-Resolved-SymbolicPS-ReadsRecordOnBothWires"
 ]

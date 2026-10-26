@@ -1126,9 +1126,9 @@ VerificationTest[
 (* TIER 12 -- Hybrid interop (Phase 7): qmo[ps], qc[ps], stabilizer dispatch.   *)
 (* ============================================================================ *)
 
-(* Pauli-basis QMO routes to ps["M", pauli] (no nonpaulibasis message). *)
+(* The Lueders ZZ parity routes to ps["M", "ZZ"] (no nonpaulibasis message). *)
 VerificationTest[
-    Sort @ Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][$psBell],
+    Sort @ Keys @ QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ", {1, 2}]]][$psBell],
     {0},
     TestID -> "Audit-Hybrid-QMO-ZZ-on-Bell-FastPath"
 ]

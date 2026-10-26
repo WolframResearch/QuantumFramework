@@ -244,17 +244,17 @@ VerificationTest[
     TestID -> "Conn5-qmoPS-Dispatches"
 ]
 
-(* Semantic: qmo[ps] === ps["M", "ZZ"] for Pauli-string QMO. *)
+(* Semantic: the Lueders parity of a Pauli string has the outcome keys of ps["M", "ZZ"]. *)
 VerificationTest[
-    Sort[Keys[QuantumMeasurementOperator["ZZ", {1, 2}][$psBell]]] ===
+    Sort[Keys[QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ", {1, 2}]]][$psBell]]] ===
         Sort[Keys[$psBell["M", "ZZ"]]],
     True,
     TestID -> "Conn5-qmoPS-EqualsMethodM"
 ]
 
-(* Bell ZZ correlation: deterministic outcome. *)
+(* Bell ZZ correlation: the Lueders parity is deterministic. *)
 VerificationTest[
-    Sort @ Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][$psBell],
+    Sort @ Keys @ QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ", {1, 2}]]][$psBell],
     {0},
     TestID -> "Conn5-qmoZZ-on-Bell-Deterministic"
 ]
@@ -699,8 +699,8 @@ VerificationTest[
 (* The GHZ circuit through the UpValue gives the closed-form stabilizer group in *)
 (* n, X on every qubit together with every neighbouring Z_q Z_(q+1), with the   *)
 (* symplectic pairing intact, and a measurement on it stays in the tableau (a   *)
-(* single Z random, the Z_1 Z_2 parity certain); at n = 60 no dense reference   *)
-(* exists at all.                                                               *)
+(* single Z random, the Lueders Z_1 Z_2 parity certain); at n = 60 no dense     *)
+(* reference exists at all.                                                     *)
 VerificationTest[
     Table[
         With[{ps = QuantumCircuitOperator["GHZ"[n]][PauliStabilizer[n]]},
@@ -709,7 +709,7 @@ VerificationTest[
                 Sort[ps["Stabilizers"]] === Sort @ Prepend[Table[StringReplacePart[StringRepeat["I", n], "ZZ", {q, q + 1}], {q, n - 1}], StringRepeat["X", n]],
                 symplecticQ[ps],
                 Sort @ Keys @ QuantumMeasurementOperator["Z", {2}][ps],
-                Sort @ Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][ps]
+                Sort @ Keys @ QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ", {1, 2}]]][ps]
             }
         ],
         {n, {3, 7, 60}}
@@ -839,7 +839,7 @@ VerificationTest[
     Module[{psBell, viaPS, qmo, viaQS},
         psBell = $psBell;
         viaPS = Sort[Keys[psBell["M", "ZZ"]]];
-        qmo = QuantumMeasurementOperator["ZZ", {1, 2}];
+        qmo = QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ", {1, 2}]]];
         viaQS = Sort[Keys[qmo[psBell]]];
         viaPS === viaQS
     ],
@@ -886,10 +886,10 @@ VerificationTest[
 VerificationTest[
     Module[{ps5 = $ps5Q, allOutcomes},
         allOutcomes = Sort @ Keys @ # & /@ {
-            QuantumMeasurementOperator["XZZXI", Range[5]][ps5],
-            QuantumMeasurementOperator["IXZZX", Range[5]][ps5],
-            QuantumMeasurementOperator["XIXZZ", Range[5]][ps5],
-            QuantumMeasurementOperator["ZXIXZ", Range[5]][ps5]
+            QuantumMeasurementOperator["Lueders"[QuantumOperator["XZZXI", Range[5]]]][ps5],
+            QuantumMeasurementOperator["Lueders"[QuantumOperator["IXZZX", Range[5]]]][ps5],
+            QuantumMeasurementOperator["Lueders"[QuantumOperator["XIXZZ", Range[5]]]][ps5],
+            QuantumMeasurementOperator["Lueders"[QuantumOperator["ZXIXZ", Range[5]]]][ps5]
         };
         AllTrue[allOutcomes, # === {0} &]
     ],
