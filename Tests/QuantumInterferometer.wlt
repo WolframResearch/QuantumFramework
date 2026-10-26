@@ -1181,6 +1181,99 @@ VerificationTest[
 ]
 
 VerificationTest[
+    Module[{eta, n, k},
+        With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
+            FreeQ[probability, _QuantumInterferometer] &&
+                FreeQ[probability, s_Symbol /; StringStartsQ[Context[s], "Wolfram`QuantumFramework`"]] &&
+                ! FreeQ[probability, ConditionalExpression] &&
+                FullSimplify[probability - Binomial[n, k] eta^k (1 - eta)^(n - k),
+                    Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] === 0
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-count-output-contains-only-native-expressions"
+]
+
+VerificationTest[
+    Module[{eta, mu, n, r, k, l, q},
+        With[{probability = QuantumInterferometer[{"Loss"[eta] -> 1, "PS"[Pi/7] -> 1,
+                "Loss"[2/3] -> 1, "Loss"[mu] -> 2}, 3]["Probability", {n, r, 1} -> {k, l, q}]},
+            FreeQ[probability, _QuantumInterferometer] &&
+                FreeQ[probability, s_Symbol /; StringStartsQ[Context[s], "Wolfram`QuantumFramework`"]] &&
+                FullSimplify[probability - Binomial[n, k] (2 eta/3)^k (1 - 2 eta/3)^(n - k) *
+                    Binomial[r, l] mu^l (1 - mu)^(r - l),
+                    Element[{n, r, k, l}, Integers] && 0 <= k <= n && 0 <= l <= r &&
+                        q == 1 && 0 < eta < 1 && 0 < mu < 1] === 0 &&
+                (probability /. {n -> 3, r -> 2, k -> 1, l -> 1, q -> 0, eta -> 3/5, mu -> 1/4}) === 0 &&
+                (probability /. {n -> 3, r -> 2, k -> 1, l -> 1, q -> 1, eta -> 3/5, mu -> 1/4}) === 81/500
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-count-output-composes-independent-attenuators-and-untouched-modes"
+]
+
+VerificationTest[
+    Module[{eta, n, k},
+        With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
+            And @@ Flatten[Table[
+                (probability /. {n -> input, k -> output, eta -> transmissivity}) ===
+                    If[transmissivity == 0, KroneckerDelta[output], KroneckerDelta[input, output]],
+                {transmissivity, {0, 1}}, {input, {0, 1, 3}}, {output, Range[0, 4]}]] &&
+                (probability /. {n -> -1, k -> 0, eta -> 0}) === 0 &&
+                (probability /. {n -> 1/2, k -> 0, eta -> 1}) === 0 &&
+                (probability /. {n -> I, k -> 0, eta -> 1/2}) === 0 &&
+                (probability /. {n -> 3, k -> -1, eta -> 1/2}) === 0 &&
+                (probability /. {n -> 3, k -> 1, eta -> 2}) === Undefined
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-count-substitutions-preserve-endpoints-vacuum-and-domain-guards"
+]
+
+VerificationTest[
+    Module[{eta, n, k},
+        With[{symbolic = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
+            And @@ Map[Function[transmissivity,
+                With[{qi = QuantumInterferometer[{"Loss"[transmissivity]}]},
+                    {probability = qi["Probability", {n} -> {k}]},
+                    {lost = probability /. {n -> 1, k -> 0}, value = probability /. {n -> 3, k -> 1}},
+                    lost === qi["Probability", {1} -> {0}] && lost === 1 - transmissivity && lost > 0 &&
+                        (symbolic /. {n -> 1, k -> 0, eta -> transmissivity}) === lost &&
+                        Precision[lost] === Precision[1 - transmissivity] &&
+                        If[Precision[transmissivity] === Infinity,
+                            value === 3 transmissivity (1 - transmissivity)^2 && Precision[value] === Infinity,
+                            Abs[value/(3 transmissivity (1 - transmissivity)^2) - 1] < 10^-13 &&
+                                Precision[value] >= Min[Precision[transmissivity], Precision[1 - transmissivity]] - 6
+                        ]
+                ]], {2/5, 1 - 10^-40, 1. - 2^-50, N[2/5, 60], N[1 - 10^-40, 80]}]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-count-evaluation-preserves-exact-machine-and-arbitrary-precision"
+]
+
+VerificationTest[
+    Module[{eta, n, k, parameter},
+        With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
+            And @@ Flatten[Table[
+                With[{reference = PDF[BinomialDistribution[input, parameter], output] /. parameter -> transmissivity},
+                    (probability /. {n -> input, k -> output, eta -> transmissivity}) === reference
+                ],
+                {transmissivity, {0., 1., N[0, 60], N[1, 60]}}, {input, {0, 1, 3}}, {output, Range[0, 4]}]] &&
+                And @@ Map[Function[transmissivity,
+                    With[{qi = QuantumInterferometer[{"Loss"[transmissivity]}]},
+                        {bound = qi["Probability", {n} -> {k}]},
+                        And @@ Flatten[Table[(bound /. {n -> input, k -> output}) ===
+                            qi["Probability", {input} -> {output}],
+                            {input, {0, 1, 3}}, {output, Range[0, 4]}]]
+                    ]], {0., N[0, 60]}]
+        ]
+    ],
+    True,
+    TestID -> "QI-loss-symbolic-count-substitution-retains-native-inexact-endpoint-precision"
+]
+
+VerificationTest[
     Module[{eta},
         With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
             ! FreeQ[qi["Probability", {1} -> {0}], ConditionalExpression] &&

@@ -1086,9 +1086,20 @@ lossTransitionProbability[qi_, in_, out_] := Which[
         Replace[coherentAmplitudes[qi, in, {out}, Abs[#] ^ 2 &], {p_} :> p],
     symbolicPatternsQ[qi, in, out],
         If[FreeQ[qi["Elements"], "BS"[__] -> _],
-            With[{occupations = Join[in, out]},
-                If[Element[occupations, Integers], If[Min[occupations] >= 0,
-                    Times @@ MapThread[lossCountProbability, {in, lossRates[qi["Elements"], qi["Modes"]], out}], 0], 0]
+            With[{
+                occupations = Join[in, out],
+                probability = Times @@ MapThread[
+                    Function[{photons, eta, detected},
+                        With[{density = lossCountProbability[photons, eta, detected]},
+                            (* Guard the native PDF's zero exponents without changing its numerical powers. *)
+                            {endpoint = density /. Power[base_, exponent_] :> If[exponent == 0, 1, base^exponent]},
+                            If[eta (1 - eta) == 0, endpoint, density]
+                        ]
+                    ],
+                    {in, lossRates[qi["Elements"], qi["Modes"]], out}
+                ]
+            },
+                If[Element[occupations, Integers], If[Min[occupations] >= 0, probability, 0], 0]
             ],
             Message[QuantumInterferometer::lossoccupation]; $Failed
         ],
