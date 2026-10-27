@@ -620,6 +620,112 @@ VerificationTest[
     TestID -> "QI-samples-rejects-squeezers-symbolic-and-bad-patterns"
 ]
 
+(* The exact law of the sampler: every order of the photons' columns and every sequence of output rows,
+   weighted with the sampler's own step and binned to the retained modes. Several photons in one input
+   mode, and loss through environment rows, must both reproduce "Probabilities" to round-off. *)
+samplerLaw[qi_, s_] := With[{
+    a = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`samplingColumns[qi, s],
+    weights = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`photonWeights,
+    m = qi["Modes"], n = Total[s]
+},
+    Merge[
+        Map[
+            Function[b, Merge[
+                KeyValueMap[<|BinCounts[#1, {1, m + 1, 1}] -> #2|> &,
+                    Nest[
+                        Association @ Catenate @ KeyValueMap[
+                            Function[{rows, p}, With[{w = weights[b, rows, Length[rows] + 1]}, MapIndexed[Append[rows, First[#2]] -> p #1 / Total[w] &, w]]],
+                            #
+                        ] &,
+                        <|{} -> 1|>,
+                        n
+                    ]
+                ],
+                Total
+            ]],
+            a[[All, #]] & /@ Permutations[Range[n]]
+        ] / n!,
+        Total
+    ]
+]
+
+VerificationTest[
+    SeedRandom[33];
+    With[{
+        qi = QuantumInterferometer["Random"[3]],
+        lossy = QuantumInterferometer[{"BS"[0.7, 0.3] -> {1, 2}, "Loss"[0.6] -> 1, "BS"[0.4, 1.1] -> {2, 3}, "Loss"[0.85] -> 3, "BS"[1.0, -0.5] -> {1, 2}}, 3]
+    },
+        Map[
+            With[{exact = KeyMap[#["Name"] &, #[[1]]["Probabilities", #[[2]]]], law = samplerLaw @@ #},
+                Max @ Abs[Lookup[exact, #, 0] - Lookup[law, #, 0]] &[Union[Keys[exact], Keys[law]]] < 10^-12
+            ] &,
+            {
+                {QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}}, 2], {1, 1}}, {QuantumInterferometer["Random"[2]], {2, 2}},
+                {qi, {1, 1, 1}}, {qi, {2, 1, 0}}, {qi, {3, 0, 0}}, {lossy, {1, 1, 1}}, {lossy, {2, 1, 0}}
+            }
+        ]
+    ],
+    ConstantArray[True, 7],
+    TestID -> "QI-sampler-law-is-exact-with-repeated-inputs-and-loss"
+]
+
+(* pure loss on one mode thins n photons binomially; a lossy mesh keeps at most the input photons *)
+VerificationTest[
+    SeedRandom[34];
+    With[{
+        attenuator = QuantumInterferometer[{"Loss"[1/4]}],
+        lossy = QuantumInterferometer[{"BS"[0.7, 0.3] -> {1, 2}, "Loss"[0.6] -> 1, "BS"[0.4, 1.1] -> {2, 3}}, 3]
+    },
+        {
+            With[{counts = attenuator["SampleCounts", {3}, 20000], outputs = QuditName /@ Range[0, 3]},
+                Max @ Abs[Lookup[counts, outputs, 0] / 20000. - PDF[BinomialDistribution[3, 1/4], Range[0, 3]]] < 0.015
+            ],
+            SubsetQ[Range[0, 3], Union[Total[#["Name"]] & /@ lossy["Samples", {1, 1, 1}, 200]]],
+            Total[lossy["SampleCounts", {2, 0, 1}, 50]]
+        }
+    ],
+    {True, True, 50},
+    TestID -> "QI-samples-lossy-binomial-thinning-and-photon-budget"
+]
+
+(* coherent light leaves a passive network, lossy or not, as |K a>: independent Poisson counts with means |(K a)_j|^2 *)
+VerificationTest[
+    SeedRandom[35];
+    With[{
+        lossy = QuantumInterferometer[{"BS"[0.7, 0.3] -> {1, 2}, "Loss"[0.6] -> 1, "BS"[0.4, 1.1] -> {2, 3}, "Loss"[0.85] -> 3}, 3],
+        a = {0.8, 0.3 I, 0}, k = 20000
+    },
+        With[{counts = #["Name"] & /@ lossy["Samples", "Coherent"[a], k], means = Abs[lossy["TransferMatrix"] . a] ^ 2},
+            {
+                Max[Abs[Mean[counts] - means] / Sqrt[means / k]] < 5,
+                Max[Abs[Variance[counts] / means - 1]] < 0.06,
+                Keys[lossy["SampleCounts", "Coherent"[{0, 0, 0}], 7]],
+                lossy["Samples", "Coherent"[a], 0]
+            }
+        ]
+    ],
+    {True, True, {QuditName[{0, 0, 0}]}, {}},
+    TestID -> "QI-samples-coherent-poisson-counts"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer["Random"[2]]},
+        {
+            qi["Samples", {1, "Coherent"[0.3]}, 3],
+            qi["Samples", {1, 1}],
+            qi["SampleCounts", {1, 1}, 3.],
+            qi["Samples", "Coherent"[{x, 0}], 3],
+            QuantumInterferometer[{"S"[0.3] -> 1, "BS"[Pi / 4, 0] -> {1, 2}}, 2]["Samples", "Coherent"[{1, 0}], 3]
+        }
+    ],
+    ConstantArray[$Failed, 5],
+    {
+        QuantumInterferometer::samplecoherent, QuantumInterferometer::samplecount, QuantumInterferometer::samplecount,
+        QuantumInterferometer::coherentnumeric, QuantumInterferometer::squeezed
+    },
+    TestID -> "QI-samples-messages-name-the-unsupported-input-or-count"
+]
+
 EndTestSection[]
 
 
@@ -1761,9 +1867,9 @@ VerificationTest[
 ]
 
 VerificationTest[
-    With[{qi = QuantumInterferometer[{"Loss"[1/2]}]}, {qi["Samples", {1}, 2], QuantumInterferometer[qi]}],
-    {$Failed, $Failed}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
-    TestID -> "QI-loss-does-not-pretend-to-support-sampling-or-unitary-remeshing"
+    QuantumInterferometer[QuantumInterferometer[{"Loss"[1/2]}]],
+    $Failed, {QuantumInterferometer::lossy},
+    TestID -> "QI-loss-does-not-pretend-to-support-unitary-remeshing"
 ]
 
 VerificationTest[

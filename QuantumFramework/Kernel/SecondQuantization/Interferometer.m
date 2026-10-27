@@ -59,7 +59,8 @@ Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cuto
 interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
 \"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions over dummy indices K[j], numbered past any K[j] in the photon numbers, the element parameters or the assumptions; as with any dummy index, a K[j] substituted into the result later is captured by the sums. Inexact angles given at construction are handled in the formula; inexact values substituted for symbolic angles later should follow the photon numbers, since a numeric WignerD outside its index range is Indeterminate.
 Symbolic results hold for nonnegative integer photon numbers, real beam-splitter and phase-shifter angles and real transmissivities 0 <= eta <= 1, with complex coherent amplitudes and squeezing parameters; transition queries accept Assumptions -> assumptions or an enclosing Assuming for relations beyond these domains.
-Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. A symbolic eta reaches eta = 0 and eta = 1 as limits of its formula, or through Assumptions -> eta == 0 or a numeric \"Loss\"[0]. Loss supports passive optics, Fock probabilities, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.";
+Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. A symbolic eta reaches eta = 0 and eta = 1 as limits of its formula, or through Assumptions -> eta == 0 or a numeric \"Loss\"[0]. Loss supports passive optics, Fock probabilities, sampling, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.
+interferometer[\"Samples\", input, k] draws k output photon patterns of a passive network, lossy or not, for photon numbers {n1, \[Ellipsis]} or \"Coherent\"[{\[Alpha]1, \[Ellipsis]}]; interferometer[\"SampleCounts\", input, k] counts them.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
@@ -82,7 +83,10 @@ QuantumInterferometer::notnumeric = "`1` needs a numeric transfer matrix.";
 QuantumInterferometer::squeezed = "`1` needs a passive interferometer, without squeezers.";
 QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probability `2`; set \"Cutoff\" -> n to keep more.";
 QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing or coherent amplitudes; set \"Cutoff\" -> n.";
-QuantumInterferometer::undefprop = "property `` is undefined for this interferometer";
+QuantumInterferometer::samplecount = "\"`1`\" takes an input and a nonnegative integer number of samples k, as in interferometer[\"`1`\", {1, 1, 0}, k].";
+QuantumInterferometer::samplecoherent = "Sampling takes photon numbers for every mode or \"Coherent\"[{\[Alpha]1, \[Ellipsis]}]; mixed Fock and coherent inputs are not supported.";
+QuantumInterferometer::coherentnumeric = "Sampling coherent light needs numeric amplitudes `1`.";
+QuantumInterferometer::undefprop ="property `` is undefined for this interferometer";
 
 Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True, "Parameters" -> {}};
 
@@ -672,35 +676,85 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
     ]
 ]
 
-(* Clifford and Clifford, arXiv:1706.01260, Algorithm B: with the input photons in random order, photon k
-   lands on mode i with weight |Perm(A[r ++ {i}, 1..k])|^2, expanded along row i into k minors of A[r, 1..k] *)
 QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{in = occupation[s]},
     Which[
+        MatchQ[in, "Coherent"[_]], coherentSamples[qi, First[in], k],
+        ! FreeQ[in, "Coherent"[___]], Message[QuantumInterferometer::samplecoherent]; $Failed,
         ! occupationQ[qi, in], $Failed,
-        lossyQ[qi], Message[QuantumInterferometer::lossy, "Sampling"]; $Failed,
-        ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
-        ! MatrixQ[N[qi["Unitary"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
-        True, With[{w = N[qi["Unitary"]][[All, modeList[in]]], m = qi["Modes"], n = Total[in]},
-            Table[
-                With[{a = w[[All, RandomSample[Range[n]]]]},
-                    QuditName @ Lookup[
-                        Counts @ Fold[
-                            Append[#1, RandomChoice[Abs[a[[All, ;; #2]] . If[#2 == 1, {1}, Table[Permanent[a[[#1, Delete[Range[#2], l]]]], {l, #2}]]] ^ 2 -> Range[m]]] &,
-                            {},
-                            Range[n]
-                        ],
-                        Range[m],
-                        0
-                    ]
-                ],
-                k
-            ]
+        ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
+        Total[in] == 0, ConstantArray[QuditName[in], k],
+        ! MatrixQ[N[qi["TransferMatrix"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
+        True, With[{a = samplingColumns[qi, in], m = qi["Modes"]},
+            Table[QuditName @ Lookup[Counts[photonRows[a[[All, RandomSample[Range[Total[in]]]]]]], Range[m], 0], k]
         ]
     ]
 ]
 
 QuantumInterferometerProp[qi_, "SampleCounts", s_, k_Integer ? NonNegative] := Replace[qi["Samples", s, k],
     samples_List :> KeyMap[QuditName, Reverse @ KeySort @ Counts[#["Name"] & /@ samples]]
+]
+
+QuantumInterferometerProp[_, prop : "Samples" | "SampleCounts", ___] := (Message[QuantumInterferometer::samplecount, prop]; $Failed)
+
+(* Loss is a beam splitter to a vacuum mode that is never read: K stacked on L with L^dag L = G has
+   orthonormal columns, the first m columns of a unitary on m + m modes, and counting a sample on the
+   first m rows drops the environment *)
+samplingMatrix[qi_ ? lossyQ] := With[{g = N[First[qi]["LossGram"]]},
+    {e = Eigensystem[(g + ConjugateTranspose[g]) / 2]},
+    Join[N[qi["TransferMatrix"]], Sqrt[Ramp[e[[1]]]] Conjugate[e[[2]]]]
+]
+
+samplingMatrix[qi_] := N[qi["Unitary"]]
+
+samplingColumns[qi_, in_] := Developer`ToPackedArray[samplingMatrix[qi][[All, modeList[in]]], Complex]
+
+(* Clifford and Clifford, arXiv:1706.01260, Algorithm B: with the input photons' columns a in random order,
+   photon j lands on row i with weight |Perm(a[rows ++ {i}, 1..j])|^2, the expansion along row i into the
+   j minors of a[rows, 1..j]. Several photons in one input mode repeat a column; the tests check that law exactly. *)
+photonRows[a_] := With[{rows = Range[Length[a]]},
+    Fold[Append[#1, RandomChoice[photonWeights[a, #1, #2] -> rows]] &, {}, Range[Length[First[a]]]]
+]
+
+photonWeights[a_, rows_, j_] := Abs[a[[All, ;; j]] . If[j == 1, {1.}, laplaceMinors[a[[rows, ;; j]]]]] ^ 2
+
+(* All k minors Perm(b without column l) of a (k - 1) x k block b at once (Clifford and Clifford, Lemma 2).
+   Glynn's formula runs over sign vectors d with d_1 = 1 in Gray-code order, updating the column sums
+   c = d . b one row at a time; forward and backward products of c give Prod_{j != l} c_j for every l. *)
+laplaceMinors := laplaceMinors = Compile[{{b, _Complex, 2}},
+    Module[{r = Length[b], k = Dimensions[b][[2]], c, d, minors, front, back, sign = 1., h, p},
+        c = b[[1]];
+        Do[c += b[[i]], {i, 2, r}];
+        d = Table[1, {r}];
+        minors = Table[0. + 0. I, {k}];
+        front = Table[1. + 0. I, {k + 1}];
+        back = Table[1. + 0. I, {k + 1}];
+        Do[
+            Do[front[[j + 1]] = front[[j]] c[[j]], {j, k}];
+            Do[back[[j]] = back[[j + 1]] c[[j]], {j, k, 1, -1}];
+            Do[minors[[j]] += sign front[[j]] back[[j + 1]], {j, k}];
+            If[g < 2 ^ (r - 1),
+                h = g; p = 2;
+                While[EvenQ[h], h = Quotient[h, 2]; p++];
+                c -= 2 d[[p]] b[[p]];
+                d[[p]] = - d[[p]];
+                sign = - sign
+            ],
+            {g, 2 ^ (r - 1)}
+        ];
+        minors / 2. ^ (r - 1)
+    ],
+    RuntimeOptions -> "Speed"
+]
+
+(* a passive network, lossy or not, sends |a> to the coherent state |K a>: independent Poisson counts *)
+coherentSamples[qi_, a_, k_] := Which[
+    ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
+    ! VectorQ[a] || Length[a] != qi["Modes"], Message[QuantumInterferometer::occ, "Coherent"[a], qi["Modes"]]; $Failed,
+    ! VectorQ[N[a], NumericQ], Message[QuantumInterferometer::coherentnumeric, a]; $Failed,
+    ! MatrixQ[N[qi["TransferMatrix"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
+    True, QuditName /@ Transpose[
+        If[# > 0, RandomVariate[PoissonDistribution[#], k], ConstantArray[0, k]] & /@ (Abs[N[qi["TransferMatrix"]] . N[a]] ^ 2)
+    ]
 ]
 
 inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes
