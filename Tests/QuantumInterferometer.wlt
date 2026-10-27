@@ -712,23 +712,51 @@ VerificationTest[
     TestID -> "QI-symbolic-sum-indices-do-not-capture-user-symbols"
 ]
 
-(* substitutions outside the physical photon numbers give 0 *)
+(* on nonnegative integer photon numbers and real angles the results are bare formulas, with no
+   condition restating that domain; photon conservation stays as a Kronecker delta *)
 VerificationTest[
-    With[{bs2 = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]["Amplitude", {nx, ny} -> {tx, nx + ny - tx}],
+    With[{bs = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2],
           hom = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]["Amplitude", {nx, nx} -> {kx, 2 nx - kx}],
-          identity = QuantumInterferometer[{}, 1]["Amplitude", {nx} -> {nx}],
-          chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]["Amplitude", {nx, 0} -> {tx, nx - tx}]},
-        {
-            bs2 /. {nx -> 0, ny -> 0, tx -> 0},
-            (bs2 /. Thread[{nx, ny, tx} -> #]) & /@ {{0, 0, -1}, {0, 0, 1}, {-1, -1, 0}, {-1, 2, 0}, {2, -1, 0}, {1, 1, -1}, {1, 1, 3}},
-            (hom /. Thread[{nx, kx} -> #]) & /@ {{-1, 0}, {1/2, 0}, {I, 0}, {2, I}, {2, -1}, {2, 5}, {1, 0}},
-            (identity /. nx -> #) & /@ {-1, 1/2, I, 3},
-            (Activate[chain /. Thread[{nx, tx} -> #]] &) /@ {{I, 0}, {2, I}, {1/2, 0}, {-1, 0}, {2, -1}, {2, 3}},
-            QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]["Amplitude", {nx, ny} -> {tx, ty}] /. {nx -> 1, ny -> 1, tx -> 1, ty -> 0}
-        }
+          ps = QuantumInterferometer[{"PS"[\[Alpha]] -> 1}, 1],
+          chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
+        With[{bs2 = bs["Amplitude", {nx, ny} -> {tx, nx + ny - tx}], general = bs["Amplitude", {nx, ny} -> {tx, ty}],
+              sum = chain["Amplitude", {nx, 0} -> {tx, nx - tx}]},
+            {
+                MatchQ[bs2, _WignerD] && FullSimplify[bs2 - WignerD[{(nx + ny)/2, (nx - ny)/2, tx - (nx + ny)/2}, \[Phi], 2 \[Theta], - \[Phi]]] === 0,
+                hom,
+                {ps["Amplitude", {nx} -> {nx}], ps["Probability", {nx} -> {nx}], QuantumInterferometer[{}, 1]["Amplitude", {nx} -> {nx}]},
+                MatchQ[general, KroneckerDelta[nx + ny, tx + ty] _WignerD] && (general /. {nx -> 1, ny -> 1, tx -> 1, ty -> 0}) === 0,
+                MatchQ[sum, Inactive[Sum][_, {_K, 0, nx}]],
+                FreeQ[{bs2, general, hom, sum}, If | Piecewise | ConditionalExpression],
+                bs2 /. {nx -> 0, ny -> 0, tx -> 0},
+                (* the photon distribution after the chain is normalized for every input *)
+                Table[RootReduce[Total[Abs[Table[Activate[sum /. {nx -> n, tx -> t}], {t, 0, n}]] ^ 2]], {n, 0, 3}]
+            }
+        ]
     ],
-    {1, ConstantArray[0, 7], Join[ConstantArray[0, 6], {1/Sqrt[2]}], {0, 0, 0, 1}, ConstantArray[0, 6], 0},
-    TestID -> "QI-symbolic-invalid-substitutions-give-zero"
+    {True, WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], {E^(I \[Alpha] nx), 1, 1}, True, True, True, 1, {1, 1, 1, 1}},
+    TestID -> "QI-symbolic-results-are-bare-formulas-on-the-physical-domain"
+]
+
+(* WignerD does not vanish outside its index range, so the formula keeps the one condition the
+   photon numbers do not imply: photons in mode 3 reach mode 1 only through mode 2, after the
+   first beam splitter has acted *)
+VerificationTest[
+    With[{exact = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {2, 3}}, 3],
+          machine = QuantumInterferometer[{"BS"[0.3, 0.7] -> {1, 2}, "BS"[1.1, 0.2] -> {2, 3}}, 3]},
+        With[{a = exact["Amplitude", {n1, n2, n3} -> {t1, t2, t3}], b = machine["Amplitude", {n1, n2, n3} -> {t1, t2, t3}]},
+            {
+                MatchQ[a, KroneckerDelta[n1 + n2 + n3, t1 + t2 + t3] Piecewise[{{_, n1 + n2 >= t1}}, 0]],
+                (a /. Thread[{n1, n2, n3, t1, t2, t3} -> {0, 0, 2, 1, 0, 1}]) === 0 && (b /. Thread[{n1, n2, n3, t1, t2, t3} -> {0, 0, 2, 1, 0, 1}]) === 0,
+                And @@ Flatten @ Table[
+                    FullSimplify[(a /. Thread[{n1, n2, n3, t1, t2, t3} -> Join[in, out]]) - exact["Amplitude", in -> out]] === 0 &&
+                        Abs[(b /. Thread[{n1, n2, n3, t1, t2, t3} -> Join[in, out]]) - machine["Amplitude", in -> out]] < 10^-12,
+                    {in, {{0, 1, 2}, {2, 0, 1}, {1, 1, 1}}}, {out, patterns[3, 3]}]
+            }
+        ]
+    ],
+    {True, True, True},
+    TestID -> "QI-symbolic-photon-path-condition-is-kept"
 ]
 
 VerificationTest[
@@ -757,9 +785,9 @@ VerificationTest[
     With[{chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
         With[{amplitude = chain["Amplitude", {K[1], 0} -> {K[2], K[1] - K[2]}]},
             {
-                Cases[amplitude, Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity],
+                Cases[amplitude, Inactive[Sum][_, iters__] :> {iters}[[All, 1]], {0, Infinity}],
                 Max[Abs[Table[N[Activate[amplitude /. {K[1] -> 2, K[2] -> t}] - chain["Amplitude", {2, 0} -> {t, 2 - t}]], {t, 0, 2}]]] < 10^-12,
-                Cases[chain["Amplitude", {K[1][x], 0} -> {t1, t2}], Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity]
+                Cases[chain["Amplitude", {K[1][x], 0} -> {t1, t2}], Inactive[Sum][_, iters__] :> {iters}[[All, 1]], {0, Infinity}]
             }
         ]
     ],
@@ -829,10 +857,11 @@ VerificationTest[
             $Assumptions === before,
             Assuming[nx == I, hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, {Assumptions :> domain}]],
             Assuming[Element[{nx, kx}, Integers] && nx == 0 && kx == 0, hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> True]] ===
-                Block[{$Assumptions = True}, hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}]]
+                Block[{$Assumptions = True}, hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}]],
+            hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}]
         }
     ],
-    {WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], True, WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], True},
+    {WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], True, WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0], True, WignerD[{nx, 0, kx - nx}, 0, Pi/2, 0]},
     TestID -> "QI-assumptions-give-the-compact-formula"
 ]
 
@@ -850,22 +879,132 @@ VerificationTest[
     TestID -> "QI-assumptions-general-two-mode-identity"
 ]
 
-(* only constraints the assumptions prove are removed *)
+(* restating the physical domain changes nothing, a relation beyond it simplifies further, and
+   assumptions that contradict it fail *)
 VerificationTest[
-    With[{hom = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2], chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
-        With[{integer = hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> Element[{nx, kx}, Integers]],
-              real = hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> Element[nx, Reals] && nx >= 0],
-              partial = chain["Amplitude", {nx, 0} -> {kx, nx - kx}, Assumptions -> Element[nx, Integers] && nx >= 0]},
+    With[{hom = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2], ps = QuantumInterferometer[{"PS"[alpha] -> 1}, 1],
+          chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
+        {
+            hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> Element[{nx, kx}, Integers] && nx >= 0 && kx >= 0] ===
+                hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}],
+            chain["Amplitude", {nx, 0} -> {kx, nx - kx}, Assumptions -> Element[nx, Integers] && nx >= 0] === chain["Amplitude", {nx, 0} -> {kx, nx - kx}],
+            ps["Amplitude", {nx} -> {nx}, Assumptions -> alpha == Pi],
+            hom["Amplitude", {nx, nx} -> {kx, 2 nx - kx}, Assumptions -> nx == 1/2],
+            ps["Amplitude", {nx} -> {nx}, Assumptions -> alpha == I]
+        }
+    ],
+    {True, True, (-1)^nx, $Failed, $Failed},
+    {Refine::fas, Refine::fas},
+    TestID -> "QI-assumptions-add-relations-beyond-the-physical-domain"
+]
+
+(* a list of assumptions reads as their conjunction, and an assumed endpoint transmissivity
+   gives the endpoint law rather than 0^0 *)
+VerificationTest[
+    Module[{eta, n, k},
+        With[{ps = QuantumInterferometer[{"PS"[alpha] -> 1}, 1], loss = QuantumInterferometer[{"Loss"[eta]}]},
             {
-                (integer /. Thread[{nx, kx} -> #]) & /@ {{-1, 0}, {2, -1}, {2, 5}, {1, 0}},
-                (real /. Thread[{nx, kx} -> #]) & /@ {{1/2, 0}, {2, I}, {2, 1/2}, {1, 0}},
-                ! FreeQ[partial, Inactive[Sum]] && ((Activate[partial /. {nx -> 2, kx -> #}] &) /@ {I, 1/2, -1, 3}) === {0, 0, 0, 0} &&
-                    And @@ Table[FullSimplify[Activate[partial /. {nx -> 2, kx -> k}] - chain["Amplitude", {2, 0} -> {k, 2 - k}]] === 0, {k, 0, 2}]
+                ps["Amplitude", {nx} -> {nx}, Assumptions -> {alpha == Pi}],
+                loss["Probability", {n} -> {k}, Assumptions -> eta == 0] === KroneckerDelta[k, 0],
+                loss["Probability", {n} -> {k}, Assumptions -> {eta == 1}] === KroneckerDelta[n, k],
+                Assuming[eta == 0, loss["Probability", {n} -> {k}]] === KroneckerDelta[k, 0]
             }
         ]
     ],
-    {{0, 0, 0, 1/Sqrt[2]}, {0, 0, 0, 1/Sqrt[2]}, True},
-    TestID -> "QI-assumptions-keep-unproved-constraints"
+    {(-1)^nx, True, True, True},
+    TestID -> "QI-assumptions-list-form-and-endpoint-transmissivities"
+]
+
+(* a non-numeric photon number that cannot be a nonnegative integer is rejected like a concrete one *)
+VerificationTest[
+    With[{hom = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        {hom["Amplitude", {nx, Infinity} -> {tx, 0}], hom["Amplitude", {nx, "a"} -> {tx, 0}]}
+    ],
+    {$Failed, $Failed},
+    {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-symbolic-photon-numbers-reject-infinite-and-string-entries"
+]
+
+(* Null and None are rejected too, and ::occ names the pattern at fault *)
+VerificationTest[
+    With[{hom = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        {hom["Amplitude", {nx, Null} -> {tx, 0}], QuantumInterferometer[{"Loss"[1/2]}]["Probability", {nx} -> {None}]}
+    ],
+    {$Failed, $Failed},
+    {HoldForm[Message[QuantumInterferometer::occ, {nx, Null}, 2]], HoldForm[Message[QuantumInterferometer::occ, {None}, 1]]},
+    TestID -> "QI-symbolic-photon-numbers-name-the-rejected-pattern"
+]
+
+VerificationTest[
+    With[{hom = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]},
+        hom["Amplitude", # -> {tx, 0}] & /@ {{nx, {1}}, {nx, Interval[{0, 1}]}}
+    ],
+    {$Failed, $Failed},
+    {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-symbolic-photon-numbers-reject-lists-and-placeholder-symbols"
+]
+
+(* the inverse, photon distributions and lossy states are simplified on the physical domain too *)
+VerificationTest[
+    Module[{eta},
+        With[{bs = QuantumInterferometer[{"BS"[th, ph]}], loss = QuantumInterferometer[{"Loss"[eta]}]},
+            {
+                bs["Dagger"]["Unitary"],
+                Values[bs["Probabilities", {1, 1}]],
+                Normal[loss[QuantumState[{1, I}/Sqrt[2], 2]]["DensityMatrix"]] === {{1/2 + (1 - eta)/2, -I Sqrt[eta]/2}, {I Sqrt[eta]/2, eta/2}},
+                FreeQ[Values[bs["Probabilities", "Coherent"[{a, 0}], "Cutoff" -> 1]], Im | Re],
+                With[{q = QuantumInterferometer["Random"[3]]}, q["Dagger"]["Unitary"] === ConjugateTranspose[q["Unitary"]]]
+            }
+        ]
+    ],
+    {
+        {{Cos[th], Sin[th]/E^(I ph)}, {-E^(I ph) Sin[th], Cos[th]}},
+        {2 Cos[th]^2 Sin[th]^2, (Cos[th]^2 - Sin[th]^2)^2, 2 Cos[th]^2 Sin[th]^2},
+        True, True, True
+    },
+    TestID -> "QI-dagger-probabilities-and-lossy-states-on-the-physical-domain"
+]
+
+(* a pattern that breaks a selection rule gives 0 with no message *)
+VerificationTest[
+    {
+        QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]["Amplitude", {nx, 0} -> {nx + 1, 0}],
+        QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {2, 3}, "PS"[Pi/5] -> 1}, 3]["Amplitude", {nx, 1, 0} -> {nx + 1, uy, uz}],
+        QuantumInterferometer[{"BS"[0.3, 0.7] -> {1, 2}}, 2]["Amplitude", {nx, 0} -> {nx + 1, 0}]
+    },
+    {0, 0, 0},
+    TestID -> "QI-symbolic-off-shell-patterns-are-zero-without-messages"
+]
+
+(* inexact angles: a numeric WignerD outside its index range is Indeterminate, so the selection
+   rules are held in the Piecewise condition and off-shell patterns give 0 *)
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[0.3, 0.7] -> {1, 2}}, 2], side = QuantumInterferometer[{"BS"[0.3, 0.7] -> {2, 3}}, 3]},
+        With[{f = bs["Amplitude", {n1, n2} -> {t1, t2}], g = side["Amplitude", {n1, n2, n3} -> {t1, t2, t3}]},
+            {
+                MatchQ[f, Piecewise[{{_WignerD, n1 + n2 == t1 + t2}}, 0]],
+                {f /. {n1 -> 0, n2 -> 0, t1 -> 1, t2 -> 0}, f /. {n1 -> 1, n2 -> 0, t1 -> 2, t2 -> 0},
+                    bs["Probability", {n1, n2} -> {t1, t2}] /. {n1 -> 1, n2 -> 0, t1 -> 2, t2 -> 0},
+                    g /. Thread[{n1, n2, n3, t1, t2, t3} -> {1, 0, 0, 0, 1, 0}]},
+                Max[Abs[Table[(f /. Thread[{n1, n2, t1, t2} -> Join[{2, 1}, p]]) - bs["Amplitude", {2, 1} -> p], {p, patterns[2, 3]}]]] < 10^-12
+            }
+        ]
+    ],
+    {True, {0, 0, 0, 0}, True},
+    TestID -> "QI-symbolic-inexact-angles-hold-the-selection-rules"
+]
+
+(* the modulus squared of a selection rule is the rule, and self-contradictory assumptions fail *)
+VerificationTest[
+    Module[{eta, n, k},
+        {
+            QuantumInterferometer[{"PS"[alpha] -> 1}, 1]["Probability", {nx} -> {tx}],
+            QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}, Assumptions -> {eta == 0, eta == 1}]
+        }
+    ],
+    {KroneckerDelta[nx, tx], $Failed},
+    {Refine::cas},
+    TestID -> "QI-assumptions-contradictory-and-squared-selection-rules"
 ]
 
 VerificationTest[
@@ -1301,23 +1440,23 @@ VerificationTest[
     TestID -> "QI-loss-large-occupation-uses-direct-count-law-without-cutoff"
 ]
 
+(* the count law is the bare binomial: normalized, with mean n eta, and no photon is created *)
 VerificationTest[
     Module[{eta, n, k},
-        With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
-            FullSimplify[qi["Probability", {n} -> {k},
-                Assumptions -> Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] ==
-                Binomial[n, k] eta^k (1 - eta)^(n - k),
-                Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] &&
-            With[{guarded = qi["Probability", {n} -> {k}]},
-                (guarded /. {n -> -1, k -> 0, eta -> 1/2}) === 0 &&
-                (guarded /. {n -> 1/2, k -> 0, eta -> 1/2}) === 0 &&
-                (guarded /. {n -> 2, k -> 3, eta -> 1/2}) === 0 &&
-                (guarded /. {n -> 2, k -> 1, eta -> 1/2}) === 1/2
-            ]
+        With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
+            {
+                probability === Binomial[n, k] eta^k (1 - eta)^(n - k),
+                QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k},
+                    Assumptions -> Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] === probability,
+                Sum[probability, {k, 0, n}],
+                Simplify[Sum[k probability, {k, 0, n}]] === n eta,
+                Table[probability /. {n -> input, k -> output}, {input, 0, 2}, {output, input + 1, 3}],
+                (probability /. {n -> 2, k -> 1, eta -> 1/2}) === 1/2
+            }
         ]
     ],
-    True,
-    TestID -> "QI-loss-symbolic-count-law-retains-nonnegative-integer-guards"
+    {True, True, 1, True, {{0, 0, 0}, {0, 0}, {0}}, True},
+    TestID -> "QI-loss-symbolic-count-law-is-the-bare-binomial"
 ]
 
 VerificationTest[
@@ -1325,7 +1464,7 @@ VerificationTest[
         With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
             FreeQ[probability, _QuantumInterferometer] &&
                 FreeQ[probability, s_Symbol /; StringStartsQ[Context[s], "Wolfram`QuantumFramework`"]] &&
-                ! FreeQ[probability, ConditionalExpression] &&
+                FreeQ[probability, ConditionalExpression | Piecewise | If] &&
                 FullSimplify[probability - Binomial[n, k] eta^k (1 - eta)^(n - k),
                     Element[{n, k}, Integers] && 0 <= k <= n && 0 < eta < 1] === 0
         ]
@@ -1352,22 +1491,24 @@ VerificationTest[
     TestID -> "QI-loss-symbolic-count-output-composes-independent-attenuators-and-untouched-modes"
 ]
 
+(* the symbolic law reaches the endpoints by continuity; an endpoint rate known in the evaluator
+   gives its limit directly, and an untouched mode conserves its photons *)
 VerificationTest[
-    Module[{eta, n, k},
+    Module[{eta, n, k, r, l},
         With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
-            And @@ Flatten[Table[
-                (probability /. {n -> input, k -> output, eta -> transmissivity}) ===
-                    If[transmissivity == 0, KroneckerDelta[output], KroneckerDelta[input, output]],
-                {transmissivity, {0, 1}}, {input, {0, 1, 3}}, {output, Range[0, 4]}]] &&
-                (probability /. {n -> -1, k -> 0, eta -> 0}) === 0 &&
-                (probability /. {n -> 1/2, k -> 0, eta -> 1}) === 0 &&
-                (probability /. {n -> I, k -> 0, eta -> 1/2}) === 0 &&
-                (probability /. {n -> 3, k -> -1, eta -> 1/2}) === 0 &&
-                (probability /. {n -> 3, k -> 1, eta -> 2}) === Undefined
+            {
+                And @@ Flatten[Table[
+                    Limit[probability /. {n -> input, k -> output}, eta -> transmissivity] ===
+                        If[transmissivity == 0, KroneckerDelta[output, 0], KroneckerDelta[input, output]],
+                    {transmissivity, {0, 1}}, {input, {0, 1, 3}}, {output, Range[0, 4]}]],
+                QuantumInterferometer[{"Loss"[0]}]["Probability", {n} -> {k}] === KroneckerDelta[k, 0],
+                QuantumInterferometer[{"Loss"[eta] -> 1}, 2]["Probability", {n, r} -> {k, l}] === probability KroneckerDelta[r, l],
+                Table[QuantumInterferometer[{"Loss"[0]}]["Probability", {3} -> {output}], {output, 0, 4}]
+            }
         ]
     ],
-    True,
-    TestID -> "QI-loss-symbolic-count-substitutions-preserve-endpoints-vacuum-and-domain-guards"
+    {True, True, True, {1, 0, 0, 0, 0}},
+    TestID -> "QI-loss-symbolic-count-endpoints-by-continuity-and-in-the-evaluator"
 ]
 
 VerificationTest[
@@ -1392,31 +1533,29 @@ VerificationTest[
     TestID -> "QI-loss-symbolic-count-evaluation-preserves-exact-machine-and-arbitrary-precision"
 ]
 
+(* inexact endpoint transmissivities: concrete counts keep the native binomial law and its
+   precision, and the symbolic-count law built at that endpoint agrees with them *)
 VerificationTest[
-    Module[{eta, n, k, parameter},
-        With[{probability = QuantumInterferometer[{"Loss"[eta]}]["Probability", {n} -> {k}]},
-            And @@ Flatten[Table[
-                With[{reference = PDF[BinomialDistribution[input, parameter], output] /. parameter -> transmissivity},
-                    (probability /. {n -> input, k -> output, eta -> transmissivity}) === reference
-                ],
-                {transmissivity, {0., 1., N[0, 60], N[1, 60]}}, {input, {0, 1, 3}}, {output, Range[0, 4]}]] &&
-                And @@ Map[Function[transmissivity,
-                    With[{qi = QuantumInterferometer[{"Loss"[transmissivity]}]},
-                        {bound = qi["Probability", {n} -> {k}]},
-                        And @@ Flatten[Table[(bound /. {n -> input, k -> output}) ===
-                            qi["Probability", {input} -> {output}],
-                            {input, {0, 1, 3}}, {output, Range[0, 4]}]]
-                    ]], {0., N[0, 60]}]
-        ]
+    Module[{n, k, parameter},
+        And @@ Map[Function[transmissivity,
+            With[{qi = QuantumInterferometer[{"Loss"[transmissivity]}]},
+                {bound = qi["Probability", {n} -> {k}]},
+                FreeQ[bound, Piecewise | If] &&
+                And @@ Flatten[Table[
+                    With[{reference = PDF[BinomialDistribution[input, parameter], output] /. parameter -> transmissivity},
+                        qi["Probability", {input} -> {output}] === reference && (bound /. {n -> input, k -> output}) == reference
+                    ],
+                    {input, {0, 1, 3}}, {output, Range[0, 4]}]]
+            ]], {0., N[0, 60]}]
     ],
     True,
-    TestID -> "QI-loss-symbolic-count-substitution-retains-native-inexact-endpoint-precision"
+    TestID -> "QI-loss-inexact-endpoint-counts-keep-native-precision"
 ]
 
 VerificationTest[
     Module[{eta},
         With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
-            ! FreeQ[qi["Probability", {1} -> {0}], ConditionalExpression] &&
+            qi["Probability", {1} -> {0}] === 1 - eta &&
             qi["Probability", {1} -> {0}, Assumptions -> 0 <= eta <= 1] === 1 - eta &&
             Assuming[0 <= eta <= 1, qi["Probability", {1} -> {0}]] === 1 - eta
         ]
@@ -1740,13 +1879,13 @@ VerificationTest[
             With[{probabilities = qi["Probabilities", "Coherent"[{1}], "Cutoff" -> 2]},
                 And @@ Table[Lookup[probabilities, QuditName[{k}]] ===
                     qi["Probability", "Coherent"[{1}] -> {k}], {k, 0, 2}] &&
-                    Values[probabilities /. eta -> 2] === ConstantArray[Undefined, 3] &&
+                    Values[probabilities] === {E^(-eta), eta E^(-eta), eta^2 E^(-eta)/2} &&
                     Values[probabilities /. eta -> 0] === {1, 0, 0}
             ]
         ]
     ],
     True,
-    TestID -> "QI-loss-coherent-probability-table-retains-the-scalar-physical-domain"
+    TestID -> "QI-loss-coherent-probability-table-is-the-bare-Poisson-law"
 ]
 
 VerificationTest[
@@ -1797,13 +1936,12 @@ VerificationTest[
     Module[{eta},
         With[{qi = QuantumInterferometer[{"Loss"[eta]}]},
             {qi["Probability", {1} -> {0}, Assumptions -> eta == I],
-             qi["Probability", {1} -> {0}] /. eta -> I,
-             Values[qi["Probabilities", {1}] /. eta -> I],
-             Values[qi["Probabilities", "Coherent"[{1}], "Cutoff" -> 1] /. eta -> I]}
+             qi["Probability", {1} -> {0}, Assumptions -> eta > 1],
+             Values[qi["Probabilities", {1}]] === {1 - eta, eta}}
         ]
     ],
-    {$Failed, Undefined, {Undefined, Undefined}, {Undefined, Undefined}}, {Refine::fas},
-    TestID -> "QI-loss-nonreal-assumptions-fail-and-probability-substitutions-are-undefined"
+    {$Failed, $Failed, True}, {Refine::fas, Refine::fas},
+    TestID -> "QI-loss-assumptions-outside-the-physical-domain-fail"
 ]
 
 VerificationTest[

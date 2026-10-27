@@ -40,7 +40,14 @@ PackageScope["QuantumInterferometerQ"]
    Squeezers "S"[xi] -> {p}, S(xi) = Exp[(xi^* a^2 - xi a^dag^2) / 2] as SqueezeOperator,
    make the network active: "Unitary" is None and "Bogoliubov" holds {alpha, beta, c}
    with U a_k^dag U^dag = Sum_j (alpha_jk a_j^dag + beta_jk a_j) and c = <0|U|0>.
-   Passive networks carry no "Bogoliubov" key and keep the permanent paths. *)
+   Passive networks carry no "Bogoliubov" key and keep the permanent paths.
+
+   Physical domain. Photon numbers are nonnegative integers; beam-splitter angles theta, phi and
+   phase-shifter angles alpha are real; loss transmissivities eta are real with 0 <= eta <= 1;
+   coherent amplitudes and squeezing parameters are complex. Each constraint follows from the
+   argument's role. Concrete inputs outside the domain are rejected. Symbolic results are formulas
+   on the domain, simplified under it and returned without conditions that restate it; Assumptions
+   add relations beyond it. A loss formula reaches eta = 0 and eta = 1 by continuity. *)
 
 
 QuantumInterferometer::usage = "QuantumInterferometer[u] decomposes the m\[Times]m unitary u into a mesh of beam splitters and phase shifters.
@@ -50,9 +57,9 @@ Bare beam splitters act on modes {1, 2}; bare phase shifters and squeezers act o
 QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
 Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
 interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
-\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions over dummy indices K[j], numbered past any K[j] in the photon numbers, the element parameters or the assumptions; as with any dummy index, a K[j] substituted into the result later is captured by the sums.
-Transition queries accept Assumptions -> assumptions or an enclosing Assuming to refine the result on that domain; unproved photon constraints remain guarded.
-Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. Loss supports passive optics, Fock probabilities, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.";
+\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions over dummy indices K[j], numbered past any K[j] in the photon numbers, the element parameters or the assumptions; as with any dummy index, a K[j] substituted into the result later is captured by the sums. Inexact angles given at construction are handled in the formula; inexact values substituted for symbolic angles later should follow the photon numbers, since a numeric WignerD outside its index range is Indeterminate.
+Symbolic results hold for nonnegative integer photon numbers, real beam-splitter and phase-shifter angles and real transmissivities 0 <= eta <= 1, with complex coherent amplitudes and squeezing parameters; transition queries accept Assumptions -> assumptions or an enclosing Assuming for relations beyond these domains.
+Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. A symbolic eta reaches eta = 0 and eta = 1 as limits of its formula, or through Assumptions -> eta == 0 or a numeric \"Loss\"[0]. Loss supports passive optics, Fock probabilities, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
@@ -252,7 +259,7 @@ hafnianTraceTerms := hafnianTraceTerms = Compile[{{b, _Complex, 2}, {lo, _Intege
         ];
         tot
     ],
-    RuntimeAttributes -> {Listable}, Parallelization -> True, RuntimeOptions -> "Speed"
+    RuntimeAttributes -> {Listable}, Parallelization -> False, RuntimeOptions -> "Speed"
 ]
 
 
@@ -612,14 +619,27 @@ QuantumInterferometerProp[qi_, "Probability", pattern_Rule, opts : OptionsPatter
 QuantumInterferometerProp[qi_ ? lossyQ, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
     lossTransitionValue[qi, pattern, OptionValue[Assumptions]]
 
-(* Build the guarded transition independently of ambient assumptions. Explicit query
-   assumptions replace $Assumptions and remove only constraints they prove; a refined
-   formula is valid on that supplied domain. Keep sums inactive and precision unchanged. *)
+(* Build the transition independently of ambient assumptions, then refine it on the physical
+   domain of its arguments together with the query assumptions, which replace $Assumptions.
+   Assumptions that contradict the physical domain fail. Keep sums inactive and precision unchanged. *)
 transitionValue[qi_, s_ -> t_, f_, assumptions_] := Block[{$Assumptions = True},
     With[{amplitude = interferometerAmplitude[qi, occupation[s], occupation[t], assumptions]},
-        {value = If[amplitude === $Failed, $Failed, f[amplitude]]},
-        If[value === $Failed || assumptions === True, value,
-            Check[Refine[value, Assumptions -> assumptions], $Failed, Refine::fas]
+        physicalValue[qi, {occupation[s], occupation[t]}, If[amplitude === $Failed, $Failed, f[amplitude]], assumptions]
+    ]
+]
+
+(* rebuild[domain, value] lets a formula be rebuilt on the refined domain before it is refined;
+   a squared Kronecker delta, from the modulus of a selection rule, is the rule itself *)
+physicalValue[_, _, $Failed, __] := $Failed
+
+physicalValue[_, _, value_ ? NumericQ, True, ___] := value
+
+physicalValue[qi_, patterns_, value_, assumptions_, rebuild_ : (#2 &)] := With[{given = And @@ Flatten[{assumptions}]},
+    {domain = Check[given && Refine[opticalDomain[qi["Elements"]] && occupationDomain[patterns], Assumptions -> given], $Failed, {Refine::fas, Refine::cas}]},
+    If[domain === $Failed, $Failed,
+        Replace[
+            Check[Refine[If[domain === False, value, rebuild[domain, value]], Assumptions -> domain], $Failed, {Refine::fas, Refine::cas}],
+            Power[delta_KroneckerDelta, _Integer ? Positive] :> delta, {0, Infinity}
         ]
     ]
 ]
@@ -628,7 +648,7 @@ interferometerAmplitude[qi_, in_, out_, assumptions_] := Which[
     ! FreeQ[{in, out}, "Coherent"[___]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
     lossyQ[qi], Message[QuantumInterferometer::lossy, "Fock transition amplitudes"]; $Failed,
     symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out, assumptions], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
-    occupationQ[qi, in] && occupationQ[qi, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
+    patternsQ[qi, in, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
     True, $Failed
 ]
 
@@ -643,7 +663,11 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
         ],
         True, Replace[gaussianAmplitudes[qi, in, OptionValue["Cutoff"]], a_Association :> Abs[a] ^ 2]
     ]},
-    If[lossyQ[qi] && AssociationQ[probabilities], lossProbabilityDomain[qi, #] & /@ probabilities, probabilities]
+    (* symbolic distributions are simplified on the physical domain of the elements *)
+    If[AssociationQ[probabilities] && ! VectorQ[Values[probabilities], NumericQ],
+        Refine[#, Assumptions -> opticalDomain[qi["Elements"]]] & /@ probabilities,
+        probabilities
+    ]
 ]
 
 (* Clifford and Clifford, arXiv:1706.01260, Algorithm B: with the input photons in random order, photon k
@@ -688,7 +712,7 @@ QuantumInterferometerProp[qi_ ? lossyQ, "Dagger"] := (Message[QuantumInterferome
 QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceiling[Max[0, qi["Layers"]] - 1/2]]},
     elementsInterferometer[
         Reverse[inverseElement /@ qi["Elements"]], Reverse[last + 1 - qi["Layers"]], qi["Modes"],
-        If[passiveQ[qi], ConjugateTranspose[qi["Unitary"]], None], KeyTake[First[qi], {"Parameters", "DropIdentities"}]
+        If[passiveQ[qi], refineArray[ConjugateTranspose[qi["Unitary"]], opticalDomain[qi["Elements"]]], None], KeyTake[First[qi], {"Parameters", "DropIdentities"}]
     ]
 ]
 
@@ -740,8 +764,19 @@ occupationQ[qi_, s_] := If[
     Message[QuantumInterferometer::occ, s, qi["Modes"]]; False
 ]
 
-symbolicPatternsQ[qi_, s_, t_] := VectorQ[s] && VectorQ[t] && Length[s] == Length[t] == qi["Modes"] &&
-    ! VectorQ[Join[s, t], IntegerQ] && VectorQ[Join[s, t], ! NumericQ[#] || IntegerQ[#] && # >= 0 &]
+(* an entry is a nonnegative integer or an expression that could stand for one *)
+symbolicOccupationQ[x_] := IntegerQ[x] && x >= 0 || ! NumericQ[x] && FreeQ[x, _List | _Interval | _Quantity | _Association | _String |
+    _Rule | _RuleDelayed | _Missing | _Failure | _Function | _DirectedInfinity | Indeterminate | Undefined | $Failed |
+    Automatic | All | True | False | Null | None]
+
+symbolicOccupationListQ[s_, m_] := VectorQ[s] && VectorQ[s, symbolicOccupationQ] && Length[s] == m
+
+symbolicPatternsQ[qi_, s_, t_] := symbolicOccupationListQ[s, qi["Modes"]] && symbolicOccupationListQ[t, qi["Modes"]] &&
+    ! VectorQ[Join[s, t], IntegerQ]
+
+(* once the pair is neither concrete nor symbolic, ::occ names the pattern at fault *)
+patternsQ[qi_, s_, t_] := (symbolicOccupationListQ[s, qi["Modes"]] || occupationQ[qi, s]) &&
+    (symbolicOccupationListQ[t, qi["Modes"]] || occupationQ[qi, t])
 
 cutoffQ[cutoff_] := If[MatchQ[cutoff, Automatic | _Integer ? NonNegative],
     True,
@@ -869,13 +904,9 @@ symbolicCounts[c_, {"BS"[__] -> {p_, q_}, k_}] := ReplacePart[c, {p -> k, q -> c
 symbolicCounts[c_, _] := c
 
 (* With j = N/2, the magnetic indices are half the input and output occupation differences.
-   WL's Euler-angle convention absorbs the beam-splitter phase and exchange sign.
-   Keep zero outside the physical index range rather than WignerD's analytic continuation. *)
-symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] := With[{
-    j = (c[[p]] + c[[q]]) / 2, in = (c[[p]] - c[[q]]) / 2
-},
-    {out = k - j},
-    Piecewise[{{0, j < 0 || Abs[in] > j || Abs[out] > j}}, WignerD[{j, in, out}, ph, 2 th, - ph]]
+   WL's Euler-angle convention absorbs the beam-splitter phase and exchange sign. *)
+symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] := With[{j = (c[[p]] + c[[q]]) / 2},
+    WignerD[{j, (c[[p]] - c[[q]]) / 2, k - j}, ph, 2 th, - ph]
 ]
 
 symbolicFactor[c_, {"PS"[al_] -> {p_}, _}] := E^(I al c[[p]])
@@ -884,8 +915,11 @@ symbolicFactor[_, {"Loss"[_] -> _, _}] := 1
 
 (* Beam splitter j sums over K[offset + j], the default summation index of K::usage, with
    offset past every integer-indexed K, heads included, in the element parameters, the
-   photon numbers and the assumptions, so no symbol is created and none of these is bound. *)
-symbolicAmplitude[elements_, n_, t_, assumptions_] := Module[{steps, counts, ks, eqs, rules, free, cs},
+   photon numbers and the assumptions, so no symbol is created and none of these is bound.
+   WignerD does not vanish outside its index range, so an intermediate photon count that the photon
+   numbers, conservation and the sum ranges leave unbounded conditions the formula: photons cannot
+   reach a mode before a beam splitter couples them. *)
+symbolicAmplitude[elements_, n_, t_, assumptions_] := Module[{steps, counts, ks, eqs, rules, free, cs, selection, path},
     steps = With[{
         offset = Max[0, Cases[{elements, n, t, assumptions}, K[j_Integer] :> j, Infinity, Heads -> True]],
         splitters = MatchQ["BS"[__] -> _] /@ elements
@@ -903,10 +937,13 @@ symbolicAmplitude[elements_, n_, t_, assumptions_] := Module[{steps, counts, ks,
     ];
     free = DeleteCases[ks, Alternatives @@ Keys[rules]];
     cs = Select[DeleteDuplicates[Expand[Flatten[Rest[counts]] /. rules]], ! NumericQ[#] &];
-    With[{angles = Select[Cases[elements, (("BS"[_, a_] | "PS"[a_]) -> _) :> a], ! NumericQ[#] &], occupations = Join[n, t]},
-        {amplitude = KroneckerDelta[Total[n], Total[t]] (Eliminate[eqs, ks] /. {Equal -> KroneckerDelta, And -> Times, True -> 1, False -> 0}) *
-        Inactive[Sum][
-            Times @@ MapThread[symbolicFactor, {Most[counts], steps}] /. rules,
+    selection = Eliminate[eqs, ks];
+    path = pathConditions[DeleteDuplicates[Expand[Flatten[Rest[counts]] /. rules]], free,
+        selection && Total[n] == Total[t] && occupationDomain[{n, t}]];
+    With[{angles = Select[Cases[elements, (("BS"[_, a_] | "PS"[a_]) -> _) :> a], ! NumericQ[#] &],
+          inner = And @@ Select[path, ! FreeQ[#, Alternatives @@ free] &], outer = And @@ Select[path, FreeQ[#, Alternatives @@ free] &]},
+        {amplitude = Inactive[Sum][
+            conditioned[Times @@ MapThread[symbolicFactor, {Most[counts], steps}] /. rules, inner],
             Sequence @@ Table[
                 With[{k = free[[j]], c = Select[cs, ! FreeQ[#, free[[j]]] && FreeQ[#, Alternatives @@ Drop[free, j]] &]},
                     {k, Max[0, Sequence @@ (k - Select[c, Coefficient[#, k] == 1 &])], Min @@ (k + Select[c, Coefficient[#, k] == -1 &])}
@@ -921,9 +958,30 @@ symbolicAmplitude[elements_, n_, t_, assumptions_] := Module[{steps, counts, ks,
             Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Collect[Expand[x / I], angles]),
             WignerD[{j_, m1_, m2_}, eulerAngles___] :> WignerD[Together[Expand[{j, m1, m2}]], eulerAngles]
         }},
-        (* Hold the formula until the discrete domain is known, before evaluating sum bounds. *)
-        If[Element[occupations, Integers], If[Min[occupations] >= 0, amplitude, 0], 0]
+        (* An inexact WignerD evaluates outside its index range, to Indeterminate, before a vanishing
+           Kronecker delta can multiply it, so with inexact beam-splitter angles the selection rules
+           join the held Piecewise condition. *)
+        If[AnyTrue[Flatten[Cases[elements, ("BS"[a__] -> _) :> {a}]], InexactNumberQ],
+            conditioned[amplitude, outer && selection && Total[n] == Total[t]],
+            KroneckerDelta[Total[n], Total[t]] (selection /. {Equal -> KroneckerDelta, And -> Times, True -> 1, False -> 0}) conditioned[amplitude, outer]
+        ]
     ]
+]
+
+conditioned[expr_, condition_] /; TrueQ[condition] := expr
+
+conditioned[expr_, condition_] := Piecewise[{{expr, condition}}, 0]
+
+occupationDomain[patterns_] := And @@ Cases[Flatten[{patterns}], x_ /; ! NumericQ[x] && FreeQ[x, "Coherent"] :> Element[x, Integers] && x >= 0]
+
+(* a count is bounded by the sum over its last free index when that index enters with coefficient 1 or -1 *)
+sumRangeQ[c_, free_] := With[{last = SelectFirst[Reverse[free], ! FreeQ[c, #] &]},
+    ! MissingQ[last] && MatchQ[Coefficient[c, last], 1 | -1]
+]
+
+(* an off-shell pattern makes the domain False: the selection rules already give 0 *)
+pathConditions[counts_, free_, domain_] := With[{d = Simplify[domain]},
+    If[d === False, {}, DeleteCases[Simplify[# >= 0, d] & /@ Select[counts, ! sumRangeQ[#, free] &], True]]
 ]
 
 shellAmplitudes[g_, s_, n_] := AssociationMap[gaussianAmplitude[g, s, #] &, photonPatterns[n, Length[s]]]
@@ -1091,39 +1149,34 @@ lossFockProbabilities[qi_, s_] := With[{
 
 (* General symbolic occupations are retained for independent attenuators.  With
    mode mixing, constructing a permanent needs explicit integer occupations. *)
-lossTransitionProbability[qi_, in_, out_] := Which[
+lossTransitionProbability[qi_, in_, out_, rate_ : Identity] := Which[
     ! FreeQ[{in, out}, "Coherent"[___]],
         Replace[coherentAmplitudes[qi, in, {out}, Abs[#] ^ 2 &], {p_} :> p],
     symbolicPatternsQ[qi, in, out],
         If[FreeQ[qi["Elements"], "BS"[__] -> _],
-            With[{
-                occupations = Join[in, out],
-                probability = Times @@ MapThread[
-                    Function[{photons, eta, detected},
-                        With[{density = lossCountProbability[photons, eta, detected]},
-                            (* Guard the native PDF's zero exponents without changing its numerical powers. *)
-                            {endpoint = density /. Power[base_, exponent_] :> If[exponent == 0, 1, base^exponent]},
-                            If[eta (1 - eta) == 0, endpoint, density]
-                        ]
-                    ],
-                    {in, lossRates[qi["Elements"], qi["Modes"]], out}
-                ]
-            },
-                If[Element[occupations, Integers], If[Min[occupations] >= 0, probability, 0], 0]
-            ],
+            Times @@ MapThread[symbolicCountProbability, {in, rate /@ lossRates[qi["Elements"], qi["Modes"]], out}],
             Message[QuantumInterferometer::lossoccupation]; $Failed
         ],
-    occupationQ[qi, in] && occupationQ[qi, out], lossFockProbability[qi, in, out],
+    patternsQ[qi, in, out], lossFockProbability[qi, in, out],
     True, $Failed
 ]
 
-lossProbabilityDomain[qi_, value_] := ConditionalExpression[
-    Refine[value, Assumptions -> opticalDomain[qi["Elements"]]], lossDomain[qi["Elements"]]]
+(* The binomial count law; a numeric endpoint rate takes its limit, so a mode no
+   attenuator touches conserves its photons. *)
+symbolicCountProbability[n_, eta_ ? NumericQ, k_] /; eta == 0 := KroneckerDelta[k, 0] (1 - eta) ^ n
 
+symbolicCountProbability[n_, eta_ ? NumericQ, k_] /; 1 - eta == 0 := KroneckerDelta[n, k] eta ^ n
+
+symbolicCountProbability[n_, eta_, k_] := Binomial[n, k] eta ^ k (1 - eta) ^ (n - k)
+
+(* Rates refined on the domain reach the endpoint laws, as eta == 0 does. *)
 lossTransitionValue[qi_, s_ -> t_, assumptions_] := Block[{$Assumptions = True},
-    With[{value = lossTransitionProbability[qi, occupation[s], occupation[t]]},
-        If[value === $Failed, $Failed,
-            Check[Refine[lossProbabilityDomain[qi, value], Assumptions -> assumptions], $Failed, Refine::fas]
+    With[{in = occupation[s], out = occupation[t]},
+        physicalValue[qi, {in, out}, lossTransitionProbability[qi, in, out], assumptions,
+            If[FreeQ[{in, out}, "Coherent"[___]] && symbolicPatternsQ[qi, in, out],
+                Function[{domain, value}, lossTransitionProbability[qi, in, out, Function[rate, Refine[rate, Assumptions -> domain]]]],
+                #2 &
+            ]
         ]
     ]
 ]
@@ -1142,13 +1195,23 @@ lossStateStep[qs_, "Loss"[eta_] -> {p_}, d_, m_] := With[{
     operators = KroneckerProduct[IdentityMatrix[d ^ (p - 1), SparseArray], #,
         IdentityMatrix[d ^ (m - p), SparseArray]] & /@ lossKraus[eta, d]
 },
-    QuantumState[Refine[Total[# . rho . ConjugateTranspose[#] & /@ operators], Assumptions -> 0 <= eta <= 1],
+    QuantumState[refineArray[Total[# . rho . ConjugateTranspose[#] & /@ operators], 0 <= eta <= 1],
         ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]
 ]
 
 lossStateStep[qs_, element_, d_, _] := elementOperator[element, d][qs]
 
-lossState[qi_, qs_, d_, m_] := Fold[lossStateStep[#1, #2, d, m] &, qs, qi["Elements"]]
+lossState[qi_, qs_, d_, m_] := With[{state = Fold[lossStateStep[#1, #2, d, m] &, qs, qi["Elements"]]},
+    QuantumState[refineArray[state["Computational"]["DensityMatrix"], opticalDomain[qi["Elements"]]],
+        ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]
+]
+
+(* Refine leaves the entries of a SparseArray untouched, so refine its rules *)
+refineArray[a_ ? (ArrayQ[#, _, NumericQ] &), _] := a
+
+refineArray[a_SparseArray, domain_] := SparseArray[Refine[ArrayRules[a], Assumptions -> domain], Dimensions[a]]
+
+refineArray[a_, domain_] := Refine[a, Assumptions -> domain]
 
 lossPrimitive[{x_, p_, eta_}, labelQ_] := Tooltip[
     {EdgeForm[GrayLevel[0.25]], FaceForm[GrayLevel[0.85]], Disk[{x, -p}, .12],
