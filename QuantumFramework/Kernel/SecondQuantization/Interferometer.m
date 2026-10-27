@@ -191,8 +191,10 @@ takagi[a_, tol_] := Module[{u, s, v, w},
     {w, s}
 ]
 
-gaussianKernel[QuantumInterferometer[KeyValuePattern["Bogoliubov" -> {a_, b_, c_}]]] := With[{bv = vacuumMatrix[a, b]},
-    {ArrayFlatten[{{bv, a + bv . b}, {Transpose[a + bv . b], (Transpose[a] . b + Transpose[b] . a) / 2 + Transpose[b] . bv . b}}], c}
+(* With alpha^dag alpha - beta^dag beta = 1 and alpha^T beta symmetric, the blocks reduce to
+   B = -(alpha^dag)^-1 beta^dag, (alpha^dag)^-1 and beta^T (alpha^dag)^-1 *)
+gaussianKernel[QuantumInterferometer[KeyValuePattern["Bogoliubov" -> {a_, b_, c_}]]] := With[{ai = Inverse[ConjugateTranspose[a]]},
+    {ArrayFlatten[{{- ai . ConjugateTranspose[b], ai}, {Transpose[ai], Transpose[b] . ai}}], c}
 ]
 
 gaussianAmplitude[{k_, c_}, s_, t_] := c / Sqrt[Times @@ (s!) Times @@ (t!)] With[{r = Join[t, s]},
@@ -880,7 +882,7 @@ coherentAmplitudes[qi_, s_, outs_, f_] := Enclose[
             Replace[outs, {
                 {"Coherent"[g_List]} :> (
                     ConfirmAssert[VectorQ[g] && Length[g] == m, Message[QuantumInterferometer::occ, "Coherent"[g], m]];
-                    f[Exp[(Conjugate[g] . b - Conjugate[b] . g) / 2 - Total[Abs[g - b] ^ 2] / 2] Times @@ MapThread[If[#2 == 0, 1, #1 ^ #2 / Sqrt[#2!]] &, {Transpose[w] . Conjugate[g - b], n}]]
+                    f[Exp[I Im[Conjugate[g] . b] - Total[Abs[g - b] ^ 2] / 2] Times @@ MapThread[If[#2 == 0, 1, #1 ^ #2 / Sqrt[#2!]] &, {Transpose[w] . Conjugate[g - b], n}]]
                 ),
                 cutoff : Automatic | _Integer :> With[{top = Replace[cutoff, Automatic :> (
                         ConfirmAssert[VectorQ[N[a], NumericQ], Message[QuantumInterferometer::symcutoff]];
@@ -1008,7 +1010,7 @@ autoShells[g_, s_, start_] := With[{
 ]
 
 (qi_QuantumInterferometer ? QuantumInterferometerQ)[s : _List | Ket[_List] | _QuditName, opts : OptionsPattern[{"Cutoff" -> Automatic}]] /;
-    VectorQ[occupation[s], IntegerQ] := With[{in = occupation[s], cutoff = OptionValue[{opts, "Cutoff" -> Automatic}, "Cutoff"]},
+    VectorQ[occupation[s], IntegerQ] || symbolicOccupationListQ[occupation[s], qi["Modes"]] := With[{in = occupation[s], cutoff = OptionValue[{opts, "Cutoff" -> Automatic}, "Cutoff"]},
     Which[
         ! cutoffQ[cutoff], $Failed,
         ! occupationQ[qi, in], $Failed,
@@ -1059,7 +1061,7 @@ photonSectorState[w_, components_, d_, m_, parameters_] := With[{
             ]},
             If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
             If[lossyQ[qi], lossState[qi, qs, d, m], If[ components === None,
-                qi["CircuitOperator", d][qs],
+                circuitState[qi, qs, d, m],
                 photonSectorState[qi["Unitary"], components, d, m, qs["ParameterSpec"]]
             ]]
         ],
@@ -1200,6 +1202,12 @@ lossStateStep[qs_, "Loss"[eta_] -> {p_}, d_, m_] := With[{
 ]
 
 lossStateStep[qs_, element_, d_, _] := elementOperator[element, d][qs]
+
+(* a symbolic state from the Fock-space circuit is refined on the physical domain, as a lossy state is *)
+circuitState[qi_, qs_, d_, m_] := With[{state = qi["CircuitOperator", d][qs]},
+    If[ArrayQ[state["Computational"]["State"], _, NumericQ], state,
+        QuantumState[refineArray[state["Computational"]["State"], opticalDomain[qi["Elements"]]], ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]]
+]
 
 lossState[qi_, qs_, d_, m_] := With[{state = Fold[lossStateStep[#1, #2, d, m] &, qs, qi["Elements"]]},
     QuantumState[refineArray[state["Computational"]["DensityMatrix"], opticalDomain[qi["Elements"]]],

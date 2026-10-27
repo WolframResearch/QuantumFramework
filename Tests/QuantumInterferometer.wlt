@@ -965,6 +965,57 @@ VerificationTest[
     TestID -> "QI-dagger-probabilities-and-lossy-states-on-the-physical-domain"
 ]
 
+(* the all-outputs form names symbolic photon numbers instead of staying unevaluated *)
+VerificationTest[
+    QuantumInterferometer[{"BS"[th, ph]}][{n1, n2}],
+    $Failed,
+    {QuantumInterferometer::occ},
+    TestID -> "QI-symbolic-all-outputs-form-rejects-symbolic-photon-numbers"
+]
+
+(* the overlap phase of two coherent states has unit modulus, so probabilities are plain Gaussians *)
+VerificationTest[
+    Module[{eta},
+        With[{loss = QuantumInterferometer[{"Loss"[eta]}], bs = QuantumInterferometer[{"BS"[th, ph]}]},
+            {
+                loss["Probability", "Coherent"[{a}] -> "Coherent"[{b}]] === E^(-Abs[b - a Sqrt[eta]]^2),
+                FreeQ[bs["Probability", "Coherent"[{a, b}] -> "Coherent"[{c, d}]], Re | Im]
+            }
+        ]
+    ],
+    {True, True},
+    TestID -> "QI-coherent-overlap-probabilities-carry-no-phase-term"
+]
+
+(* the Gaussian kernel blocks are (alpha^dag)^-1 and its products, so squeezed amplitudes come out compact *)
+VerificationTest[
+    {
+        QuantumInterferometer[{"S"[xi]}]["Amplitude", {1} -> {3}],
+        With[{elements = {"S"[x1] -> 1, "S"[x2] -> 2, "BS"[Pi/5, 1/3]}, values = {x1 -> 1/3 + I/4, x2 -> -1/2}},
+            Abs[N[QuantumInterferometer[elements]["Amplitude", {1, 0} -> {1, 2}] /. values] -
+                N[QuantumInterferometer[elements /. values]["Amplitude", {1, 0} -> {1, 2}]]] < 10^-12
+        ]
+    },
+    {-Sqrt[3/2] E^(I Arg[xi]) Sech[Abs[xi]]^(5/2) Sinh[Abs[xi]], True},
+    TestID -> "QI-squeezed-symbolic-amplitudes-use-the-closed-form-kernel"
+]
+
+(* states through the Fock-space circuit are simplified on the physical domain; numeric ones are untouched *)
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[th, ph]}], rho = QuantumState[DiagonalMatrix[{0, 1/2, 1/2, 0}], {2, 2}]},
+        {
+            Normal[bs[rho]["DensityMatrix"]],
+            FreeQ[Normal[QuantumInterferometer[{"S"[xi]}][QuantumState[DiagonalMatrix[{1/2, 1/2, 0}], 3]]["DensityMatrix"]], Conjugate],
+            With[{q = QuantumInterferometer[{"BS"[1/3, 1/5]}]}, Normal[q[rho]["DensityMatrix"]] === Normal[q["CircuitOperator", 2][rho]["DensityMatrix"]]]
+        }
+    ],
+    {
+        {{0, 0, 0, 0}, {0, (Cos[th]^2 + Sin[th]^2)/2, 0, 0}, {0, 0, (Cos[th]^2 + Sin[th]^2)/2, 0}, {0, 0, 0, 0}},
+        True, True
+    },
+    TestID -> "QI-mixed-and-squeezed-states-on-the-physical-domain"
+]
+
 (* a pattern that breaks a selection rule gives 0 with no message *)
 VerificationTest[
     {
