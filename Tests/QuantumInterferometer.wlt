@@ -576,21 +576,25 @@ EndTestSection[]
 
 BeginTestSection["QuantumInterferometer: sampling"]
 
-(* total variation distance of 5000 samples from "Probabilities"; sampling noise alone is about 0.025 here *)
+(* total variation distance of 5000 samples from "Probabilities", lossless and lossy; sampling noise alone is about 0.025 here *)
 VerificationTest[
     SeedRandom[31];
-    With[{qi = QuantumInterferometer["Random"[4]], k = 5000},
+    With[{
+        qi = QuantumInterferometer["Random"[4]],
+        lossy = QuantumInterferometer[{"BS"[0.7, 0.3] -> {1, 2}, "Loss"[0.6] -> 1, "BS"[0.4, 1.1] -> {2, 3}, "Loss"[0.85] -> 3, "BS"[1.0, -0.5] -> {1, 2}}, 3],
+        k = 5000
+    },
         Map[
-            With[{probs = qi["Probabilities", #], counts = qi["SampleCounts", #, k]},
+            With[{probs = #[[1]]["Probabilities", #[[2]]], counts = #[[1]]["SampleCounts", #[[2]], k]},
                 With[{keys = Union[Keys[probs], Keys[counts]]},
                     Total[counts] === k && Complement[Keys[counts], Keys[probs]] === {} &&
                         Total[Abs[Lookup[probs, keys, 0] - Lookup[counts, keys, 0] / k]] / 2 < 0.06
                 ]
             ] &,
-            {{1, 1, 1, 0}, {2, 1, 0, 0}}
+            {{qi, {1, 1, 1, 0}}, {qi, {2, 1, 0, 0}}, {lossy, {1, 1, 1}}, {lossy, {2, 1, 0}}}
         ]
     ],
-    {True, True},
+    {True, True, True, True},
     TestID -> "QI-samples-match-probabilities"
 ]
 
@@ -698,13 +702,15 @@ VerificationTest[
         With[{counts = #["Name"] & /@ lossy["Samples", "Coherent"[a], k], means = Abs[lossy["TransferMatrix"] . a] ^ 2},
             {
                 Max[Abs[Mean[counts] - means] / Sqrt[means / k]] < 5,
-                Max[Abs[Variance[counts] / means - 1]] < 0.06,
+                Max[Abs[Variance[counts] - means] / Sqrt[(means + 2 means ^ 2) / k]] < 5,
+                Max[Abs[Covariance[counts] - DiagonalMatrix[Variance[counts]]] / Sqrt[Outer[Times, means, means] / k]] < 5,
                 Keys[lossy["SampleCounts", "Coherent"[{0, 0, 0}], 7]],
+                Keys[lossy["SampleCounts", {"Coherent"[0], "Coherent"[0], "Coherent"[0]}, 7]],
                 lossy["Samples", "Coherent"[a], 0]
             }
         ]
     ],
-    {True, True, {QuditName[{0, 0, 0}]}, {}},
+    {True, True, True, {QuditName[{0, 0, 0}]}, {QuditName[{0, 0, 0}]}, {}},
     TestID -> "QI-samples-coherent-poisson-counts"
 ]
 

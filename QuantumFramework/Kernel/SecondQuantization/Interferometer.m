@@ -60,7 +60,7 @@ interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent
 \"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions over dummy indices K[j], numbered past any K[j] in the photon numbers, the element parameters or the assumptions; as with any dummy index, a K[j] substituted into the result later is captured by the sums. Inexact angles given at construction are handled in the formula; inexact values substituted for symbolic angles later should follow the photon numbers, since a numeric WignerD outside its index range is Indeterminate.
 Symbolic results hold for nonnegative integer photon numbers, real beam-splitter and phase-shifter angles and real transmissivities 0 <= eta <= 1, with complex coherent amplitudes and squeezing parameters; transition queries accept Assumptions -> assumptions or an enclosing Assuming for relations beyond these domains.
 Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. A symbolic eta reaches eta = 0 and eta = 1 as limits of its formula, or through Assumptions -> eta == 0 or a numeric \"Loss\"[0]. Loss supports passive optics, Fock probabilities, sampling, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.
-interferometer[\"Samples\", input, k] draws k output photon patterns of a passive network, lossy or not, for photon numbers {n1, \[Ellipsis]} or \"Coherent\"[{\[Alpha]1, \[Ellipsis]}]; interferometer[\"SampleCounts\", input, k] counts them.";
+interferometer[\"Samples\", input, k] draws k output photon patterns of a passive network, lossy or not, for photon numbers {n1, \[Ellipsis]}, \"Coherent\"[{\[Alpha]1, \[Ellipsis]}] or {\"Coherent\"[\[Alpha]1], \[Ellipsis]}; interferometer[\"SampleCounts\", input, k] counts them.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
@@ -84,9 +84,9 @@ QuantumInterferometer::squeezed = "`1` needs a passive interferometer, without s
 QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probability `2`; set \"Cutoff\" -> n to keep more.";
 QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing or coherent amplitudes; set \"Cutoff\" -> n.";
 QuantumInterferometer::samplecount = "\"`1`\" takes an input and a nonnegative integer number of samples k, as in interferometer[\"`1`\", {1, 1, 0}, k].";
-QuantumInterferometer::samplecoherent = "Sampling takes photon numbers for every mode or \"Coherent\"[{\[Alpha]1, \[Ellipsis]}]; mixed Fock and coherent inputs are not supported.";
+QuantumInterferometer::samplecoherent = "Sampling takes photon numbers for every mode, \"Coherent\"[{\[Alpha]1, \[Ellipsis]}] or {\"Coherent\"[\[Alpha]1], \[Ellipsis]}; mixed Fock and coherent inputs are not supported.";
 QuantumInterferometer::coherentnumeric = "Sampling coherent light needs numeric amplitudes `1`.";
-QuantumInterferometer::undefprop ="property `` is undefined for this interferometer";
+QuantumInterferometer::undefprop = "property `` is undefined for this interferometer";
 
 Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True, "Parameters" -> {}};
 
@@ -679,6 +679,7 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
 QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{in = occupation[s]},
     Which[
         MatchQ[in, "Coherent"[_]], coherentSamples[qi, First[in], k],
+        MatchQ[in, {"Coherent"[_] ..}], coherentSamples[qi, First /@ in, k],
         ! FreeQ[in, "Coherent"[___]], Message[QuantumInterferometer::samplecoherent]; $Failed,
         ! occupationQ[qi, in], $Failed,
         ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
