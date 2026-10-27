@@ -52,15 +52,9 @@ PackageScope["QuantumInterferometerQ"]
 
 QuantumInterferometer::usage = "QuantumInterferometer[u] decomposes the m\[Times]m unitary u into a mesh of beam splitters and phase shifters.
 QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"Reck\" or \"CosineSine\" mesh.
-QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters and phase shifters.
-Bare beam splitters act on modes {1, 2}; bare phase shifters and squeezers act on mode 1. Omitted beam-splitter phase is 0; omitted mode count is inferred from the normalized elements.
-QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
-Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
-interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
-\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions over dummy indices K[j], numbered past any K[j] in the photon numbers, the element parameters or the assumptions; as with any dummy index, a K[j] substituted into the result later is captured by the sums. Inexact angles given at construction are handled in the formula; inexact values substituted for symbolic angles later should follow the photon numbers, since a numeric WignerD outside its index range is Indeterminate.
-Symbolic results hold for nonnegative integer photon numbers, real beam-splitter and phase-shifter angles and real transmissivities 0 <= eta <= 1, with complex coherent amplitudes and squeezing parameters; transition queries accept Assumptions -> assumptions or an enclosing Assuming for relations beyond these domains.
-Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. A symbolic eta reaches eta = 0 and eta = 1 as limits of its formula, or through Assumptions -> eta == 0 or a numeric \"Loss\"[0]. Loss supports passive optics, Fock probabilities, sampling, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.
-interferometer[\"Samples\", input, k] draws k output photon patterns of a passive network, lossy or not, for photon numbers {n1, \[Ellipsis]} or \"Coherent\"[{\[Alpha]1, \[Ellipsis]}]; interferometer[\"SampleCounts\", input, k] counts them.";
+QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \"S\"[\[Xi]] -> p, \"Loss\"[\[Eta]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters, phase shifters, squeezers and losses.
+QuantumInterferometer[\"Random\"[m]] gives a Haar-random m-mode interferometer.
+QuantumInterferometer[\"Fourier\"[m]] gives the m-mode discrete Fourier interferometer.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
@@ -820,10 +814,17 @@ occupationQ[qi_, s_] := If[
     Message[QuantumInterferometer::occ, s, qi["Modes"]]; False
 ]
 
-(* an entry is a nonnegative integer or an expression that could stand for one *)
-symbolicOccupationQ[x_] := IntegerQ[x] && x >= 0 || ! NumericQ[x] && FreeQ[x, _List | _Interval | _Quantity | _Association | _String |
-    _Rule | _RuleDelayed | _Missing | _Failure | _Function | _DirectedInfinity | Indeterminate | Undefined | $Failed |
-    Automatic | All | True | False | Null | None]
+(* a nonnegative integer, or a polynomial with rational coefficients in photon-number variables *)
+symbolicOccupationQ[x_] := IntegerQ[x] && x >= 0 || ! NumericQ[x] && With[{v = Variables[x]},
+    v =!= {} && VectorQ[v, photonVariableQ] && PolynomialQ[x, v] && VectorQ[Flatten[{CoefficientList[x, v]}], MatchQ[_Integer | _Rational]]
+]
+
+(* a user symbol, a one-letter system symbol such as K or a formal letter, or an indexed or subscripted form of these *)
+photonVariableQ[v_Symbol] := Context[v] =!= "System`" || StringLength[SymbolName[v]] == 1
+
+photonVariableQ[(Subscript | _ ? photonVariableQ)[args__]] := VectorQ[{args}, IntegerQ[#] || photonVariableQ[#] &]
+
+photonVariableQ[_] := False
 
 symbolicOccupationListQ[s_, m_] := VectorQ[s] && VectorQ[s, symbolicOccupationQ] && Length[s] == m
 
@@ -882,8 +883,6 @@ repeatedPermanentPlan[w_, s_, t_] := With[{p = Precision[w]},
         ]
     ]
 ]
-
-useRepeatedPermanentQ[w_, s_, t_] := ListQ[repeatedPermanentPlan[w, s, t]]
 
 permanentAmplitude[w_, s_, t_] := Which[
     Total[s] != Total[t], 0,
