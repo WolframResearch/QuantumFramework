@@ -50,7 +50,7 @@ Bare beam splitters act on modes {1, 2}; bare phase shifters and squeezers act o
 QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
 Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
 interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
-\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions.
+\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions over dummy indices K[j], numbered past any K[j] in the photon numbers, the element parameters or the assumptions; as with any dummy index, a K[j] substituted into the result later is captured by the sums.
 Transition queries accept Assumptions -> assumptions or an enclosing Assuming to refine the result on that domain; unproved photon constraints remain guarded.
 Elements \"Loss\"[eta] -> p specify pure loss with real 0 <= eta <= 1; bare loss acts on mode 1. Loss supports passive optics, Fock probabilities, pure coherent inputs, finite quantum states and \"Channel\", d. Lossy devices expose their retained \"TransferMatrix\"; generic Fock transition amplitudes and loss with squeezing are not supported.";
 
@@ -62,7 +62,7 @@ QuantumInterferometer::lossoccupation = "mode mixing with loss needs explicit no
 QuantumInterferometer::losscoherent = "loss supports pure coherent inputs; mixed Fock/coherent transition inputs are not supported";
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
 QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"Reck\" or \"CosineSine\".";
-QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p or \"S\"[\[Xi]] -> p.";
+QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \"S\"[\[Xi]] -> p or \"Loss\"[\[Eta]] -> p.";
 QuantumInterferometer::angles = "beam-splitter and phase-shifter angles `1` must be real";
 QuantumInterferometer::cutoff = "cutoff `1` must be Automatic or a nonnegative integer";
 QuantumInterferometer::modes = "The elements act on mode `1`, outside the `2` modes of the interferometer.";
@@ -616,7 +616,7 @@ QuantumInterferometerProp[qi_ ? lossyQ, "Probability", pattern_Rule, opts : Opti
    assumptions replace $Assumptions and remove only constraints they prove; a refined
    formula is valid on that supplied domain. Keep sums inactive and precision unchanged. *)
 transitionValue[qi_, s_ -> t_, f_, assumptions_] := Block[{$Assumptions = True},
-    With[{amplitude = interferometerAmplitude[qi, occupation[s], occupation[t]]},
+    With[{amplitude = interferometerAmplitude[qi, occupation[s], occupation[t], assumptions]},
         {value = If[amplitude === $Failed, $Failed, f[amplitude]]},
         If[value === $Failed || assumptions === True, value,
             Check[Refine[value, Assumptions -> assumptions], $Failed, Refine::fas]
@@ -624,10 +624,10 @@ transitionValue[qi_, s_ -> t_, f_, assumptions_] := Block[{$Assumptions = True},
     ]
 ]
 
-interferometerAmplitude[qi_, in_, out_] := Which[
-    ! FreeQ[{in, out}, "Coherent"[_]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
+interferometerAmplitude[qi_, in_, out_, assumptions_] := Which[
+    ! FreeQ[{in, out}, "Coherent"[___]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
     lossyQ[qi], Message[QuantumInterferometer::lossy, "Fock transition amplitudes"]; $Failed,
-    symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
+    symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out, assumptions], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
     occupationQ[qi, in] && occupationQ[qi, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
     True, $Failed
 ]
@@ -635,7 +635,7 @@ interferometerAmplitude[qi_, in_, out_] := Which[
 QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
     {probabilities = Which[
         ! cutoffQ[OptionValue["Cutoff"]], $Failed,
-        ! FreeQ[in, "Coherent"[_]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
+        ! FreeQ[in, "Coherent"[___]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
         ! occupationQ[qi, in], $Failed,
         lossyQ[qi], KeyMap[QuditName, lossFockProbabilities[qi, in]],
         passiveQ[qi], With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
@@ -732,8 +732,10 @@ occupation[s_QuditName] := s["Name"]
 
 occupation[s_] := s
 
+occupationListQ[s_, m_] := VectorQ[s, IntegerQ[#] && # >= 0 &] && Length[s] == m
+
 occupationQ[qi_, s_] := If[
-    VectorQ[s, IntegerQ[#] && # >= 0 &] && Length[s] == qi["Modes"],
+    occupationListQ[s, qi["Modes"]],
     True,
     Message[QuantumInterferometer::occ, s, qi["Modes"]]; False
 ]
@@ -837,12 +839,12 @@ coherentInput[_] := {None, None}
 coherentAmplitudes[qi_, s_, outs_, f_] := Enclose[
     ConfirmAssert[passiveQ[qi] || lossyQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]];
     With[{m = qi["Modes"], n = coherentInput[s][[1]], a = coherentInput[s][[2]], w = qi["TransferMatrix"]},
-        ConfirmAssert[ListQ[a] && Length[a] == m && occupationQ[qi, n], Message[QuantumInterferometer::occ, s, m]];
+        ConfirmAssert[VectorQ[a] && Length[a] == m && occupationListQ[n, m], Message[QuantumInterferometer::occ, s, m]];
         ConfirmAssert[! lossyQ[qi] || Total[n] == 0, Message[QuantumInterferometer::losscoherent]];
         With[{b = w . a},
             Replace[outs, {
                 {"Coherent"[g_List]} :> (
-                    ConfirmAssert[Length[g] == m, Message[QuantumInterferometer::occ, "Coherent"[g], m]];
+                    ConfirmAssert[VectorQ[g] && Length[g] == m, Message[QuantumInterferometer::occ, "Coherent"[g], m]];
                     f[Exp[(Conjugate[g] . b - Conjugate[b] . g) / 2 - Total[Abs[g - b] ^ 2] / 2] Times @@ MapThread[If[#2 == 0, 1, #1 ^ #2 / Sqrt[#2!]] &, {Transpose[w] . Conjugate[g - b], n}]]
                 ),
                 cutoff : Automatic | _Integer :> With[{top = Replace[cutoff, Automatic :> (
@@ -880,8 +882,16 @@ symbolicFactor[c_, {"PS"[al_] -> {p_}, _}] := E^(I al c[[p]])
 
 symbolicFactor[_, {"Loss"[_] -> _, _}] := 1
 
-symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, free, cs},
-    steps = {#, Unique["k"]} & /@ elements;
+(* Beam splitter j sums over K[offset + j], the default summation index of K::usage, with
+   offset past every integer-indexed K, heads included, in the element parameters, the
+   photon numbers and the assumptions, so no symbol is created and none of these is bound. *)
+symbolicAmplitude[elements_, n_, t_, assumptions_] := Module[{steps, counts, ks, eqs, rules, free, cs},
+    steps = With[{
+        offset = Max[0, Cases[{elements, n, t, assumptions}, K[j_Integer] :> j, Infinity, Heads -> True]],
+        splitters = MatchQ["BS"[__] -> _] /@ elements
+    },
+        Transpose[{elements, MapThread[If[#1, K[offset + #2], None] &, {splitters, Accumulate[Boole[splitters]]}]}]
+    ];
     counts = FoldList[symbolicCounts, n, steps];
     ks = Cases[steps, {"BS"[__] -> _, k_} :> k];
     eqs = Thread[Most[Last[counts]] == Most[t]];
@@ -1082,7 +1092,7 @@ lossFockProbabilities[qi_, s_] := With[{
 (* General symbolic occupations are retained for independent attenuators.  With
    mode mixing, constructing a permanent needs explicit integer occupations. *)
 lossTransitionProbability[qi_, in_, out_] := Which[
-    ! FreeQ[{in, out}, "Coherent"[_]],
+    ! FreeQ[{in, out}, "Coherent"[___]],
         Replace[coherentAmplitudes[qi, in, {out}, Abs[#] ^ 2 &], {p_} :> p],
     symbolicPatternsQ[qi, in, out],
         If[FreeQ[qi["Elements"], "BS"[__] -> _],

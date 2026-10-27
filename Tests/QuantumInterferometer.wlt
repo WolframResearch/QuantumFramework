@@ -268,6 +268,13 @@ VerificationTest[
     TestID -> "QI-bare-elements-reject-malformed-elements"
 ]
 
+(* the message names every element kind the constructor accepts *)
+VerificationTest[
+    StringContainsQ[QuantumInterferometer::elem, #] & /@ {"\"BS\"[", "\"PS\"[", "\"S\"[", "\"Loss\"["},
+    {True, True, True, True},
+    TestID -> "QI-element-message-lists-every-element-kind"
+]
+
 VerificationTest[
     And @@ Map[Function[p,
         With[{t = N[3/10, p], f = N[7/11, p]},
@@ -343,6 +350,64 @@ VerificationTest[
     ],
     {{Sech[1/5]}, <|QuditName[{0}] -> Exp[-2/9]|>, True, <||>},
     TestID -> "QI-zero-and-below-input-cutoffs"
+]
+
+(* a bad photon number next to a coherent amplitude is reported once per query, naming the query's input *)
+VerificationTest[
+    With[{qi = QuantumInterferometer["Fourier"[3]]},
+        (Lookup[EvaluationData[#], {"Result", "MessagesExpressions"}] /. Hold[Message[name_, args___]] :> {Hold[name], {args}}) & /@ {
+            Unevaluated[qi["Amplitude", {-1, "Coherent"[1/2], 0} -> {0, 1, 0}]],
+            Unevaluated[qi["Probabilities", {-1, "Coherent"[1/2], 0}, "Cutoff" -> 2]]
+        }
+    ],
+    ConstantArray[{$Failed, {{Hold[QuantumInterferometer::occ], {{-1, "Coherent"[1/2], 0}, 3}}}}, 2],
+    {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-coherent-bad-photon-numbers-warn-once"
+]
+
+(* an amplitude list in a "Coherent" slot is rejected, and lossy queries report the same way *)
+VerificationTest[
+    With[{qi = QuantumInterferometer["Fourier"[3]], lossy = QuantumInterferometer[{"BS"[Pi/6], "Loss"[2/5] -> 2}]},
+        (Lookup[EvaluationData[#], {"Result", "MessagesExpressions"}] /. Hold[Message[name_, args___]] :> {Hold[name], {args}}) & /@ {
+            Unevaluated[qi["Amplitude", {2, "Coherent"[{1, 2}], 0} -> {0, 1, 0}]],
+            Unevaluated[lossy["Probability", {-1, "Coherent"[1/2]} -> {0, 1}]]
+        }
+    ],
+    {
+        {$Failed, {{Hold[QuantumInterferometer::occ], {{2, "Coherent"[{1, 2}], 0}, 3}}}},
+        {$Failed, {{Hold[QuantumInterferometer::occ], {{-1, "Coherent"[1/2]}, 2}}}}
+    },
+    {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-coherent-nested-and-lossy-bad-inputs-warn-once"
+]
+
+(* a "Coherent" slot with the wrong number of arguments is rejected the same way *)
+VerificationTest[
+    With[{qi = QuantumInterferometer["Fourier"[3]]},
+        (Lookup[EvaluationData[#], {"Result", "MessagesExpressions"}] /. Hold[Message[name_, args___]] :> {Hold[name], {args}}) & /@ {
+            Unevaluated[qi["Amplitude", {0, "Coherent"[1, 2], 0} -> {0, 1, 0}]],
+            Unevaluated[qi["Probability", {0, "Coherent"[], 0} -> {0, 1, 0}]]
+        }
+    ],
+    {
+        {$Failed, {{Hold[QuantumInterferometer::occ], {{0, "Coherent"[1, 2], 0}, 3}}}},
+        {$Failed, {{Hold[QuantumInterferometer::occ], {{0, "Coherent"[], 0}, 3}}}}
+    },
+    {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-coherent-malformed-slots-warn-once"
+]
+
+(* a malformed "Coherent" output state is rejected the same way *)
+VerificationTest[
+    With[{qi = QuantumInterferometer["Fourier"[3]]},
+        (Lookup[EvaluationData[#], {"Result", "MessagesExpressions"}] /. Hold[Message[name_, args___]] :> {Hold[name], {args}}) & /@ {
+            Unevaluated[qi["Amplitude", {0, "Coherent"[1/2], 0} -> "Coherent"[{1, {2}, 0}]]],
+            Unevaluated[qi["Probability", {0, "Coherent"[1/2], 0} -> "Coherent"[{1, {2}, 0}]]]
+        }
+    ],
+    ConstantArray[{$Failed, {{Hold[QuantumInterferometer::occ], {"Coherent"[{1, {2}, 0}], 3}}}}, 2],
+    {QuantumInterferometer::occ, QuantumInterferometer::occ},
+    TestID -> "QI-coherent-malformed-output-warns-once"
 ]
 
 EndTestSection[]
@@ -674,6 +739,81 @@ VerificationTest[
     {$Failed, $Failed},
     {QuantumInterferometer::squeezed, QuantumInterferometer::occ},
     TestID -> "QI-symbolic-photon-numbers-reject-squeezers-and-negatives"
+]
+
+(* symbolic amplitudes add no symbols to the caller's context *)
+VerificationTest[
+    With[{chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2], before = Names[$Context <> "*"]},
+        chain["Amplitude", {nx, ny} -> {tx, ty}];
+        chain["Probability", {nx, ny} -> {tx, ty}];
+        Complement[Names[$Context <> "*"], before]
+    ],
+    {},
+    TestID -> "QI-symbolic-amplitudes-create-no-symbols"
+]
+
+(* the summation indices K[j] skip past any K[j] already in the query *)
+VerificationTest[
+    With[{chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]},
+        With[{amplitude = chain["Amplitude", {K[1], 0} -> {K[2], K[1] - K[2]}]},
+            {
+                Cases[amplitude, Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity],
+                Max[Abs[Table[N[Activate[amplitude /. {K[1] -> 2, K[2] -> t}] - chain["Amplitude", {2, 0} -> {t, 2 - t}]], {t, 0, 2}]]] < 10^-12,
+                Cases[chain["Amplitude", {K[1][x], 0} -> {t1, t2}], Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity]
+            }
+        ]
+    ],
+    {{{K[3]}}, True, {{K[2]}}},
+    TestID -> "QI-symbolic-sum-indices-skip-K-in-the-query",
+    TimeConstraint -> 60
+]
+
+(* a K[j] used as an element parameter is skipped too, and only beam splitters take indices *)
+VerificationTest[
+    {
+        Cases[QuantumInterferometer[{"BS"[K[5], 0] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]["Amplitude", {n1, n2} -> {t1, t2}],
+            Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity],
+        Cases[QuantumInterferometer[{"PS"[al] -> 1, "BS"[th, ph] -> {1, 2}, "PS"[be] -> 2, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2]["Amplitude", {n1, n2} -> {t1, t2}],
+            Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity],
+        With[{elements = {"BS"[K[1], 0] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}},
+            Max[Abs[Table[N[Activate[QuantumInterferometer[elements, 2]["Amplitude", {n1, n2} -> {t1, t2}] /. K[1] -> 3/10 /. {n1 -> 2, n2 -> 1, t1 -> t, t2 -> 3 - t}] -
+                QuantumInterferometer[elements /. K[1] -> 3/10, 2]["Amplitude", {2, 1} -> {t, 3 - t}]], {t, 0, 3}]]] < 10^-12
+        ]
+    },
+    {{{K[6]}}, {{K[1]}}, True},
+    TestID -> "QI-symbolic-sum-indices-skip-K-in-the-elements",
+    TimeConstraint -> 60
+]
+
+(* nested sums, whose inner bounds depend on the outer index, also skip a K[j] in the query *)
+VerificationTest[
+    With[{elements = {"BS"[th1, ph1] -> {1, 2}, "BS"[th2, ph2] -> {2, 3}, "BS"[th3, ph3] -> {1, 2}, "BS"[th4, ph4] -> {2, 3}},
+          angles = {th1 -> 3/10, ph1 -> 7/10, th2 -> 11/10, ph2 -> 1/5, th3 -> 1/2, ph3 -> -2/5, th4 -> 9/10, ph4 -> 13/10}},
+        With[{amplitude = QuantumInterferometer[elements, 3]["Amplitude", {K[1], K[2], 0} -> {t1, t2, t3}], numeric = QuantumInterferometer[elements /. angles, 3]},
+            {
+                Cases[amplitude, Inactive[Sum][_, iters__] :> {iters}[[All, 1]], Infinity],
+                Max[Abs[Flatten @ Table[
+                    N[Activate[amplitude /. angles /. {K[1] -> 2, K[2] -> 1, t1 -> a, t2 -> b, t3 -> 3 - a - b}] - numeric["Amplitude", {2, 1, 0} -> {a, b, 3 - a - b}]],
+                    {a, 0, 3}, {b, 0, 3 - a}]]] < 10^-12
+            }
+        ]
+    ],
+    {{{K[3], K[4]}}, True},
+    TestID -> "QI-symbolic-nested-sum-indices-skip-K-in-the-query"
+]
+
+(* a K[j] named only in the assumptions is skipped too, so the assumption does not constrain a sum *)
+VerificationTest[
+    With[{chain = QuantumInterferometer[{"BS"[Pi/6, Pi/7] -> {1, 2}, "BS"[Pi/5, Pi/11] -> {1, 2}}, 2],
+          domain = Element[{n1, n2, t1, t2}, Integers] && n1 >= 0 && n2 >= 0 && t1 >= 0 && t2 >= 0},
+        {
+            Max[Abs[Table[N[Activate[chain["Amplitude", {n1, n2} -> {t1, t2}, Assumptions -> domain && K[1] < 0] /. {n1 -> 2, n2 -> 1, t1 -> t, t2 -> 3 - t}] - chain["Amplitude", {2, 1} -> {t, 3 - t}]], {t, 0, 3}]]] < 10^-12,
+            Max[Abs[Table[N[Activate[Assuming[domain && K[1] < 0, chain["Probability", {n1, n2} -> {t1, t2}]] /. {n1 -> 2, n2 -> 1, t1 -> t, t2 -> 3 - t}] - chain["Probability", {2, 1} -> {t, 3 - t}]], {t, 0, 3}]]] < 10^-12
+        }
+    ],
+    {True, True},
+    TestID -> "QI-symbolic-sum-indices-skip-K-in-the-assumptions",
+    TimeConstraint -> 60
 ]
 
 EndTestSection[]
