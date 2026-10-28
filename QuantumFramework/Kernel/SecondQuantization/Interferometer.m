@@ -634,8 +634,13 @@ physicalValue[_, _, $Failed, __] := $Failed
 
 physicalValue[_, _, value_ ? NumericQ, True, ___] := value
 
+(* A self-contradictory set reaching a query through Assuming has already been reported by Assuming,
+   so Refine warns no more and a numeric value would pass; reject the set before refining. *)
+contradictoryAssumptionsQ[given_] := given =!= False && Block[{$Assumptions = True}, Simplify[given]] === False
+
 physicalValue[qi_, patterns_, value_, assumptions_, rebuild_ : (#2 &)] := With[{given = And @@ Flatten[{assumptions}]},
-    {domain = Check[given && Refine[opticalDomain[qi["Elements"]] && occupationDomain[patterns], Assumptions -> given], $Failed, {Refine::fas, Refine::cas}]},
+    {domain = If[contradictoryAssumptionsQ[given], Message[Refine::cas, given]; $Failed,
+        Check[given && Refine[opticalDomain[qi["Elements"]] && occupationDomain[patterns], Assumptions -> given], $Failed, {Refine::fas, Refine::cas}]]},
     If[domain === $Failed, $Failed,
         Replace[
             Check[Refine[If[domain === False, value, rebuild[domain, value]], Assumptions -> domain], $Failed, {Refine::fas, Refine::cas}],
@@ -652,7 +657,8 @@ interferometerAmplitude[qi_, in_, out_, assumptions_] := Which[
     True, $Failed
 ]
 
-QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
+QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic, Assumptions :> $Assumptions}]] :=
+    With[{in = occupation[s], given = And @@ Flatten[{OptionValue[Assumptions]}]},
     {probabilities = Which[
         ! cutoffQ[OptionValue["Cutoff"]], $Failed,
         ! FreeQ[in, "Coherent"[___]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
@@ -663,9 +669,16 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
         ],
         True, Replace[gaussianAmplitudes[qi, in, OptionValue["Cutoff"]], a_Association :> Abs[a] ^ 2]
     ]},
-    (* symbolic distributions are simplified on the physical domain of the elements *)
-    If[AssociationQ[probabilities] && ! VectorQ[Values[probabilities], NumericQ],
-        Refine[#, Assumptions -> opticalDomain[qi["Elements"]]] & /@ probabilities,
+    (* symbolic distributions are simplified on the physical domain of the elements together with
+       the query assumptions, and assumptions that contradict the domain fail even for a numeric
+       distribution; Refine of an association ignores its assumptions, so refine the values *)
+    If[AssociationQ[probabilities] && (given =!= True || ! VectorQ[Values[probabilities], NumericQ]),
+        Block[{$Assumptions = True}, With[
+            {domain = If[contradictoryAssumptionsQ[given], Message[Refine::cas, given]; $Failed,
+                Check[given && Refine[opticalDomain[qi["Elements"]], Assumptions -> given], $Failed, {Refine::fas, Refine::cas}]]},
+            If[domain === $Failed, $Failed,
+                Check[AssociationThread[Keys[probabilities], Refine[Values[probabilities], Assumptions -> domain]], $Failed, {Refine::fas, Refine::cas}]]
+        ]],
         probabilities
     ]
 ]
@@ -1074,6 +1087,15 @@ autoShells[g_, s_, start_] := With[{
     ]
 ]
 
+(* a "Coherent" slot gives the output amplitudes of every pattern up to the cutoff, as "Probabilities" does *)
+(qi_QuantumInterferometer ? QuantumInterferometerQ)[s : _List | Ket[_List] | _QuditName, opts : OptionsPattern[{"Cutoff" -> Automatic}]] /;
+    ! FreeQ[occupation[s], "Coherent"[___]] :=
+    With[{cutoff = OptionValue[{opts, "Cutoff" -> Automatic}, "Cutoff"]},
+        Replace[If[cutoffQ[cutoff], coherentAmplitudes[qi, occupation[s], cutoff, Identity], $Failed],
+            a_Association /; ! VectorQ[Values[a], NumericQ] :> (Refine[#, Assumptions -> opticalDomain[qi["Elements"]]] & /@ a)
+        ]
+    ]
+
 (* a passive network keeps a coherent state coherent: |a> -> |W a> *)
 (qi_QuantumInterferometer ? QuantumInterferometerQ)["Coherent"[a_List]] := Which[
     ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
@@ -1140,15 +1162,25 @@ lossDomain[elements_] := And @@ Cases[elements, ("Loss"[eta_] -> _) :> Element[e
 opticalDomain[elements_] := lossDomain[elements] && Element[
     Catenate @ Cases[elements, (("BS"[parameters__] | "PS"[parameters__]) -> _) :> {parameters}], Reals]
 
-lossStep[{w_, g_}, "Loss"[eta_] -> {p_}] := {
+(* Transfer-matrix entries are built from real angles and transmissivities 0 <= eta <= 1, so on the
+   physical domain their complex conjugate flips every explicit I, unless a parameter itself is
+   written with one, as (z - Conjugate[z]) / (2 I) is; Refine leaves Conjugate on a sum once more
+   than one of its terms carries a phase, as entries do after two beam splitters *)
+realConjugate[a_] := If[ArrayQ[a, _, NumericQ], Conjugate[a], a /. Complex[x_, y_] :> Complex[x, - y]]
+
+domainConjugate[elements_] := If[FreeQ[Cases[elements, (_[parameters___] -> _) :> {parameters}], _Complex], realConjugate, Conjugate]
+
+lossStep[{w_, g_}, "Loss"[eta_] -> {p_}, conjugate_] := {
     ReplacePart[w, p -> Sqrt[eta] w[[p]]],
-    g + (1 - eta) Outer[Times, Conjugate[w[[p]]], w[[p]]]
+    g + (1 - eta) Outer[Times, conjugate[w[[p]]], w[[p]]]
 }
 
-lossStep[{w_, g_}, element_] := {applyGate[w, element], g}
+lossStep[{w_, g_}, element_, _] := {applyGate[w, element], g}
 
-lossData[elements_, m_] := Developer`ToPackedArray /@ Refine[
-    Fold[lossStep, {IdentityMatrix[m], ConstantArray[0, {m, m}]}, elements], Assumptions -> opticalDomain[elements]]
+lossData[elements_, m_] := With[{conjugate = domainConjugate[elements]},
+    Developer`ToPackedArray /@ Refine[
+        Fold[lossStep[##, conjugate] &, {IdentityMatrix[m], ConstantArray[0, {m, m}]}, elements], Assumptions -> opticalDomain[elements]]
+]
 
 lossRates[elements_, m_] := Fold[
     ReplacePart[#1, #2[[2, 1]] -> #2[[1, 1]] #1[[#2[[2, 1]]]]] &,
@@ -1168,7 +1200,7 @@ lossPolynomial[QuantumInterferometer[data_], s_, rows_, vars_] := With[{
 },
     {in = s[[cols]], k = data["TransferMatrix"][[rows, cols]], g = data["LossGram"][[cols, cols]]},
     {matrices = If[p === Infinity || ! MatrixQ[Join[k, g], NumericQ], {k, g}, SetPrecision[{k, g}, p + Total[s]]]},
-    {b = matrices[[2]] + If[rows === {}, 0, ConjugateTranspose[matrices[[1]]] . DiagonalMatrix[vars] . matrices[[1]]]},
+    {b = matrices[[2]] + If[rows === {}, 0, domainConjugate[data["Elements"]][Transpose[matrices[[1]]]] . DiagonalMatrix[vars] . matrices[[1]]]},
     Permanent[b[[modeList[in], modeList[in]]]] / (Times @@ (s!))
 ]
 

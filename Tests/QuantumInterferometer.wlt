@@ -1217,6 +1217,62 @@ VerificationTest[
     TestID -> "QI-assumptions-cannot-bypass-checks"
 ]
 
+(* "Probabilities" takes assumptions as "Probability" does: as an option, a list or from Assuming *)
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[th, ph]}], sq = QuantumInterferometer[{"S"[xi]}], loss = QuantumInterferometer[{"Loss"[eta]}]},
+        {
+            bs["Probabilities", {1, 1}, Assumptions -> th == Pi/4],
+            Assuming[th == Pi/4, bs["Probabilities", {1, 1}]] === bs["Probabilities", {1, 1}, Assumptions -> {th == Pi/4}],
+            Values[bs["Probabilities", {1, 1}]],
+            Values[sq["Probabilities", {0}, "Cutoff" -> 2, Assumptions -> xi > 0]],
+            Values[loss["Probabilities", {2}, Assumptions -> eta == 1]],
+            Values[bs["Probabilities", "Coherent"[{a, 0}], "Cutoff" -> 1, Assumptions -> a > 0 && th == Pi/3]]
+        }
+    ],
+    {
+        <|QuditName[{2, 0}] -> 1/2, QuditName[{1, 1}] -> 0, QuditName[{0, 2}] -> 1/2|>, True,
+        {2 Cos[th]^2 Sin[th]^2, (Cos[th]^2 - Sin[th]^2)^2, 2 Cos[th]^2 Sin[th]^2},
+        {Sech[xi], Sech[xi] Tanh[xi]^2/2}, {0, 0, 1}, {E^(-a^2), a^2 E^(-a^2)/4, 3 a^2 E^(-a^2)/4}
+    },
+    TestID -> "QI-probabilities-take-assumptions"
+]
+
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[th, ph]}]},
+        {bs["Probabilities", {1, 1}, Assumptions -> th == I], bs["Probabilities", {1, 1}, Assumptions -> {th == 0, th == 1}]}
+    ],
+    {$Failed, $Failed},
+    {Refine::fas, Refine::cas},
+    TestID -> "QI-probabilities-reject-assumptions-outside-the-physical-domain"
+]
+
+(* a numeric distribution fails on the same assumptions as "Probability", and is otherwise unchanged *)
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[th, ph]}], hom = QuantumInterferometer[{"BS"[Pi/4]}]},
+        {
+            bs["Probabilities", {0, 0}, Assumptions -> th == I],
+            hom["Probabilities", {1, 1}, Assumptions -> {x == 0, x == 1}],
+            hom["Probabilities", {1, 1}, Assumptions -> x > 0] === hom["Probabilities", {1, 1}]
+        }
+    ],
+    {$Failed, $Failed, True},
+    {Refine::fas, Refine::cas},
+    TestID -> "QI-numeric-probabilities-reject-assumptions-outside-the-physical-domain"
+]
+
+(* a self-contradictory set fails the same way from Assuming as from the option; Assuming reports it first *)
+VerificationTest[
+    With[{hom = QuantumInterferometer[{"BS"[Pi/4]}]},
+        {
+            Assuming[{w == 0, w == 1}, hom["Probabilities", {1, 1}]],
+            Assuming[{w == 0, w == 1}, hom["Probability", {1, 1} -> {2, 0}]]
+        }
+    ],
+    {$Failed, $Failed},
+    {$Assumptions::cas, Refine::cas, $Assumptions::cas, Refine::cas},
+    TestID -> "QI-contradictory-assumptions-fail-from-Assuming"
+]
+
 EndTestSection[]
 
 
@@ -1438,6 +1494,38 @@ VerificationTest[
     {QuantumInterferometer::occ, QuantumInterferometer::occ, QuantumInterferometer::squeezed, QuantumInterferometer::squeezed,
         QuantumInterferometer::symcutoff, QuantumInterferometer::symcutoff},
     TestID -> "QI-coherent-errors"
+]
+
+(* the all-outputs form takes "Coherent" slots: its amplitudes square to "Probabilities" and are the "Amplitude" values *)
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[th, ph]}], numeric = QuantumInterferometer[{"BS"[3/10, 7/10]}], alpha = (2 + I)/5,
+          lossy = QuantumInterferometer[{"BS"[th], "Loss"[eta] -> 1}]},
+        {
+            Union[Values[FullSimplify[(Abs[#]^2 & /@ bs[{1, "Coherent"[a]}, "Cutoff" -> 2]) - bs["Probabilities", {1, "Coherent"[a]}, "Cutoff" -> 2], Element[{th, ph}, Reals]]]],
+            With[{amplitudes = numeric[{1, "Coherent"[alpha]}, "Cutoff" -> 3]},
+                Union[Simplify[Values[amplitudes] - (numeric["Amplitude", {1, "Coherent"[alpha]} -> #["Name"]] & /@ Keys[amplitudes])]]],
+            Keys[bs[{"Coherent"[a], "Coherent"[b]}, "Cutoff" -> 1]],
+            FreeQ[bs[{"Coherent"[a], "Coherent"[b]}, "Cutoff" -> 1], Im | Re],
+            lossy[{"Coherent"[a], "Coherent"[0]}, "Cutoff" -> 1][QuditName[{1, 0}]] === lossy["Amplitude", "Coherent"[{a, 0}] -> {1, 0}],
+            bs[Ket[{1, "Coherent"[a]}], "Cutoff" -> 1] === bs[{1, "Coherent"[a]}, "Cutoff" -> 1]
+        }
+    ],
+    {{0}, {0}, QuditName /@ {{0, 0}, {1, 0}, {0, 1}}, True, True, True},
+    TestID -> "QI-coherent-all-outputs-form"
+]
+
+VerificationTest[
+    With[{bs = QuantumInterferometer[{"BS"[th, ph]}]},
+        {
+            bs[{"Coherent"[a], "Coherent"[b]}],
+            bs[{1, "Coherent"[a]}, "Cutoff" -> -1],
+            QuantumInterferometer[{"S"[xi]}, 2][{1, "Coherent"[a]}, "Cutoff" -> 1],
+            QuantumInterferometer[{"BS"[th], "Loss"[eta] -> 1}][{1, "Coherent"[a]}, "Cutoff" -> 1]
+        }
+    ],
+    ConstantArray[$Failed, 4],
+    {QuantumInterferometer::symcutoff, QuantumInterferometer::cutoff, QuantumInterferometer::squeezed, QuantumInterferometer::losscoherent},
+    TestID -> "QI-coherent-all-outputs-form-errors"
 ]
 
 EndTestSection[]
@@ -2138,6 +2226,39 @@ VerificationTest[
     ],
     {$Failed, $Failed, True}, {QuantumInterferometer::lossy, QuantumInterferometer::lossy},
     TestID -> "QI-loss-unitary-normal-forms-guard-symbolic-loss-and-recover-identity-limit"
+]
+
+(* loss between beam splitters: symbolic probabilities carry no Conjugate, total 1 on the physical
+   domain and agree with the network built from the same numbers *)
+VerificationTest[
+    With[{elements = {"BS"[th, ph], "Loss"[eta] -> 1, "BS"[th2, ph2], "Loss"[mu] -> 2},
+          values = {th -> 3/10, ph -> 7/10, th2 -> 11/10, ph2 -> -2/5, eta -> 3/5, mu -> 7/20}},
+        With[{probabilities = QuantumInterferometer[elements]["Probabilities", {2, 1}]},
+            {
+                FreeQ[probabilities, Conjugate],
+                FreeQ[First[QuantumInterferometer[elements]]["LossGram"], Conjugate],
+                FullSimplify[Total[probabilities], Element[{th, ph, th2, ph2}, Reals] && 0 <= eta <= 1 && 0 <= mu <= 1],
+                Max[Abs[N[Values[probabilities /. values] - Values[QuantumInterferometer[elements /. values]["Probabilities", {2, 1}]]]]] < 10^-12
+            }
+        ]
+    ],
+    {True, True, 1, True},
+    TestID -> "QI-loss-symbolic-mixing-probabilities-carry-no-conjugate"
+]
+
+(* a real angle written with an explicit I, here Im[z], is conjugated as written, not by flipping its I *)
+VerificationTest[
+    With[{elements = {"BS"[th, (z - Conjugate[z])/(2 I)], "Loss"[eta] -> 1, "BS"[th2]},
+          values = {th -> 3/10, th2 -> 11/10, eta -> 3/5, z -> 1/5 + 7 I/10}},
+        With[{probabilities = QuantumInterferometer[elements]["Probabilities", {1, 1}] /. values},
+            {
+                FullSimplify[Total[probabilities]],
+                Max[Abs[N[Values[probabilities] - Values[QuantumInterferometer[elements /. values]["Probabilities", {1, 1}]]]]] < 10^-12
+            }
+        ]
+    ],
+    {1, True},
+    TestID -> "QI-loss-angles-written-with-I-keep-their-conjugate"
 ]
 
 EndTestSection[]
