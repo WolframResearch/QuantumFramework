@@ -729,10 +729,10 @@ photonWeights[a_, rows_, j_] := Abs[a[[All, ;; j]] . If[j == 1, {1.}, laplaceMin
 (* All k minors Perm(b without column l) of a (k - 1) x k block b at once (Clifford and Clifford, Lemma 2).
    Glynn's formula runs over sign vectors d with d_1 = 1 in Gray-code order, updating the column sums
    c = d . b one row at a time; forward and backward products of c give Prod_{j != l} c_j for every l. *)
-laplaceMinors := laplaceMinors = Compile[{{b, _Complex, 2}},
-    Module[{r = Length[b], k = Dimensions[b][[2]], c, d, minors, front, back, sign = 1., h, p},
+laplaceMinorsCode = Function[{Typed[b, TypeSpecifier["PackedArray"]["ComplexReal64", 2]]},
+    Module[{r = Length[b], k = Dimensions[b][[2]], c, d, minors, front, back, sign = 1., h = 0, p = 0},
         c = b[[1]];
-        Do[c += b[[i]], {i, 2, r}];
+        Do[c = c + b[[i]], {i, 2, r}];
         d = Table[1, {r}];
         minors = Table[0. + 0. I, {k}];
         front = Table[1. + 0. I, {k + 1}];
@@ -740,20 +740,21 @@ laplaceMinors := laplaceMinors = Compile[{{b, _Complex, 2}},
         Do[
             Do[front[[j + 1]] = front[[j]] c[[j]], {j, k}];
             Do[back[[j]] = back[[j + 1]] c[[j]], {j, k, 1, -1}];
-            Do[minors[[j]] += sign front[[j]] back[[j + 1]], {j, k}];
+            Do[minors[[j]] = minors[[j]] + sign front[[j]] back[[j + 1]], {j, k}];
             If[g < 2 ^ (r - 1),
                 h = g; p = 2;
-                While[EvenQ[h], h = Quotient[h, 2]; p++];
-                c -= 2 d[[p]] b[[p]];
+                While[EvenQ[h], h = Quotient[h, 2]; p = p + 1];
+                Do[c[[j]] = c[[j]] - 2. d[[p]] b[[p, j]], {j, k}];
                 d[[p]] = - d[[p]];
                 sign = - sign
             ],
             {g, 2 ^ (r - 1)}
         ];
         minors / 2. ^ (r - 1)
-    ],
-    RuntimeOptions -> "Speed"
+    ]
 ]
+
+laplaceMinors := laplaceMinors = compiledFunction["laplaceMinors", laplaceMinorsCode, {{b, _Complex, 2}}]
 
 (* a passive network, lossy or not, sends |a> to the coherent state |K a>: independent Poisson counts *)
 coherentSamples[qi_, a_, k_] := Which[
@@ -767,7 +768,8 @@ coherentSamples[qi_, a_, k_] := Which[
 ]
 
 (* Quesada et al., PRX Quantum 3, 010306 (2022): heterodyne outcomes alpha on every mode, drawn from the Q function
-   Exp[-|alpha|^2 + Re[alpha^* . B . alpha^*]] *)
+   Exp[-|alpha|^2 + Re[alpha^* . B . alpha^*]], leave modes 1..k in Exp[a^dag . B . a^dag / 2 + gamma . a^dag] |0> with
+   gamma = B[1..k, k+1..m] . alpha^*[k+1..m], so trading alpha_k for a count draws n_k from its exact conditional *)
 gaussianSamples[qi_, in_, k_] := With[{bog = N[First[qi]["Bogoliubov"][[;; 2]]]}, Which[
     Total[in] > 0, Message[QuantumInterferometer::squeezedinput]; $Failed,
     ! MatrixQ[First[bog], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
@@ -781,7 +783,11 @@ gaussianSamples[qi_, in_, k_] := With[{bog = N[First[qi]["Bogoliubov"][[;; 2]]]}
 (* The counts of modes 1..k fill the coefficients F_n of Exp[z . B . z / 2 + gamma . z] by
    n_j F_n = gamma_j F_(n - e_j) + Sum_i B_ji F_(n - e_j - e_i), on a box with n_k outermost, so n_k grows
    one slab at a time until the weights n_k! |F|^2 left are below tol; u_k picks n_k by inverse CDF *)
-gaussianSampleChain := gaussianSampleChain = Compile[{{b, _Complex, 2}, {alpha, _Complex, 1}, {u, _Real, 1}, {tol, _Real}},
+gaussianSampleCode = Function[{
+        Typed[b, TypeSpecifier["PackedArray"]["ComplexReal64", 2]],
+        Typed[alpha, TypeSpecifier["PackedArray"]["ComplexReal64", 1]],
+        Typed[u, TypeSpecifier["PackedArray"]["Real64", 1]],
+        Typed[tol, "Real64"]},
     Module[{m = Length[alpha], gam = b . Conjugate[alpha], sample = Table[0, {Length[alpha]}],
             mode, dims, strides, s, f, n, j, q, acc, t, fact, total, w, last, weights, cap, p, cum, done},
         Do[
@@ -841,8 +847,40 @@ gaussianSampleChain := gaussianSampleChain = Compile[{{b, _Complex, 2}, {alpha, 
             {k, m}
         ];
         sample
+    ]
+]
+
+gaussianSampleChain := gaussianSampleChain = compiledFunction["gaussianSampleChain", gaussianSampleCode,
+    {{b, _Complex, 2}, {alpha, _Complex, 1}, {u, _Real, 1}, {tol, _Real}}]
+
+(* exportCompiled builds for every desktop system; an older version cannot read a newer build *)
+compiledDirectory := FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "Kernel", "SecondQuantization", "Compiled"}]
+
+compiledVersion := ToString[NumberForm[$VersionNumber, {3, 1}]]
+
+buildVersion[file_] := FileNameTake[file, {-2}]
+
+compiledFunction[name_, code_, spec_] := Enclose[
+    ConfirmAssert[MemberQ[{"Windows-x86-64", "Linux-x86-64", "Linux-ARM64", "MacOSX-x86-64", "MacOSX-ARM64"}, $SystemID]];
+    ConfirmMatch[
+        Quiet[
+            Import @ ConfirmBy[
+                SelectFirst[
+                    Sort[FileNames[name <> ".wxf", compiledDirectory, {2}], PacletNewerQ[buildVersion[#1], buildVersion[#2]] &],
+                    ! PacletNewerQ[buildVersion[#], compiledVersion] &
+                ],
+                StringQ
+            ],
+            Import::wxfcor
+        ],
+        _CompiledCodeFunction
     ],
-    RuntimeOptions -> "Speed"
+    Compile @@ Join[Hold[spec], Extract[code, {2}, Hold], Hold[RuntimeOptions -> "Speed"]] &
+]
+
+exportCompiled[name_, code_] := With[{dir = FileNameJoin[{compiledDirectory, compiledVersion}]},
+    If[! DirectoryQ[dir], CreateDirectory[dir, CreateIntermediateDirectories -> True]];
+    Export[FileNameJoin[{dir, name <> ".wxf"}], FunctionCompile[code, TargetSystem -> All]]
 ]
 
 inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes
