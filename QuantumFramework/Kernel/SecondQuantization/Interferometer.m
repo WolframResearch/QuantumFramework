@@ -75,6 +75,7 @@ QuantumInterferometer::truncation = "The state holds up to `1` photons but each 
 QuantumInterferometer::compose ="Cannot compose interferometers on `1` and `2` modes.";
 QuantumInterferometer::notnumeric = "`1` needs a numeric transfer matrix.";
 QuantumInterferometer::squeezed = "`1` needs a passive interferometer, without squeezers.";
+QuantumInterferometer::squeezedinput = "Sampling an interferometer with squeezers needs vacuum input.";
 QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probability `2`; set \"Cutoff\" -> n to keep more.";
 QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing or coherent amplitudes; set \"Cutoff\" -> n.";
 QuantumInterferometer::samplecount = "\"`1`\" takes an input and a nonnegative integer number of samples k, as in interferometer[\"`1`\", {1, 1, 0}, k].";
@@ -689,7 +690,7 @@ QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{
         MatchQ[in, {"Coherent"[_] ..}], coherentSamples[qi, First /@ in, k],
         ! FreeQ[in, "Coherent"[___]], Message[QuantumInterferometer::samplecoherent]; $Failed,
         ! occupationQ[qi, in], $Failed,
-        ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
+        ! passiveQ[qi] && ! lossyQ[qi], gaussianSamples[qi, in, k],
         Total[in] == 0, ConstantArray[QuditName[in], k],
         ! MatrixQ[N[qi["TransferMatrix"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
         True, With[{a = samplingColumns[qi, in], m = qi["Modes"]},
@@ -765,6 +766,85 @@ coherentSamples[qi_, a_, k_] := Which[
     ]
 ]
 
+(* Quesada et al., PRX Quantum 3, 010306 (2022): heterodyne outcomes alpha on every mode, drawn from the Q function
+   Exp[-|alpha|^2 + Re[alpha^* . B . alpha^*]] *)
+gaussianSamples[qi_, in_, k_] := With[{bog = N[First[qi]["Bogoliubov"][[;; 2]]]}, Which[
+    Total[in] > 0, Message[QuantumInterferometer::squeezedinput]; $Failed,
+    ! MatrixQ[First[bog], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
+    True, With[{b = Developer`ToPackedArray[vacuumMatrix @@ bog, Complex], m = qi["Modes"]},
+        {s = Inverse[ArrayFlatten[{{IdentityMatrix[m] - Re[b], - Im[b]}, {- Im[b], IdentityMatrix[m] + Re[b]}}]] / 2},
+        QuditName /@ MapThread[gaussianSampleChain[b, #1[[;; m]] + I #1[[m + 1 ;;]], #2, 10.^-14] &,
+            {RandomVariate[MultinormalDistribution[ConstantArray[0., 2 m], (s + Transpose[s]) / 2], k], RandomReal[1, {k, m}]}]
+    ]
+]]
+
+(* The counts of modes 1..k fill the coefficients F_n of Exp[z . B . z / 2 + gamma . z] by
+   n_j F_n = gamma_j F_(n - e_j) + Sum_i B_ji F_(n - e_j - e_i), on a box with n_k outermost, so n_k grows
+   one slab at a time until the weights n_k! |F|^2 left are below tol; u_k picks n_k by inverse CDF *)
+gaussianSampleChain := gaussianSampleChain = Compile[{{b, _Complex, 2}, {alpha, _Complex, 1}, {u, _Real, 1}, {tol, _Real}},
+    Module[{m = Length[alpha], gam = b . Conjugate[alpha], sample = Table[0, {Length[alpha]}],
+            mode, dims, strides, s, f, n, j, q, acc, t, fact, total, w, last, weights, cap, p, cum, done},
+        Do[
+            Do[gam[[i]] = gam[[i]] - b[[i, k]] Conjugate[alpha[[k]]], {i, m}];
+            mode = Table[0, {k}];
+            dims = Table[1, {k}];
+            mode[[1]] = k;
+            Do[mode[[i]] = i - 1; dims[[i]] = sample[[i - 1]] + 1, {i, 2, k}];
+            s = 1;
+            Do[s = s dims[[i]], {i, 2, k}];
+            strides = Table[1, {k}];
+            Do[strides[[i]] = strides[[i + 1]] dims[[i + 1]], {i, k - 1, 1, -1}];
+            cap = 16;
+            f = Table[0. + 0. I, {s cap}];
+            weights = Table[0., {cap}];
+            n = Table[0, {k}];
+            f[[1]] = 1. + 0. I;
+            t = 0; fact = 1.; total = 0.; last = 0.; p = 1; done = False;
+            While[! done,
+                If[p > 1,
+                    j = k;
+                    While[n[[j]] == 0, j = j - 1];
+                    q = p - strides[[j]];
+                    acc = gam[[mode[[j]]]] f[[q]];
+                    n[[j]] = n[[j]] - 1;
+                    Do[If[n[[i]] > 0, acc = acc + b[[mode[[j]], mode[[i]]]] f[[q - strides[[i]]]]], {i, k}];
+                    n[[j]] = n[[j]] + 1;
+                    f[[p]] = acc / n[[j]]
+                ];
+                If[Mod[p, s] == 0,
+                    w = fact Abs[f[[p]]] ^ 2;
+                    weights[[t + 1]] = w;
+                    total = total + w;
+                    If[t >= 3 && total > 0. && w + last <= tol total,
+                        done = True,
+                        last = w;
+                        t = t + 1;
+                        fact = fact t;
+                        If[t == cap,
+                            f = Join[f, Table[0. + 0. I, {s cap}]];
+                            weights = Join[weights, Table[0., {cap}]];
+                            cap = 2 cap
+                        ]
+                    ]
+                ];
+                If[! done,
+                    p = p + 1;
+                    j = k;
+                    While[j > 1 && n[[j]] == dims[[j]] - 1, n[[j]] = 0; j = j - 1];
+                    n[[j]] = n[[j]] + 1
+                ]
+            ];
+            cum = 0.;
+            j = 0;
+            While[j < t && cum + weights[[j + 1]] < u[[k]] total, cum = cum + weights[[j + 1]]; j = j + 1];
+            sample[[k]] = j,
+            {k, m}
+        ];
+        sample
+    ],
+    RuntimeOptions -> "Speed"
+]
+
 inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes
 
 inverseElement[(kind : "PS" | "S")[a_] -> modes_] := kind[- a] -> modes
@@ -794,11 +874,8 @@ QuantumInterferometerProp[qi_, "BlochMessiah"] := Which[
         With[{m0 = Transpose[u] . N[First[qi]["Bogoliubov"][[2]]] . v},
             Scan[(q[[#, #]] = Conjugate[First[takagi[m0[[#, #]], 10.^-9]]]) &, Split[Range[Length[c]], Abs[c[[#1]] - c[[#2]]] <= 10.^-9 c[[1]] &]]
         ];
-        QuantumInterferometer[Join[
-            QuantumInterferometer[ConjugateTranspose[q] . ConjugateTranspose[v]]["Elements"],
-            MapIndexed["S"[ArcCosh[Max[1, #1]]] -> First[#2] &, c],
-            QuantumInterferometer[u . q]["Elements"]
-        ], Length[c]]
+        QuantumInterferometer[u . q] @ QuantumInterferometer[MapIndexed["S"[ArcCosh[Max[1, #1]]] -> First[#2] &, c], Length[c]] @
+            QuantumInterferometer[ConjugateTranspose[q] . ConjugateTranspose[v]]
     ]
 ]
 

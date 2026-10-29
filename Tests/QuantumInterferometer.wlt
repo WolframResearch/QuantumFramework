@@ -620,8 +620,29 @@ VerificationTest[
         QuantumInterferometer["Random"[2]]["Samples", {1, 0, 0}, 5]
     },
     {$Failed, $Failed, $Failed},
-    {QuantumInterferometer::squeezed, QuantumInterferometer::notnumeric, QuantumInterferometer::occ},
+    {QuantumInterferometer::squeezedinput, QuantumInterferometer::notnumeric, QuantumInterferometer::occ},
     TestID -> "QI-samples-rejects-squeezers-symbolic-and-bad-patterns"
+]
+
+(* vacuum into squeezers: the heterodyne chain rule against "Probabilities", and photons in pairs from one squeezer *)
+VerificationTest[
+    SeedRandom[36];
+    With[{
+        gbs = QuantumInterferometer[{"S"[0.4] -> 1, "BS"[0.7, 0.3] -> {1, 2}, "S"[0.3 I] -> 2, "BS"[1.1, -0.5] -> {2, 3}, "S"[-0.5] -> 3, "PS"[0.9] -> 1, "BS"[0.4, 1.2] -> {1, 3}}, 3],
+        k = 20000
+    },
+        {
+            With[{probs = gbs["Probabilities", {0, 0, 0}, "Cutoff" -> 12], counts = gbs["SampleCounts", {0, 0, 0}, k]},
+                With[{keys = Union[Keys[probs], Keys[counts]]},
+                    Total[Abs[Lookup[probs, keys, 0] - Lookup[counts, keys, 0] / k]] / 2 < 0.04
+                ]
+            ],
+            Union[EvenQ[#["Name"]] & /@ QuantumInterferometer[{"S"[0.8] -> 1}, 1]["Samples", {0}, 500]],
+            gbs["Samples", {0, 0, 0}, 0]
+        }
+    ],
+    {True, {True}, {}},
+    TestID -> "QI-samples-squeezed-vacuum-match-probabilities"
 ]
 
 (* The exact law of the sampler: every order of the photons' columns and every sequence of output rows,
