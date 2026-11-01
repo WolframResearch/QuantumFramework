@@ -2678,5 +2678,58 @@ VerificationTest[
     TestID -> "Tier11-PauliStringMeasure-Packed-Perf-n500"
 ]
 
+(* A Clifford circuit becomes a tableau at a cost polynomial in its width. A     *)
+(* constructor that goes through the 2^n matrix of each gate exceeds the time   *)
+(* and memory bounds below, so it fails these tests.                            *)
+(* The GHZ state on 200 qubits is the +1 eigenstate of X on every qubit and of   *)
+(* Z_1 Z_200, while Z_1 alone is undetermined.                                   *)
+VerificationTest[
+    TimeConstrained[MemoryConstrained[
+        With[{ps = PauliStabilizer["GHZ"[200]]},
+            Keys[ps["M", #]] & /@ {StringRepeat["X", 200], "Z" <> StringRepeat["I", 198] <> "Z", "Z" <> StringRepeat["I", 199]}
+        ],
+        2^31, $Aborted], 30, $Aborted],
+    {{0}, {0}, {0, 1}},
+    TestID -> "Tier11-CircuitConstructor-GHZ200-Eigenstate"
+]
+(* A random 150-qubit Clifford circuit, given as a gate list and as a circuit,   *)
+(* gives the tableau and signs that applying its gates one at a time gives;    *)
+(* "Tableau" alone leaves out the signs, which a Pauli gate changes.            *)
+VerificationTest[
+    Block[{n = 150, gates, reference, tableauAndSigns = {#["Tableau"], #["Signs"]} &},
+        SeedRandom[11];
+        gates = Table[
+            RandomChoice[{
+                RandomChoice[{"H", "S", "X", "Y", "Z"}] -> RandomInteger[{1, n}],
+                RandomChoice[{"CNOT", "CZ", "SWAP"}] -> RandomSample[Range[n], 2]
+            }],
+            {600}
+        ];
+        reference = tableauAndSigns[Fold[#1[#2] &, PauliStabilizer[n], gates]];
+        TimeConstrained[MemoryConstrained[
+            tableauAndSigns[PauliStabilizer[#]] === reference & /@ {gates, QuantumCircuitOperator[gates]},
+            2^31, $Aborted], 30, $Aborted]
+    ],
+    {True, True},
+    TestID -> "Tier11-CircuitConstructor-RandomClifford150-MatchesGateByGate"
+]
+(* On 5 qubits the tableau's state equals the dense circuit's state up to a     *)
+(* global phase.                                                                *)
+VerificationTest[
+    Block[{gates},
+        SeedRandom[5];
+        gates = Table[
+            RandomChoice[{
+                RandomChoice[{"H", "S", "X", "Y", "Z"}] -> RandomInteger[{1, 5}],
+                RandomChoice[{"CNOT", "CZ", "SWAP"}] -> RandomSample[Range[5], 2]
+            }],
+            {40}
+        ];
+        Abs[Chop[N[Conjugate[Normal[PauliStabilizer[QuantumCircuitOperator[gates]]["State"]["StateVector"]]] .
+            Normal[QuantumCircuitOperator[gates][QuantumState["Register"[5]]]["StateVector"]]]]] == 1.
+    ],
+    True,
+    TestID -> "Tier11-CircuitConstructor-RandomClifford5-MatchesDense"
+]
 
 EndTestSection[]
