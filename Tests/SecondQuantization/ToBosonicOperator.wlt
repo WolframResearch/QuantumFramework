@@ -79,6 +79,37 @@ VerificationTest[
     TestID -> "ToBosonicOperator-TwoModeCoupling"
 ]
 
+VerificationTest[
+    Module[{a1 = AnnihilationOperator[4, {1}], a2 = AnnihilationOperator[4, {2}]},
+        ToBosonicOperator[\[FormalA] ** \[FormalB] + SuperDagger[\[FormalA]], 4]["Matrix"] ==
+            (a1 @ a2 + SuperDagger[a1])["Matrix"]
+    ],
+    True,
+    TestID -> "ToBosonicOperator-ProductPlusBareOperator"
+]
+
+VerificationTest[
+    Module[{a1 = AnnihilationOperator[4, {1}], a2 = AnnihilationOperator[4, {2}]},
+        Chop[Norm[Flatten[
+            ToBosonicOperator[Exp[0.1 (\[FormalA] ** \[FormalB] + SuperDagger[\[FormalA]])], 4]["Matrix"] -
+                Exp[0.1 (a1 @ a2 + SuperDagger[a1])]["Matrix"]
+        ]]]
+    ],
+    0,
+    TestID -> "ToBosonicOperator-ProductPlusBareOperatorInExp"
+]
+
+VerificationTest[
+    With[{a = AnnihilationOperator[6]},
+        ToBosonicOperator[
+            Evaluate @ BosonicNormalOrder[\[FormalA] ** SuperDagger[\[FormalA]] ** \[FormalA], FieldVariables[]],
+            6
+        ]["Matrix"] == (a + SuperDagger[a] @ a @ a)["Matrix"]
+    ],
+    True,
+    TestID -> "ToBosonicOperator-NormalOrderedPolynomial"
+]
+
 EndTestSection[]
 
 
