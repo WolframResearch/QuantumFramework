@@ -455,6 +455,22 @@ VerificationTest[
     TestID -> "Phase8.2-CCfromQC-BitFlip-StochasticNotice"
 ]
 
+(* A single-Pauli channel flips the sign of exactly the generators that       *)
+(* anticommute with that Pauli, as the gate does (QF-B98).                     *)
+VerificationTest[
+    Outer[
+        With[{ps = PauliStabilizer[{#1}]},
+            CliffordChannel[QuantumChannel[QuantumOperator[#2]]][ps]["Stabilizers"] ===
+                If[#2 === "I", ps, ps[#2, 1]]["Stabilizers"]
+        ] &,
+        {"Z", "-Z", "X", "-X", "Y", "-Y"},
+        {"X", "Y", "Z", "I"}
+    ] // Flatten // Union,
+    {True},
+    {},
+    TestID -> "Phase8.2-CCfromQC-DetPauli-SignsMatchGate"
+]
+
 
 (* ============================================================================ *)
 (* TIER O -- Composition produces valid Clifford channels                      *)

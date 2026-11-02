@@ -417,11 +417,15 @@ CliffordChannel[qc_QuantumChannel] /; QuantumChannelQ[qc] := Module[{
             CliffordChannel[<|
                 "UA"           -> IdentityMatrix[2 n],
                 "UB"           -> IdentityMatrix[2 n],
-                "c"            -> Module[{sign, body, xz, signCol},
-                    {sign, body} = If[StringStartsQ[label, "-"], {-1, StringDrop[label, 1]}, {1, label}];
-                    (* Each row's c-bit is set if the corresponding row's Pauli
-                       anticommutes with the input Pauli AND it picks up a sign. *)
-                    ConstantArray[If[sign == -1, 1, 0], 2 n]
+                "c"            -> With[{chars = Characters[StringDelete[label, "-"]]},
+                    (* Conjugation by P flips the sign of row r exactly when the
+                       row's Pauli anticommutes with P; P's own overall sign
+                       cancels. Row q is X_q, so its bit is P's Z-bit on q;
+                       row n + q is Z_q, so its bit is P's X-bit on q. *)
+                    Join[
+                        Boole[MemberQ[{"Z", "Y"}, #]] & /@ chars,
+                        Boole[MemberQ[{"X", "Y"}, #]] & /@ chars
+                    ]
                 ],
                 "InputQubits"  -> n,
                 "OutputQubits" -> n,
