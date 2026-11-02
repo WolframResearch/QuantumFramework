@@ -471,6 +471,29 @@ VerificationTest[
     TestID -> "Phase8.2-CCfromQC-DetPauli-SignsMatchGate"
 ]
 
+(* The same channel against P rho P built from PauliMatrix, independent of QF: *)
+(* every signed output generator must have expectation +1 on that state.       *)
+VerificationTest[
+    With[{
+        pauli = <|"I" -> IdentityMatrix[2], "X" -> PauliMatrix[1], "Y" -> PauliMatrix[2], "Z" -> PauliMatrix[3]|>,
+        signed = If[StringStartsQ[#, "-"], -1, 1] &
+    },
+        Outer[
+            Function[{s, p}, With[{
+                rho = pauli[p] . ((IdentityMatrix[2] + signed[s] pauli[StringDelete[s, "-"]]) / 2) . pauli[p],
+                gens = CliffordChannel[QuantumChannel[QuantumOperator[p]]][PauliStabilizer[{s}]]["Stabilizers"]
+            },
+                Tr[rho . (signed[#] pauli[StringDelete[#, "-"]])] & /@ gens
+            ]],
+            {"Z", "-Z", "X", "-X", "Y", "-Y"},
+            {"X", "Y", "Z", "I"}
+        ] // Flatten // Union
+    ],
+    {1},
+    {},
+    TestID -> "Phase8.2-CCfromQC-DetPauli-SignsMatchDensityMatrix"
+]
+
 
 (* ============================================================================ *)
 (* TIER O -- Composition produces valid Clifford channels                      *)
