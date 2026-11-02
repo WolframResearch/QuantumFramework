@@ -227,12 +227,12 @@ VerificationTest[
         Exp[\[Alpha]*\[FormalA]**\[FormalB] +
             \[Beta]*SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]]],
         "Ordering" -> "Antinormal"],
-    E^((\[Alpha]*\[FormalA]**\[FormalB]*Tan[Sqrt[\[Alpha]*\[Beta]]])/
-            Sqrt[\[Alpha]*\[Beta]])**Sec[Sqrt[\[Alpha]*\[Beta]]]*
+    Sec[Sqrt[\[Alpha]*\[Beta]]]*(E^((\[Alpha]*\[FormalA]**\[FormalB]*Tan[Sqrt[\[Alpha]*\[Beta]]])/
+            Sqrt[\[Alpha]*\[Beta]])**
         Sec[Sqrt[\[Alpha]*\[Beta]]]^(-\[FormalA]**SuperDagger[\[FormalA]] -
             \[FormalB]**SuperDagger[\[FormalB]])**
         E^((\[Beta]*SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]]*
-            Tan[Sqrt[\[Alpha]*\[Beta]]])/Sqrt[\[Alpha]*\[Beta]]),
+            Tan[Sqrt[\[Alpha]*\[Beta]]])/Sqrt[\[Alpha]*\[Beta]])),
     TestID -> "BosonicExpAnti-TwoModeSqueezer"
 ]
 
