@@ -82,7 +82,7 @@ BosonicAntinormalOrder[expr_, vars_, OptionsPattern[]] :=
         Which[
             lv === $Failed, $Failed,
             ! MatchQ[method, Automatic | "Blasiak"], Message[BosonicAntinormalOrder::unknownMethod, method]; $Failed,
-            True, ladderSwap[ladderOrder[lv, method, BosonicAntinormalOrder][ladderSwap[expr, lv]], lv, "Inverse"]
+            True, expandCoefficients[ladderSwap[ladderOrder[lv, method, BosonicAntinormalOrder][ladderSwap[expr, lv]], lv, "Inverse"], lv]
         ]
     ]
 
@@ -234,7 +234,7 @@ BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
 numberDiagonal[expr_, v_, k_] :=
     With[{nn = SuperDagger[v] ** v},
         With[{f = Replace[expr, {
-                    NormalOrdered[Exp[c_. w_]] /; w === nn :> (1 + c)^k,
+                    NormalOrdered[Exp[c_. w_], _] /; w === nn :> (1 + c)^k,
                     e_ :> ReplaceAll[e, nn -> k]
                 }]},
             If[FreeQ[f, v | SuperDagger[v] | NormalOrdered], f, $Failed]
@@ -308,7 +308,7 @@ BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
                 (* A mixed exponential is not yet a product of wings; disentangle and retry. *)
                 Replace[normalProductElement[expr, v, m, n, j],
                     $Failed /; ! FreeQ[expr, E] :>
-                        normalProductElement[BosonicExpOrder[expr], v, m, n, j]]
+                        normalProductElement[BosonicExpOrder[expr, {{SuperDagger[v]}, {v}}], v, m, n, j]]
         ];
         r /; r =!= $Failed && FreeQ[expr, _QuantumOperator | _QuantumState]
     ]
