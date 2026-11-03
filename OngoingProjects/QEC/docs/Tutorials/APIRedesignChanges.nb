@@ -1,0 +1,3635 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    153828,       3631]
+NotebookOptionsPosition[    134457,       3337]
+NotebookOutlinePosition[    135425,       3364]
+CellTagsIndexPosition[    135382,       3361]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["The QEC API Redesign: What Changed and Why", "Title",
+ CellID->509267359,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
+
+Cell[TextData[{
+ "This note walks through, with runnable examples, everything that changed in \
+the QEC layer in response to the API audit (",
+ Cell["QEC-API-Audit-and-Redesign.md", "InlineCode",ExpressionUUID->
+  "4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
+ "). The plan that was followed, with its steps and the status of every \
+observation, is ",
+ Cell["QEC-API-Redesign-Plan.md", "InlineCode",ExpressionUUID->
+  "1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
+ "; this note is the same work seen running."
+}], "Text",ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
+
+Cell[TextData[{
+ "The idea in one sentence: ",
+ StyleBox["the mathematics did not change, the face did.",
+  FontWeight->"Bold"],
+ " The 593 tests that existed at the start passed after every step, and there \
+are now 687. What changed is how the layer is asked things: through the \
+objects the rest of the framework uses (",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25a568a6-87a2-527f-535a-810032572145"],
+ ", ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+ ", ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+ ", ",
+ Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5902d484-617f-9570-0f31-cdee100bfc5a"],
+ "), with one return type per function, and with fewer public names."
+}], "Text",ExpressionUUID->"56e0e12c-de7d-6135-7e9f-f889db08301f"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "5708d032-2150-04f2-7d37-ca7c50e56ed8"], Cell["step", "TableText",
+     FontWeight->Bold,ExpressionUUID->"3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+     Cell["what was done", "TableText",
+     FontWeight->Bold,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "234f1fb7-07c6-bba9-5174-96f1b27009f3"], Cell[
+    "1", "TableText",ExpressionUUID->"6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"], 
+    Cell["three small fixes the audit asked for", "TableText",ExpressionUUID->
+     "0a3edd72-e0d3-62fb-3bc5-d53f916630c1"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "6ec9a758-58be-624c-16f6-3f02594b3096"], Cell[
+    "2", "TableText",ExpressionUUID->"23253b8d-1c99-a6bf-52da-b2d7952d0c85"], 
+    Cell["the gadgets hand back framework circuits", "TableText",
+     ExpressionUUID->"6e84829b-9667-6594-16bb-1bc523124ffe"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "569e173f-6b36-b240-7ea5-8f790ec000aa"], Cell[
+    "3", "TableText",ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"], 
+    Cell["a code presents itself as quantum operations", "TableText",
+     ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "2867ea9b-6e8d-517b-581c-03c50b382041"], Cell[
+    "4", "TableText",ExpressionUUID->"76dfbc62-92ac-7b6e-1ee4-364c275949b4"], 
+    Cell["the error rate has one return type; decoders are objects", 
+     "TableText",ExpressionUUID->"0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"], Cell[
+    "5", "TableText",ExpressionUUID->"741b091d-feb2-1a39-1c38-a146fb476903"], 
+    Cell["the renames, all at once, with aliases for the old names", 
+     "TableText",ExpressionUUID->"3bf5a20e-c541-e06e-698a-446becf5b2b4"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "07964fa7-8d1e-ff14-2dae-660124a8c27e"], Cell[
+    "6", "TableText",ExpressionUUID->"3e367b18-9aa8-58f9-67ce-73421f5d2ac3"], 
+    Cell["gate matrices are read from the framework", "TableText",
+     ExpressionUUID->"1dbaaaf7-1388-e538-4b59-43b1a622cc02"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "77d99fdb-a351-2d53-1de6-1684d6e477b9"], Cell[
+    "7", "TableText",ExpressionUUID->"04646437-faee-7dfc-2c1c-7e70fe9b47c6"], 
+    Cell["documentation and tests", "TableText",ExpressionUUID->
+     "1cbde497-e826-5557-4442-fdd089d33fbd"]}
+  }]], "2ColumnTableMod",ExpressionUUID->"6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+
+Cell["Definition", "Section",ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+
+Cell[TextData[{
+ "The QEC layer still lives in ",
+ Cell["OngoingProjects/QEC/", "InlineCode",ExpressionUUID->
+  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+ ", outside the paclet, so this page loads both the framework and the layer:"
+}], "Text",ExpressionUUID->"5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}], ";"}], 
+  "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"qecCore", " ", "=", " ", 
+    RowBox[{"SelectFirst", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"{", "\n", "        ", 
+       RowBox[{
+        RowBox[{"Quiet", " ", "@", " ", 
+         RowBox[{"Check", "[", 
+          RowBox[{
+           RowBox[{"FileNameJoin", "[", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{"ParentDirectory", "[", 
+               RowBox[{
+                RowBox[{"NotebookDirectory", "[", "]"}], ",", " ", "2"}], 
+               "]"}], ",", " ", "\"\<QECCore\>\"", ",", 
+              " ", "\"\<QECCore.wl\>\""}], "}"}], "]"}], ",", " ", 
+           "$Failed"}], "]"}]}], ",", "\n", "        ", 
+        RowBox[{"FileNameJoin", "[", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"ParentDirectory", "[", 
+            RowBox[{"DirectoryName", "[", 
+             RowBox[{
+              RowBox[{
+              "FindFile", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}], ",",
+               " ", "2"}], "]"}], "]"}], ",", "\n", 
+           "            ", "\"\<OngoingProjects\>\"", ",", " ", "\"\<QEC\>\"",
+            ",", " ", "\"\<QECCore\>\"", ",", " ", "\"\<QECCore.wl\>\""}], 
+          "}"}], "]"}], ",", "\n", "        ", 
+        RowBox[{"FileNameJoin", "[", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"Directory", "[", "]"}], ",", " ", "\"\<QECCore\>\"", ",", 
+           " ", "\"\<QECCore.wl\>\""}], "}"}], "]"}]}], "\n", "    ", "}"}], ",",
+       "\n", "    ", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"StringQ", "[", "#", "]"}], " ", "&&", " ", 
+        RowBox[{"FileExistsQ", "[", "#", "]"}]}], " ", "&"}], ",", "\n", 
+      "    ", "$Failed"}], "\n", "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{"If", "[", " ", 
+  RowBox[{
+   RowBox[{"qecCore", " ", "===", " ", "$Failed"}], ",", "\n", "    ", 
+   RowBox[{"Failure", "[", 
+    RowBox[{"\"\<QECCoreNotFound\>\"", ",", " ", 
+     RowBox[{"<|", 
+      RowBox[{"\"\<MessageTemplate\>\"", " ", "->", "\n", 
+       "        ", "\"\<Could not locate QECCore/QECCore.wl. Get it by hand, \
+then run the rest of the page.\>\""}], "|>"}]}], "]"}], ",", "\n", "    ", 
+   RowBox[{
+    RowBox[{"Get", "[", "qecCore", "]"}], ";", "\n", "    ", 
+    RowBox[{"MemberQ", "[", 
+     RowBox[{
+     "$ContextPath", ",", " ", "\"\<Wolfram`QuantumFramework`QEC`\>\""}], 
+     "]"}]}]}], "\n", "]"}]}], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]= ",ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"]
+}, Open  ]],
+
+Cell["Three codes carry the whole note:", "Text",ExpressionUUID->"2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"bitFlip", " ", "=", " ", 
+   RowBox[{"QECCode", "[", "\"\<BitFlipCode\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"five", " ", "=", " ", 
+   RowBox[{"QECCode", "[", "\"\<5QubitCode\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"steane", " ", "=", " ", 
+   RowBox[{"QECCode", "[", "\"\<SteaneCode\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"bitFlip", "[", "\"\<Parameters\>\"", "]"}], ",", " ", 
+   RowBox[{"five", "[", "\"\<Parameters\>\"", "]"}], ",", " ", 
+   RowBox[{"steane", "[", "\"\<Parameters\>\"", "]"}]}], "}"}]}], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"35077f55-9291-6519-633d-771f27244c63"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"3", ",", "1", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"5", ",", "1", ",", "3"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"7", ",", "1", ",", "3"}], "}"}]}], "}"}]], "Output",
+ CellLabel->"Out[2]= ",ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"]
+}, Open  ]],
+
+Cell["The four decisions", "Section",ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+
+Cell["\<\
+The audit left four design questions open. They were settled provisionally so \
+the work was not blocked; each one is isolated, so changing one does not \
+touch the others.\
+\>", "Text",ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"], Cell["", "TableText",
+     FontWeight->Bold,ExpressionUUID->"02f88238-86c8-66df-3287-2462337d4c25"],
+     Cell["question", "TableText",
+     FontWeight->Bold,ExpressionUUID->"034d641c-5834-e412-3173-7e4659c6cf78"],
+     Cell["decision", "TableText",
+     FontWeight->Bold,ExpressionUUID->"52ce4f6a-032d-a48b-02f6-6734b6d90ed1"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "5bfe104a-50de-a555-0985-8a1461680fbf"], Cell[
+    "A", "TableText",ExpressionUUID->"134534fb-1061-d656-417a-ada5a115bcbc"], 
+    Cell["Is the rate read from the logical channel?", "TableText",
+     ExpressionUUID->"2cd98fd2-34e7-e188-54e6-269cbc93b3d2"], Cell[TextData[{
+     StyleBox["Yes",
+      FontWeight->"Bold"],
+     ", but the channel is built from the coset engine, not by composing \
+dense channels, so it stays exact and symbolic"
+    }], "TableText",ExpressionUUID->"6e1c99a5-dcef-9c28-1623-100ed49be772"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "608e87cc-8fce-afdf-10b5-1e962a78f525"], Cell[
+    "B", "TableText",ExpressionUUID->"2aa912c6-4938-1bb7-5a56-8ba068cd699d"], 
+    Cell[TextData[{
+     "Do the constructions (",
+     Cell[BoxData["QECConcatenate"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+     ", ",
+     Cell[BoxData["QECPasteCodes"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+     ", ",
+     Cell[BoxData["QECRemoveQubit"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+     ") become properties?"
+    }], "TableText",ExpressionUUID->"644cc522-c7c4-9b18-0c73-dc8ff276e662"], 
+    Cell[TextData[{
+     StyleBox["They stay functions",
+      FontWeight->"Bold"],
+     " and can also be asked of a code as properties"
+    }], "TableText",ExpressionUUID->"2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "6801f052-da94-0b6f-183e-ea1fdf2159b5"], Cell[
+    "C", "TableText",ExpressionUUID->"0daf8e98-7628-e40b-3b54-27c203c2cf51"], 
+    Cell[TextData[{
+     "Does ",
+     Cell[BoxData[
+      RowBox[{"code", "[", "\"\<Generators\>\"", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "7b6211f5-475c-1194-2911-88bf72e963fe"],
+     " return Pauli objects?"
+    }], "TableText",ExpressionUUID->"7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"], 
+    Cell[TextData[{
+     StyleBox["No",
+      FontWeight->"Bold"],
+     ", it still returns strings"
+    }], "TableText",ExpressionUUID->"14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"], Cell[
+    "D", "TableText",ExpressionUUID->"3b7fe4cc-5889-7f4e-6904-fd96593c4594"], 
+    Cell["What is the FT(C) object called?", "TableText",ExpressionUUID->
+     "6cb5c01f-62f5-68e0-144a-da5916803aca"], Cell[TextData[{
+     Cell[BoxData["QECFaultTolerantCircuit"], "InlineFormula",
+      FontSize->0.9 Inherited,
+      FontWeight->"Bold",ExpressionUUID->
+      "55f417ec-7166-d78d-038b-8eb60010bdd7"],
+     "; \"Protocol\" is kept for the Definition 10.5 object"
+    }], "TableText",ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765"]}
+  }]], "3ColumnTableMod",ExpressionUUID->"1d359769-845f-cd94-44ca-0f332deb97fe"],
+
+Cell["Step 1: three small fixes", "Section",ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<Decoder\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "64c30c0d-1857-1b13-0cf0-a65799e26679"],
+ " appeared twice in the property list, because it has two call shapes (",
+ Cell[BoxData[
+  RowBox[{"code", "[", "\"\<Decoder\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"code", "[", 
+   RowBox[{"\"\<Decoder\>\"", ",", " ", "noise"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ea251ed-865f-e03c-1652-48b733ebb306"],
+ "). It now appears once:"
+}], "Text",ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Count", "[", 
+  RowBox[{
+   RowBox[{"steane", "[", "\"\<Properties\>\"", "]"}], ",", 
+   " ", "\"\<Decoder\>\""}], "]"}]], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"],
+
+Cell[BoxData["1"], "Output",
+ CellLabel->"Out[3]= ",ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"]
+}, Open  ]],
+
+Cell[TextData[{
+ Cell[BoxData["QECPauliMeasurement"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+ " validated its Pauli with a ",
+ Cell[BoxData[
+  RowBox[{"Quiet", "[", 
+   RowBox[{"Check", "[", "...", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "14fd1512-f616-8834-3c82-8d5f83a0db1e"],
+ ", which the style guide forbids and which also hid errors. It now asks \
+explicitly and refuses three different cases, each with its message: \
+something that is not a Pauli, a Pauli of the wrong size, and a Pauli \
+carrying a phase:"
+}], "Text",ExpressionUUID->"66c67103-72a1-9427-0efe-696d0755ff0d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"QECPauliMeasurement", "[", 
+    RowBox[{"five", ",", " ", "\"\<XQ\>\""}], "]"}], ",", " ", 
+   RowBox[{"QECPauliMeasurement", "[", 
+    RowBox[{"five", ",", " ", "\"\<XX\>\""}], "]"}], ",", " ", 
+   RowBox[{"QECPauliMeasurement", "[", 
+    RowBox[{"five", ",", " ", "\"\<-XZZXI\>\""}], "]"}]}], "}"}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"QECPauliMeasurement", "::", "pauli"}], "MessageName"], 
+  RowBox[{":", " "}], "XQ", 
+  RowBox[{" ", 
+   RowBox[{"is", " ", "not", " ", "a", " ", "Pauli", " ", "on", " "}]}], "5", 
+  
+  RowBox[{" ", 
+   RowBox[{"qubits", "."}]}]}]], "Message", \
+"MSG",ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"QECPauliMeasurement", "::", "pauli"}], "MessageName"], 
+  RowBox[{":", " "}], "XX", 
+  RowBox[{" ", 
+   RowBox[{"is", " ", "not", " ", "a", " ", "Pauli", " ", "on", " "}]}], "5", 
+  
+  RowBox[{" ", 
+   RowBox[{"qubits", "."}]}]}]], "Message", \
+"MSG",ExpressionUUID->"11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"QECPauliMeasurement", "::", "pauli"}], "MessageName"], 
+  RowBox[{":", " "}], 
+  RowBox[{"-", "XZZXI"}], 
+  RowBox[{" ", 
+   RowBox[{"is", " ", "not", " ", "a", " ", "Pauli", " ", "on", " "}]}], "5", 
+  
+  RowBox[{" ", 
+   RowBox[{"qubits", "."}]}]}]], "Message", \
+"MSG",ExpressionUUID->"7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"General", "::", "stop"}], "MessageName"], 
+  RowBox[{":", " "}], 
+  RowBox[{"Further", " ", "output", " ", "of", " "}], 
+  TagBox[
+   StyleBox[
+    RowBox[{"QECPauliMeasurement", "::", "pauli"}], "MessageName"],
+   HoldCompleteForm], 
+  RowBox[{" ", 
+   RowBox[{"will", " ", "be", " ", "suppressed", " ", "during", " ", "this", " ", 
+    RowBox[{"calculation", "."}]}]}]}]], "Message", \
+"MSG",ExpressionUUID->"3181a460-bc62-f1ee-67be-3e4a3514c334"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"$Failed", ",", "$Failed", ",", "$Failed"}], "}"}]], "Output",
+ CellLabel->"Out[4]= ",ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The third item of step 1, taking ",
+ Cell[BoxData["QECClassicalHammingMatrix"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b45e796-37a7-eecc-197a-fed04253b416"],
+ " out of the public namespace, moved to step 5, because six tests and two \
+documentation cells used it."
+}], "Text",ExpressionUUID->"5e187950-8ca2-2ab2-0638-711a25577898"],
+
+Cell["Step 2: the gadgets hand back framework circuits", "Section",ExpressionUUID->"250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+
+Cell[TextData[{
+ "Before, the six circuit-bearing objects (",
+ Cell[BoxData["QECSyndromeCircuit"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a9104d-5625-6af3-4356-8a1763d038d9"],
+ ", ",
+ Cell[BoxData["QECCatState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+ ", ",
+ Cell[BoxData["QECPauliMeasurement"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ ", ",
+ Cell[BoxData["QECErrorCorrection"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+ ", ",
+ Cell[BoxData["QECTransversalGate"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+ " and the FT object) only gave their own instruction list. Now they all also \
+give the framework's ",
+ Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+ " and its diagram, through one shared file, ",
+ Cell["Gadget.wl", "InlineCode",ExpressionUUID->
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
+ ":"
+}], "Text",ExpressionUUID->"5077c06e-c394-b43c-000c-da4bf6261f06"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QECCatState", "[", "4", "]"}], "[", "\"\<Diagram\>\"", 
+  "]"}]], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"07359582-e823-44a1-2eca-0cef89d62e8b"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -2}, {2.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -2}, {3.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -3}, {3.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -3}, {4.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -4}, {4.625, -4}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -2}, {5.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -5}, {5.625, -5}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{5.375, -3}, {6.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{6.375, -5}, {6.625, -5}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{7.375, -5}, {7.625, -5}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {0.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -4}, {0.625, -4}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -5}, {0.625, -5}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -1}, {8.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{6.375, -2}, {8.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{7.375, -3}, {8.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{5.375, -4}, {8.625, -4}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{8.375, -5}, {8.625, -5}}]}}}, {
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+     LineBox[{{0.375, -0.0234375}, {8.625, -0.0234375}}], 
+     LineBox[{{0.375, 0.0234375}, {8.625, 0.0234375}}]}, InsetBox[
+     StyleBox["\<\"c\"\>",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 0}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+       3]}], FaceForm[{RGBColor[0.0313725, 0.027451, 0.027451], Opacity[
+       0.25]}], RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{"\<\"Reset\"\>", "(", "\<\"0\"\>", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->LightDarkSwitched[
+            GrayLevel[0], 
+            GrayLevel[1]],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      RowBox[{"\"Reset\"", "[", "\"0\"", "]"}]],
+     Annotation[#, 
+      "Reset"["0"], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+       3]}], FaceForm[{RGBColor[0.0313725, 0.027451, 0.027451], Opacity[
+       0.25]}], RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{"\<\"Reset\"\>", "(", "\<\"0\"\>", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->LightDarkSwitched[
+            GrayLevel[0], 
+            GrayLevel[1]],
+          Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      RowBox[{"\"Reset\"", "[", "\"0\"", "]"}]],
+     Annotation[#, 
+      "Reset"["0"], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+       3]}], FaceForm[{RGBColor[0.0313725, 0.027451, 0.027451], Opacity[
+       0.25]}], RectangleBox[{0.625, -3.375}, {1.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{"\<\"Reset\"\>", "(", "\<\"0\"\>", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->LightDarkSwitched[
+            GrayLevel[0], 
+            GrayLevel[1]],
+          Background->GrayLevel[0, 0]], {1., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      RowBox[{"\"Reset\"", "[", "\"0\"", "]"}]],
+     Annotation[#, 
+      "Reset"["0"], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+       3]}], FaceForm[{RGBColor[0.0313725, 0.027451, 0.027451], Opacity[
+       0.25]}], RectangleBox[{0.625, -4.375}, {1.375, -3.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{"\<\"Reset\"\>", "(", "\<\"0\"\>", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->LightDarkSwitched[
+            GrayLevel[0], 
+            GrayLevel[1]],
+          Background->GrayLevel[0, 0]], {1., -4.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      RowBox[{"\"Reset\"", "[", "\"0\"", "]"}]],
+     Annotation[#, 
+      "Reset"["0"], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+       0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+       RectangleBox[{1.625, -1.375}, {2.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"H\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->LightDarkSwitched[
+            GrayLevel[0], 
+            GrayLevel[1]],
+          Background->GrayLevel[0, 0]], {2., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"H\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "H", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+           Opacity[0.3], CapForm[None], LineBox[{{2.625, -2.}, {2.85, -2.}}], 
+           LineBox[{{3.15, -2.}, {3.375, -2.}}], 
+           {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+            RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+            DiskBox[{3., -2.}, 0.15000000000000002], 
+            {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+             LineBox[{{2.85, -2.}, {3.15, -2.}}], 
+             LineBox[{{3., -2.15}, {3., -1.85}}]}}},
+          "\"NOT\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "NOT", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{3., -1.09375}, {3., -1.85}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{2.625, -1.}, {2.90625, -1.}}], 
+          LineBox[{{3.09375, -1.}, {3.375, -1.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{3., -1.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"NOT\""], "[", 
+        RowBox[{
+          RowBox[{"{", "1", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "NOT"][{1}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+           Opacity[0.3], CapForm[None], LineBox[{{3.625, -3.}, {3.85, -3.}}], 
+           LineBox[{{4.15, -3.}, {4.375, -3.}}], 
+           {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+            RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+            DiskBox[{4., -3.}, 0.15000000000000002], 
+            {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+             LineBox[{{3.85, -3.}, {4.15, -3.}}], 
+             LineBox[{{4., -3.15}, {4., -2.85}}]}}},
+          "\"NOT\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "NOT", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{4., -2.09375}, {4., -2.85}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{3.625, -2.}, {3.90625, -2.}}], 
+          LineBox[{{4.09375, -2.}, {4.375, -2.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{4., -2.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"NOT\""], "[", 
+        RowBox[{
+          RowBox[{"{", "2", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "NOT"][{2}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+           Opacity[0.3], CapForm[None], LineBox[{{4.625, -4.}, {4.85, -4.}}], 
+           LineBox[{{5.15, -4.}, {5.375, -4.}}], 
+           {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+            RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+            DiskBox[{5., -4.}, 0.15000000000000002], 
+            {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+             LineBox[{{4.85, -4.}, {5.15, -4.}}], 
+             LineBox[{{5., -4.15}, {5., -3.85}}]}}},
+          "\"NOT\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "NOT", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{5., -3.09375}, {5., -3.85}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{4.625, -3.}, {4.90625, -3.}}], 
+          LineBox[{{5.09375, -3.}, {5.375, -3.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{5., -3.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"NOT\""], "[", 
+        RowBox[{
+          RowBox[{"{", "3", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "NOT"][{3}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+       3]}], FaceForm[{RGBColor[0.0313725, 0.027451, 0.027451], Opacity[
+       0.25]}], RectangleBox[{0.625, -5.375}, {1.375, -4.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{"\<\"Reset\"\>", "(", "\<\"0\"\>", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->LightDarkSwitched[
+            GrayLevel[0], 
+            GrayLevel[1]],
+          Background->GrayLevel[0, 0]], {1., -5.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      RowBox[{"\"Reset\"", "[", "\"0\"", "]"}]],
+     Annotation[#, 
+      "Reset"["0"], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+           Opacity[0.3], CapForm[None], LineBox[{{5.625, -5.}, {5.85, -5.}}], 
+           LineBox[{{6.15, -5.}, {6.375, -5.}}], 
+           {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+            RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+            DiskBox[{6., -5.}, 0.15000000000000002], 
+            {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+             LineBox[{{5.85, -5.}, {6.15, -5.}}], 
+             LineBox[{{6., -5.15}, {6., -4.85}}]}}},
+          "\"NOT\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "NOT", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{6., -2.09375}, {6., -4.85}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{5.625, -2.}, {5.90625, -2.}}], 
+          LineBox[{{6.09375, -2.}, {6.375, -2.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{6., -2.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"NOT\""], "[", 
+        RowBox[{
+          RowBox[{"{", "2", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "NOT"][{2}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+           Opacity[0.3], CapForm[None], LineBox[{{6.625, -5.}, {6.85, -5.}}], 
+           LineBox[{{7.15, -5.}, {7.375, -5.}}], 
+           {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+            RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+            DiskBox[{7., -5.}, 0.15000000000000002], 
+            {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+             LineBox[{{6.85, -5.}, {7.15, -5.}}], 
+             LineBox[{{7., -5.15}, {7., -4.85}}]}}},
+          "\"NOT\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "NOT", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{7., -3.09375}, {7., -4.85}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{6.625, -3.}, {6.90625, -3.}}], 
+          LineBox[{{7.09375, -3.}, {7.375, -3.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{7., -3.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"NOT\""], "[", 
+        RowBox[{
+          RowBox[{"{", "3", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "NOT"][{3}, {}], "Tooltip"]& ], {
+     TagBox[
+      TooltipBox[{
+        TagBox[
+         TooltipBox[{
+           TagBox[
+            TooltipBox[
+             {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+              0.7367, 0.358, 0.503], Opacity[0.3]}], 
+              RectangleBox[{7.625, -5.375}, {8.375, -4.625},
+               RoundingRadius->0.1]},
+             "\"Measurement\"",
+             TooltipStyle->"TextStyling"],
+            Annotation[#, "Measurement", "Tooltip"]& ], {
+            {Thickness[Small], 
+             LineBox[{{8.151690686445303, -5.0772902651951615`}, {
+              8.212366961023424, -5.033206371273226}}], 
+             LineBox[{{8.116904337848512, -5.040906597037244}, {
+              8.163666072987917, -4.982269235852142}}], 
+             LineBox[{{8.073692193435111, -5.015088542646603}, {
+              8.103169070809155, -4.946123959705244}}], 
+             LineBox[{{8.02516873734081, -5.001696919668512}, {
+              8.035236232277134, -4.927375687535918}}], 
+             LineBox[{{7.9748312626591895`, -5.001696919668512}, {
+              7.964763767722865, -4.927375687535918}}], 
+             LineBox[{{7.926307806564889, -5.015088542646603}, {
+              7.896830929190845, -4.946123959705244}}], 
+             LineBox[{{7.883095662151487, -5.040906597037244}, {
+              7.836333927012083, -4.982269235852142}}], 
+             LineBox[{{7.848309313554697, -5.0772902651951615`}, {
+              7.787633038976576, -5.033206371273225}}]}, 
+            {Thickness[Medium], 
+             LineBox[{{8, -5.1875}, {
+               8.17024643740233, -4.853372553429362}}]}}, InsetBox[
+            StyleBox["\<\"MH\"\>",
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->LightDarkSwitched[
+               GrayLevel[0], 
+               GrayLevel[1]],
+             Background->GrayLevel[0, 0]], {8, -5.3}], 
+           {Dashing[{Small, Small}]}},
+          RowBox[{"\"Measurement\"", "[", "\"MH\"", "]"}]],
+         Annotation[#, 
+          "Measurement"["MH"], "Tooltip"]& ], 
+        {Dashing[{Small, Small}]}},
+       TemplateBox[{
+         RowBox[{"\"Measurement\"", "[", "\"MH\"", "]"}], 
+         RowBox[{"\[CircleTimes]", "1"}]}, "Superscript", SyntaxForm -> 
+        SuperscriptBox]],
+      Annotation[#, 
+       Superscript[
+        "Measurement"["MH"], 
+        CircleTimes[1]], "Tooltip"]& ], 
+     {RGBColor[0.537254, 0.537254, 0.537254], 
+      LineBox[{{8., -4.625}, {8., -0.2109375}}], 
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+       FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+       PolygonBox[{{7.90625, -0.2109375}, {8.09375, -0.2109375}, {
+        8., -0.0234375}}]}}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["4",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -4}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["5",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -5}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->Medium]], "Output",
+ CellLabel->"Out[5]= ",ExpressionUUID->"7c239bd0-3ff5-3b18-25d0-129ab9818662"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The property that matters is that the translation neither drops nor invents \
+anything: one instruction, one operator. Resets and measurements survive (",
+ Cell[BoxData[
+  RowBox[{"\"\<M\>\"", " ", "->", " ", "q"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+ " is the ",
+ StyleBox["identity", "TI"],
+ " in the framework, so ",
+ Cell[BoxData[
+  RowBox[{"\"\<Measurement\>\"", " ", "->", " ", "q"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+ " is used), and ",
+ Cell[BoxData["Sdg"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+ " is one box, not three ",
+ Cell[BoxData["S"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+ ":"
+}], "Text",ExpressionUUID->"5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"g", " ", "=", " ", 
+     RowBox[{"QECTransversalGate", "[", 
+      RowBox[{"steane", ",", " ", "\"\<S\>\""}], "]"}]}], "}"}], ",", "\n", 
+   "    ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Length", "[", 
+      RowBox[{"g", "[", "\"\<Instructions\>\"", "]"}], "]"}], ",", " ", 
+     RowBox[{"Length", "[", 
+      RowBox[{
+       RowBox[{"g", "[", "\"\<QuantumCircuitOperator\>\"", "]"}], 
+       "[", "\"\<Operators\>\"", "]"}], "]"}]}], "}"}]}], "]"}]], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"30baa1c8-66ad-75e0-6059-389213585fca"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"7", ",", "7"}], "}"}]], "Output",
+ CellLabel->"Out[6]= ",ExpressionUUID->"52535901-cb26-8b9c-0261-516aeed0d9e6"]
+}, Open  ]],
+
+Cell["Step 3: a code as quantum operations", "Section",ExpressionUUID->"323a4b1c-b138-a791-63da-6359c0b20dfb"],
+
+Cell[TextData[{
+ "This is the core of the redesign. The theory of error correction (Knill\
+\[Dash]Laflamme\[Dash]Viola) describes a code with five objects: an encoding \
+isometry, a projector onto the code space, a syndrome measurement, a recovery \
+per syndrome and, composing all of it, a channel on the logical qubit. \
+Before, the layer gave none of them; now a code gives them all. The new file \
+is ",
+ Cell["Operational.wl", "InlineCode",ExpressionUUID->
+  "7421cf44-a1ac-4319-1dde-e721d0592e63"],
+ "."
+}], "Text",ExpressionUUID->"511b3347-8d7d-ab60-0738-ab212409f64a"],
+
+Cell[TextData[{
+ StyleBox["Nothing new was invented to hold them.",
+  FontWeight->"Bold"],
+ " The framework already had an object for each of these ideas, and each \
+property returns that object:"
+}], "Text",ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "6815cd54-0cd7-196f-182a-e51ea5626bb5"], Cell["property", "TableText",
+     FontWeight->Bold,ExpressionUUID->"519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+     Cell["returns", "TableText",
+     FontWeight->Bold,ExpressionUUID->"5900aac7-5263-773e-0f3f-43a167165a04"],
+     Cell["the framework object that already meant", "TableText",
+     FontWeight->Bold,ExpressionUUID->"06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "12d95fcb-3316-2212-42e7-569546a37178"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", "\"\<Encoder\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "733995c2-f5bf-78ee-22c6-0caffc4a4a34"]], "TableText",ExpressionUUID->
+     "4f8ab258-7e7f-0723-7589-34027b0a6a09"], Cell[TextData[Cell[BoxData[
+    "QuantumOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "6b12ee74-9953-131d-1921-003e18e67e67"]], "TableText",ExpressionUUID->
+     "65262d3c-fccc-1dc6-0cdd-c579f579672c"], Cell[TextData[{
+     "a linear map between qubits (here the isometry ",
+     Cell[BoxData[
+      FormBox[
+       StyleBox["V", "TI"], TraditionalForm]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "5e157ee2-48da-d240-062b-77cc696ca0aa"],
+     ", 1 qubit in, ",
+     Cell[BoxData[
+      FormBox[
+       StyleBox["n", "TI"], TraditionalForm]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "78287f93-0f12-7c52-2828-76ddaaa746b8"],
+     " out)"
+    }], "TableText",ExpressionUUID->"08285353-0e0e-39f8-3828-4b1dabb88bc2"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "1daed7d3-93e8-7698-4b55-ce9d259d5ce2"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", "\"\<Codewords\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "187adc3d-3961-76c2-4819-d667b8145c28"]], "TableText",ExpressionUUID->
+     "641c78eb-7f03-7846-0c24-71b57ab64aac"], Cell[TextData[{
+     "a list of ",
+     Cell[BoxData["QuantumState"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"]
+    }], "TableText",ExpressionUUID->"112ae6ec-4b5c-6ad2-4729-ffb66ee93838"], 
+    Cell["a state", "TableText",ExpressionUUID->
+     "6121b9de-dddd-aca8-10de-309bd469f6f2"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "30209679-023a-ee91-61df-0823b7ccb4fb"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", "\"\<Codespace\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "29bc1606-c22d-409d-5f43-8863f7d812e7"]], "TableText",ExpressionUUID->
+     "7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"], Cell[TextData[Cell[BoxData[
+    "QuantumOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "3119d855-3ffd-7401-6726-d21fb9885f6b"]], "TableText",ExpressionUUID->
+     "62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"], Cell[TextData[{
+     "an operator (here the projector ",
+     Cell[BoxData[
+      FormBox[
+       RowBox[{
+        StyleBox["P", "TI"], "\[LongEqual]", 
+        StyleBox["V", "TI"], 
+        SuperscriptBox[
+         StyleBox["V", "TI"], "\[Dagger]"]}], TraditionalForm]], 
+      "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
+     ")"
+    }], "TableText",ExpressionUUID->"51fce014-dca1-0630-0783-fa51d5546d1a"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "657c1c65-980e-511d-1303-964f19bb2067"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", "\"\<SyndromeMeasurement\>\"", "]"}]], 
+     "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "0f15dbd5-5f35-596c-352a-d29f5ac02bb6"]], "TableText",ExpressionUUID->
+     "7e9b7e66-629a-1114-26b9-7040172f607e"], Cell[TextData[Cell[BoxData[
+    "QuantumMeasurementOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "585a51e6-774f-2dd2-087a-48c002fa7738"]], "TableText",ExpressionUUID->
+     "1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"], Cell[
+    "a measurement with one projector per outcome", "TableText",
+     ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "2845529c-454d-b13b-587b-4bc66cf90001"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", 
+      RowBox[{"\"\<Recovery\>\"", ",", " ", "s"}], "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "7519012f-e657-215b-2326-988893e273a1"]], "TableText",ExpressionUUID->
+     "594776df-9e75-d16a-0f7d-6f991b01a3b0"], Cell[TextData[Cell[BoxData[
+    "QuantumChannel"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "6405505f-4b92-3bd6-0c3b-4a196e24893c"]], "TableText",ExpressionUUID->
+     "6878c7f8-419e-9db5-1807-dea27028e79f"], Cell[
+    "a channel (here one Kraus operator, the correcting Pauli)", "TableText",
+     ExpressionUUID->"48a3d607-c312-9dd3-7850-c860f6a4e739"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "539491e8-328f-8d7b-01ab-08b2473bd441"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", 
+      RowBox[{"\"\<LogicalChannel\>\"", ",", " ", "noise"}], "]"}]], 
+     "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"]], "TableText",ExpressionUUID->
+     "023f49e2-a747-9723-33c5-60cfd2f3fa09"], Cell[TextData[Cell[BoxData[
+    "QuantumChannel"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "21aa1c49-e16c-f406-57a9-9612901edf6c"]], "TableText",ExpressionUUID->
+     "289b85cd-827f-9a9c-58b8-1c97370be8e6"], Cell[
+    "a channel (here on the logical qubit)", "TableText",ExpressionUUID->
+     "12f3dbee-abc4-6375-4280-d2cbce714e5f"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "7ed5da6f-a344-b859-26ea-dc48d6f60aa3"], Cell[TextData[Cell[BoxData[
+     RowBox[{"noise", "[", "\"\<QuantumChannel\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "2cfa2c34-ef50-7d46-5499-c6718ae547ac"]], "TableText",ExpressionUUID->
+     "362a4e41-4988-041f-5e2a-602b683d6f65"], Cell[TextData[Cell[BoxData[
+    "QuantumChannel"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "01ed6b92-5a5f-fa78-3792-82dc5febc942"]], "TableText",ExpressionUUID->
+     "107fa29c-d013-1000-4004-3bd9e1a6636a"], Cell["\<\
+a channel (now for every Pauli model, not only the named ones)\
+\>", "TableText",ExpressionUUID->"6798df62-4cc7-e4e1-0da7-d74c6573cecb"]}
+  }]], "3ColumnTableMod",ExpressionUUID->"49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+
+Cell["Asked directly:", "Text",ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Head", " ", "/@", " ", 
+  RowBox[{"<|", "\n", "    ", 
+   RowBox[{
+    RowBox[{"\"\<Encoder\>\"", " ", "->", " ", 
+     RowBox[{"bitFlip", "[", "\"\<Encoder\>\"", "]"}]}], ",", "\n", "    ", 
+    RowBox[{"\"\<Codewords\>\"", " ", "->", " ", 
+     RowBox[{"First", "[", 
+      RowBox[{"bitFlip", "[", "\"\<Codewords\>\"", "]"}], "]"}]}], ",", "\n", 
+    "    ", 
+    RowBox[{"\"\<Codespace\>\"", " ", "->", " ", 
+     RowBox[{"bitFlip", "[", "\"\<Codespace\>\"", "]"}]}], ",", "\n", "    ", 
+    
+    RowBox[{"\"\<SyndromeMeasurement\>\"", " ", "->", " ", 
+     RowBox[{"bitFlip", "[", "\"\<SyndromeMeasurement\>\"", "]"}]}], ",", 
+    "\n", "    ", 
+    RowBox[{"\"\<Recovery\>\"", " ", "->", " ", 
+     RowBox[{"bitFlip", "[", 
+      RowBox[{"\"\<Recovery\>\"", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "1"}], "}"}]}], "]"}]}], ",", "\n", "    ", 
+    RowBox[{"\"\<LogicalChannel\>\"", " ", "->", " ", 
+     RowBox[{"bitFlip", "[", 
+      RowBox[{"\"\<LogicalChannel\>\"", ",", " ", 
+       RowBox[{"QECNoiseModel", "[", 
+        RowBox[{"\"\<BitFlip\>\"", ",", " ", 
+         RowBox[{"1", "/", "10"}]}], "]"}]}], "]"}]}], ",", "\n", "    ", 
+    RowBox[{"\"\<noise[\\\"QuantumChannel\\\"]\>\"", " ", "->", " ", 
+     RowBox[{
+      RowBox[{"QECNoiseModel", "[", 
+       RowBox[{"\"\<BitFlip\>\"", ",", " ", 
+        RowBox[{"1", "/", "10"}]}], "]"}], "[", "\"\<QuantumChannel\>\"", 
+      "]"}]}]}], "|>"}]}]], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"Encoder\"\>", "\[Rule]", "QuantumOperator"}], ",", 
+   RowBox[{"\<\"Codewords\"\>", "\[Rule]", "QuantumState"}], ",", 
+   RowBox[{"\<\"Codespace\"\>", "\[Rule]", "QuantumOperator"}], ",", 
+   RowBox[{"\<\"SyndromeMeasurement\"\>", "\[Rule]", 
+    "QuantumMeasurementOperator"}], ",", 
+   RowBox[{"\<\"Recovery\"\>", "\[Rule]", "QuantumChannel"}], ",", 
+   RowBox[{"\<\"LogicalChannel\"\>", "\[Rule]", "QuantumChannel"}], ",", 
+   RowBox[{"\<\"noise[\\\"QuantumChannel\\\"]\"\>", "\[Rule]", 
+    "QuantumChannel"}]}], "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[7]= ",ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054"]
+}, Open  ]],
+
+Cell["\<\
+Because they are the framework's own objects, the framework's own operations \
+work on them without any QEC-specific glue. The whole correction cycle can be \
+run by hand: encode a framework state, hit it with a framework gate, measure \
+the syndrome, apply the recovery \[LongDash] every step is just applying one \
+framework object to another:\
+\>", "Text",ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"psi", ",", " ", "hit", ",", " ", "fixed", ",", " ", "v"}], "}"}],
+    ",", "\n", "    ", 
+   RowBox[{
+    RowBox[{"psi", " ", "=", " ", 
+     RowBox[{
+      RowBox[{"bitFlip", "[", "\"\<Encoder\>\"", "]"}], "[", 
+      RowBox[{"QuantumState", "[", "\"\<+\>\"", "]"}], "]"}]}], ";", 
+    "          ", 
+    RowBox[{"(*", " ", 
+     RowBox[{"QuantumOperator", " ", "on", " ", "a", " ", "QuantumState"}], 
+     " ", "*)"}], "\n", "    ", 
+    RowBox[{"hit", " ", "=", " ", 
+     RowBox[{
+      RowBox[{"QuantumOperator", "[", 
+       RowBox[{"\"\<X\>\"", ",", " ", 
+        RowBox[{"{", "2", "}"}]}], "]"}], "[", "psi", "]"}]}], ";", 
+    "                  ", 
+    RowBox[{"(*", " ", 
+     RowBox[{
+     "an", " ", "ordinary", " ", "framework", " ", "gate", " ", "as", " ", 
+      "the", " ", "error"}], " ", "*)"}], "\n", "    ", 
+    RowBox[{"fixed", " ", "=", " ", 
+     RowBox[{
+      RowBox[{"bitFlip", "[", 
+       RowBox[{"\"\<Recovery\>\"", ",", " ", 
+        RowBox[{"bitFlip", "[", 
+         RowBox[{"\"\<Syndrome\>\"", ",", " ", "\"\<IXI\>\""}], "]"}]}], 
+       "]"}], "[", 
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"hit", "[", "\"\<DensityMatrix\>\"", "]"}], "]"}], "]"}]}], ";",
+     "\n", "    ", 
+    RowBox[{"v", " ", "=", " ", 
+     RowBox[{"Normal", "[", 
+      RowBox[{"psi", "[", "\"\<StateVector\>\"", "]"}], "]"}]}], ";", "\n", 
+    "    ", 
+    RowBox[{"<|", 
+     RowBox[{
+      RowBox[{"\"\<encoded\>\"", " ", "->", " ", 
+       RowBox[{"Head", "[", "psi", "]"}]}], ",", "\n", "      ", 
+      RowBox[{"\"\<left alone by the projector\>\"", " ", "->", " ", 
+       RowBox[{
+        RowBox[{"Chop", "[", 
+         RowBox[{
+          RowBox[{"Normal", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"bitFlip", "[", "\"\<Codespace\>\"", "]"}], "[", "psi", 
+             "]"}], "[", "\"\<StateVector\>\"", "]"}], "]"}], " ", "-", " ", 
+          "v"}], "]"}], " ", "==", " ", 
+        RowBox[{"ConstantArray", "[", 
+         RowBox[{"0", ",", " ", "8"}], "]"}]}]}], ",", "\n", "      ", 
+      RowBox[{"\"\<syndrome probabilities\>\"", " ", "->", " ", 
+       RowBox[{"Values", "[", 
+        RowBox[{"Normal", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"bitFlip", "[", "\"\<SyndromeMeasurement\>\"", "]"}], "[", 
+           "hit", "]"}], "[", "\"\<Probabilities\>\"", "]"}], "]"}], "]"}]}], 
+      ",", "\n", "      ", 
+      RowBox[{"\"\<fidelity after recovery\>\"", " ", "->", " ", 
+       RowBox[{"Chop", "[", 
+        RowBox[{"Simplify", "[", 
+         RowBox[{
+          RowBox[{"Conjugate", "[", "v", "]"}], " ", ".", " ", 
+          RowBox[{"Normal", "[", 
+           RowBox[{"fixed", "[", "\"\<DensityMatrix\>\"", "]"}], "]"}], " ", ".",
+           " ", "v"}], "]"}], "]"}]}]}], "|>"}]}]}], "]"}]], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"062d91f0-6326-41c0-2fd2-08ba16d3132a"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"encoded\"\>", "\[Rule]", "QuantumState"}], ",", 
+   RowBox[{"\<\"left alone by the projector\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"syndrome probabilities\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "}"}]}], ",", 
+   RowBox[{"\<\"fidelity after recovery\"\>", "\[Rule]", "1"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[8]= ",ExpressionUUID->"1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"]
+}, Open  ]],
+
+Cell["The rest of this step looks at each object in turn.", "Text",ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
+
+Cell[TextData[{
+ "The encoder is the isometry ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["V", "TI"], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "612fd791-c81e-86f2-10d4-cedae9a8ecd8"],
+ ", as a ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
+ ", from 1 logical qubit to 3 physical ones:"
+}], "Text",ExpressionUUID->"296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"bitFlip", "[", "\"\<Encoder\>\"", "]"}], "[", "\"\<Order\>\"", 
+  "]"}]], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"6b853673-18d0-d9fa-19ba-a83d996aabc0"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"1", ",", "2", ",", "3"}], "}"}], ",", 
+   RowBox[{"{", "1", "}"}]}], "}"}]], "Output",
+ CellLabel->"Out[9]= ",ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Its columns are the codewords, and they are in ",
+ StyleBox["the code's own",
+  FontWeight->"Bold"],
+ " logical basis: ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox[
+     RowBox[{"|", "0"}], 
+     StyleBox["L", "TI"]], "\[RightAngleBracket]"}], TraditionalForm]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "574a2197-51ef-7938-7d49-b8d1679a4802"],
+ " is the ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"+", "1"}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e85e9ed-427b-8528-16ba-00b7770fec72"],
+ " eigenstate of the ",
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox[
+    StyleBox["Z", "TI"], "_"], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "73b76025-96bb-3fff-214d-798f234f85c5"],
+ " that ",
+ Cell[BoxData[
+  RowBox[{"code", "[", "\"\<LogicalZ\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31f4c073-8ff6-126f-678b-da3d298360b5"],
+ " reports. That was not automatic. The five-qubit code's encoding circuit \
+sends ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"|", "00000"}], "\[RightAngleBracket]"}], TraditionalForm]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "72ff7667-e560-b2c0-2285-68408c1a002a"],
+ " to the ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"-", "1"}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c9be80e-0554-61c1-24b8-0268ace1332b"],
+ " eigenstate of that ",
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox[
+    StyleBox["Z", "TI"], "_"], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "106b7ad8-6378-599b-4069-7382160d2be1"],
+ " \[LongDash] a valid encoder, but with its labels swapped. Against what ",
+ Cell[BoxData["\"\<Codewords\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
+ " gives now:"
+}], "Text",ExpressionUUID->"304452a4-201b-d64c-607c-4b0e51afbc96"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"z", " ", "=", " ", 
+      RowBox[{"Normal", "[", 
+       RowBox[{
+        RowBox[{"QECPauli", "[", 
+         RowBox[{"First", "[", 
+          RowBox[{"five", "[", "\"\<LogicalZ\>\"", "]"}], "]"}], "]"}], 
+        "[", "\"\<Matrix\>\"", "]"}], "]"}]}], ",", " ", "raw", ",", " ", 
+     "fixed"}], "}"}], ",", "\n", "    ", 
+   RowBox[{
+    RowBox[{"raw", " ", "=", " ", 
+     RowBox[{
+      RowBox[{"Normal", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"QuantumCircuitOperator", "[", 
+          RowBox[{"Join", "[", 
+           RowBox[{
+            RowBox[{"Table", "[", 
+             RowBox[{
+              RowBox[{"\"\<I\>\"", " ", "->", " ", "q"}], ",", " ", 
+              RowBox[{"{", 
+               RowBox[{"q", ",", " ", "5"}], "}"}]}], "]"}], ",", " ", 
+            RowBox[{"five", "[", "\"\<EncodingGates\>\"", "]"}]}], "]"}], 
+          "]"}], "[", "\n", "        ", "\"\<QuantumOperator\>\"", "]"}], 
+        "[", "\"\<MatrixRepresentation\>\"", "]"}], "]"}], "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", " ", "1"}], "]"}], "]"}]}], ";", "\n", "    ", 
+    RowBox[{"fixed", " ", "=", " ", 
+     RowBox[{"Normal", "[", 
+      RowBox[{
+       RowBox[{"First", "[", 
+        RowBox[{"five", "[", "\"\<Codewords\>\"", "]"}], "]"}], 
+       "[", "\"\<StateVector\>\"", "]"}], "]"}]}], ";", "\n", "    ", 
+    RowBox[{"<|", 
+     RowBox[{
+      RowBox[{"\"\<circuit alone\>\"", " ", "->", " ", 
+       RowBox[{"Simplify", "[", 
+        RowBox[{
+         RowBox[{"Conjugate", "[", "raw", "]"}], " ", ".", " ", "z", " ", ".",
+          " ", "raw"}], "]"}]}], ",", "\n", "      ", 
+      RowBox[{"\"\<Codewords\>\"", " ", "->", " ", 
+       RowBox[{"Simplify", "[", 
+        RowBox[{
+         RowBox[{"Conjugate", "[", "fixed", "]"}], " ", ".", " ", "z", " ", ".",
+          " ", "fixed"}], "]"}]}]}], "|>"}]}]}], "]"}]], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"circuit alone\"\>", "\[Rule]", 
+    RowBox[{"-", "1"}]}], ",", 
+   RowBox[{"\<\"Codewords\"\>", "\[Rule]", "1"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->
+  "Out[10]= ",ExpressionUUID->"4b5b9263-9199-4e16-7978-144d202c157c"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The projector is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    StyleBox["P", "TI"], "\[LongEqual]", 
+    StyleBox["V", "TI"], 
+    SuperscriptBox[
+     StyleBox["V", "TI"], "\[Dagger]"]}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
+ ". It is checked against ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    UnderscriptBox["\[Product]", 
+     StyleBox["i", "TI"],
+     LimitsPositioning->True], 
+    RowBox[{"(", 
+     RowBox[{"1", "+", 
+      SubscriptBox[
+       StyleBox["g", "TI"], 
+       StyleBox["i", "TI"]]}], ")"}], "/", "2"}], TraditionalForm]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"],
+ ", the same projector built without the encoder:"
+}], "Text",ExpressionUUID->"3343f580-98d5-e31c-6170-ecea1961ce66"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"p", " ", "=", " ", 
+      RowBox[{"Normal", "[", 
+       RowBox[{
+        RowBox[{"bitFlip", "[", "\"\<Codespace\>\"", "]"}], 
+        "[", "\"\<MatrixRepresentation\>\"", "]"}], "]"}]}], ",", " ", "gens",
+      ",", " ", 
+     RowBox[{"one", " ", "=", " ", 
+      RowBox[{"IdentityMatrix", "[", "8", "]"}]}]}], "}"}], ",", "\n", "    ", 
+   RowBox[{
+    RowBox[{"gens", " ", "=", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Normal", "[", 
+        RowBox[{
+         RowBox[{"QECPauli", "[", "#", "]"}], "[", "\"\<Matrix\>\"", "]"}], 
+        "]"}], " ", "&"}], " ", "/@", " ", 
+      RowBox[{"bitFlip", "[", "\"\<Generators\>\"", "]"}]}]}], ";", "\n", 
+    "    ", 
+    RowBox[{"p", " ", "==", " ", 
+     RowBox[{"Fold", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"#1", " ", ".", " ", 
+          RowBox[{"(", 
+           RowBox[{"one", " ", "+", " ", "#2"}], ")"}]}], " ", "/", " ", 
+         "2"}], " ", "&"}], ",", " ", "one", ",", " ", "gens"}], "]"}]}]}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"20a7420b-376a-b23f-505d-6455421c0105"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->
+  "Out[11]= ",ExpressionUUID->"6af863a9-1098-c609-1a98-7af3a112ad53"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The syndrome measurement is a ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "055bc2ad-6b92-a3be-3378-dbf70e24f184"],
+ " with one projector per syndrome. An ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["X", "TI"], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2b0fb60e-2211-365f-5934-286857a59ca5"],
+ " on the middle qubit trips both checks, syndrome ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"1", ",", "1"}], "}"}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "201a2509-bdd9-2fa1-5039-bd53346c758b"],
+ ", the fourth outcome; and the recovery for that syndrome gives the codeword \
+back:"
+}], "Text",ExpressionUUID->"7085d256-6adc-aa08-20ba-d4100f6ef952"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"zero", " ", "=", " ", 
+      RowBox[{"First", "[", 
+       RowBox[{"bitFlip", "[", "\"\<Codewords\>\"", "]"}], "]"}]}], ",", " ", 
+     "hit"}], "}"}], ",", "\n", "    ", 
+   RowBox[{
+    RowBox[{"hit", " ", "=", " ", 
+     RowBox[{
+      RowBox[{"QuantumOperator", "[", "\"\<IXI\>\"", "]"}], "[", "zero", 
+      "]"}]}], ";", "\n", "    ", 
+    RowBox[{"<|", 
+     RowBox[{
+      RowBox[{"\"\<syndrome\>\"", " ", "->", " ", 
+       RowBox[{"bitFlip", "[", 
+        RowBox[{"\"\<Syndrome\>\"", ",", " ", "\"\<IXI\>\""}], "]"}]}], ",", 
+      "\n", "      ", 
+      RowBox[{"\"\<outcome probabilities\>\"", " ", "->", " ", 
+       RowBox[{"Values", "[", 
+        RowBox[{"Normal", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"bitFlip", "[", "\"\<SyndromeMeasurement\>\"", "]"}], "[", 
+           "hit", "]"}], "[", "\"\<Probabilities\>\"", "]"}], "]"}], "]"}]}], 
+      ",", "\n", "      ", 
+      RowBox[{"\"\<recovered\>\"", " ", "->", " ", 
+       RowBox[{
+        RowBox[{"Chop", "[", 
+         RowBox[{
+          RowBox[{"Normal", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"bitFlip", "[", 
+              RowBox[{"\"\<Recovery\>\"", ",", " ", 
+               RowBox[{"{", 
+                RowBox[{"1", ",", " ", "1"}], "}"}]}], "]"}], "[", 
+             RowBox[{"QuantumState", "[", 
+              RowBox[{"hit", "[", "\"\<DensityMatrix\>\"", "]"}], "]"}], 
+             "]"}], "[", "\"\<DensityMatrix\>\"", "]"}], "]"}], " ", "-", 
+          "\n", "          ", 
+          RowBox[{"Normal", "[", 
+           RowBox[{"zero", "[", "\"\<DensityMatrix\>\"", "]"}], "]"}]}], 
+         "]"}], " ", "==", " ", 
+        RowBox[{"ConstantArray", "[", 
+         RowBox[{"0", ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"8", ",", " ", "8"}], "}"}]}], "]"}]}]}]}], "|>"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"5f932952-49a5-d34f-05a0-c11c6851a195"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"syndrome\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1"}], "}"}]}], ",", 
+   RowBox[{"\<\"outcome probabilities\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "}"}]}], ",", 
+   RowBox[{"\<\"recovered\"\>", "\[Rule]", "True"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->
+  "Out[12]= ",ExpressionUUID->"160f17c4-d31a-fe19-3e34-8ea1e6acc563"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The same measurement can be asked of the syndrome circuit: ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"QECSyndromeCircuit", "[", "code", "]"}], 
+   "[", "\"\<SyndromeMeasurement\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
+ "."
+}], "Text",ExpressionUUID->"3fdc991b-fead-14b0-65e3-1144fb587e9a"],
+
+Cell[TextData[{
+ "These four objects are dense \[LongDash] of size ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["2", 
+    StyleBox["n", "TI"]], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
+ " \[LongDash] and stop at ",
+ Cell[BoxData["$QECDenseQubitLimit"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0642d375-09f3-9942-2e71-cb3faf87eba8"],
+ " (10 qubits by default) with a message saying what to use instead:"
+}], "Text",ExpressionUUID->"0651775d-2bad-791b-2e6f-6f074e584861"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Block", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"$QECDenseQubitLimit", " ", "=", " ", "5"}], "}"}], ",", " ", 
+   RowBox[{"steane", "[", "\"\<Encoder\>\"", "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"QECCode", "::", "dense"}], "MessageName"], 
+  RowBox[{":", " "}], "Encoder", 
+  RowBox[{" ", 
+   RowBox[{
+   "materializes", " ", "a", " ", "dense", " ", "object", " ", "on", " "}]}], 
+  "7", 
+  RowBox[{" ", 
+   RowBox[{"qubits", ",", " ", 
+    RowBox[{
+     RowBox[{"above", " ", "$QECDenseQubitLimit"}], " ", "=", " "}]}]}], "5", 
+  
+  RowBox[{
+   RowBox[{
+    RowBox[{".", " ", "The"}], " ", "logical", " ", "channel"}], ",", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"the", " ", "Knill"}], "-", 
+     RowBox[{
+     "Laflamme", " ", "matrix", " ", "and", " ", "the", " ", "detector", " ", 
+      "model", " ", "carry", " ", "the", " ", "same", " ", "information", " ",
+       "without", " ", "it"}]}], ";", " ", 
+    RowBox[{"raise", " ", "$QECDenseQubitLimit", " ", "to", " ", "force", " ", 
+     RowBox[{"it", "."}]}]}]}]}]], "Message", \
+"MSG",ExpressionUUID->"67c13665-f813-2f11-0dfe-a84ef9a6727b"],
+
+Cell[BoxData["$Failed"], "Output",
+ CellLabel->
+  "Out[13]= ",ExpressionUUID->"4c440104-ea8a-4285-747b-99618f3f10ef"]
+}, Open  ]],
+
+Cell["The logical channel", "Subsection",ExpressionUUID->"66c9a615-af45-c085-0ef6-385ecaf192ef"],
+
+Cell[TextData[{
+ "Encoding, applying the noise, measuring the syndrome, recovering and \
+decoding is one channel on the logical qubit. Building it literally goes \
+through a ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["4", 
+    StyleBox["n", "TI"]], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0513e607-0f4c-1e20-3320-f861aaf9650a"],
+ "-dimensional superoperator. But for Pauli noise on a stabilizer code the \
+net result is always a logical Pauli, so the logical channel is a Pauli \
+channel with ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["4", 
+    StyleBox["k", "TI"]], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0371ff35-cd30-cda2-310e-f77ee4ca9788"],
+ " weights, and those weights are exactly the coset probabilities the \
+maximum-likelihood decoder already computed. So it comes out exact, symbolic, \
+and cheap:"
+}], "Text",ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"bitFlip", "[", 
+  RowBox[{"\"\<LogicalPauliProbabilities\>\"", ",", " ", 
+   RowBox[{"QECNoiseModel", "[", 
+    RowBox[{"\"\<BitFlip\>\"", ",", " ", "p"}], "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"I\"\>", "\[Rule]", 
+    RowBox[{
+     SuperscriptBox[
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"-", "1"}], "+", "p"}], ")"}], "2"], " ", 
+     RowBox[{"(", 
+      RowBox[{"1", "+", 
+       RowBox[{"2", " ", "p"}]}], ")"}]}]}], ",", 
+   RowBox[{"\<\"X\"\>", "\[Rule]", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"3", "-", 
+       RowBox[{"2", " ", "p"}]}], ")"}], " ", 
+     SuperscriptBox["p", "2"]}]}], ",", 
+   RowBox[{"\<\"Y\"\>", "\[Rule]", "0"}], ",", 
+   RowBox[{"\<\"Z\"\>", "\[Rule]", "0"}]}], "\[RightAssociation]"}]], "Output",\
+
+ CellLabel->
+  "Out[14]= ",ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7"]
+}, Open  ]],
+
+Cell["\<\
+This is decision A in one line: the logical error rate is one minus the \
+identity weight, and the two agree coefficient for coefficient:\
+\>", "Text",ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"noise", " ", "=", " ", 
+     RowBox[{"QECNoiseModel", "[", 
+      RowBox[{"\"\<Depolarizing\>\"", ",", " ", "p"}], "]"}]}], "}"}], ",", 
+   "\n", "    ", 
+   RowBox[{"Simplify", "[", 
+    RowBox[{"1", " ", "-", " ", 
+     RowBox[{
+      RowBox[{"steane", "[", 
+       RowBox[{"\"\<LogicalPauliProbabilities\>\"", ",", " ", "noise"}], 
+       "]"}], "[", "\"\<I\>\"", "]"}], " ", "-", " ", 
+     RowBox[{"QECLogicalErrorRate", "[", 
+      RowBox[{"steane", ",", " ", "noise"}], "]"}]}], "]"}]}], "]"}]], "Input",\
+
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"50b12ff8-e606-85f7-004e-c6a593b0efdd"],
+
+Cell[BoxData["0"], "Output",
+ CellLabel->
+  "Out[15]= ",ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77"]
+}, Open  ]],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"code", "[", 
+   RowBox[{"\"\<LogicalChannel\>\"", ",", " ", "noise"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "63a48922-0fac-666c-115b-208caa594cb6"],
+ " is the same thing as a ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "387a9e0d-0234-0e73-6819-1057b7c15559"],
+ " on the logical qubit, ready to compose with anything else in the framework:"
+}], "Text",ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"ch", " ", "=", " ", 
+     RowBox[{"steane", "[", 
+      RowBox[{"\"\<LogicalChannel\>\"", ",", " ", 
+       RowBox[{"QECNoiseModel", "[", 
+        RowBox[{"\"\<Depolarizing\>\"", ",", " ", 
+         RowBox[{"1", "/", "10"}]}], "]"}]}], "]"}]}], "}"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Head", "[", "ch", "]"}], ",", " ", 
+     RowBox[{"ch", "[", "\"\<Order\>\"", "]"}]}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[16]:= ",ExpressionUUID->"399d1ff3-4632-be92-6fa2-96bd73c404f8"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"QuantumChannel", ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"0", ",", "1"}], "}"}], ",", 
+     RowBox[{"{", "1", "}"}]}], "}"}]}], "}"}]], "Output",
+ CellLabel->
+  "Out[16]= ",ExpressionUUID->"1170384d-2f38-2c50-470f-b2174acd76ba"]
+}, Open  ]],
+
+Cell[TextData[{
+ "It is a code-capacity object: with circuit-level noise the checks \
+themselves fail, the cycle is no longer one channel, and the answer is ",
+ Cell[BoxData["Missing"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
+ ", pointing to the detector model."
+}], "Text",ExpressionUUID->"54e2b6d5-0ba4-5b19-7c91-2f9fae512663"],
+
+Cell["Noise as a channel", "Subsection",ExpressionUUID->"6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
+
+Cell[TextData[{
+ "Noise can also be given in the framework's own terms. A one-qubit ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74397683-04f4-1d4d-1dc7-6fedac816797"],
+ " that is a Pauli channel is read back as a noise model and is accepted \
+everywhere a noise model is:"
+}], "Text",ExpressionUUID->"735e49d5-32a1-4a48-2166-609f47541892"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"QECNoiseModel", "[", 
+     RowBox[{"QuantumChannel", "[", 
+      RowBox[{"\"\<Depolarizing\>\"", "[", "q", "]"}], "]"}], "]"}], 
+    "[", "\"\<Probabilities\>\"", "]"}], ",", "\n", " ", 
+   RowBox[{"Expand", "[", 
+    RowBox[{"QECLogicalErrorRate", "[", 
+     RowBox[{
+      RowBox[{"QECCode", "[", 
+       RowBox[{"\"\<Repetition\>\"", ",", " ", "3"}], "]"}], ",", " ", 
+      RowBox[{"QuantumChannel", "[", 
+       RowBox[{"\"\<BitFlip\>\"", "[", "p", "]"}], "]"}]}], "]"}], "]"}]}], 
+  "}"}]], "Input",
+ CellLabel->
+  "In[17]:= ",ExpressionUUID->"335d55a2-cf9b-493d-6163-4c0fea2e1807"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"1", "-", 
+      FractionBox[
+       RowBox[{"3", " ", "q"}], "4"]}], ",", 
+     FractionBox["q", "4"], ",", 
+     FractionBox["q", "4"], ",", 
+     FractionBox["q", "4"]}], "}"}], ",", 
+   RowBox[{
+    RowBox[{"3", " ", 
+     SuperscriptBox["p", "2"]}], "-", 
+    RowBox[{"2", " ", 
+     SuperscriptBox["p", "3"]}]}]}], "}"}]], "Output",
+ CellLabel->
+  "Out[17]= ",ExpressionUUID->"3bfbbd45-edb8-1b0b-6998-352e844d6651"]
+}, Open  ]],
+
+Cell["\<\
+A channel that is not Pauli is refused with its reason, rather than \
+approximated silently:\
+\>", "Text",ExpressionUUID->"045023ab-c37d-b770-2c6f-baf4f6091a5a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QECNoiseModel", "[", 
+  RowBox[{"QuantumChannel", "[", 
+   RowBox[{"\"\<AmplitudeDamping\>\"", "[", "g", "]"}], "]"}], "]"}]], "Input",\
+
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"QECNoiseModel", "::", "notpauli"}], "MessageName"], 
+  RowBox[{":", " "}], 
+  InterpretationBox[
+   RowBox[{
+    TagBox["QuantumChannel",
+     "SummaryHead"], "[", 
+    DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+     TemplateBox[{
+       PaneSelectorBox[{False -> GridBox[{{
+             PaneBox[
+              ButtonBox[
+               DynamicBox[
+                FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+               ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+               BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+               "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+              Dynamic[{
+                Automatic, 
+                 3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                  Magnification])}]], 
+             TagBox[
+              TooltipBox[
+               GraphicsBox[
+                
+                RasterBox[{{{0.9137653193736024, 0.27452152355638126`, 
+                 0.24314158972109914`}, {0.9137653193736024, 
+                 0.27452152355638126`, 0.24314158972109914`}}, {{
+                 0.9137653193736024, 0.27452152355638126`, 
+                 0.24314158972109914`}, {0.9850103633607525, 
+                 0.8394024170352739, 0.7484069819342996}}, {{
+                 0.9137653193736024, 0.27452152355638126`, 
+                 0.24314158972109914`}, {0.9867350439356144, 
+                 0.9428975971497842, 0.8246775349763249}}, {{
+                 0.9781700020469903, 0.8163477438464728, 
+                 0.8084040269287099}, {0.9137653193736024, 
+                 0.27452152355638126`, 0.24314158972109914`}}}, {{0, 0}, {2, 
+                 4}}, {0, 1}], {
+                DisplayFunction -> Identity, PlotRange -> All, 
+                 PlotInteractivity :> True, 
+                 DefaultBaseStyle -> {"PlotGraphics", "Graphics"}, 
+                 DisplayFunction -> Identity, PlotInteractivity :> True, 
+                 DefaultBaseStyle -> {"PlotGraphics", "Graphics"}, Background -> 
+                 RGBColor[1, 1, 1, 0], DisplayFunction -> Identity, Frame -> 
+                 False, FrameLabel -> {None, None}, 
+                 FrameTicks -> {{None, None}, {None, None}}, GridLinesStyle -> 
+                 Directive[
+                   GrayLevel[0.5, 0.4]], ImageSize -> 
+                 Dynamic[{
+                   Automatic, 
+                    3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                    Magnification])}], 
+                 Method -> {
+                  "GridLinesInFront" -> True, "DefaultBoundaryStyle" -> 
+                   Automatic, 
+                   "DefaultGraphicsInteraction" -> {
+                    "Version" -> 1.2, "TrackMousePosition" -> {True, False}, 
+                    "Effects" -> {
+                    "Highlight" -> {"ratio" -> 2}, 
+                    "HighlightPoint" -> {"ratio" -> 2}, 
+                    "Droplines" -> {
+                    "freeformCursorMode" -> True, 
+                    "placement" -> {"x" -> "All", "y" -> "None"}}}}, 
+                   "DefaultPlotStyle" -> Automatic}, PlotRangeClipping -> 
+                 True}], 
+               RowBox[{"\"AmplitudeDamping\"", "[", "g", "]"}]], Annotation[#, 
+               "AmplitudeDamping"[MTNB$1e4h424aebbn4`g], "Tooltip"]& ], 
+             GridBox[{{
+                RowBox[{
+                  TagBox["\"Order: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   TemplateBox[{
+                    RowBox[{"{", "1", "}"}], "\"\[RightArrow]\"", 
+                    RowBox[{"{", 
+                    RowBox[{"0", ",", "1"}], "}"}]}, "RowDefault"], 
+                   "SummaryItem"]}]}, {
+                RowBox[{
+                  TagBox["\"Dimension: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   TemplateBox[{"2", "\"\[RightArrow]\"", "4"}, "RowDefault"],
+                    "SummaryItem"]}]}}, 
+              GridBoxAlignment -> {
+               "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+              False, GridBoxItemSize -> {
+               "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+              GridBoxSpacings -> {
+               "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+              BaseStyle -> {
+               ShowStringCharacters -> False, NumberMarks -> False, 
+                PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+           GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+           AutoDelete -> False, 
+           GridBoxItemSize -> {
+            "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+           BaselinePosition -> {1, 1}], True -> GridBox[{{
+             PaneBox[
+              ButtonBox[
+               DynamicBox[
+                FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+               ButtonFunction :> (Typeset`open$$ = False), Appearance -> None,
+                BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+               "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+              Dynamic[{
+                Automatic, 
+                 3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                  Magnification])}]], 
+             TagBox[
+              TooltipBox[
+               GraphicsBox[
+                
+                RasterBox[{{{0.9137653193736024, 0.27452152355638126`, 
+                 0.24314158972109914`}, {0.9137653193736024, 
+                 0.27452152355638126`, 0.24314158972109914`}}, {{
+                 0.9137653193736024, 0.27452152355638126`, 
+                 0.24314158972109914`}, {0.9850103633607525, 
+                 0.8394024170352739, 0.7484069819342996}}, {{
+                 0.9137653193736024, 0.27452152355638126`, 
+                 0.24314158972109914`}, {0.9867350439356144, 
+                 0.9428975971497842, 0.8246775349763249}}, {{
+                 0.9781700020469903, 0.8163477438464728, 
+                 0.8084040269287099}, {0.9137653193736024, 
+                 0.27452152355638126`, 0.24314158972109914`}}}, {{0, 0}, {2, 
+                 4}}, {0, 1}], {
+                DisplayFunction -> Identity, PlotRange -> All, 
+                 PlotInteractivity :> True, 
+                 DefaultBaseStyle -> {"PlotGraphics", "Graphics"}, 
+                 DisplayFunction -> Identity, PlotInteractivity :> True, 
+                 DefaultBaseStyle -> {"PlotGraphics", "Graphics"}, Background -> 
+                 RGBColor[1, 1, 1, 0], DisplayFunction -> Identity, Frame -> 
+                 False, FrameLabel -> {None, None}, 
+                 FrameTicks -> {{None, None}, {None, None}}, GridLinesStyle -> 
+                 Directive[
+                   GrayLevel[0.5, 0.4]], ImageSize -> 
+                 Dynamic[{
+                   Automatic, 
+                    3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                    Magnification])}], 
+                 Method -> {
+                  "GridLinesInFront" -> True, "DefaultBoundaryStyle" -> 
+                   Automatic, 
+                   "DefaultGraphicsInteraction" -> {
+                    "Version" -> 1.2, "TrackMousePosition" -> {True, False}, 
+                    "Effects" -> {
+                    "Highlight" -> {"ratio" -> 2}, 
+                    "HighlightPoint" -> {"ratio" -> 2}, 
+                    "Droplines" -> {
+                    "freeformCursorMode" -> True, 
+                    "placement" -> {"x" -> "All", "y" -> "None"}}}}, 
+                   "DefaultPlotStyle" -> Automatic}, PlotRangeClipping -> 
+                 True}], 
+               RowBox[{"\"AmplitudeDamping\"", "[", "g", "]"}]], Annotation[#, 
+               "AmplitudeDamping"[MTNB$1e4h424aebbn4`g], "Tooltip"]& ], 
+             GridBox[{{
+                RowBox[{
+                  TagBox["\"Order: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   TemplateBox[{
+                    RowBox[{"{", "1", "}"}], "\"\[RightArrow]\"", 
+                    RowBox[{"{", 
+                    RowBox[{"0", ",", "1"}], "}"}]}, "RowDefault"], 
+                   "SummaryItem"]}], ""}, {
+                RowBox[{
+                  TagBox["\"Dimension: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   TemplateBox[{"2", "\"\[RightArrow]\"", "4"}, "RowDefault"],
+                    "SummaryItem"]}], ""}, {
+                RowBox[{
+                  TagBox["\"Trace preserving: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox["Undefined", "SummaryItem"]}], 
+                RowBox[{
+                  TagBox["\"Qudits: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   TemplateBox[{"1", "\"\[RightArrow]\"", "2"}, "RowDefault"],
+                    "SummaryItem"]}]}, {
+                RowBox[{
+                  TagBox["\"Parameters: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   RowBox[{"{", "}"}], "SummaryItem"]}], 
+                RowBox[{
+                  TagBox["\"Dimensions: \"", "SummaryItemAnnotation"], 
+                  "\[InvisibleSpace]", 
+                  TagBox[
+                   TemplateBox[{
+                    RowBox[{"{", "2", "}"}], "\"\[RightArrow]\"", 
+                    RowBox[{"{", 
+                    RowBox[{"2", ",", "2"}], "}"}]}, "RowDefault"], 
+                   "SummaryItem"]}]}}, 
+              GridBoxAlignment -> {
+               "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+              False, GridBoxItemSize -> {
+               "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+              GridBoxSpacings -> {
+               "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+              BaseStyle -> {
+               ShowStringCharacters -> False, NumberMarks -> False, 
+                PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+           GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+           AutoDelete -> False, 
+           GridBoxItemSize -> {
+            "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+           BaselinePosition -> {1, 1}]}, 
+        Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+      "SummaryPanel"],
+     DynamicModuleValues:>{}], "]"}],
+   Wolfram`QuantumFramework`QuantumChannel[
+    Wolfram`QuantumFramework`QuantumOperator[
+     Wolfram`QuantumFramework`QuantumState[
+     SparseArray[
+      Automatic, {8}, 0, {
+       1, {{0, 3}, {{1}, {4}, {6}}}, {
+        1, (1 - MTNB$1e4h424aebbn4`g)^Rational[1, 2], MTNB$1e4h424aebbn4`g^
+         Rational[1, 2]}}], 
+      Wolfram`QuantumFramework`QuantumBasis[<|
+       "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+             Wolfram`QuantumFramework`QuditName[
+              Subscript["\[ScriptCapitalK]", 0], "Dual" -> False], 1} -> 
+           SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Subscript["\[ScriptCapitalK]", 1], "Dual" -> False], 1} -> 
+           SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+           SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+           SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+        "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+             
+             Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+              False], 1} -> 1, {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+           SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+           SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+        "Picture" -> "Schrodinger", "Label" -> 
+        "AmplitudeDamping"[MTNB$1e4h424aebbn4`g], 
+        "ParameterSpec" -> {}|>]], {{0, 1}, {1}}]],
+   Editable->False,
+   SelectWithContents->True,
+   Selectable->False], 
+  RowBox[{" ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"is", " ", "not", " ", "a", " ", "one"}], "-", 
+     RowBox[{"qubit", " ", "Pauli", " ", "channel"}]}], ";", " ", 
+    RowBox[{
+    "only", " ", "Pauli", " ", "noise", " ", "has", " ", "a", " ", 
+     "description", " ", "on", " ", "a", " ", "stabilizer", " ", 
+     RowBox[{"code", ".", " ", "Twirl"}], " ", "it", " ", "first", " ", "if", 
+     " ", "its", " ", "Pauli", " ", "approximation", " ", "is", " ", "what", " ",
+      "you", " ", 
+     RowBox[{"want", "."}]}]}]}]}]], "Message", \
+"MSG",ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"],
+
+Cell[BoxData["$Failed"], "Output",
+ CellLabel->
+  "Out[18]= ",ExpressionUUID->"794a4309-908b-2549-2f4a-5b53213f8f93"]
+}, Open  ]],
+
+Cell[TextData[{
+ "And the other way round: ",
+ Cell[BoxData[
+  RowBox[{"noise", "[", "\"\<QuantumChannel\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "167ebcf0-2b32-2a61-3e05-35ba4ec7794b"],
+ " used to work only for the named channels; it now works for every Pauli \
+model."
+}], "Text",ExpressionUUID->"15eb24b6-b946-3a65-43e8-bdf038f0894f"],
+
+Cell["Knill\[Dash]Laflamme", "Subsection",ExpressionUUID->"27d2a24c-1e84-19ee-4de1-44169b316b34"],
+
+Cell[TextData[{
+ "The underlying question \[LongDash] does the code correct this set of \
+errors? \[LongDash] is the Knill\[Dash]Laflamme condition. For Pauli errors \
+it is decided on symplectic rows, without forming any ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["2", 
+    StyleBox["n", "TI"]], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "285985c7-a1c8-13eb-5866-1ca0d07d6131"],
+ " vector, so it has no size limit. When it fails, it names the pair that \
+breaks it and the logical operator their product is:"
+}], "Text",ExpressionUUID->"57868ed1-450c-c474-7dbd-279b6cbeaf5e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"bitFlip", "[", 
+    RowBox[{"\"\<KnillLaflammeMatrix\>\"", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"\"\<III\>\"", ",", " ", "\"\<XII\>\"", ",", " ", "\"\<IXI\>\"",
+        ",", " ", "\"\<IIX\>\""}], "}"}]}], "]"}], ",", "\n", " ", 
+   RowBox[{"bitFlip", "[", 
+    RowBox[{"\"\<KnillLaflammeMatrix\>\"", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"\"\<XII\>\"", ",", " ", "\"\<IXX\>\""}], "}"}]}], "]"}]}], 
+  "}"}]], "Input",
+ CellLabel->
+  "In[19]:= ",ExpressionUUID->"0c5e608e-35dc-f74f-3466-79e8bc6edd95"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"1", ",", "0", ",", "0", ",", "0"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "}"}]}], "}"}], ",", 
+   RowBox[{"Missing", "[", 
+    RowBox[{"\<\"NotCorrectable\"\>", ",", 
+     RowBox[{"\[LeftAssociation]", 
+      RowBox[{
+       RowBox[{"\<\"Errors\"\>", "\[Rule]", 
+        RowBox[{"{", 
+         RowBox[{"\<\"XII\"\>", ",", "\<\"IXX\"\>"}], "}"}]}], ",", 
+       RowBox[{"\<\"Product\"\>", "\[Rule]", "\<\"XXX\"\>"}]}], 
+      "\[RightAssociation]"}]}], "]"}]}], "}"}]], "Output",
+ CellLabel->
+  "Out[19]= ",ExpressionUUID->"1a1e4090-3303-05ed-4a26-59da46b66f37"]
+}, Open  ]],
+
+Cell["\<\
+Asked of every error up to a weight, it reads off the distance:\
+\>", "Text",ExpressionUUID->"10256af3-3972-af7a-41da-83bdb804f240"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{"steane", "[", 
+    RowBox[{"\"\<CorrectableQ\>\"", ",", " ", 
+     RowBox[{"\"\<Weight\>\"", "[", "t", "]"}]}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"t", ",", " ", "0", ",", " ", "2"}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[20]:= ",ExpressionUUID->"457602f1-d86e-ac86-730d-9bbad918f6ec"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "True", ",", "False"}], "}"}]], "Output",
+ CellLabel->
+  "Out[20]= ",ExpressionUUID->"499f95c1-a958-6c18-7fa4-0caac8ed3762"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The names ",
+ Cell[BoxData["\"\<Codewords\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f1e874b-6d22-b8ab-3525-1f1504d40af1"],
+ ", ",
+ Cell[BoxData["\"\<KnillLaflammeMatrix\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0c02104f-9807-e6c4-3431-8a2919b3cc2e"],
+ " and ",
+ Cell[BoxData["\"\<CorrectableQ\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f909018-5ea1-6a32-15af-0a425b543918"],
+ " are the ones the bosonic plan chose (",
+ Cell["Bosonic-QEC-PartA-Spec.md", "InlineCode",ExpressionUUID->
+  "2f4595f3-090a-1216-557a-0cbda8bf617c"],
+ "), so a qubit code and an oscillator code answer the same questions the \
+same way."
+}], "Text",ExpressionUUID->"06385f5e-e9d4-4e6c-2fd8-571b886114b6"],
+
+Cell["Step 4: the rate and the decoders", "Section",ExpressionUUID->"25d2fb85-296f-82e5-53e1-f2ef481bd0cf"],
+
+Cell["One return type", "Subsection",ExpressionUUID->"3b9a140e-d97a-4136-69b9-8e6bd80f101c"],
+
+Cell[TextData[{
+ "Before, ",
+ Cell[BoxData["QECLogicalErrorRate"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f9438da-b80f-a114-75ab-b18439bbf07e"],
+ " returned a number, except when the circuit had heralds: then it returned \
+an ",
+ Cell[BoxData["Association"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7281c19b-2602-dcd4-22be-d8c553b4a63e"],
+ " with ",
+ Cell[BoxData["\"\<Rate\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3c8746fc-db76-c487-64bd-5fb9de00aeed"],
+ ", ",
+ Cell[BoxData["\"\<Acceptance\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "11f0f87a-e6f0-91cd-478f-f227928ae317"],
+ ", and so on. The caller had to know that in advance. Now it always returns \
+the rate:"
+}], "Text",ExpressionUUID->"473164ce-b547-c1f4-6ecf-7da83cf393de"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Head", " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"QECLogicalErrorRate", "[", 
+     RowBox[{"steane", ",", " ", 
+      RowBox[{"QECNoiseModel", "[", 
+       RowBox[{"\"\<Depolarizing\>\"", ",", " ", 
+        RowBox[{"1", "/", "10"}]}], "]"}]}], "]"}], ",", "\n", "    ", 
+    RowBox[{"QECLogicalErrorRate", "[", 
+     RowBox[{"bitFlip", ",", " ", 
+      RowBox[{"QECNoiseModel", "[", 
+       RowBox[{"\"\<Circuit\>\"", ",", " ", 
+        RowBox[{"1", "/", "1000"}]}], "]"}], ",", " ", 
+      RowBox[{"\"\<Rounds\>\"", " ", "->", " ", "1"}]}], "]"}]}], 
+   "}"}]}]], "Input",
+ CellLabel->
+  "In[21]:= ",ExpressionUUID->"12c4fc3b-e00c-2bba-42fb-f66491b97980"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"Rational", ",", "Rational"}], "}"}]], "Output",
+ CellLabel->
+  "Out[21]= ",ExpressionUUID->"1d7e6892-18cd-6f45-4b05-81dc997835af"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The full report comes with ",
+ Cell[BoxData["All"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "325c8f47-cd85-89da-6263-2720e431db20"],
+ ", with the same keys whether or not anything was post-selected (without \
+heralds the acceptance is 1 and the failure is the rate):"
+}], "Text",ExpressionUUID->"43fcea2e-12ab-c026-7183-0388a75f930c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QECLogicalErrorRate", "[", 
+  RowBox[{"steane", ",", " ", 
+   RowBox[{"QECNoiseModel", "[", 
+    RowBox[{"\"\<Depolarizing\>\"", ",", " ", 
+     RowBox[{"1", "/", "10"}]}], "]"}], ",", " ", "All"}], "]"}]], "Input",
+ CellLabel->
+  "In[22]:= ",ExpressionUUID->"5b416c07-c3d3-bf4f-097e-8660f6670595"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"Rate\"\>", "\[Rule]", 
+    FractionBox["13147289", "113906250"]}], ",", 
+   RowBox[{"\<\"Acceptance\"\>", "\[Rule]", "1"}], ",", 
+   RowBox[{"\<\"Failure\"\>", "\[Rule]", 
+    FractionBox["13147289", "113906250"]}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->
+  "Out[22]= ",ExpressionUUID->"5add4728-e92e-eff1-0ae3-5f7588d8b5db"]
+}, Open  ]],
+
+Cell["\<\
+And the detector model, which is where heralds come from, answers the same as \
+properties:\
+\>", "Text",ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"dem", " ", "=", " ", 
+     RowBox[{"QECDetectorModel", "[", 
+      RowBox[{"bitFlip", ",", " ", 
+       RowBox[{"QECNoiseModel", "[", 
+        RowBox[{"\"\<Circuit\>\"", ",", " ", 
+         RowBox[{"1", "/", "1000"}]}], "]"}], ",", " ", "1"}], "]"}]}], "}"}],
+    ",", "\n", "    ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"dem", "[", "\"\<LogicalErrorRate\>\"", "]"}], " ", "===", " ", 
+      
+      RowBox[{"QECLogicalErrorRate", "[", 
+       RowBox[{"bitFlip", ",", " ", 
+        RowBox[{"QECNoiseModel", "[", 
+         RowBox[{"\"\<Circuit\>\"", ",", " ", 
+          RowBox[{"1", "/", "1000"}]}], "]"}], ",", " ", 
+        RowBox[{"\"\<Rounds\>\"", " ", "->", " ", "1"}]}], "]"}]}], ",", "\n",
+      "     ", 
+     RowBox[{"dem", "[", "\"\<Acceptance\>\"", "]"}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[23]:= ",ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "1"}], "}"}]], "Output",
+ CellLabel->
+  "Out[23]= ",ExpressionUUID->"7d3ffb2e-09a8-fc78-24c4-f288a842c742"]
+}, Open  ]],
+
+Cell[TextData[Cell[BoxData["QECDecoder"], "InlineFormula",
+ FontSize->0.9 
+  Inherited,ExpressionUUID->"4139b36b-52b1-2977-70c6-2b356744785d"]], \
+"Subsection",ExpressionUUID->"494d6e39-7750-b6eb-7f72-806302ea1c31"],
+
+Cell["\<\
+There were three decoders inside the layer \[LongDash] the minimum-weight \
+table, maximum likelihood over cosets, and the detector model's rule \
+\[LongDash] but they could only be chosen with a string. Now they are objects:\
+\>", "Text",ExpressionUUID->"39b01e29-d171-5c92-6f4f-9072e00426f8"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"d", " ", "=", " ", 
+     RowBox[{"QECDecoder", "[", "steane", "]"}]}], "}"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"d", "[", "\"\<Method\>\"", "]"}], ",", " ", 
+     RowBox[{"d", "[", 
+      RowBox[{"\"\<Decode\>\"", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+        "0", ",", " ", "0", ",", " ", "0", ",", " ", "1", ",", " ", "1", ",", 
+         " ", "1"}], "}"}]}], "]"}]}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[24]:= ",ExpressionUUID->"4f6d713e-2461-11c8-7513-69784d146312"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"MinimumWeight\"\>", ",", "\<\"IIIIIIX\"\>"}], "}"}]], "Output",\
+
+ CellLabel->
+  "Out[24]= ",ExpressionUUID->"14ad582f-66ff-93eb-3c53-5189128be131"]
+}, Open  ]],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"QECDecoder", "[", 
+   RowBox[{"code", ",", " ", "noise"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f7ea056-2d28-85ec-7505-3a1044c2ef36"],
+ " is maximum likelihood (or, at circuit level, the detector model's decoder) \
+and ",
+ Cell[BoxData[
+  RowBox[{"QECDecoder", "[", "dem", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "16b00368-b832-202d-3e4f-9b3239c77377"],
+ " is the detector model's rule. None of them re-implements anything: they \
+call the same function that already decoded, so the herald filter that moved \
+the exponent from 1.73 to 1.965 is kept, and a test checks it table against \
+table."
+}], "Text",ExpressionUUID->"06d00634-a672-f252-2eef-9871d304c0b8"],
+
+Cell[TextData[{
+ "The fourth form is the way in for any other decoder: ",
+ Cell[BoxData[
+  RowBox[{"QECDecoder", "[", 
+   RowBox[{"code", ",", " ", "f"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "05feeeaf-4f58-f7b7-3385-07096ad2dd9d"],
+ " wraps a function from syndrome to correction (PyMatching through ",
+ Cell[BoxData["ExternalEvaluate"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "583a98af-415b-100e-09d9-110970ee6354"],
+ ", a neural network, a lookup), and the rate scores it with the same \
+machinery as the others. The decoder that never corrects anything fails \
+whenever anything happens:"
+}], "Text",ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{"QECLogicalErrorRate", "[", 
+   RowBox[{"bitFlip", ",", " ", 
+    RowBox[{"QECNoiseModel", "[", 
+     RowBox[{"\"\<BitFlip\>\"", ",", " ", "p"}], "]"}], ",", "\n", "    ", 
+    RowBox[{"\"\<Decoder\>\"", " ", "->", " ", 
+     RowBox[{"QECDecoder", "[", 
+      RowBox[{"bitFlip", ",", " ", 
+       RowBox[{
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"#", " ", "===", " ", 
+           RowBox[{"{", 
+            RowBox[{"0", ",", " ", "0"}], "}"}]}], ",", " ", "\"\<III\>\"", ",",
+           " ", 
+          RowBox[{"Missing", "[", "]"}]}], "]"}], " ", "&"}]}], "]"}]}]}], 
+   "]"}], "]"}]], "Input",
+ CellLabel->
+  "In[25]:= ",ExpressionUUID->"503c05d1-55e8-8c5e-01c3-9c9b6382d6a4"],
+
+Cell[BoxData[
+ RowBox[{"p", " ", 
+  RowBox[{"(", 
+   RowBox[{"3", "-", 
+    RowBox[{"3", " ", "p"}], "+", 
+    SuperscriptBox["p", "2"]}], ")"}]}]], "Output",
+ CellLabel->
+  "Out[25]= ",ExpressionUUID->"60049622-f570-0e0e-103b-0f8ffc055554"]
+}, Open  ]],
+
+Cell["Step 5: the renames", "Section",ExpressionUUID->"40ea559d-da93-7842-70ea-4cc6df264aa8"],
+
+Cell["\<\
+All in one step, so the API breaks once and not several times:\
+\>", "Text",ExpressionUUID->"23ccc6ee-92c0-e596-51f3-dfc8277acffc"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "114d8d02-b276-9c05-4772-256fc700e76f"], Cell["before", "TableText",
+     FontWeight->Bold,ExpressionUUID->"2dc22b63-32d1-862f-5bf1-c34d4765ed75"],
+     Cell["now", "TableText",
+     FontWeight->Bold,ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "5b23761c-2477-64e8-0ad1-68464d024e32"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECPauliVector", "[", "p", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "73216bcf-7cf1-61ac-22de-82a9748433f6"]], "TableText",ExpressionUUID->
+     "69fa63e8-c0ca-4913-1f9a-7ab5f17f1879"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      RowBox[{"QECPauli", "[", "p", "]"}], "[", "\"\<Vector\>\"", "]"}]], 
+     "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "409bca18-cbd6-e54d-70b8-ec45ee60cf97"]], "TableText",ExpressionUUID->
+     "10b62b5f-1d3f-f012-404d-c31994cbc378"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "79984792-c453-565a-2fb8-5edfede63ca0"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECPauliString", "[", "p", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "1d45428e-8fa1-6801-4b7b-5be82a543b6b"]], "TableText",ExpressionUUID->
+     "604bb87d-3174-a116-1048-32274006f07c"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      RowBox[{"QECPauli", "[", "p", "]"}], "[", "\"\<String\>\"", "]"}]], 
+     "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "763191a2-6f8b-197a-1fce-080c0a3e6840"]], "TableText",ExpressionUUID->
+     "635fdfdb-2856-deda-1164-d68549e0a420"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "0f6eb37a-d9e9-6713-3515-2b27df9c4a79"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECPauliWeight", "[", "p", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "5c8469dd-bfc7-2a7a-04bb-80873a727940"]], "TableText",ExpressionUUID->
+     "182ee0c1-720e-fc83-49d5-f9ab07b8c6e9"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      RowBox[{"QECPauli", "[", "p", "]"}], "[", "\"\<Weight\>\"", "]"}]], 
+     "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "3921e4bb-f5e4-3596-68de-fde483969ffc"]], "TableText",ExpressionUUID->
+     "13db9173-5387-1c16-41f8-093d6632677c"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "6804c0ab-fd16-b7db-183b-d9f4f4a01d21"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECPauliPhase", "[", "p", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "77076ae4-09e5-8344-1d3c-83ceaf91d1ae"]], "TableText",ExpressionUUID->
+     "4289b0c6-8043-1b93-72b6-29a031f669f9"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      RowBox[{"QECPauli", "[", "p", "]"}], "[", "\"\<Phase\>\"", "]"}]], 
+     "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "070f3e08-556d-9d60-2d34-b0525c19e44a"]], "TableText",ExpressionUUID->
+     "6d593b15-c37a-9c59-1b66-b35ef60ce6a3"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "4140e475-1e41-1f16-777f-fe3f9bf4627c"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECPauliCommuteQ", "[", 
+      RowBox[{"p", ",", " ", "q"}], "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "67f13035-938c-831a-0d8e-aa7f263eee60"]], "TableText",ExpressionUUID->
+     "16b44e14-0404-e868-3e4c-605eadb6bab2"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      RowBox[{"QECPauli", "[", "p", "]"}], "[", 
+      RowBox[{"\"\<CommuteQ\>\"", ",", " ", "q"}], "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "70bc3c38-1a7f-2cd8-2043-b6629f0a7622"]], "TableText",ExpressionUUID->
+     "7e10bd94-ae42-3b4d-262f-34d1cbf48997"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "5fdf5ac0-01aa-1326-05e5-53aab05f7e0c"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECPauliProduct", "[", 
+      RowBox[{"p", ",", " ", "q"}], "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "013c2307-fb8b-27c7-30c3-bb60fe3f8d2d"]], "TableText",ExpressionUUID->
+     "4b734859-75e7-efa6-7901-62030393b58c"], Cell[TextData[{
+     Cell[BoxData[
+      RowBox[{
+       RowBox[{"QECPauli", "[", "p", "]"}], "[", 
+       RowBox[{"\"\<Product\>\"", ",", " ", "q"}], "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "4ae31c17-eefa-a706-7a90-96508a8c0a6c"],
+     " or ",
+     Cell[BoxData[
+      RowBox[{
+       RowBox[{"QECPauli", "[", "p", "]"}], " ", "**", " ", 
+       RowBox[{"QECPauli", "[", "q", "]"}]}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "00844d77-2817-3ec6-30bc-653149a3842c"]
+    }], "TableText",ExpressionUUID->"20b97f64-b973-0c8a-5047-774e380656d0"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "04469009-6b02-dcc3-2c7d-0a530eb4a629"], Cell[TextData[Cell[BoxData[
+    "QECFaultTolerant"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "4e35d333-5bd5-ef26-77ca-cb7d5e61b20c"]], "TableText",ExpressionUUID->
+     "5547dfb6-0e84-e145-037c-d6f0ab36b3af"], Cell[TextData[Cell[BoxData[
+    "QECFaultTolerantCircuit"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "12b61bfc-9cd7-eca9-424d-92a61563b6f3"]], "TableText",ExpressionUUID->
+     "451364b5-819d-fb99-7321-7dff3029c9e3"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "13b49e24-0fb7-4441-414b-178eaa422eab"], Cell[TextData[Cell[BoxData[
+    "QECStimCircuit"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "445bf28f-7a5a-ecd1-6c78-ebe97fecb63b"]], "TableText",ExpressionUUID->
+     "089aa42d-ce49-3603-38b9-3e76ebfd9d69"], Cell[TextData[{
+     Cell[BoxData["QECStim"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "48fccab3-b886-a0f7-7883-e3fd3930f2dd"],
+     ", plus ",
+     Cell[BoxData[
+      RowBox[{"dem", "[", "\"\<StimString\>\"", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "0cdaad60-2181-5e26-34f9-454a5034250c"]
+    }], "TableText",ExpressionUUID->"542cff75-84e0-b601-7dd3-f73f2c9a1d6b"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "00dd9d4d-f7ec-565f-30e2-151681993ca5"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", "\"\<StimCircuit\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "0d66b502-775d-ec4c-3b1d-2d6c02e9b696"]], "TableText",ExpressionUUID->
+     "3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891"], Cell[TextData[Cell[BoxData[
+     RowBox[{"code", "[", "\"\<Stim\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "333832e2-8bec-4128-62c7-abcc2d991072"]], "TableText",ExpressionUUID->
+     "78cf51d6-d7cd-4672-28f5-4893e2782d58"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "1d9e3d6f-99f1-7c1e-4ba5-b5491f844764"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECCodeCatalog", "[", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "710db4a8-d877-0db2-2732-2df5d9025798"]], "TableText",ExpressionUUID->
+     "71e12f72-3ad4-a92f-279e-c73cbf66f875"], Cell[TextData[Cell[BoxData[
+     RowBox[{"QECCode", "[", "\"\<Catalog\>\"", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "06ea8612-dd18-b4f0-2ee9-185fd4921eda"]], "TableText",ExpressionUUID->
+     "0b02f270-2101-5c3d-3931-f43a50b42707"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "2d1868bf-f524-2aaf-5b27-81f8fcd178f5"], Cell[TextData[Cell[BoxData[
+    "QECClassicalHammingMatrix"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "669caa83-24d6-d7e9-0ea3-43ed4d60bd33"]], "TableText",ExpressionUUID->
+     "5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e"], Cell[TextData[{
+     "internal; ",
+     Cell[BoxData[
+      RowBox[{"QECCode", "[", 
+       RowBox[{"\"\<Hamming\>\"", ",", " ", "r"}], "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4"],
+     " builds the quantum code"
+    }], "TableText",ExpressionUUID->"3e73fafe-05d0-7203-6600-f3b8ac654169"]}
+  }]], "2ColumnTableMod",ExpressionUUID->"7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8"],
+
+Cell[TextData[{
+ Cell[BoxData["QECPauliQ"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12c044c4-b778-74e1-42f0-5da1c20d5ecb"],
+ " stays as it is: it is the guard."
+}], "Text",ExpressionUUID->"3d9aa029-60a8-273a-6bb9-3a7311428a00"],
+
+Cell[TextData[Cell[BoxData["QECPauli"], "InlineFormula",
+ FontSize->0.9 
+  Inherited,ExpressionUUID->"64adc082-4122-deff-0c52-d9ec70d4a4c5"]], \
+"Subsection",ExpressionUUID->"7e451771-8a55-ceec-267a-8f3b2fe19436"],
+
+Cell["\<\
+A Pauli is now one object. It prints as its string and holds its row:\
+\>", "Text",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QECPauli", "[", "\"\<XZZXI\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[26]:= ",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"QECPauli", "[", "\<\"XZZXI\"\>", "]"}],
+  Wolfram`QuantumFramework`QEC`QECPauli[{1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 
+   0}]]], "Output",
+ CellLabel->
+  "Out[26]= ",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3"]
+}, Open  ]],
+
+Cell["\<\
+Its properties are the six former functions, plus some that did not exist:\
+\>", "Text",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"P", " ", "=", " ", 
+     RowBox[{"QECPauli", "[", "\"\<-iXY\>\"", "]"}]}], "}"}], ",", "\n", 
+   "    ", 
+   RowBox[{"<|", 
+    RowBox[{
+     RowBox[{"\"\<String\>\"", " ", "->", " ", 
+      RowBox[{"P", "[", "\"\<String\>\"", "]"}]}], ",", " ", 
+     RowBox[{"\"\<Vector\>\"", " ", "->", " ", 
+      RowBox[{"P", "[", "\"\<Vector\>\"", "]"}]}], ",", " ", 
+     RowBox[{"\"\<Weight\>\"", " ", "->", " ", 
+      RowBox[{"P", "[", "\"\<Weight\>\"", "]"}]}], ",", " ", 
+     RowBox[{"\"\<Phase\>\"", " ", "->", " ", 
+      RowBox[{"P", "[", "\"\<Phase\>\"", "]"}]}], ",", "\n", "      ", 
+     RowBox[{"\"\<Support\>\"", " ", "->", " ", 
+      RowBox[{"P", "[", "\"\<Support\>\"", "]"}]}], ",", " ", 
+     RowBox[{"\"\<HermitianQ\>\"", " ", "->", " ", 
+      RowBox[{"P", "[", "\"\<HermitianQ\>\"", "]"}]}]}], "|>"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[27]:= ",ExpressionUUID->"737c509e-bc52-eefb-2104-49d835e4b4c1"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"String\"\>", "\[Rule]", "\<\"-iXY\"\>"}], ",", 
+   RowBox[{"\<\"Vector\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "0", ",", "1", ",", "3"}], "}"}]}], ",", 
+   RowBox[{"\<\"Weight\"\>", "\[Rule]", "2"}], ",", 
+   RowBox[{"\<\"Phase\"\>", "\[Rule]", "3"}], ",", 
+   RowBox[{"\<\"Support\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "2"}], "}"}]}], ",", 
+   RowBox[{"\<\"HermitianQ\"\>", "\[Rule]", "False"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->
+  "Out[27]= ",ExpressionUUID->"01a44b6b-c85f-9e0e-375c-6334e9ebe554"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The product carries the phase in ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox[
+    StyleBox["Z",
+     FontSlant->"Plain"], "4"], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10bcaec6-cc03-bcfd-4043-47a3e5b706c7"],
+ ", as before:"
+}], "Text",ExpressionUUID->"25120901-cfbc-a8e6-5321-a16aea4efacc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"QECPauli", "[", "\"\<X\>\"", "]"}], " ", "**", " ", 
+      RowBox[{"QECPauli", "[", "\"\<Z\>\"", "]"}]}], ")"}], 
+    "[", "\"\<String\>\"", "]"}], ",", " ", 
+   RowBox[{
+    RowBox[{"QECPauli", "[", "\"\<XZZXI\>\"", "]"}], "[", 
+    RowBox[{"\"\<CommuteQ\>\"", ",", " ", "\"\<IXZZX\>\""}], "]"}]}], 
+  "}"}]], "Input",
+ CellLabel->
+  "In[28]:= ",ExpressionUUID->"3ee7491f-72c3-8814-669d-61590777db7e"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"-iY\"\>", ",", "True"}], "}"}]], "Output",
+ CellLabel->
+  "Out[28]= ",ExpressionUUID->"67860241-8011-89c8-0dbd-a42b31a5db12"]
+}, Open  ]],
+
+Cell[TextData[{
+ "And a ",
+ Cell[BoxData["QECPauli"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1318f44b-7a0d-b86f-4127-ee157fb90ab5"],
+ " is accepted wherever a string or a row was, and converts to the \
+framework's objects:"
+}], "Text",ExpressionUUID->"221ecbfd-1ed7-d323-5225-e2a79b63be09"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"five", "[", 
+     RowBox[{"\"\<Syndrome\>\"", ",", " ", 
+      RowBox[{"QECPauli", "[", "\"\<XIIII\>\"", "]"}]}], "]"}], " ", "===", 
+    " ", 
+    RowBox[{"five", "[", 
+     RowBox[{"\"\<Syndrome\>\"", ",", " ", "\"\<XIIII\>\""}], "]"}]}], ",", 
+   "\n", " ", 
+   RowBox[{"Head", "[", 
+    RowBox[{
+     RowBox[{"QECPauli", "[", "\"\<XZ\>\"", "]"}], 
+     "[", "\"\<QuantumOperator\>\"", "]"}], "]"}]}], "}"}]], "Input",
+ CellLabel->
+  "In[29]:= ",ExpressionUUID->"3f067a83-888f-4db3-653e-73ed293a1799"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "QuantumOperator"}], "}"}]], "Output",
+ CellLabel->
+  "Out[29]= ",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Underneath nothing changed shape: the row functions still exist in ",
+ Cell[BoxData["PackageScope"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2207e002-80f7-0285-523c-fa6c308250ef"],
+ " with their original definitions, only under internal names (",
+ Cell[BoxData["pauliVector"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "440467ae-8db5-79b4-6c3c-7e0824404b9e"],
+ ", ",
+ Cell[BoxData["pauliProduct"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "141585f4-d1c1-5bbd-3c2a-1cb1e0742987"],
+ ", \[Ellipsis]). The object wraps the row; it does not replace it."
+}], "Text",ExpressionUUID->"3d27d006-86b8-9131-64dc-ca603332e01b"],
+
+Cell["The constructions, also as properties", "Subsection",ExpressionUUID->"3e44340b-ef5c-51d5-667b-ae548ae9233f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"steane", "[", "\"\<RemoveQubit\>\"", "]"}], 
+    "[", "\"\<Parameters\>\"", "]"}], ",", "\n", " ", 
+   RowBox[{
+    RowBox[{"bitFlip", "[", 
+     RowBox[{"\"\<Concatenate\>\"", ",", " ", 
+      RowBox[{"QECCode", "[", "\"\<PhaseFlipCode\>\"", "]"}]}], "]"}], " ", "===",
+     " ", 
+    RowBox[{"QECConcatenate", "[", 
+     RowBox[{"bitFlip", ",", " ", 
+      RowBox[{"QECCode", "[", "\"\<PhaseFlipCode\>\"", "]"}]}], "]"}]}], ",", 
+   "\n", " ", 
+   RowBox[{"Head", "[", 
+    RowBox[{"QECCode", "[", "\"\<Catalog\>\"", "]"}], "]"}]}], "}"}]], "Input",\
+
+ CellLabel->
+  "In[30]:= ",ExpressionUUID->"321034f4-436e-dcec-622f-adbe7618a636"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"6", ",", "2", ",", "2"}], "}"}], ",", "True", ",", "Dataset"}], 
+  "}"}]], "Output",
+ CellLabel->
+  "Out[30]= ",ExpressionUUID->"1287d3f9-6500-de4e-42bc-caa30cbaa494"]
+}, Open  ]],
+
+Cell["The old names still work, for one more release", "Subsection",ExpressionUUID->"3035d7f6-28ea-dcd5-61ca-ceb0489ca63f"],
+
+Cell[TextData[{
+ "The eleven retired names (ten functions and the ",
+ Cell[BoxData["\"\<StimCircuit\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "087f5f2f-6486-1b59-3805-56890d3369a3"],
+ " property) live in ",
+ Cell["Deprecated.wl", "InlineCode",ExpressionUUID->
+  "7ddf1aac-cdaa-cd7e-2be4-9309e45c9444"],
+ ": they return exactly what they returned before and say, once per session, \
+what to use instead:"
+}], "Text",ExpressionUUID->"2b41c4a9-15e8-1804-597e-ddf3a39d6b6e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QECPauliVector", "[", "\"\<XZ\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[31]:= ",ExpressionUUID->"13ecd9ee-6506-67bb-4193-d0c80cb34d81"],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"QECPauliVector", "::", "qecdeprecated"}], "MessageName"], 
+  RowBox[{":", " "}], 
+  TagBox["QECPauliVector",
+   HoldForm], 
+  RowBox[{" ", 
+   RowBox[{
+    RowBox[{
+    "is", " ", "deprecated", " ", "and", " ", "will", " ", "be", " ", 
+     "removed", " ", "in", " ", "the", " ", "next", " ", "release"}], ";", 
+    " ", "use", " "}]}], 
+  RowBox[{
+   RowBox[{"QECPauli", "[", "p", "]"}], "[", "\<\"Vector\"\>", "]"}], 
+  RowBox[{" ", 
+   RowBox[{"instead", "."}]}]}]], "Message", \
+"MSG",ExpressionUUID->"6724c974-bdf1-27a5-0edb-e13e3b858d8f"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"1", ",", "0", ",", "0", ",", "1", ",", "0"}], "}"}]], "Output",
+ CellLabel->
+  "Out[31]= ",ExpressionUUID->"2b52875c-0948-9ae8-5961-1f06a8e2e832"]
+}, Open  ]],
+
+Cell["\<\
+The second time there is no warning, so that a loop over a thousand Paulis \
+does not print a thousand messages:\
+\>", "Text",ExpressionUUID->"53412643-5a68-df00-017e-b82d5f02a26a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QECPauliVector", "[", "\"\<ZX\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[32]:= ",ExpressionUUID->"696f5b1d-d56b-3a26-1f15-5346dc1f890c"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"0", ",", "1", ",", "1", ",", "0", ",", "0"}], "}"}]], "Output",
+ CellLabel->
+  "Out[32]= ",ExpressionUUID->"0eb02373-2484-618c-364f-bb3d4d3133d6"]
+}, Open  ]],
+
+Cell["The public surface", "Subsection",ExpressionUUID->"640353f1-ff8e-e9b3-0c31-4abafa38bb99"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"all", " ", "=", " ", 
+      RowBox[{"Names", "[", "\"\<Wolfram`QuantumFramework`QEC`*\>\"", "]"}]}],
+      ",", " ", "old", ",", " ", "limits"}], "}"}], ",", "\n", "    ", 
+   RowBox[{
+    RowBox[{"old", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{"\"\<QECPauliVector\>\"", ",", " ", "\"\<QECPauliString\>\"", ",",
+        " ", "\"\<QECPauliWeight\>\"", ",", " ", "\"\<QECPauliCommuteQ\>\"", ",",
+        " ", "\"\<QECPauliProduct\>\"", ",", "\n", 
+       "        ", "\"\<QECPauliPhase\>\"", ",", 
+       " ", "\"\<QECFaultTolerant\>\"", ",", " ", "\"\<QECStimCircuit\>\"", ",",
+        " ", "\"\<QECCodeCatalog\>\"", ",", 
+       " ", "\"\<QECClassicalHammingMatrix\>\""}], "}"}]}], ";", "\n", "    ", 
+    RowBox[{"limits", " ", "=", " ", 
+     RowBox[{"Select", "[", 
+      RowBox[{"all", ",", " ", 
+       RowBox[{
+        RowBox[{"StringStartsQ", "[", 
+         RowBox[{"#", ",", " ", "\"\<$\>\""}], "]"}], " ", "&"}]}], "]"}]}], ";",
+     "\n", "    ", 
+    RowBox[{"<|", 
+     RowBox[{
+      RowBox[{"\"\<public functions\>\"", " ", "->", " ", 
+       RowBox[{"Complement", "[", 
+        RowBox[{"all", ",", " ", "old", ",", " ", "limits"}], "]"}]}], ",", 
+      " ", 
+      RowBox[{"\"\<limits\>\"", " ", "->", " ", "limits"}]}], "|>"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[33]:= ",ExpressionUUID->"37161f66-4600-a3a8-5d2d-974073baf1f2"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"public functions\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\<\"QECCatState\"\>", ",", "\<\"QECClearCache\"\>", 
+      ",", "\<\"QECCliffordHierarchyLevel\"\>", ",", "\<\"QECCode\"\>", 
+      ",", "\<\"QECConcatenate\"\>", ",", "\<\"QECDecoder\"\>", 
+      ",", "\<\"QECDetectorModel\"\>", ",", "\<\"QECErrorCorrection\"\>", 
+      ",", "\<\"QECFaultTolerantCircuit\"\>", 
+      ",", "\<\"QECLogicalErrorRate\"\>", ",", "\<\"QECNoiseModel\"\>", 
+      ",", "\<\"QECPasteCodes\"\>", ",", "\<\"QECPauli\"\>", 
+      ",", "\<\"QECPauliMeasurement\"\>", ",", "\<\"QECPauliQ\"\>", 
+      ",", "\<\"QECPseudothreshold\"\>", ",", "\<\"QECRegister\"\>", 
+      ",", "\<\"QECRemoveQubit\"\>", ",", "\<\"QECStim\"\>", 
+      ",", "\<\"QECSyndromeCircuit\"\>", ",", "\<\"QECTransversalGate\"\>"}], 
+     "}"}]}], ",", 
+   RowBox[{"\<\"limits\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\<\"$QECDecoderSubsetLimit\"\>", 
+      ",", "\<\"$QECDenseQubitLimit\"\>", 
+      ",", "\<\"$QECExactDetectorLimit\"\>", 
+      ",", "\<\"$QECExactEnumerationLimit\"\>", 
+      ",", "\<\"$QECStabilizerGroupLimit\"\>"}], "}"}]}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->
+  "Out[33]= ",ExpressionUUID->"2e44757e-c407-f813-567c-6d3bedb3cb79"]
+}, Open  ]],
+
+Cell[TextData[{
+ "There were 26 functions at the start. It is not the \"about 16\" the audit \
+estimated, because ",
+ Cell[BoxData["QECDecoder"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07a61755-6475-fbf7-2d5d-8f1f0d01c9dd"],
+ " was added and the three constructions stayed functions (decision B)."
+}], "Text",ExpressionUUID->"539b0e4e-9e5a-5525-01b8-a0281bef3c0f"],
+
+Cell["Step 6: transversal gates", "Section",ExpressionUUID->"1cd82739-42e3-b7ed-44e7-bf6376971d37"],
+
+Cell[TextData[{
+ Cell["Transversal.wl", "InlineCode",ExpressionUUID->
+  "0971a20b-7913-467e-3f0e-445578a62d44"],
+ " had the gate matrices copied by hand from the framework; a copy is a \
+second convention that can drift. They are now read from ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "09df342d-d743-5809-3fe4-ae76e2f62b53"],
+ " at load time:"
+}], "Text",ExpressionUUID->"0a0cc1e9-e2ca-26d9-3a33-d8b2977c8c23"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Normal", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumOperator", "[", "\"\<S\>\"", "]"}], "[", "\"\<Dagger\>\"",
+      "]"}], "[", "\"\<MatrixRepresentation\>\"", "]"}], "]"}], " ", "===", 
+  "\n", "    ", 
+  RowBox[{
+  "Wolfram`QuantumFramework`QEC`Transversal`PackagePrivate`$\
+transversalGateMatrix", "[", "\"\<Sdg\>\"", "]"}]}]], "Input",
+ CellLabel->
+  "In[34]:= ",ExpressionUUID->"21fdaace-430e-f3f9-5782-43a876b8c1c3"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->
+  "Out[34]= ",ExpressionUUID->"1b4e2dea-4a49-bf2e-4975-c4b46ffd0274"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The audit also asked for a primitive the framework does not have: \
+conjugating a Pauli through a Clifford while keeping its phase. The kernel \
+was not touched; it is written up as a proposal in ",
+ Cell["QF-Clifford-Conjugation-Proposal.md", "InlineCode",ExpressionUUID->
+  "10b057f0-cb39-4e6e-4040-4ebdeecc14b4"],
+ ". ",
+ Cell[BoxData["CliffordChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "41c6bfc6-0792-5005-77fd-36a0b227236f"],
+ " already holds the table needed; what is missing is a constructor from a \
+Clifford ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "62752e4e-571f-d961-120a-c02862aba84b"],
+ " and a ",
+ Cell[BoxData[
+  RowBox[{"cc", "[", 
+   RowBox[{"\"\<Conjugate\>\"", ",", " ", "P"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "34ee5221-bb14-cc46-5c96-4b8b3ea696ac"],
+ " query."
+}], "Text",ExpressionUUID->"166277e1-e8de-815f-3e12-6eca8968d3a5"],
+
+Cell["Step 7: documentation and tests", "Section",ExpressionUUID->"0ae7a534-7379-468c-3a9c-3d7e060c2cd6"],
+
+Cell[TextData[{
+ Cell[BoxData["StabilizerCodes"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "34baef30-7963-b757-5c59-077a78171dbd"],
+ " has two new sections (a code as quantum operations, and decoders as \
+objects) and six new rows in its table of checks."
+}], "Item",ExpressionUUID->"15ce0314-20ee-2b64-43f5-9b5e509b764e"],
+
+Cell[TextData[{
+ Cell[BoxData["QECCoreInternals"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "38a9ac88-4644-6c0e-6856-45d273f13754"],
+ " has three new sections: ",
+ Cell["Operational.wl", "InlineCode",ExpressionUUID->
+  "64802aa2-b136-451c-0cbf-c30fc0c32c66"],
+ ", ",
+ Cell["Decoder.wl", "InlineCode",ExpressionUUID->
+  "67771ff6-ea2e-a98b-0d0c-96b38fd8fbd1"],
+ " and ",
+ Cell["Deprecated.wl", "InlineCode",ExpressionUUID->
+  "233ecb8e-17f3-8d32-52c5-e2e8a187d418"],
+ "."
+}], "Item",ExpressionUUID->"7dd949a9-d8cf-50b3-2be7-60f2d97a2299"],
+
+Cell["\<\
+All three tech notes use the new notation throughout; their 262 cells were \
+validated and the notebooks rebuilt.\
+\>", "Item",ExpressionUUID->"4a74bc9f-39f4-5114-7a0b-35d9bf81207e"],
+
+Cell["\<\
+The README, the roadmap and the plan carry the new numbers; the plan has a \
+status column for each of the audit's 16 observations.\
+\>", "Item",ExpressionUUID->"598f41e5-f1df-a461-0fb5-58ce806b0f4b"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "1e0f0df5-2071-c96f-4634-a4bf51059bb5"], Cell["", "TableText",
+     FontWeight->Bold,ExpressionUUID->"7f6e12d5-e3b9-0bb9-2515-8b9e964c5983"],
+     Cell["at the start", "TableText",
+     FontWeight->Bold,ExpressionUUID->"41ecc127-3c02-05fa-7793-d881b5b76fc0"],
+     Cell["now", "TableText",
+     FontWeight->Bold,ExpressionUUID->"1190ff72-a9fe-60f8-47af-f73fcf8b32c2"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "19c80315-d7de-7125-4ff7-9b5ee26b400f"], Cell[
+    "tests", "TableText",ExpressionUUID->
+     "6fdf78a7-59a9-97d9-15e5-7101585dfd23"], Cell[
+    "593", "TableText",ExpressionUUID->
+     "7a87483f-bfa4-2eb6-2abd-62793a51749c"], Cell[
+    "687", "TableText",ExpressionUUID->
+     "09b26917-59e6-8729-3f41-81515f90ea73"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "521ad179-838d-ce9b-0239-c923363994e1"], Cell[
+    "test files", "TableText",ExpressionUUID->
+     "136d7364-bcfb-8461-4113-6b4e348fef4b"], Cell[
+    "19", "TableText",ExpressionUUID->"2b78534b-7a52-d624-5918-4b157fe4bd0e"],
+     Cell["23", "TableText",ExpressionUUID->
+     "30c454b2-bdb8-e427-60fc-4dfc3432cf0d"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "6879dfe8-0276-0c7b-1806-d6b2b7035741"], Cell[
+    "public functions", "TableText",ExpressionUUID->
+     "7cc522fa-6a93-e579-24fa-bba40f27cc43"], Cell[
+    "26", "TableText",ExpressionUUID->"5b82e386-6ff5-c0ee-09b1-fae009819234"],
+     Cell[TextData[{
+     "19 (+ 4 ",
+     Cell[BoxData["$"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "34a39a2f-b372-ffce-5c50-1388c604c514"],
+     " limits)"
+    }], "TableText",ExpressionUUID->"66ca9132-7812-8248-0ec9-097c79a4d092"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "023b1c4a-5b09-a8c9-33d8-96145ebdfa13"], Cell[TextData[{
+     "files in ",
+     Cell[
+     "QECCore/", "InlineCode",ExpressionUUID->
+      "29a4f364-fd74-7ca4-5f5b-eb41f401468e"]
+    }], "TableText",ExpressionUUID->"47740231-7fc8-4299-6d0b-a47b7a7d10e3"], 
+    Cell["21", "TableText",ExpressionUUID->
+     "1af52337-5e42-c8c3-4a8a-bb715bf49a29"], Cell[
+    "25", "TableText",ExpressionUUID->
+     "2fdb82dc-2353-e9b3-55f8-1b8656e7bb99"]}
+  }]], "3ColumnTableMod",ExpressionUUID->"5782d92f-a790-094a-7db1-d088d2255b90"],
+
+Cell[TextData[{
+ "New files: ",
+ Cell["Gadget.wl", "InlineCode",ExpressionUUID->
+  "05d48452-325d-a277-33eb-1e1c47e9f15d"],
+ ", ",
+ Cell["Operational.wl", "InlineCode",ExpressionUUID->
+  "087ffcf6-194e-431e-3804-f5b098fb2e64"],
+ ", ",
+ Cell["Decoder.wl", "InlineCode",ExpressionUUID->
+  "615fadf7-df9a-5675-1764-44b0da2f3d5f"],
+ ", ",
+ Cell["Deprecated.wl", "InlineCode",ExpressionUUID->
+  "5de452e3-5fd7-a751-0b9c-4bcd5a630dbb"],
+ ", and the tests ",
+ Cell["Gadget.wlt", "InlineCode",ExpressionUUID->
+  "2d0df906-1ebb-1081-5b32-f1609b4e62eb"],
+ ", ",
+ Cell["Operational.wlt", "InlineCode",ExpressionUUID->
+  "519a4e0d-3467-bfb9-07ba-6057bd130583"],
+ ", ",
+ Cell["Decoder.wlt", "InlineCode",ExpressionUUID->
+  "3a891815-8c00-cf41-6ab6-925f25ba95ab"],
+ ", ",
+ Cell["Surface.wlt", "InlineCode",ExpressionUUID->
+  "0dbacffa-31b0-43f6-3b59-e6a4404511dc"],
+ ". Nothing in ",
+ Cell["QuantumFramework/Kernel/", "InlineCode",ExpressionUUID->
+  "196a859c-b643-c1b3-4f69-1cd9c3f79399"],
+ " was modified."
+}], "Text",ExpressionUUID->"48c8a383-1e42-ef31-78f7-3aed9bf4b21b"],
+
+Cell["One finding", "Section",ExpressionUUID->"50735439-04fd-dee7-0001-4e63ac89a4cd"],
+
+Cell[TextData[{
+ StyleBox["The five-qubit code's encoder uses its own labels.",
+  FontWeight->"Bold"],
+ " Shown above: the encoding circuit produces the ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"-", "1"}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3597ba8d-914b-928f-63ac-33d720ffe0d5"],
+ " eigenstate of the code's ",
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox[
+    StyleBox["Z", "TI"], "_"], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "056fda38-a5bc-2884-3314-dc65cc497aee"],
+ ". ",
+ Cell["Encoder.wl", "InlineCode",ExpressionUUID->
+  "383c4a9f-130c-f8c1-69c4-63d9a6beca2b"],
+ " was not changed, because the circuit is still valid and is what the \
+extraction and Stim consume; the new ",
+ Cell[BoxData["\"\<Encoder\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b649e79-a2e1-7610-291b-1022d6945d7a"],
+ " corrects it, and a test pins ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["V", "TI"], "\[Dagger]"], 
+    OverscriptBox[
+     StyleBox["Z", "TI"], "_"], 
+    StyleBox["V", "TI"], "\[LongEqual]", 
+    StyleBox["Z", "TI"]}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "09cb884c-5fc8-b209-3fc8-22165a620153"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["V", "TI"], "\[Dagger]"], 
+    OverscriptBox[
+     StyleBox["X", "TI"], "_"], 
+    StyleBox["V", "TI"], "\[LongEqual]", 
+    StyleBox["X", "TI"]}], TraditionalForm]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "376c6589-bcca-29e8-5d14-7cd3357f7b32"],
+ " on five codes."
+}], "Text",ExpressionUUID->"667bb688-7420-22c7-0e18-2fd27dd5702d"],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "TutorialMoreAboutSection",
+ CellChangeTimes->{{3.843042384656711*^9, 3.843042386024461*^9}},
+ CellID->23220180,ExpressionUUID->"72002252-da4c-5210-223f-c41fdff9217a"],
+
+Cell[TextData[Cell[BoxData[
+ TemplateBox[{
+   Cell[
+    TextData["WolframQuantumComputationFramework"]], 
+   "paclet:Wolfram/QuantumFramework/guide/WolframQuantumComputationFramework"},
+  "RefLinkPlain",
+  BaseStyle->{
+   "InlineFormula"}]], \
+"InlineFormula",ExpressionUUID->"084561a7-5440-aaee-387b-78015dfaf834"]], \
+"TutorialMoreAbout",ExpressionUUID->"721e71e5-9ca7-ded5-2226-68cf1553a43f"]
+}, Open  ]],
+
+Cell["Related Tech Notes", "RelatedTutorialsSection",
+ CellID->415694126,ExpressionUUID->"0a84e7eb-55e0-1894-3abb-feb563956afe"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Metadata", "MetadataSection",
+ CellID->311882160,ExpressionUUID->"3261920b-7b77-02d6-621e-14557e02503c"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["XX", "HistoryData",
+  CellTags->"New",ExpressionUUID->"4ebe3b2c-9c8f-bd2d-7645-b376153b0477"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"7d6a0058-fb4a-caff-2b69-9a05fefc98c5"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "41d92934-9aba-8299-77e6-c17e1f4cd0e3"]
+}], "History",
+ CellID->341476719,ExpressionUUID->"5cc23ff5-bf0f-f019-04f1-b6bf3abbc363"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",
+ CellID->1122911449,ExpressionUUID->"29880975-91f0-008f-5fb7-a13f278552d5"],
+
+Cell["Tutorial", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->686433507,ExpressionUUID->"551c00cf-fc58-99c4-0323-99a8f5d2eb2e"],
+
+Cell["Wolfram/QuantumFramework", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->605800465,ExpressionUUID->"22235db8-54be-42b7-53d1-54e25d4b109d"],
+
+Cell["Wolfram`QuantumFramework`", "Categorization",
+ CellLabel->"Context",
+ CellID->468444828,ExpressionUUID->"0976d5ae-737d-f257-3f0d-cc080609c0bd"],
+
+Cell["Wolfram/QuantumFramework/tutorial/APIRedesignChanges", "Categorization",
+ CellLabel->"URI",ExpressionUUID->"13e711b4-4d78-4d68-419c-88fe640d17b2"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",
+ CellID->1427428552,ExpressionUUID->"3fd09d86-aea1-a602-65ef-14e3cb550d68"],
+
+Cell["quantum error correction", "Keywords",
+ CellID->1251852827,ExpressionUUID->"2f6c0922-6605-ed68-5513-a08c13b1b7b2"],
+
+Cell["API redesign", "Keywords",
+ CellID->1251852827,ExpressionUUID->"2caab86a-2af9-b1b1-54a9-32344e8d039b"],
+
+Cell["QECPauli", "Keywords",
+ CellID->1251852827,ExpressionUUID->"7f56169e-4783-4dbb-256d-8fd872361781"],
+
+Cell["QECDecoder", "Keywords",
+ CellID->1251852827,ExpressionUUID->"5b84d4d6-858d-5842-09bb-cd902c382aa8"],
+
+Cell["logical channel", "Keywords",
+ CellID->1251852827,ExpressionUUID->"67558936-e5eb-8680-0d6a-2173939fecea"],
+
+Cell["Knill-Laflamme", "Keywords",
+ CellID->1251852827,ExpressionUUID->"1072dc7c-f7d5-c74e-4001-d6398261ad94"],
+
+Cell["encoder", "Keywords",
+ CellID->1251852827,ExpressionUUID->"3462f0a3-098c-f6b3-5c11-e90da83edc99"],
+
+Cell["deprecation", "Keywords",
+ CellID->1251852827,ExpressionUUID->"04cac1af-436c-9192-2cc9-d809761ee3f8"]
+}, Closed]]
+}, Open  ]]
+},
+WindowSize->{700, 771},
+WindowMargins->{{4, Automatic}, {Automatic, 0}},
+TaggingRules->{
+ "Metadata" -> {
+   "title" -> "APIRedesignChanges", "context" -> "Wolfram`QuantumFramework`", 
+    "keywords" -> {
+     "quantum error correction", "API redesign", "QECPauli", "QECDecoder", 
+      "logical channel", "Knill-Laflamme", "encoder", "deprecation"}, 
+    "summary" -> "", "paclet" -> "Wolfram/QuantumFramework", "uri" -> 
+    "Wolfram/QuantumFramework/tutorial/APIRedesignChanges", "type" -> 
+    "Tutorial", "index" -> True, "language" -> "en"}},
+CellContext->"Global`",
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (May 7, 2026)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TechNotePageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"63be94f2-239e-9b81-1145-0dbc5628e9eb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 134, 1, 70, "Title",ExpressionUUID->"5a3d7a71-218e-1995-0bc3-7c3b503b6bff",
+ CellID->509267359],
+Cell[713, 25, 567, 10, 70, "Text",ExpressionUUID->"3a0f2024-2f71-09ca-6a34-b98e4a045b10"],
+Cell[1283, 37, 1048, 23, 70, "Text",ExpressionUUID->"277956ac-4c9d-d338-4d07-4ff66529be02"],
+Cell[2334, 62, 2580, 42, 70, "2ColumnTableMod",ExpressionUUID->"178a6a52-23e4-1142-3d89-8c1c559163a8"],
+Cell[4917, 106, 84, 0, 70, "Section",ExpressionUUID->"52ddf811-e480-8137-02e2-f25a8d3ad01d"],
+Cell[5004, 108, 297, 5, 70, "Text",ExpressionUUID->"719ae17a-c654-ed44-27b9-f927f3e6b7ae"],
+Cell[CellGroupData[{
+Cell[5326, 117, 2585, 62, 70, "Input",ExpressionUUID->"62c8f42b-c628-388a-12f7-ee74f3c28ad0"],
+Cell[7914, 181, 110, 1, 70, "Output",ExpressionUUID->"36e5ffeb-8179-694d-5e9a-f6b5300c3b97"]
+}, Open  ]],
+Cell[8039, 185, 104, 0, 70, "Text",ExpressionUUID->"7af061c8-c44a-ae8e-2a80-7895edfcf4d4"],
+Cell[CellGroupData[{
+Cell[8168, 189, 679, 15, 70, "Input",ExpressionUUID->"0d437dad-8290-de9a-3b71-74f7372aa4e0"],
+Cell[8850, 206, 339, 9, 70, "Output",ExpressionUUID->"7aafc905-908a-67da-2a54-e16f213f4d20"]
+}, Open  ]],
+Cell[9204, 218, 92, 0, 70, "Section",ExpressionUUID->"62016b94-8ad8-fb56-123e-82de2f52c9bc"],
+Cell[9299, 220, 251, 4, 70, "Text",ExpressionUUID->"0e7c794a-82c2-56e7-3604-711437773ccd"],
+Cell[9553, 226, 3433, 69, 70, "3ColumnTableMod",ExpressionUUID->"30f601cf-5001-fb68-608d-98a961b5c9b2"],
+Cell[12989, 297, 99, 0, 70, "Section",ExpressionUUID->"04bc0f0b-f02f-243d-2c43-a75481db8f07"],
+Cell[13091, 299, 700, 16, 70, "Text",ExpressionUUID->"1a24bdc2-598a-1b95-4bdb-34ac583f69ff"],
+Cell[CellGroupData[{
+Cell[13816, 319, 234, 5, 70, "Input",ExpressionUUID->"705e212e-f5a4-7717-2065-b88bfc515a7d"],
+Cell[14053, 326, 107, 1, 70, "Output",ExpressionUUID->"5c2f5325-a3f6-c048-05d5-4a8ed5809292"]
+}, Open  ]],
+Cell[14175, 330, 683, 14, 70, "Text",ExpressionUUID->"211ecaf2-61ee-418f-5725-e3bc179b13d5"],
+Cell[CellGroupData[{
+Cell[14883, 348, 442, 9, 70, "Input",ExpressionUUID->"51e4dffc-d38f-5703-079b-d6b9e63a3a69"],
+Cell[15328, 359, 354, 10, 70, "Message",ExpressionUUID->"30e43b5d-74af-d0fb-609b-b3077d5ba2c1"],
+Cell[15685, 371, 354, 10, 70, "Message",ExpressionUUID->"44d9380c-2e05-8f35-6ce6-b2564bb1d21f"],
+Cell[16042, 383, 375, 11, 70, "Message",ExpressionUUID->"36758762-649a-f7b1-5e0a-1f4c0d2cdd9b"],
+Cell[16420, 396, 497, 13, 70, "Message",ExpressionUUID->"138e1639-4d05-8b97-41b5-886364b1d9fd"],
+Cell[16920, 411, 180, 3, 70, "Output",ExpressionUUID->"156728ce-0023-e03b-431c-c1a8b1d7b301"]
+}, Open  ]],
+Cell[17115, 417, 374, 7, 70, "Text",ExpressionUUID->"7fc37353-2ed8-42c8-25f1-6b1d4b6d1012"],
+Cell[17492, 426, 122, 0, 70, "Section",ExpressionUUID->"26ff5c08-e081-ff27-4e85-56559135c20d"],
+Cell[17617, 428, 1243, 30, 70, "Text",ExpressionUUID->"07c988c4-3ef2-8066-2df6-21aeba84d34c"],
+Cell[CellGroupData[{
+Cell[18885, 462, 188, 4, 70, "Input",ExpressionUUID->"4bc0a2f3-6150-447f-79ff-3bbd10e52f45"],
+Cell[19076, 468, 20982, 472, 70, "Output",ExpressionUUID->"7ac66077-3bfa-1f18-2afe-7a31bd8f6262"]
+}, Open  ]],
+Cell[40073, 943, 949, 23, 70, "Text",ExpressionUUID->"3d863d84-94ab-5643-6bbd-b4ee1d5e3ca9"],
+Cell[CellGroupData[{
+Cell[41047, 970, 624, 16, 70, "Input",ExpressionUUID->"7ab8b877-e011-189c-2a47-323091a46ae6"],
+Cell[41674, 988, 152, 3, 70, "Output",ExpressionUUID->"35eb0178-2238-e094-63e8-992257b2b2fe"]
+}, Open  ]],
+Cell[41841, 994, 110, 0, 70, "Section",ExpressionUUID->"0da6433d-a7a4-ba24-3b5e-5b66d256090e"],
+Cell[41954, 996, 576, 10, 70, "Text",ExpressionUUID->"462f64f6-435d-c7dd-6fd5-7db076e9ad27"],
+Cell[42533, 1008, 263, 5, 70, "Text",ExpressionUUID->"4b06bf63-5f43-ed7c-793d-374d5af7b446"],
+Cell[42799, 1015, 6570, 121, 70, "3ColumnTableMod",ExpressionUUID->"0fd1c247-21a4-d962-35ee-e4215056a848"],
+Cell[49372, 1138, 86, 0, 70, "Text",ExpressionUUID->"09347675-9fce-c17b-38cc-683f1a789041"],
+Cell[CellGroupData[{
+Cell[49483, 1142, 1546, 33, 70, "Input",ExpressionUUID->"2c597ed5-00d9-d535-5467-779fb16dbc1f"],
+Cell[51032, 1177, 704, 12, 70, "Output",ExpressionUUID->"66c4d8d6-27c8-a0db-0efb-d1905262f221"]
+}, Open  ]],
+Cell[51751, 1192, 424, 6, 70, "Text",ExpressionUUID->"4d3801b6-8b23-0df3-74c7-98f02ed657d9"],
+Cell[CellGroupData[{
+Cell[52200, 1202, 2945, 71, 70, "Input",ExpressionUUID->"09816d05-11e9-fb6e-3fbe-856fa79dc9b4"],
+Cell[55148, 1275, 522, 10, 70, "Output",ExpressionUUID->"35ec423d-cde2-7917-6394-6466eb97487d"]
+}, Open  ]],
+Cell[55685, 1288, 122, 0, 70, "Text",ExpressionUUID->"05e0e9bc-56b1-1bf2-339f-00e6634469d8"],
+Cell[55810, 1290, 482, 12, 70, "Text",ExpressionUUID->"46408f14-a324-388b-6e7f-2751d6d68ad1"],
+Cell[CellGroupData[{
+Cell[56317, 1306, 196, 4, 70, "Input",ExpressionUUID->"40213c85-9219-7c2b-71de-b5ef27ac4771"],
+Cell[56516, 1312, 235, 6, 70, "Output",ExpressionUUID->"678faed4-2cca-f411-0db4-479e457cdf7b"]
+}, Open  ]],
+Cell[56766, 1321, 1991, 59, 70, "Text",ExpressionUUID->"3b3cac94-919f-f08d-6ac3-45de202bc2d7"],
+Cell[CellGroupData[{
+Cell[58782, 1384, 2029, 51, 70, "Input",ExpressionUUID->"634a1270-2707-566e-1149-943a52b23cb4"],
+Cell[60814, 1437, 310, 8, 70, "Output",ExpressionUUID->"571f0194-b08e-3ab4-7d24-98d1c138889e"]
+}, Open  ]],
+Cell[61139, 1448, 870, 27, 70, "Text",ExpressionUUID->"79764466-e076-5945-2f0e-5e4391032baf"],
+Cell[CellGroupData[{
+Cell[62034, 1479, 1193, 34, 70, "Input",ExpressionUUID->"54e8dec7-14b1-519a-7c97-d7a19d4423e0"],
+Cell[63230, 1515, 114, 2, 70, "Output",ExpressionUUID->"25f5c72f-3423-741a-538a-de89bdd65f60"]
+}, Open  ]],
+Cell[63359, 1520, 821, 20, 70, "Text",ExpressionUUID->"6dbbd446-5835-e39a-1b58-ce2059c1b1e0"],
+Cell[CellGroupData[{
+Cell[64205, 1544, 2019, 52, 70, "Input",ExpressionUUID->"6d34e655-b983-17e8-14cb-f81f38367d32"],
+Cell[66227, 1598, 478, 12, 70, "Output",ExpressionUUID->"5c435daa-0d1c-c5df-0471-54f4a4aeaf25"]
+}, Open  ]],
+Cell[66720, 1613, 381, 9, 70, "Text",ExpressionUUID->"21714cd0-c04e-e57a-570f-659df1f8cc40"],
+Cell[67104, 1624, 575, 13, 70, "Text",ExpressionUUID->"74ff421b-073b-c6d4-1c85-6445b2cfac3e"],
+Cell[CellGroupData[{
+Cell[67704, 1641, 294, 7, 70, "Input",ExpressionUUID->"3ebc3a74-dd7c-3fa6-6643-bc31d40e858c"],
+Cell[68001, 1650, 955, 26, 70, "Message",ExpressionUUID->"7d5c93fe-a057-3a16-2b63-0abbd1e3897c"],
+Cell[68959, 1678, 117, 2, 70, "Output",ExpressionUUID->"487dadd0-5ed6-7873-7802-449a5b634b59"]
+}, Open  ]],
+Cell[69091, 1683, 96, 0, 70, "Subsection",ExpressionUUID->"5219761b-8a64-c9ff-0227-68452f169bc5"],
+Cell[69190, 1685, 970, 22, 70, "Text",ExpressionUUID->"69346765-6d1c-e9c9-18cc-7f4f04aebb13"],
+Cell[CellGroupData[{
+Cell[70185, 1711, 288, 6, 70, "Input",ExpressionUUID->"7c22b8c2-70f4-0562-25d1-31ac00816c48"],
+Cell[70476, 1719, 710, 22, 70, "Output",ExpressionUUID->"04fec585-b88c-469b-2c85-dcef39392ce1"]
+}, Open  ]],
+Cell[71201, 1744, 216, 3, 70, "Text",ExpressionUUID->"7aa617d4-4041-969d-2a5d-8e9e71f5fce7"],
+Cell[CellGroupData[{
+Cell[71442, 1751, 674, 18, 70, "Input",ExpressionUUID->"5e86e5c8-d785-1389-06bd-fc95e23061d3"],
+Cell[72119, 1771, 111, 2, 70, "Output",ExpressionUUID->"3582ea65-851b-2569-63b1-0c4f2caf8fb3"]
+}, Open  ]],
+Cell[72245, 1776, 538, 12, 70, "Text",ExpressionUUID->"5e81d752-d9a7-cf7a-06be-cf1fd8539240"],
+Cell[CellGroupData[{
+Cell[72808, 1792, 579, 15, 70, "Input",ExpressionUUID->"6dc17641-57cc-3497-1bff-682b627e9efd"],
+Cell[73390, 1809, 297, 9, 70, "Output",ExpressionUUID->"647a9320-5a37-336f-0c19-0a8a5fc381b5"]
+}, Open  ]],
+Cell[73702, 1821, 392, 7, 70, "Text",ExpressionUUID->"57b40e76-1aa6-da65-7d4b-a0309f50a94f"],
+Cell[74097, 1830, 95, 0, 70, "Subsection",ExpressionUUID->"575b10e3-003a-b957-7d78-89cdb1cc0bbd"],
+Cell[74195, 1832, 394, 7, 70, "Text",ExpressionUUID->"7c7345dd-208f-a284-2401-5c87513bf0ee"],
+Cell[CellGroupData[{
+Cell[74614, 1843, 653, 17, 70, "Input",ExpressionUUID->"0121a537-2575-8479-30de-3d714c01ef43"],
+Cell[75270, 1862, 504, 17, 70, "Output",ExpressionUUID->"7f325126-465a-e19d-26c2-488073ecb3e7"]
+}, Open  ]],
+Cell[75789, 1882, 171, 3, 70, "Text",ExpressionUUID->"739af998-c5c1-31b3-21b9-f0c5ec758399"],
+Cell[CellGroupData[{
+Cell[75985, 1889, 244, 6, 70, "Input",ExpressionUUID->"003becda-d908-4451-31d8-0587d8bd2ebb"],
+Cell[76232, 1897, 13032, 259, 70, "Message",ExpressionUUID->"7aeb468a-2cc6-59e2-2ae9-5fd445732bc8"],
+Cell[89267, 2158, 117, 2, 70, "Output",ExpressionUUID->"3873a668-04d7-31ac-6800-3832ad6383f6"]
+}, Open  ]],
+Cell[89399, 2163, 372, 8, 70, "Text",ExpressionUUID->"4156c81a-8a68-59d7-776d-e2442f1d2b3d"],
+Cell[89774, 2173, 97, 0, 70, "Subsection",ExpressionUUID->"569e7ab4-00f8-e339-7ea6-73feb172ce03"],
+Cell[89874, 2175, 619, 12, 70, "Text",ExpressionUUID->"0b3ec616-de69-0141-3ac5-d853db1c53ab"],
+Cell[CellGroupData[{
+Cell[90518, 2191, 565, 14, 70, "Input",ExpressionUUID->"7c0d57bf-7ae8-3253-2433-4ef97e8280b9"],
+Cell[91086, 2207, 877, 23, 70, "Output",ExpressionUUID->"0aaecb0d-dff0-cd78-3a55-e356d98a9442"]
+}, Open  ]],
+Cell[91978, 2233, 142, 2, 70, "Text",ExpressionUUID->"4fe4a286-576e-fd11-759b-3be06218c47b"],
+Cell[CellGroupData[{
+Cell[92145, 2239, 365, 9, 70, "Input",ExpressionUUID->"07179650-9fbb-2bc1-2d2c-081a1a4e792b"],
+Cell[92513, 2250, 176, 4, 70, "Output",ExpressionUUID->"7aecd320-e31f-2936-2a93-ca8d96aa781c"]
+}, Open  ]],
+Cell[92704, 2257, 782, 18, 70, "Text",ExpressionUUID->"326b0854-5043-0b63-6268-a21e61f65649"],
+Cell[93489, 2277, 107, 0, 70, "Section",ExpressionUUID->"1d6edc53-4ce5-e0f2-4b15-d61d6491b2d8"],
+Cell[93599, 2279, 92, 0, 70, "Subsection",ExpressionUUID->"45f7e4e6-4e1c-a184-738c-fdc06baef3ee"],
+Cell[93694, 2281, 835, 20, 70, "Text",ExpressionUUID->"70e98525-204e-6ba4-2096-1c8f51fb398e"],
+Cell[CellGroupData[{
+Cell[94554, 2305, 695, 17, 70, "Input",ExpressionUUID->"704169dd-a4db-5005-207e-8086cd6e236f"],
+Cell[95252, 2324, 170, 4, 70, "Output",ExpressionUUID->"7b2d1c14-5aff-cd5f-2ad2-965e5e8b97a5"]
+}, Open  ]],
+Cell[95437, 2331, 374, 7, 70, "Text",ExpressionUUID->"62ac11c1-6d0b-a8c0-1253-88ab04bffa2a"],
+Cell[CellGroupData[{
+Cell[95836, 2342, 322, 7, 70, "Input",ExpressionUUID->"2e7621e1-2fba-a33a-560d-b8cb4a4c0e00"],
+Cell[96161, 2351, 412, 10, 70, "Output",ExpressionUUID->"15938457-0322-a4d9-43a0-1e11b6d40e23"]
+}, Open  ]],
+Cell[96588, 2364, 170, 3, 70, "Text",ExpressionUUID->"7f1ed2e3-b722-4b37-2525-cbccc2d7161d"],
+Cell[CellGroupData[{
+Cell[96783, 2371, 978, 26, 70, "Input",ExpressionUUID->"52e63e44-9d5c-26a1-029d-b02e14ee8c8b"],
+Cell[97764, 2399, 159, 4, 70, "Output",ExpressionUUID->"6e766a94-5ec6-6187-160d-83de5b7333ed"]
+}, Open  ]],
+Cell[97938, 2406, 215, 3, 70, "Subsection",ExpressionUUID->"2eead67c-41e5-1519-56e9-c82677907c63"],
+Cell[98156, 2411, 304, 4, 70, "Text",ExpressionUUID->"23a655ec-dad2-e192-515e-4cc9df64b3f8"],
+Cell[CellGroupData[{
+Cell[98485, 2419, 587, 16, 70, "Input",ExpressionUUID->"62ef85cc-c62f-39ac-1294-1ca9f3db8bf6"],
+Cell[99075, 2437, 192, 5, 70, "Output",ExpressionUUID->"7d6c313b-6800-4a9b-2b13-a96509b518e1"]
+}, Open  ]],
+Cell[99282, 2445, 769, 16, 70, "Text",ExpressionUUID->"75dfb56b-bb47-a02b-23e4-2d353ef3f371"],
+Cell[100054, 2463, 715, 14, 70, "Text",ExpressionUUID->"57533ce7-69d6-be0e-7d60-b5c108600554"],
+Cell[CellGroupData[{
+Cell[100794, 2481, 752, 19, 70, "Input",ExpressionUUID->"27c3fefb-2ee6-8038-4df0-f7a54a90d302"],
+Cell[101549, 2502, 241, 7, 70, "Output",ExpressionUUID->"60d4995f-bb7f-b80c-10eb-11193e0b0b56"]
+}, Open  ]],
+Cell[101805, 2512, 93, 0, 70, "Section",ExpressionUUID->"64608bbe-760c-8af3-0c1f-22f803bed8d9"],
+Cell[101901, 2514, 141, 2, 70, "Text",ExpressionUUID->"09661063-a2cf-675e-3f1d-8a4cd77a4da4"],
+Cell[102045, 2518, 8072, 148, 70, "2ColumnTableMod",ExpressionUUID->"5561d787-26b0-8d0a-031e-cee1534ad450"],
+Cell[110120, 2668, 250, 5, 70, "Text",ExpressionUUID->"0fea91e8-e80e-a1ed-35e9-08b589b8f337"],
+Cell[110373, 2675, 213, 3, 70, "Subsection",ExpressionUUID->"37725419-c8bf-c4cd-5d02-4e42e94bae17"],
+Cell[110589, 2680, 148, 2, 70, "Text",ExpressionUUID->"6eee5857-8f9d-bf63-1696-52112a290249"],
+Cell[CellGroupData[{
+Cell[110762, 2686, 156, 3, 70, "Input",ExpressionUUID->"2635f536-2fc9-ab3c-4fca-ed704a7df606"],
+Cell[110921, 2691, 259, 6, 70, "Output",ExpressionUUID->"1b3760e9-4a32-92b2-4acd-79b36fc4e098"]
+}, Open  ]],
+Cell[111195, 2700, 153, 2, 70, "Text",ExpressionUUID->"14fe93a8-4ee9-5b9e-3c85-0af26a9c29e4"],
+Cell[CellGroupData[{
+Cell[111373, 2706, 997, 23, 70, "Input",ExpressionUUID->"11cf5d11-52cc-ddbb-47f5-555b677ea781"],
+Cell[112373, 2731, 643, 15, 70, "Output",ExpressionUUID->"7ba8138a-66ce-478c-2957-8ad4137b2dd6"]
+}, Open  ]],
+Cell[113031, 2749, 351, 10, 70, "Text",ExpressionUUID->"35c9e6d4-f3c4-84c1-63f6-ff918676ee2b"],
+Cell[CellGroupData[{
+Cell[113407, 2763, 501, 14, 70, "Input",ExpressionUUID->"6fd66644-13e4-6fa7-15ee-782ea591358d"],
+Cell[113911, 2779, 169, 4, 70, "Output",ExpressionUUID->"00abf1cf-696b-3507-30a8-e8a9081f9c6d"]
+}, Open  ]],
+Cell[114095, 2786, 314, 7, 70, "Text",ExpressionUUID->"03d898fe-d35a-9eef-31e7-11bbe6ece435"],
+Cell[CellGroupData[{
+Cell[114434, 2797, 569, 16, 70, "Input",ExpressionUUID->"03dda600-4b0b-c3af-31e2-386a6ebf91f5"],
+Cell[115006, 2815, 173, 4, 70, "Output",ExpressionUUID->"4de38b79-ee67-8bee-7b90-23228b13d934"]
+}, Open  ]],
+Cell[115194, 2822, 697, 14, 70, "Text",ExpressionUUID->"347cf1ed-0cc4-b4dc-5c03-e8b7a5761e26"],
+Cell[115894, 2838, 114, 0, 70, "Subsection",ExpressionUUID->"7d81b9ce-3a4c-aa2a-2bbe-30a8bffef970"],
+Cell[CellGroupData[{
+Cell[116033, 2842, 701, 19, 70, "Input",ExpressionUUID->"6bb9b374-9caf-337d-1946-2b3e155b9e47"],
+Cell[116737, 2863, 237, 7, 70, "Output",ExpressionUUID->"6c340229-13f4-0181-15cb-a473a58153eb"]
+}, Open  ]],
+Cell[116989, 2873, 123, 0, 70, "Subsection",ExpressionUUID->"25dfa134-0866-9bb5-53e4-397ea910e99f"],
+Cell[117115, 2875, 497, 10, 70, "Text",ExpressionUUID->"425139cc-45a5-cefb-726e-b0966c5194c1"],
+Cell[CellGroupData[{
+Cell[117637, 2889, 159, 3, 70, "Input",ExpressionUUID->"4d922994-f334-45bb-7ba1-c0d186c12f81"],
+Cell[117799, 2894, 592, 17, 70, "Message",ExpressionUUID->"06c25578-1780-b25e-2ef2-4d22a23a00a4"],
+Cell[118394, 2913, 186, 4, 70, "Output",ExpressionUUID->"5f70617e-b140-9f95-0500-793bc0fae5ff"]
+}, Open  ]],
+Cell[118595, 2920, 191, 3, 70, "Text",ExpressionUUID->"79d0371a-30a6-04e5-2fef-af4441536ecf"],
+Cell[CellGroupData[{
+Cell[118811, 2927, 159, 3, 70, "Input",ExpressionUUID->"7d950d76-dd18-2b24-2baa-a533d4ad760e"],
+Cell[118973, 2932, 186, 4, 70, "Output",ExpressionUUID->"7234a9f4-3232-6781-23cb-40be47c74deb"]
+}, Open  ]],
+Cell[119174, 2939, 95, 0, 70, "Subsection",ExpressionUUID->"42668d78-f434-72a4-721d-2525fdc1408e"],
+Cell[CellGroupData[{
+Cell[119294, 2943, 1452, 34, 70, "Input",ExpressionUUID->"0c7cc198-0ad8-2426-3403-d8c2af528f0c"],
+Cell[120749, 2979, 1314, 26, 70, "Output",ExpressionUUID->"69698b1d-3dc2-3628-1f16-2347b4749d72"]
+}, Open  ]],
+Cell[122078, 3008, 388, 7, 70, "Text",ExpressionUUID->"701e1eb7-eeba-61c8-2025-97f08b4f3312"],
+Cell[122469, 3017, 99, 0, 70, "Section",ExpressionUUID->"0e322415-281a-3695-37c1-be5f49ac9cff"],
+Cell[122571, 3019, 468, 9, 70, "Text",ExpressionUUID->"61beb272-ef15-9663-1745-343f8aa1fd49"],
+Cell[CellGroupData[{
+Cell[123064, 3032, 467, 12, 70, "Input",ExpressionUUID->"5e8a6a96-06b4-6465-0689-83d0b3414f4f"],
+Cell[123534, 3046, 114, 2, 70, "Output",ExpressionUUID->"55951090-ef25-ccfd-03aa-89dd8ad196c7"]
+}, Open  ]],
+Cell[123663, 3051, 991, 22, 70, "Text",ExpressionUUID->"53a2ca13-da2c-324e-0151-ec5cdfde8094"],
+Cell[124657, 3075, 105, 0, 70, "Section",ExpressionUUID->"5930221d-821b-4026-08cf-c44737ae130c"],
+Cell[124765, 3077, 343, 6, 70, "Item",ExpressionUUID->"76ba63e9-5df8-c241-1e5a-7ab3547290ab"],
+Cell[125111, 3085, 558, 14, 70, "Item",ExpressionUUID->"319e51f9-a9ce-1d21-67a6-48a2c87b640b"],
+Cell[125672, 3101, 192, 3, 70, "Item",ExpressionUUID->"26f4962c-805e-a216-4e8b-087631e8f17c"],
+Cell[125867, 3106, 210, 3, 70, "Item",ExpressionUUID->"313d5a7b-7caf-7acc-60c3-5c25755a4816"],
+Cell[126080, 3111, 2303, 47, 70, "3ColumnTableMod",ExpressionUUID->"2da78195-91be-94f0-5b5c-18df2048feda"],
+Cell[128386, 3160, 1061, 29, 70, "Text",ExpressionUUID->"39c6b7ab-78e0-e73c-6ffd-2ef5789aca06"],
+Cell[129450, 3191, 85, 0, 70, "Section",ExpressionUUID->"3f7d0c35-7157-44bf-6502-a67f00e22e85"],
+Cell[129538, 3193, 1719, 49, 70, "Text",ExpressionUUID->"47b49f91-c3c7-4deb-6d4b-16daf6721731"],
+Cell[CellGroupData[{
+Cell[131282, 3246, 190, 2, 70, "TutorialMoreAboutSection",ExpressionUUID->"064e3005-d89e-7c03-2e75-aa6ed92b4769",
+ CellID->23220180],
+Cell[131475, 3250, 395, 9, 70, "TutorialMoreAbout",ExpressionUUID->"76c2caed-aea0-13a2-1ef1-e3b6cb556188"]
+}, Open  ]],
+Cell[131885, 3262, 128, 1, 70, "RelatedTutorialsSection",ExpressionUUID->"260c3025-1fa9-9acd-4e33-a98f9a5de817",
+ CellID->415694126]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[132050, 3268, 110, 1, 70, "MetadataSection",ExpressionUUID->"4b1e6c2c-0452-4134-7925-8676ade7101e",
+ CellID->311882160],
+Cell[132163, 3271, 476, 12, 70, "History",ExpressionUUID->"2982aea8-af87-65d7-5fb1-47f5ca324f3d",
+ CellID->341476719],
+Cell[CellGroupData[{
+Cell[132664, 3287, 123, 1, 70, "CategorizationSection",ExpressionUUID->"19ac3a5e-0cd6-873c-4f53-bc18a560ea06",
+ CellID->1122911449],
+Cell[132790, 3290, 136, 2, 70, "Categorization",ExpressionUUID->"6e8690e9-968f-68b3-16bd-09b3233a3a99",
+ CellID->686433507],
+Cell[132929, 3294, 152, 2, 70, "Categorization",ExpressionUUID->"2b6bc1ec-c569-bd9f-5968-d8c9ec1d07e5",
+ CellID->605800465],
+Cell[133084, 3298, 149, 2, 70, "Categorization",ExpressionUUID->"25f1a39a-81e0-db80-538e-3ac4379aa9ea",
+ CellID->468444828],
+Cell[133236, 3302, 152, 1, 70, "Categorization",ExpressionUUID->"35466be2-b7a8-26dc-637d-82cfc2428c26"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[133425, 3308, 111, 1, 70, "KeywordsSection",ExpressionUUID->"58bdea72-0ba3-5f4c-0842-0c3cae562596",
+ CellID->1427428552],
+Cell[133539, 3311, 120, 1, 70, "Keywords",ExpressionUUID->"6e8cef58-e908-949c-16b3-070588a2fee6",
+ CellID->1251852827],
+Cell[133662, 3314, 108, 1, 70, "Keywords",ExpressionUUID->"0abc4047-6c7b-4886-3a44-5a21050e1aec",
+ CellID->1251852827],
+Cell[133773, 3317, 104, 1, 70, "Keywords",ExpressionUUID->"24e21d63-fe6b-5877-4c91-954cfb1e2b5d",
+ CellID->1251852827],
+Cell[133880, 3320, 106, 1, 70, "Keywords",ExpressionUUID->"348d2737-4aeb-e3cb-5cb2-bf716e9fb111",
+ CellID->1251852827],
+Cell[133989, 3323, 111, 1, 70, "Keywords",ExpressionUUID->"2161c865-0900-0907-571e-e24fa8b5586d",
+ CellID->1251852827],
+Cell[134103, 3326, 110, 1, 70, "Keywords",ExpressionUUID->"3cadbe4b-a339-c651-6452-3014d6cdacbb",
+ CellID->1251852827],
+Cell[134216, 3329, 103, 1, 70, "Keywords",ExpressionUUID->"31169419-f57b-983b-672d-0e42fc0feb01",
+ CellID->1251852827],
+Cell[134322, 3332, 107, 1, 70, "Keywords",ExpressionUUID->"40aa99e8-53bd-499c-70a9-10b266481be6",
+ CellID->1251852827]
+}, Closed]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

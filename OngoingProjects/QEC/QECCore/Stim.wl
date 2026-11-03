@@ -246,7 +246,17 @@ QECStim[code_QECCode, noise_QECNoiseModel, rounds_, opts : OptionsPattern[]] := 
     ]
 ]
 
-QECCode[a_Association]["StimCircuit", rest___] := QECStim[QECCode[a], rest]
+(* The no-argument forms are spelled out: with rest___ alone, code["Stim"] would tie
+   with the catch-all code[prop_String] and lose to it. *)
+QECCode[a_Association]["Stim"] := QECStim[QECCode[a]]
+QECCode[a_Association]["Stim", rest__] := QECStim[QECCode[a], rest]
+QECCode[a_Association]["StimCircuit"] := codeStimAlias[a]
+QECCode[a_Association]["StimCircuit", rest__] := codeStimAlias[a, rest]
+
+codeStimAlias[a_Association, rest___] := (
+    deprecatedProperty[QECCode, "StimCircuit", "code[\"Stim\", ...]"];
+    QECStim[QECCode[a], rest]
+)
 
 
 (* The detector model's own circuit, in Stim's language: the same code, noise and

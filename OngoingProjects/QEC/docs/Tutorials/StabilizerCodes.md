@@ -298,6 +298,73 @@ That witness is a logical operator, and its weight is the distance:
 
 <!-- => {3, True} -->
 
+## Weight enumerators
+
+The distance is one number about the code. The **weight enumerator** keeps the whole distribution
+it was read from: $A_j$ is the number of stabilizer elements of weight $j$, and $B_j$ the number of
+normalizer elements of weight $j$ (Got26 sec. 7.4.1). As polynomials, for the five-qubit code:
+
+```wl
+With[{five = QECCode["5QubitCode"]}, {five["WeightEnumerator", x], five["DualWeightEnumerator", x]}]
+```
+
+<!-- => {1 + 15 x^4, 1 + 30 x^3 + 15 x^4 + 18 x^5} -->
+
+---
+
+The dual enumerator is not enumerated. The quantum MacWilliams identity,
+$B(x) = \frac{K}{2^n}(1+3x)^n A\!\left(\frac{1-x}{1+3x}\right)$, gives it from $A$ alone, so it only
+ever costs the $2^{n-k}$ elements of the stabilizer and never the $2^{n+k}$ of the normalizer. The
+tests enumerate the normalizer directly on small codes and check the identity against it.
+
+The two enumerators agree below the distance and first disagree at it (Theorem 7.7(c)) — a second
+route to the distance, independent of the search, and the two are checked against each other:
+
+```wl
+Table[With[{c = QECCode[name]},
+    {LengthWhile[c["DualWeightEnumerator"] - c["WeightEnumerator"], # === 0 &], c["Distance"]}],
+    {name, {"BitFlipCode", "5QubitCode", "SteaneCode", "ShorCode"}}]
+```
+
+<!-- => {{1, 1}, {3, 3}, {3, 3}, {3, 3}} -->
+
+---
+
+$A(x)$ counts Paulis and forgets their signs. That is right for the distance and wrong for the
+question chapter 13 asks of it: how likely is it that $n$ copies of a one-qubit state land in the
+code space? That probability is
+$\mathrm{tr}[\rho^{\otimes n}\Pi] = 2^{-(n-k)}\sum_{M\in S}\mathrm{phase}(M)\prod_q \mathrm{tr}(\rho M_q)$ (eq. 13.36),
+and the sign of each stabilizer element is in it. The layer keeps a signed enumerator beside the
+plain one, and they differ as soon as a generator carries a sign:
+
+```wl
+With[{c = QECCode[{"XX", "-ZZ"}]}, {c["WeightEnumerator", x], c["SignedWeightEnumerator", x]}]
+```
+
+<!-- => {1 + 3 x^2, 1 + x^2} -->
+
+---
+
+`code["CodespaceProbability", ρ]` computes that trace from the stabilizer group, for any one-qubit
+state or Bloch vector, symbolic or not, without forming a $2^n$ matrix. Protocol 13.5 distills the
+magic state $|R\rangle$ by projecting five copies onto the five-qubit code, and accepts one time in
+six:
+
+```wl
+QECCode["5QubitCode"]["CodespaceProbability", {1, 1, 1}/Sqrt[3]]
+```
+
+<!-- => 1/6 -->
+
+For an arbitrary Bloch vector it is a polynomial — the acceptance of the protocol for any input
+state, in one line:
+
+```wl
+QECCode["5QubitCode"]["CodespaceProbability", {a, b, c}]
+```
+
+<!-- => (1 + 5 b^2 c^2 + 5 a^2 (b^2 + c^2))/16 -->
+
 ## Syndromes and decoding
 
 An error either commutes or anticommutes with each check. The pattern of anticommutations is the
@@ -660,6 +727,58 @@ Coefficient[
 ```
 
 <!-- => 651/25 -->
+
+## Pseudothresholds
+
+Because the rate is an exact polynomial, the point where encoding stops paying — the logical rate
+crossing the physical one, $p_L(p) = p$ — is a root, found exactly:
+
+```wl
+ps = QECPseudothreshold[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", p]];
+{ps["Value"], N[ps["Value"]]}
+```
+
+<!-- => {Root[81 - 1161 #1 + 2142 #1^2 - 1824 #1^3 + 608 #1^4 &, 1, 0], 0.0810819} -->
+
+---
+
+That is why the result is an object rather than a number. A pseudothreshold compares one level of
+encoding against none, at one point of the noise space, for one decoder; sec. 14.7.6's own example
+is a pseudothreshold lying *outside* the true threshold surface. The object carries the polynomial
+it came from, the code, noise, decoder, rounds and extraction, and says what it is not:
+
+```wl
+ps["Caveats"]
+```
+
+<!-- => two sentences: not a threshold (Got26 sec. 14.7.6), and tied to this code, noise model and decoder -->
+
+---
+
+```wl
+ps["Plot"]
+```
+
+---
+
+It also refuses to answer the wrong question. On the bare-ancilla extraction the rate starts at
+$32p/15$, so encoding hurts at low noise; the polynomial still crosses $p$ further up, but that is
+where encoding *starts* to help, not where it stops, and it is reported as a crossing, not as the
+pseudothreshold:
+
+```wl
+With[{ps = QECPseudothreshold[QECCode["BitFlipCode"], QECNoiseModel["Circuit", p], "Rounds" -> 1]},
+    <|"value" -> ps["Value"], "low-noise ratio" -> ps["LowNoiseRatio"], "crossings" -> N[ps["Crossings"]]|>]
+```
+
+<!-- => <|"value" -> Missing["EncodingDoesNotHelp"], "low-noise ratio" -> 32/15, "crossings" -> {0.816}|> -->
+
+---
+
+A threshold *surface* in this layer's terms is the same question along rays: give the noise with
+one free rate in a fixed direction — say two-qubit gates at $p$ and everything else at $c\,p$ — and
+map over the direction. Each ray is one root. It is still a pseudothreshold surface, one level
+against none, and is labelled as one.
 
 ## The code as quantum operations
 
@@ -1336,7 +1455,8 @@ Dataset @ Association @ Table[
 ```
 
 The check outcomes are heralds, not syndrome bits — a nonzero one means discard the attempt — which
-is why the logical error rate carries an acceptance alongside it when a gadget post-selects.
+is why, when a gadget post-selects, the logical error rate is conditional on acceptance and its
+report, `QECLogicalErrorRate[code, noise, All]`, carries the acceptance alongside it.
 
 ## Fault-tolerant measurement of a Pauli
 
@@ -1770,6 +1890,36 @@ Clifford group transversally** — with the caveat above, that each gate arrives
 missing is everything outside that group: no transversal $T$, on this or any code of this kind, and
 that is chapter 13's problem rather than a gap in this one.
 
+## Beyond the Clifford group
+
+Every transversal gate above is a Clifford, and that is not a coincidence of these two codes: the
+Clifford group is the second level of the **Clifford hierarchy** (Def 13.1),
+$\mathcal{C}_1 = $ Paulis, $\mathcal{C}_k = \{U : U P U^\dagger \in \mathcal{C}_{k-1}\ \forall P\}$.
+The gates that make a computer universal sit above it, and chapter 13 builds them from the third
+level by teleportation. `QECCliffordHierarchyLevel` decides the level by the definition, exactly:
+
+```wl
+QECCliffordHierarchyLevel /@ {"X", "H", "CNOT", "T", "Toffoli", "CS"}
+```
+
+<!-- => {1, 2, 2, 3, 3, 3} -->
+
+---
+
+The phase gates climb the tower one level per halving of the angle, and an angle that is not a
+dyadic multiple of $\pi$ is in no level at all (the induction after eq. 13.11):
+
+```wl
+Append[
+    Table[QECCliffordHierarchyLevel[DiagonalMatrix[{1, Exp[I Pi/2^k]}], "MaxLevel" -> 6], {k, 0, 4}],
+    QECCliffordHierarchyLevel[DiagonalMatrix[{1, Exp[I/10]}]]]
+```
+
+<!-- => {1, 2, 3, 4, 5, Missing["AboveLevel", 4]} -->
+
+From $\mathcal{C}_3$ on the set is no longer a group, so the test checks the image of every Pauli,
+not only the generators, as the book warns after eq. 13.3.
+
 ## Putting the gadgets together: FT(C)
 
 Every gadget so far has been built and checked on its own. Definition 10.6 is the instruction for
@@ -1981,7 +2131,8 @@ are bare rather than verified, which is what produces the hook errors measured a
 honest property of the circuit rather than an approximation: the rate reported is the true rate
 *for this circuit*, and §12.1.1 is where to read what it costs. `"Extraction" -> "Transversal"`
 replaces it with one that is — conditionally: the rate it returns is post-selected on the cat
-checks accepting, and carries its acceptance, and the cat preparation itself is still the
+checks accepting, its report (`QECLogicalErrorRate[…, All]`) carries the acceptance, and the cat
+preparation itself is still the
 non-fault-tolerant chain of §12.1.3 rather than a chapter-13 gadget.
 
 **Zero idle noise is the default, and it is the one optimistic assumption left.** Idling is now
@@ -1997,7 +2148,7 @@ weakest.
 ## How this is checked
 
 Nothing above is trusted because the package computed it. Every fast routine is cross-checked
-against a slow, obvious one, and the checks run as a suite of 685 tests.
+against a slow, obvious one, and the checks run as a suite of 720 tests.
 
 | What | Checked against |
 |---|---|
@@ -2028,6 +2179,10 @@ against a slow, obvious one, and the checks run as a suite of 685 tests.
 | Noise read from a channel | The channel's superoperator, and the named channels' known weights |
 | A decoder object | The engine's own decoding table, entry for entry, herald filter included |
 | The retired names | The value each returned before, and one warning per session |
+| The dual weight enumerator | The normalizer enumerated directly, and the distance it implies (Thm 7.7) |
+| The code-space probability | The dense projector: $1/6$ on five copies of $|R\rangle$ |
+| The Clifford hierarchy level | The book's own placements: $T$, Toffoli, CCZ, $CS$ at 3, and one level per halving of the angle |
+| The pseudothreshold | The binomial tail of the repetition code, which crosses at exactly $1/2$ |
 
 The habit is worth keeping when extending the layer: a result checked only against the code that
 produced it is not checked.

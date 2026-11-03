@@ -13,6 +13,8 @@ PackageExport[QECStimCircuit]
 PackageExport[QECCodeCatalog]
 PackageExport[QECClassicalHammingMatrix]
 
+PackageScope[deprecatedProperty]
+
 
 (* ============================================================================ *)
 (* The names step 5 of the API redesign retired, kept for one release.          *)
@@ -59,6 +61,13 @@ QECFaultTolerant::usage = "QECFaultTolerant is deprecated; use QECFaultTolerantC
 QECStimCircuit::usage = "QECStimCircuit is deprecated; use QECStim.";
 QECCodeCatalog::usage = "QECCodeCatalog is deprecated; use QECCode[\"Catalog\"].";
 QECClassicalHammingMatrix::usage = "QECClassicalHammingMatrix is deprecated; QECCode[\"Hamming\", r] builds the quantum code directly.";
+
+(* The same, for a property name that was retired while its head stayed. *)
+deprecatedProperty[head_Symbol, prop_String, new_String] := If[
+    ! KeyExistsQ[$deprecationWarned, SymbolName[head] <> "/" <> prop],
+    $deprecationWarned[SymbolName[head] <> "/" <> prop] = True;
+    Message[MessageName[head, "qecdeprecated"], SymbolName[head] <> "[...][\"" <> prop <> "\"]", new]
+]
 
 QECPauliVector[args___] := (deprecated[QECPauliVector, $deprecatedNames[[1, 2]]]; pauliVector[args])
 QECPauliString[args___] := (deprecated[QECPauliString, $deprecatedNames[[2, 2]]]; pauliString[args])

@@ -356,10 +356,9 @@ noiseChannelName[_, _] := Missing["NotAvailable", "no engine name"]
    Sqrt[p_s] s per Pauli with nonzero weight, and on several qubits the independent
    product of one such channel per qubit, which is what this model says the noise is. *)
 (* A channel from its Kraus matrices on the given qubits.  One operator is a unitary
-   (or isometric) channel and goes in as that operator: the engine reads a one-element
-   Kraus list with an order as a channel whose environment takes the place of the first
-   system qubit (QuantumChannel[{X}, {1}]["Order"] is {{0}, {1}}), which silently acts
-   on the wrong wires. *)
+   (or isometric) channel and goes in as that operator, which states the intent
+   directly; a one-element Kraus list with an order is equivalent on the current
+   engine. *)
 krausChannel[{k_}, qubits_List] :=
     Wolfram`QuantumFramework`QuantumChannel[Wolfram`QuantumFramework`QuantumOperator[k, qubits]]
 krausChannel[ks_List, qubits_List] := Wolfram`QuantumFramework`QuantumChannel[ks, qubits]

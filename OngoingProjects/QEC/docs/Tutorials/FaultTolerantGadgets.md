@@ -205,7 +205,8 @@ modulo $P$ itself:
 **One fault, at most one data error.** The bare-ancilla circuit measuring the same generator leaves
 **four** — that is the hook error, a defect of the gadget rather than a fact about circuit-level
 noise, and removing it is what this object is for. The three heralds are the price: a shot can be
-rejected, so the acceptance probability belongs in any rate computed from this circuit.
+rejected, so the acceptance probability belongs with any rate computed from this circuit — which
+is what `QECLogicalErrorRate[code, noise, All]` and `dem["Acceptance"]` report.
 
 ---
 

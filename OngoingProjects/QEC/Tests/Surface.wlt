@@ -236,6 +236,20 @@ VerificationTest[
 ]
 
 VerificationTest[
+    QECCode["BitFlipCode"]["StimCircuit"],
+    QECCode["BitFlipCode"]["Stim"],
+    {QECCode::qecdeprecated},
+    TestID -> "QEC-Surface-alias-StimCircuit-property-works-and-warns"
+]
+
+VerificationTest[
+    QECCode["BitFlipCode"]["Stim", QECNoiseModel["Circuit", 1/100], 2] ===
+        QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/100], 2],
+    True,
+    TestID -> "QEC-Surface-Stim-as-a-code-property"
+]
+
+VerificationTest[
     QECCodeCatalog[] === QECCode["Catalog"],
     True,
     {QECCodeCatalog::qecdeprecated},

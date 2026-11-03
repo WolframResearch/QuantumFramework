@@ -167,14 +167,15 @@ $codeDerivedProperties = {
     "Parameters", "Distance", "MinimumWeightLogical", "LogicalOperators", "LogicalX", "LogicalZ",
     "StandardForm", "CompletedGenerators", "SyndromeTable", "Decoder", "PerfectQ", "CSSQ", "SyndromeCircuit",
     "EncodingGates", "EncodingCircuit", "EncodingCircuitValidQ", "PauliStabilizer", "State",
-    "Encoder", "Codewords", "Codespace", "SyndromeMeasurement"
+    "Encoder", "Codewords", "Codespace", "SyndromeMeasurement",
+    "WeightEnumerator", "SignedWeightEnumerator", "DualWeightEnumerator"
 };
 
 $codeParametrizedProperties = {
     "Syndrome", "Decode", "Decoder", "LogicalErrorRate", "CorrectionCycle", "PhysicalCorrectionCycle",
     "LogicalPauliQ", "StabilizerMemberQ",
     "Recovery", "LogicalChannel", "LogicalPauliProbabilities", "KnillLaflammeMatrix", "CorrectableQ",
-    "Concatenate", "RemoveQubit", "Paste"
+    "Concatenate", "RemoveQubit", "Paste", "Stim", "CodespaceProbability"
 };
 
 QECCode::noprop = "`1` is not a property of QECCode. Use code[\"Properties\"] for the list.";

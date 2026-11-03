@@ -40,7 +40,7 @@ Two defects found while building on it, both worth knowing:
 ### The code layer (rebuilt, in `OngoingProjects/QEC/`)
 
 The layer is no longer a prototype. It is a functional-idiom package of 25 files with
-**685 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
+**720 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
 every exported name is prefixed `QEC`. Its public surface was redesigned after the API
 audit (`QEC-API-Redesign-Plan.md`, steps 0–7 done): a code now also presents itself as
 quantum operations (encoder, codewords, syndrome measurement, recovery, logical channel,
@@ -163,7 +163,7 @@ which needs fault-tolerant measurement, which needs verified cat states.
 | — | wire the gadgets into the rate machinery | — | **done** |
 | **D** | multi-block addressing: a logical qubit is a *block* | — | **done** |
 | **E** | transversal gates for the 7-qubit code | ch. 11, sec. 11.3 | **done** |
-| **F** | **`QECFaultTolerant[circuit, code]`** — the assembler | Def 10.6, ch. 14 | **done** |
+| **F** | **`QECFaultTolerantCircuit[circuit, code]`** — the assembler | Def 10.6, ch. 14 | **done** |
 | **G** | exRecs, benign/malignant sets, the rigorous threshold bound | sec. 14.2–14.7 | next |
 
 **What A, B and C delivered, in one number each.** The cat's check set is derived, not
@@ -264,7 +264,7 @@ transversal gates" is the wrong summary and the scan gives the right one. The ac
 derived from the gates' matrices rather than typed in, and pinned to the engine's matrices in the
 tests, so adding a gate is adding a matrix.
 
-**F is done, and it is the object the whole critical path was aimed at.** `QECFaultTolerant`
+**F is done, and it is the object the whole critical path was aimed at.** `QECFaultTolerantCircuit`
 takes an ideal Clifford circuit on logical qubits and returns `FT(C)`: each qubit becomes a block,
 each location becomes its gadget, and an error correction gadget follows every preparation, gate and
 storage gadget — never a measurement gadget, whose output is classical. The assembly walks the
@@ -291,7 +291,16 @@ extraction, Steane EC and every preparation gadget here assume.
 
 These do not wait on the critical path and each is days rather than months.
 
-**(e) `QECPseudothreshold` — the threshold, honestly (sec. 14.7.6).** The one item of the
+**Done (October 2026):** the signed weight enumerator, the Clifford hierarchy test and
+`QECPseudothreshold`, each below with what it delivered. All three are exact; none needed
+anything the critical path had not already built.
+
+**(e) `QECPseudothreshold` — the threshold, honestly (sec. 14.7.6).** **Done.** Steane under
+depolarizing noise crosses at an exact `Root`, `0.0811`; the repetition code under bit flips at
+exactly `1/2`. The result is an object carrying the polynomial, code, noise, decoder, rounds,
+extraction and case-specific caveats, and it refuses to call a crossing a pseudothreshold when
+encoding does not help at low noise (the bare-ancilla `32p/15` case reports
+`Missing["EncodingDoesNotHelp"]` and lists the crossing separately). The one item of the
 first plan still outstanding, and it is now nearly free. Because the detector model
 returns an *exact polynomial* in `p`, the level-0/level-1 crossing is a polynomial root:
 `Root` or `NSolve`, arbitrary precision, no Monte Carlo, no fit, reproducible bit for
@@ -302,13 +311,17 @@ about: a pseudothreshold is *not* a threshold — sec. 14.7.6's own example lies
 model, decoder, level), never of a code alone. The return value should carry all of them,
 with no bare-number path.
 
-**`QECWeightEnumerator`, signed (sec. 7.4.1).** `A(x) = Σ_{M∈S} phase(M) x^{wt M}`.
+**`QECWeightEnumerator`, signed (sec. 7.4.1).** **Done**, as code properties rather than a new
+function (`"WeightEnumerator"`, `"SignedWeightEnumerator"`, `"DualWeightEnumerator"` via
+MacWilliams, and `"CodespaceProbability"`, which gives the `1/6` and checks it against the dense
+projector). `A(x) = Σ_{M∈S} phase(M) x^{wt M}`.
 Pure GF(2), enumerable for the codes we care about, and it reproduces the `1/6`
 acceptance of the 5-qubit magic-state protocol analytically. Highest value per unit
 effort in the whole list. The sign matters: our codes come from check matrices, which
 discard it.
 
-**`QECCliffordHierarchyLevel` (Def 13.1).** Conjugate the `2n` Pauli generators and
+**`QECCliffordHierarchyLevel` (Def 13.1).** **Done**, exact, with every Pauli checked from
+level 4 up because `C₃` is not a group. Conjugate the `2n` Pauli generators and
 classify the image. Easy for `k ≤ 3`, which is all that is needed, and it unlocks the
 vocabulary of ch. 13.
 

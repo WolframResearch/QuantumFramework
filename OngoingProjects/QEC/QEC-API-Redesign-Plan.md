@@ -4,7 +4,7 @@
 document says in what order they are carried out, what each step touches, how each one is
 verified, and the four design decisions that should be settled before the third step
 starts. Nothing here changes the mathematics: the 593 tests are the invariant every step
-is measured against. (All eight steps are done; the suite now stands at 685.)*
+is measured against. (All eight steps are done; the suite now stands at 687.)*
 
 ## 0. What this plan accepts, and the four constraints it works under
 
@@ -239,7 +239,8 @@ correctable on the 5-qubit code. (`"Projector"` was not added as a second name f
 was replaced by the projector cross-check, since `code["State"]` is only defined up to the
 logical freedom when `k > 0`.) **636/636 GREEN.**
 
-Two findings, recorded here rather than fixed at their source:
+One finding, recorded here rather than fixed at its source (a second one, reported in an
+earlier revision, did not reproduce and is retracted below):
 
 - *The encoding circuit's logical labelling is its own.* On the 5-qubit code
   `codeEncodingGates` sends `|0…0⟩` to the −1 eigenstate of the `Z̄` that
@@ -248,13 +249,12 @@ Two findings, recorded here rather than fixed at their source:
   operational layer canonicalizes (`|0_L⟩` is moved into the +1 eigenspace of every `Z̄_j`,
   `|c_L⟩ = X̄^c|0_L⟩`), and a test pins `V†Z̄V = Z`, `V†X̄V = X` on five codes.
   `Encoder.wl` is untouched.
-- *Engine: a one-element Kraus list with an order acts on the wrong wires.*
-  `QuantumChannel[{X}, {1}]["Order"]` is `{{0}, {1}}` and `QuantumChannel[{P}, {1,2,3}]` is
-  `{{0,1,2}, {1,2,3}}`: the environment wire takes the place of the first system wire, so
-  a unitary channel given this way silently acts on the wrong qubits. The layer routes a
-  single Kraus operator through `QuantumChannel[QuantumOperator[…]]` instead
-  (`krausChannel`), and two tests pin it. Worth reporting upstream; nothing in the kernel
-  was changed.
+- *Retracted: "a one-element Kraus list acts on the wrong wires".* An earlier revision of
+  this note reported that `QuantumChannel[{X}, {1}]["Order"]` came out `{{0}, {1}}`. Rechecked
+  in a fresh kernel on the current `main`, it is `{{1}, {1}}`, and `QuantumChannel[{P},
+  {1, 2, 3}]` acts on the right qubits: the observation came from a long-running session and
+  does not reproduce. There is nothing to report upstream. The layer still passes a single
+  Kraus operator as a `QuantumOperator` (`krausChannel`), which is equivalent and harmless.
 
 *Design note — the bosonic plan.* `Bosonic-QEC-Plan.md` and its Part A spec describe the
 same frame the audit's §3.5 asks for: a code is a subspace (codewords / isometry), an
@@ -397,7 +397,7 @@ all 262 cells with the only non-results being the two deliberate refusals the no
 the three notebooks are rebuilt. The roadmap and the README carry the new counts. The audit's
 observations are walked point by point in the status column of §1.
 
-**Final: 685/685 GREEN**, 23 test files, on bare Wolfram. Nothing committed; nothing in
+**Final: 687/687 GREEN** (two more after a notation pass: `code["Stim"]`), 23 test files, on bare Wolfram. Nothing committed; nothing in
 `QuantumFramework/Kernel/`.
 
 ---

@@ -1006,7 +1006,7 @@ StringTake[QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit", 0.001], 3,
 The shorthand on the code object, and the internal builder:
 
 ```wl
-{StringCount[bitFlip["StimCircuit", QECNoiseModel["Circuit", 0.001]], "\n"],
+{StringCount[bitFlip["Stim", QECNoiseModel["Circuit", 0.001]], "\n"],
  StringLength[codeStimCircuit[bfData, First[QECNoiseModel["Circuit", 0.001]], 1, "Z"]]}
 ```
 
@@ -1705,18 +1705,9 @@ entry $i^{e - e'}$, and `Missing` from it means a nontrivial logical, reported w
 $2^n$ vector is formed, which is why `"CorrectableQ"` is not behind `$QECDenseQubitLimit` and the
 encoder is.
 
-One engine quirk is routed around rather than fixed. A one-element Kraus list with an order is read
-by `QuantumChannel` as a channel whose environment wire replaces the first system wire:
-
-```wl
-QuantumChannel[{PauliMatrix[1]}, {1}]["Order"]
-```
-
-<!-- => {{0}, {1}} -->
-
-A unitary channel given that way acts on the wrong qubits. `krausChannel` (in `Noise.wl`) sends a
-single Kraus operator through `QuantumChannel[QuantumOperator[…]]` instead, and both the recovery and
-the noiseless logical channel go through it; two tests pin the resulting order.
+A single Kraus operator — a recovery, or the logical channel of noise that never acts — is passed
+to the framework as a `QuantumOperator` (`krausChannel`, in `Noise.wl`), so the channel acts on
+exactly the wires it names; two tests pin that order.
 
 On the noise side, `QECNoiseModel[qc]` reads a one-qubit channel back as Pauli weights,
 $q_\sigma = \sum_k |\mathrm{Tr}(\sigma K_k)|^2/4$, takes $q_I$ as the complement (the trace form comes
@@ -1748,10 +1739,54 @@ was passed. The detector model's `demExactReport` is memoised, so `"LogicalError
 
 Ten names were retired in step 5 of the redesign: the six `QECPauli*` verbs (now `QECPauli`'s
 properties, with the verbs themselves as `PackageScope` row functions under their old definitions),
-`QECFaultTolerant`, `QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix`. Each alias calls
+`QECFaultTolerant`, `QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix` — and one property,
+`code["StimCircuit"]`, now `code["Stim"]`. Each alias calls
 the function that now does the job and warns once per session through `General::qecdeprecated`; the
 set of warned names is reset on every load, which is what makes the warning testable in every test
 file that reloads the package. The file goes one release after the rename.
+
+## WeightEnumerator.wl — the stabilizer group, counted
+
+`codeStabilizerGroup` builds all $2^{n-k}$ elements once, as rows with their true phases: each
+generator doubles the list by multiplying it in. Everything in the file is a count or a sum over
+that list. `codeWeightEnumerator` counts weights; `codeSignedWeightEnumerator` sums $i^e$ (which is
+$\pm 1$, since every element is Hermitian); `codeDualWeightEnumerator` never touches the normalizer
+and applies the MacWilliams identity to $A$, with `Expand` and `Together` and nothing guessed.
+
+`codeCodespaceProbability` is eq. 13.36 term by term: each stabilizer element contributes its sign
+times the product, over qubits, of the Bloch component its letter picks out ($I \to 1$,
+$X \to r_x$, $Y \to r_y$, $Z \to r_z$). The letter is read straight off the two bits, because the
+row's $E(1,1)$ is $Y$ itself. The group is bounded by `$QECStabilizerGroupLimit` ($2^{20}$), with a
+message instead of a hang.
+
+```wl
+Length[Wolfram`QuantumFramework`QEC`PackageScope`codeStabilizerGroup[First[QECCode["SteaneCode"]]]]
+```
+
+<!-- => 64 -->
+
+## CliffordHierarchy.wl — the definition, run recursively
+
+Membership in $\mathcal{C}_1$ is "proportional to a Pauli", read off the matrix:
+$X^x Z^z$ has its nonzero in column $i$ at row $i \oplus x$, so the first row locates $x$, and
+$U X^x$ must be diagonal with the sign pattern $(-1)^{z\cdot i}$ for some $z$. Membership in
+$\mathcal{C}_k$ conjugates the Paulis and asks the same of level $k-1$. For $k \le 3$ the $2n$
+generators suffice, because $\mathcal{C}_1$ and $\mathcal{C}_2$ are groups; from $k = 4$ every
+non-identity Pauli is checked. Entries are compared with `PossibleZeroQ` after `Chop`, so exact
+gates are decided exactly and numerical ones are not refused for their last digit.
+
+It is a property of a unitary rather than of a code, and its natural home is `QuantumOperator`;
+it lives here until the layer moves into the kernel.
+
+## Pseudothreshold.wl — a root, and what it does not mean
+
+`QECPseudothreshold` asks `QECLogicalErrorRate[..., All]` for the exact report, requires the rate
+to depend on exactly one symbol, and solves $p_L(p) = p$ on $(0, 1)$ over the reals. Before taking
+the first root it checks the low-noise ratio $\lim_{p\to0} p_L/p$: only if it is below 1 does
+encoding help at low noise, and only then is the first crossing where it *stops* helping. Otherwise
+the value is `Missing["EncodingDoesNotHelp"]` and the roots go to `"Crossings"`. The caveats are
+assembled from the case — the level, the rounds, whether the rate is post-selected — not printed as
+boilerplate.
 
 ## Where this comes from
 

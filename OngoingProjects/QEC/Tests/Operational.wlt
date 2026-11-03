@@ -144,9 +144,7 @@ VerificationTest[
     TestID -> "QEC-Operational-syndrome-circuit-states-the-instrument-it-implements"
 ]
 
-(* The recovery is one Kraus operator on all three wires.  A one-element Kraus list
-   with an order is read by the engine as a channel whose environment replaces the
-   first wire, so this pins the route that avoids it. *)
+(* The recovery is one Kraus operator, and it acts on all three wires. *)
 VerificationTest[
     bitFlip["Recovery", {1, 0}]["Order"],
     {{1, 2, 3}, {1, 2, 3}},

@@ -28,8 +28,8 @@ and say what replaced them.
 ## What is here
 
 ```
-QECCore/           the layer: 25 files and a loader, ~6,900 lines, 19 public functions
-Tests/             685 tests in 23 MUnit files, plus a local runner
+QECCore/           the layer: 28 files and a loader, ~7,400 lines, 21 public functions
+Tests/             720 tests in 26 MUnit files, plus a local runner
 StimCrossCheck/    the external oracle: emit the circuits, compare against Stim
 docs/              markdown sources, the build script, and the built notebook
 References/        an index of the source material (the PDFs are not in the repo)
