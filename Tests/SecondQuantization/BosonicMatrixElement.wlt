@@ -185,6 +185,110 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["BosonicMatrixElement - vanishing powers at the vacuum"]
+
+(* :Exp[-ad a]: = Sum[(-1)^k ad^k a^k/k!] is the vacuum projector |0><0|.  Its diagonal is
+   (1 + c)^n at c = -1, and the n = 0 element is the k = 0 term alone, so it is 1, not 0^0.
+   The whole n = 0 column is at stake: an off-diagonal zero there must not come out as
+   0^0 times a vanishing Kronecker delta. *)
+VerificationTest[
+    Table[BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-adv ** av]]], {m, 0, 3}, {n, 0, 3}],
+    Table[KroneckerDelta[m, 0] KroneckerDelta[n, 0], {m, 0, 3}, {n, 0, 3}],
+    TestID -> "BME-Vacuum-ProjectorFock"
+]
+
+(* The closed form for symbolic indices must remain right when the indices reach the vacuum. *)
+VerificationTest[
+    With[{e = BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-adv ** av]]]},
+        {e /. {m -> 0, n -> 0}, e /. {m -> 2, n -> 2}, e /. {m -> 1, n -> 0}}],
+    {1, 0, 0},
+    TestID -> "BME-Vacuum-ProjectorSymbolicIndex"
+]
+
+(* A machine-precision -1. leaves a base of 0. rather than an exact 0, and the elements
+   stay machine numbers. *)
+VerificationTest[
+    Table[BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-1. adv ** av]]], {m, 0, 2}, {n, 0, 2}],
+    {{1., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}},
+    TestID -> "BME-Vacuum-ProjectorMachineCoefficient"
+]
+
+(* 0^(-ad a) is unbounded off the vacuum: it must not be read as the vacuum projector. *)
+VerificationTest[
+    BosonicMatrixElement[{1, 1}, 0^(-adv ** av)],
+    ComplexInfinity,
+    {Power::infy},
+    TestID -> "BME-Vacuum-NegativePowerUnbounded"
+]
+
+(* Wings on either side turn the projector into the unnormalized ket-bra
+   Exp[z ad]|0><0|Exp[w a], whose elements are z^m w^n / Sqrt[m! n!]: every element,
+   not only the vacuum one, passes through the n = 0 term of the middle sum. *)
+VerificationTest[
+    Simplify[
+        Table[BosonicMatrixElement[{m, n}, Exp[z adv] ** NormalOrdered[Exp[-adv ** av]] ** Exp[w av]],
+            {m, 0, 2}, {n, 0, 2}] -
+        Table[z^m w^n/Sqrt[m! n!], {m, 0, 2}, {n, 0, 2}]],
+    ConstantArray[0, {3, 3}],
+    TestID -> "BME-Vacuum-ProjectorBetweenWings"
+]
+
+(* Total loss: the no-jump Kraus operator eta^(ad a/2) of the photon-loss channel at
+   eta = 0 keeps only the vacuum. *)
+VerificationTest[
+    Table[BosonicMatrixElement[{m, n}, 0^((adv ** av)/2)], {m, 0, 2}, {n, 0, 2}],
+    Table[KroneckerDelta[m, 0] KroneckerDelta[n, 0], {m, 0, 2}, {n, 0, 2}],
+    TestID -> "BME-Vacuum-FullLossNoJump"
+]
+
+(* Between coherent states the projector gives <alpha|0><0|beta>. *)
+VerificationTest[
+    Simplify[BosonicMatrixElement[{\[Alpha], \[Beta]}, NormalOrdered[Exp[-adv ** av]], "Basis" -> "Coherent"] -
+        Exp[-(Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]],
+    0,
+    TestID -> "BME-Vacuum-ProjectorCoherent"
+]
+
+(* With a zero amplitude the series in Conjugate[alpha] beta keeps only its first term:
+   <0|0><0|beta> = <0|beta>, <0|0><0|0> = 1, and Exp[lambda ad a] fixes the vacuum. *)
+VerificationTest[
+    Simplify[{
+        BosonicMatrixElement[{0, \[Beta]}, NormalOrdered[Exp[-adv ** av]], "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2],
+        BosonicMatrixElement[{0, 0}, NormalOrdered[Exp[-adv ** av]], "Basis" -> "Coherent"] - 1,
+        BosonicMatrixElement[{0, \[Beta]}, Exp[\[Lambda] adv ** av], "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
+    }],
+    {0, 0, 0},
+    TestID -> "BME-Vacuum-ProjectorCoherentZeroAmplitude"
+]
+
+(* The vacuum is the coherent state of amplitude 0, so <0|a|beta> = beta <0|beta>,
+   <alpha|ad|0> = Conjugate[alpha] <alpha|0>, and <0|ad a|beta> = 0.  The zero amplitude
+   carries the power 0 for every operator it does not touch. *)
+VerificationTest[
+    Simplify[{
+        BosonicMatrixElement[{0, \[Beta]}, av, "Basis" -> "Coherent"] - \[Beta] Exp[-Abs[\[Beta]]^2/2],
+        BosonicMatrixElement[{\[Alpha], 0}, adv, "Basis" -> "Coherent"] - Conjugate[\[Alpha]] Exp[-Abs[\[Alpha]]^2/2],
+        BosonicMatrixElement[{0, \[Beta]}, 1 + adv ** av, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
+    }],
+    {0, 0, 0},
+    TestID -> "BME-Vacuum-CoherentZeroAmplitude"
+]
+
+(* One mode in the vacuum, the other coherent: the product of the per-mode overlaps times
+   1 + 0 + Conjugate[alpha] beta. *)
+VerificationTest[
+    With[{b = FieldVariables[{1, 2}]},
+        Simplify[
+            BosonicMatrixElement[{{0, \[Alpha]}, {0, \[Beta]}}, 1 + b[[2]] ** b[[1]] + b[[4]] ** b[[3]],
+                "Basis" -> "Coherent"] -
+            (1 + Conjugate[\[Alpha]] \[Beta]) Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]]],
+    0,
+    TestID -> "BME-Vacuum-CoherentZeroAmplitudeMultimode"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["BosonicMatrixElement - independent modes"]
 
 {b1, bd1, b2, bd2} = FieldVariables[{1, 2}];

@@ -211,19 +211,20 @@ BosonicMatrixElement[{_, _}, Except[_DisplacementOperator | _SqueezeOperator | _
     (Message[BosonicMatrixElement::argrx, BosonicMatrixElement, 2, 3]; $Failed)
 
 BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
-    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, r},
+    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, t, r},
         pair = If[AssociationQ[lv], {First[lv["Creators"]], First[lv["Annihilators"]]}];
         r = Which[
             lv === $Failed || ! FreeQ[expr, _QuantumOperator | _QuantumState], $Failed,
             Length[ms] === Length[ns] === Length[lv["Annihilators"]] && vevPolynomialQ[expr, lv["Generators"]],
                 If[ coherentBasisQ[opts],
-                    Times @@ MapThread[coherentOverlap, {ms, ns}] ladderSum[Conjugate[#1]^#3 #2^#4 &, {ms, ns}, expr, lv],
+                    Times @@ MapThread[coherentOverlap, {ms, ns}] ladderSum[ZeroLimitPower[Conjugate[#1], #3] ZeroLimitPower[#2, #4] &, {ms, ns}, expr, lv],
                     ladderSum[fockLadderElement, {ms, ns}, expr, lv]
                 ],
             Length[lv["Annihilators"]] =!= 1 || ListQ[m] || ListQ[n], $Failed,
+            (* summed in t before the amplitudes go in, so a zero amplitude meets no 0^j *)
             coherentBasisQ[opts],
                 Replace[numberDiagonal[expr, pair, j],
-                    f : Except[$Failed] :> Exp[-(Abs[m]^2 + Abs[n]^2)/2] Sum[f (Conjugate[m] n)^j/j!, {j, 0, Infinity}]],
+                    f : Except[$Failed] :> Exp[-(Abs[m]^2 + Abs[n]^2)/2] (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n)],
             True,
                 Replace[normalProductElement[expr, pair, m, n, j],
                     $Failed /; ! FreeQ[expr, E] :>
@@ -233,13 +234,16 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
     ]
 
 
-(* Normal ordering changes the function: :Exp[c n]: is (1 + c)^n on the diagonal. *)
+(* Normal ordering changes the function: :Exp[c n]: is (1 + c)^n on the diagonal.  A base
+   that vanishes leaves only the vacuum, so 0^n with n >= 0 is KroneckerDelta[n, 0] rather
+   than 0^0 once n is set to 0; the factor 1 + b keeps a machine zero inexact. *)
 numberDiagonal[expr_, {cr_, an_}, k_] :=
     With[{nn = cr ** an},
         With[{f = Replace[expr, {
                     NormalOrdered[Exp[c_. w_], _] /; w === nn :> (1 + c)^k,
                     e_ :> ReplaceAll[e, nn -> k]
-                }]},
+                }] /. Power[b_ /; TrueQ[b == 0], p_ /; TrueQ[Simplify[p >= 0, k >= 0]]] :>
+                    (1 + b) KroneckerDelta[p, 0]},
             If[FreeQ[f, cr | an | NormalOrdered], f, $Failed]
         ]
     ]

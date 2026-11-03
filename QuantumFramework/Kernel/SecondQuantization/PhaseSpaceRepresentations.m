@@ -16,6 +16,8 @@ PackageExport["SOrderedFunction"]
 
 PackageExport["SOrderedRepresentation"]
 
+PackageScope["ZeroLimitPower"]
+
 
 (* ::Input::Initialization::Plain:: *)
 WignerRepresentation::usage =
