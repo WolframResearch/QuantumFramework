@@ -95,6 +95,9 @@ FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumOperatorNames, name]
 
 FromOperatorShorthand[arg : namePattern -> order : _ ? orderQ] /;
     MemberQ[$QuantumOperatorNames, name] && ! (MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..]) := QuantumOperator[arg, order]
+(* a single-qudit gate on wire n is built there, as on {n}; any other operator on wire n is
+   built on its own wires and its first wire moved to n (the general rule below) *)
+FromOperatorShorthand[arg : namePattern -> qudit_Integer ? Positive] /; MemberQ[$singleQuditGateNames, name] := QuantumOperator[arg, {qudit}]
 (* "Lueders"[op] -> order measures op, placed on order, as one observable; the next rule
    would measure each qudit of order on its own *)
 FromOperatorShorthand["Lueders"[op_] -> order : _Integer | _ ? orderQ] :=
@@ -161,6 +164,21 @@ QuantumOperator[("Identity" | "I")[dim_Integer ? Positive], opts___] :=
 
 QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumOperator["I"[args], opts]]
 
+
+(* exp(-i angle/2 sigma_k) for the generalized Pauli operator sigma_k; for a qubit,
+   cos(angle/2) - i sin(angle/2) sigma_k, since sigma_k^2 = 1 *)
+rotationMatrix[3, angle_, 2] := DiagonalMatrix[FullSimplify[{Exp[- I angle / 2], Exp[I angle / 2]}]]
+rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
+rotationMatrix[k_, angle_, dimension_] := Map[FullSimplify, Normal @ matrixExponential[- I angle / 2 pauliMatrix[k, dimension]], {2}]
+
+QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[rotationMatrix[1, angle, dimension], qudit, Subscript["R", "X"][angle], opts]
+
+QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[rotationMatrix[2, angle, dimension], qudit, Subscript["R", "Y"][angle], opts]
+
+QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[rotationMatrix[3, angle, dimension], qudit, Subscript["R", "Z"][angle], opts]
 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
@@ -233,6 +251,12 @@ computationalOperator[matrix_, order : {_List, _List}, {outputDimensions_List, i
    at most that qudit and options, and any other arguments go through the general constructors *)
 singleQuditGate[matrix_, {qudit_}, label_, opts : OptionsPattern[]] :=
     computationalOperator[matrix, {{qudit}, {qudit}}, {{Length[matrix]}, {Length[matrix]}}, label, opts]
+
+(* the names whose gates have a singleQuditGate rule *)
+$singleQuditGateNames = {
+    "Phase", "P", "U1", "PhaseShift", "S", "T", "PauliX", "X", "Shift", "PauliY", "Y", "PauliZ", "Z", "ShiftPhase",
+    "Hadamard", "H", "XRotation", "RX", "YRotation", "RY", "ZRotation", "RZ"
+}
 
 QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
     singleQuditGate[SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}, {dimension, dimension}], qudit, "P"[angle], opts]
