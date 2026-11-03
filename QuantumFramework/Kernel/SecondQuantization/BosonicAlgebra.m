@@ -320,7 +320,7 @@ BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
     With[{vs = fieldVariables[expr, opts], ms = Flatten[{m}], ns = Flatten[{n}]},
         If[ coherentBasisQ[opts],
             Times @@ MapThread[coherentOverlap, {ms, ns}] *
-                ladderSum[Conjugate[#1]^#3 #2^#4 &, {ms, ns}, expr, vs],
+                ladderSum[ZeroLimitPower[Conjugate[#1], #3] ZeroLimitPower[#2, #4] &, {ms, ns}, expr, vs],
             ladderSum[fockLadderElement, {ms, ns}, expr, vs]
         ] /;
             Length[ms] === Length[vs] && Length[ns] === Length[vs] &&
@@ -329,13 +329,16 @@ BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
     ]
 
 
-(* Normal ordering changes the function: :Exp[c n]: is (1 + c)^n on the diagonal. *)
+(* Normal ordering changes the function: :Exp[c n]: is (1 + c)^n on the diagonal.  A base
+   that vanishes leaves only the vacuum, so 0^n with n >= 0 is KroneckerDelta[n, 0] rather
+   than 0^0 once n is set to 0; the factor 1 + b keeps a machine zero inexact. *)
 numberDiagonal[expr_, v_, k_] :=
     With[{nn = SuperDagger[v] ** v},
         With[{f = Replace[expr, {
                     NormalOrdered[Exp[c_. w_]] /; w === nn :> (1 + c)^k,
                     e_ :> ReplaceAll[e, nn -> k]
-                }]},
+                }] /. Power[b_ /; TrueQ[b == 0], p_ /; TrueQ[Simplify[p >= 0, k >= 0]]] :>
+                    (1 + b) KroneckerDelta[p, 0]},
             If[FreeQ[f, v | SuperDagger[v] | NormalOrdered], f, $Failed]
         ]
     ]
@@ -396,13 +399,14 @@ normalProductElement[expr_, v_, m_, n_, j_] :=
     ]
 
 BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
-    Module[{v = Replace[fieldVariables[expr, opts], {{u_} :> u, _ :> None}], j, r},
+    Module[{v = Replace[fieldVariables[expr, opts], {{u_} :> u, _ :> None}], j, t, r},
         r = Which[
             v === None || ListQ[m] || ListQ[n], $Failed,
+            (* summed in t before the amplitudes go in, so a zero amplitude meets no 0^j *)
             coherentBasisQ[opts],
                 Replace[numberDiagonal[expr, v, j],
                     f : Except[$Failed] :>
-                        Exp[-(Abs[m]^2 + Abs[n]^2)/2] Sum[f (Conjugate[m] n)^j/j!, {j, 0, Infinity}]],
+                        Exp[-(Abs[m]^2 + Abs[n]^2)/2] (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n)],
             True,
                 (* A mixed exponential is not yet a product of wings; disentangle and retry. *)
                 Replace[normalProductElement[expr, v, m, n, j],
