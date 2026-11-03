@@ -1,27 +1,28 @@
 Needs["Wolfram`QuantumFramework`"]
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
-{av, adv} = FieldVariables[];
+$v = FieldVariables[];
+{{adv}, {av}} = $v;
 
 
 BeginTestSection["BosonicMatrixElement - Fock basis (default)"]
 
 (* <m|ad a|n> = Sqrt[m] Sqrt[n] delta[m-1, n-1], the number operator with symbolic indices *)
 VerificationTest[
-    BosonicMatrixElement[{m, n}, adv ** av],
+    BosonicMatrixElement[{m, n}, adv ** av, $v],
     Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1],
     TestID -> "BME-Fock-NumberOperator-Symbolic"
 ]
 
 VerificationTest[
-    BosonicMatrixElement[{3, 3}, adv ** av],
+    BosonicMatrixElement[{3, 3}, adv ** av, $v],
     3,
     TestID -> "BME-Fock-NumberOperator-Integer"
 ]
 
 (* a lowers: <m|a|n> is nonzero only for m = n - 1 *)
 VerificationTest[
-    BosonicMatrixElement[{m, n}, av],
+    BosonicMatrixElement[{m, n}, av, $v],
     Sqrt[n] KroneckerDelta[m, n - 1],
     TestID -> "BME-Fock-Annihilation"
 ]
@@ -36,7 +37,7 @@ VerificationTest[
 (* The canonical commutation relation as a matrix element: <m|[a, ad]|n> = delta[m, n].
    Commutator expands to the NonCommutativeMultiply form the reducer expects. *)
 VerificationTest[
-    BosonicMatrixElement[{m, n}, Commutator[av, adv]],
+    BosonicMatrixElement[{m, n}, Commutator[av, adv], $v],
     KroneckerDelta[m, n],
     TestID -> "BME-Fock-CanonicalCommutator"
 ]
@@ -48,7 +49,7 @@ BeginTestSection["BosonicMatrixElement - coherent basis"]
 
 (* Coherent states are eigenstates of a, so <alpha|a|alpha> = alpha and <alpha|alpha> = 1 *)
 VerificationTest[
-    Simplify[BosonicMatrixElement[{\[Alpha], \[Alpha]}, av, "Basis" -> "Coherent"],
+    Simplify[BosonicMatrixElement[{\[Alpha], \[Alpha]}, av, $v, "Basis" -> "Coherent"],
         \[Alpha] \[Element] Reals],
     \[Alpha],
     TestID -> "BME-Coherent-Annihilation-Diagonal"
@@ -63,7 +64,7 @@ VerificationTest[
 
 (* Normal ordering carries over to the coherent basis unchanged *)
 VerificationTest[
-    Simplify[BosonicMatrixElement[{\[Alpha], \[Alpha]}, Commutator[av, adv], "Basis" -> "Coherent"],
+    Simplify[BosonicMatrixElement[{\[Alpha], \[Alpha]}, Commutator[av, adv], $v, "Basis" -> "Coherent"],
         \[Alpha] \[Element] Reals],
     1,
     TestID -> "BME-Coherent-CanonicalCommutator"
@@ -89,7 +90,7 @@ BeginTestSection["BosonicMatrixElement - cat-code matrix elements"]
 
 ClearAll[catRaw, catNorm, catElem, comb, catBlock]
 catRaw[w1_, w2_, expr_] := Total[Flatten @ Outer[
-    Conjugate[#1[[1]]] #2[[1]] BosonicMatrixElement[{#1[[2]], #2[[2]]}, expr, "Basis" -> "Coherent"] &,
+    Conjugate[#1[[1]]] #2[[1]] BosonicMatrixElement[{#1[[2]], #2[[2]]}, expr, $v, "Basis" -> "Coherent"] &,
     w1, w2, 1]]
 catNorm[w_] := Sqrt[catRaw[w, w, 1]]
 catElem[w1_, w2_, expr_] := FullSimplify[catRaw[w1, w2, expr]/(catNorm[w1] catNorm[w2]),
@@ -136,7 +137,7 @@ BeginTestSection["BosonicMatrixElement - exponentials"]
 (* A function of the number operator is diagonal.  This one is the no-jump factor of the
    photon-loss channel, which is not a polynomial and so had no route before. *)
 VerificationTest[
-    BosonicMatrixElement[{m, k}, \[Eta]^((adv ** av)/2)],
+    BosonicMatrixElement[{m, k}, \[Eta]^((adv ** av)/2), $v],
     \[Eta]^(k/2) KroneckerDelta[m, k],
     TestID -> "BME-Exp-NumberDiagonal"
 ]
@@ -144,8 +145,8 @@ VerificationTest[
 (* A wing is an exponential of one operator alone, evaluated as a Taylor coefficient of
    Exp[P].  A quadratic wing raises two levels at a time, so odd differences vanish. *)
 VerificationTest[
-    {BosonicMatrixElement[{4, 0}, Exp[s adv ** adv]],
-     BosonicMatrixElement[{3, 0}, Exp[s adv ** adv]]},
+    {BosonicMatrixElement[{4, 0}, Exp[s adv ** adv], $v],
+     BosonicMatrixElement[{3, 0}, Exp[s adv ** adv], $v]},
     {Sqrt[6] s^2, 0},
     TestID -> "BME-Exp-QuadraticWingParity"
 ]
@@ -153,7 +154,7 @@ VerificationTest[
 (* An exponential mixing the two operators is disentangled first.  Cross-checked against
    MatrixExp on a 40-level truncation, which gives 1.8682476751142998. *)
 VerificationTest[
-    Chop[N[BosonicMatrixElement[{6, 2}, Exp[av + adv]]] - 1.8682476751142998],
+    Chop[N[BosonicMatrixElement[{6, 2}, Exp[av + adv], $v]] - 1.8682476751142998],
     0,
     TestID -> "BME-Exp-MixedDisentangles"
 ]
@@ -162,8 +163,8 @@ VerificationTest[
    closed form the SqueezeOperator clause gives for the same operator. *)
 VerificationTest[
     With[{sd = BosonicExpOrder[
-            Exp[(Conjugate[\[Xi]] av ** av - \[Xi] adv ** adv)/2], \[Xi] > 0] /. \[Xi] -> 0.4},
-        Chop[BosonicMatrixElement[{2, 0}, Evaluate[sd]] -
+            Exp[(Conjugate[\[Xi]] av ** av - \[Xi] adv ** adv)/2], $v, Assumptions -> \[Xi] > 0] /. \[Xi] -> 0.4},
+        Chop[BosonicMatrixElement[{2, 0}, Evaluate[sd], $v] -
              BosonicMatrixElement[{2, 0}, SqueezeOperator[0.4]]]],
     0,
     TestID -> "BME-Exp-SqueezeMatchesNamed"
@@ -174,10 +175,10 @@ VerificationTest[
    wrong by the exponential of the commutator.  It is declined and then disentangled, so
    both spellings of the same operator agree. *)
 VerificationTest[
-    With[{no = BosonicExpOrder[Exp[0.7 adv - 0.4 av]],
-          an = BosonicExpOrder[Exp[0.7 adv - 0.4 av], "Ordering" -> "Antinormal"]},
-        Chop[BosonicMatrixElement[{3, 2}, Evaluate[an]] -
-             BosonicMatrixElement[{3, 2}, Evaluate[no]]]],
+    With[{no = BosonicExpOrder[Exp[0.7 adv - 0.4 av], $v],
+          an = BosonicExpOrder[Exp[0.7 adv - 0.4 av], $v, "Ordering" -> "Antinormal"]},
+        Chop[BosonicMatrixElement[{3, 2}, Evaluate[an], $v] -
+             BosonicMatrixElement[{3, 2}, Evaluate[no], $v]]],
     0,
     TestID -> "BME-Exp-AntinormalNotReordered"
 ]
@@ -192,14 +193,14 @@ BeginTestSection["BosonicMatrixElement - vanishing powers at the vacuum"]
    The whole n = 0 column is at stake: an off-diagonal zero there must not come out as
    0^0 times a vanishing Kronecker delta. *)
 VerificationTest[
-    Table[BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-adv ** av]]], {m, 0, 3}, {n, 0, 3}],
+    Table[BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-adv ** av], $v], $v], {m, 0, 3}, {n, 0, 3}],
     Table[KroneckerDelta[m, 0] KroneckerDelta[n, 0], {m, 0, 3}, {n, 0, 3}],
     TestID -> "BME-Vacuum-ProjectorFock"
 ]
 
 (* The closed form for symbolic indices must remain right when the indices reach the vacuum. *)
 VerificationTest[
-    With[{e = BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-adv ** av]]]},
+    With[{e = BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-adv ** av], $v], $v]},
         {e /. {m -> 0, n -> 0}, e /. {m -> 2, n -> 2}, e /. {m -> 1, n -> 0}}],
     {1, 0, 0},
     TestID -> "BME-Vacuum-ProjectorSymbolicIndex"
@@ -208,14 +209,14 @@ VerificationTest[
 (* A machine-precision -1. leaves a base of 0. rather than an exact 0, and the elements
    stay machine numbers. *)
 VerificationTest[
-    Table[BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-1. adv ** av]]], {m, 0, 2}, {n, 0, 2}],
+    Table[BosonicMatrixElement[{m, n}, NormalOrdered[Exp[-1. adv ** av], $v], $v], {m, 0, 2}, {n, 0, 2}],
     {{1., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}},
     TestID -> "BME-Vacuum-ProjectorMachineCoefficient"
 ]
 
 (* 0^(-ad a) is unbounded off the vacuum: it must not be read as the vacuum projector. *)
 VerificationTest[
-    BosonicMatrixElement[{1, 1}, 0^(-adv ** av)],
+    BosonicMatrixElement[{1, 1}, 0^(-adv ** av), $v],
     ComplexInfinity,
     {Power::infy},
     TestID -> "BME-Vacuum-NegativePowerUnbounded"
@@ -226,7 +227,7 @@ VerificationTest[
    not only the vacuum one, passes through the n = 0 term of the middle sum. *)
 VerificationTest[
     Simplify[
-        Table[BosonicMatrixElement[{m, n}, Exp[z adv] ** NormalOrdered[Exp[-adv ** av]] ** Exp[w av]],
+        Table[BosonicMatrixElement[{m, n}, Exp[z adv] ** NormalOrdered[Exp[-adv ** av], $v] ** Exp[w av], $v],
             {m, 0, 2}, {n, 0, 2}] -
         Table[z^m w^n/Sqrt[m! n!], {m, 0, 2}, {n, 0, 2}]],
     ConstantArray[0, {3, 3}],
@@ -236,14 +237,14 @@ VerificationTest[
 (* Total loss: the no-jump Kraus operator eta^(ad a/2) of the photon-loss channel at
    eta = 0 keeps only the vacuum. *)
 VerificationTest[
-    Table[BosonicMatrixElement[{m, n}, 0^((adv ** av)/2)], {m, 0, 2}, {n, 0, 2}],
+    Table[BosonicMatrixElement[{m, n}, 0^((adv ** av)/2), $v], {m, 0, 2}, {n, 0, 2}],
     Table[KroneckerDelta[m, 0] KroneckerDelta[n, 0], {m, 0, 2}, {n, 0, 2}],
     TestID -> "BME-Vacuum-FullLossNoJump"
 ]
 
 (* Between coherent states the projector gives <alpha|0><0|beta>. *)
 VerificationTest[
-    Simplify[BosonicMatrixElement[{\[Alpha], \[Beta]}, NormalOrdered[Exp[-adv ** av]], "Basis" -> "Coherent"] -
+    Simplify[BosonicMatrixElement[{\[Alpha], \[Beta]}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] -
         Exp[-(Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]],
     0,
     TestID -> "BME-Vacuum-ProjectorCoherent"
@@ -253,9 +254,9 @@ VerificationTest[
    <0|0><0|beta> = <0|beta>, <0|0><0|0> = 1, and Exp[lambda ad a] fixes the vacuum. *)
 VerificationTest[
     Simplify[{
-        BosonicMatrixElement[{0, \[Beta]}, NormalOrdered[Exp[-adv ** av]], "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2],
-        BosonicMatrixElement[{0, 0}, NormalOrdered[Exp[-adv ** av]], "Basis" -> "Coherent"] - 1,
-        BosonicMatrixElement[{0, \[Beta]}, Exp[\[Lambda] adv ** av], "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
+        BosonicMatrixElement[{0, \[Beta]}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2],
+        BosonicMatrixElement[{0, 0}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] - 1,
+        BosonicMatrixElement[{0, \[Beta]}, Exp[\[Lambda] adv ** av], $v, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
     }],
     {0, 0, 0},
     TestID -> "BME-Vacuum-ProjectorCoherentZeroAmplitude"
@@ -266,9 +267,9 @@ VerificationTest[
    carries the power 0 for every operator it does not touch. *)
 VerificationTest[
     Simplify[{
-        BosonicMatrixElement[{0, \[Beta]}, av, "Basis" -> "Coherent"] - \[Beta] Exp[-Abs[\[Beta]]^2/2],
-        BosonicMatrixElement[{\[Alpha], 0}, adv, "Basis" -> "Coherent"] - Conjugate[\[Alpha]] Exp[-Abs[\[Alpha]]^2/2],
-        BosonicMatrixElement[{0, \[Beta]}, 1 + adv ** av, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
+        BosonicMatrixElement[{0, \[Beta]}, av, $v, "Basis" -> "Coherent"] - \[Beta] Exp[-Abs[\[Beta]]^2/2],
+        BosonicMatrixElement[{\[Alpha], 0}, adv, $v, "Basis" -> "Coherent"] - Conjugate[\[Alpha]] Exp[-Abs[\[Alpha]]^2/2],
+        BosonicMatrixElement[{0, \[Beta]}, 1 + adv ** av, $v, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
     }],
     {0, 0, 0},
     TestID -> "BME-Vacuum-CoherentZeroAmplitude"
@@ -279,7 +280,7 @@ VerificationTest[
 VerificationTest[
     With[{b = FieldVariables[{1, 2}]},
         Simplify[
-            BosonicMatrixElement[{{0, \[Alpha]}, {0, \[Beta]}}, 1 + b[[2]] ** b[[1]] + b[[4]] ** b[[3]],
+            BosonicMatrixElement[{{0, \[Alpha]}, {0, \[Beta]}}, 1 + b[[1, 1]] ** b[[2, 1]] + b[[1, 2]] ** b[[2, 2]], b,
                 "Basis" -> "Coherent"] -
             (1 + Conjugate[\[Alpha]] \[Beta]) Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]]],
     0,
@@ -291,40 +292,39 @@ EndTestSection[]
 
 BeginTestSection["BosonicMatrixElement - independent modes"]
 
-{b1, bd1, b2, bd2} = FieldVariables[{1, 2}];
+$v2 = FieldVariables[{1, 2}];
+{{bd1, bd2}, {b1, b2}} = $v2;
 
 (* Distinct modes commute and the Fock space is their tensor product, so the element of a
    normally ordered monomial is one single-mode element per mode, multiplied. *)
 VerificationTest[
-    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1 ** bd2 ** b2],
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1 ** bd2 ** b2, $v2],
     Sqrt[m1] Sqrt[m2] Sqrt[n1] Sqrt[n2] KroneckerDelta[m1 - 1, n1 - 1] KroneckerDelta[m2 - 1, n2 - 1],
     TestID -> "BME-Modes-NumberProduct"
 ]
 
 VerificationTest[
-    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b2],
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b2, $v2],
     Sqrt[m1] Sqrt[n2] KroneckerDelta[m1 - 1, n1] KroneckerDelta[m2, n2 - 1],
     TestID -> "BME-Modes-CrossMode"
 ]
 
-(* Inferred modes are sorted, so index slot 1 belongs to the first label however the
-   operator happens to be written. *)
+(* Index slot k belongs to mode k of vars however the operator happens to be written. *)
 VerificationTest[
-    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd2 ** b1],
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd2 ** b1, $v2],
     Sqrt[n1] Sqrt[m2] KroneckerDelta[m1, n1 - 1] KroneckerDelta[m2 - 1, n2],
     TestID -> "BME-Modes-InferredOrderSorted"
 ]
 
-(* An operator that leaves a mode alone cannot name it, so the modes are declared; the idle
-   mode then contributes the identity.  Declared generators keep the order given. *)
+(* A mode the operator leaves alone contributes the identity, and the declared order is kept. *)
 VerificationTest[
-    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1, "Generators" -> {b1, bd1, b2, bd2}],
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1, $v2],
     Sqrt[m1] Sqrt[n1] KroneckerDelta[m1 - 1, n1 - 1] KroneckerDelta[m2, n2],
     TestID -> "BME-Modes-IdleModeDeclared"
 ]
 
 VerificationTest[
-    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1, "Generators" -> {b2, bd2, b1, bd1}],
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1, {{bd2, bd1}, {b2, b1}}],
     Sqrt[m2] Sqrt[n2] KroneckerDelta[m1, n1] KroneckerDelta[m2 - 1, n2 - 1],
     TestID -> "BME-Modes-DeclaredOrderKept"
 ]
@@ -332,9 +332,9 @@ VerificationTest[
 (* A product of single-mode operators factorizes into their single-mode elements. *)
 VerificationTest[
     Simplify[
-        BosonicMatrixElement[{{m1, m2}, {n1, n2}}, (b1 + bd1) ** (b1 + bd1) ** bd2 ** b2 ** b2] -
-        BosonicMatrixElement[{m1, n1}, (b1 + bd1) ** (b1 + bd1), "Generators" -> {b1, bd1}] *
-            BosonicMatrixElement[{m2, n2}, bd2 ** b2 ** b2, "Generators" -> {b2, bd2}]
+        BosonicMatrixElement[{{m1, m2}, {n1, n2}}, (b1 + bd1) ** (b1 + bd1) ** bd2 ** b2 ** b2, $v2] -
+        BosonicMatrixElement[{m1, n1}, (b1 + bd1) ** (b1 + bd1), {{bd1}, {b1}}] *
+            BosonicMatrixElement[{m2, n2}, bd2 ** b2 ** b2, {{bd2}, {b2}}]
     ],
     0,
     TestID -> "BME-Modes-ProductFactorizes"
@@ -351,7 +351,7 @@ VerificationTest[
                     b2 -> KroneckerProduct[one, low], bd2 -> KroneckerProduct[one, Transpose[low]]}]},
                 Count[Tuples[Tuples[Range[0, 2], 2], 2],
                     {{i1_, i2_}, {j1_, j2_}} /;
-                        Simplify[BosonicMatrixElement[{{i1, i2}, {j1, j2}}, op] - mat[[i1 d + i2 + 1, j1 d + j2 + 1]]] =!= 0]
+                        Simplify[BosonicMatrixElement[{{i1, i2}, {j1, j2}}, op, $v2] - mat[[i1 d + i2 + 1, j1 d + j2 + 1]]] =!= 0]
             ]
         ]
     ],
@@ -362,8 +362,8 @@ VerificationTest[
 (* Coherent states factorize too: the overlap is a product of single-mode overlaps. *)
 VerificationTest[
     Simplify[
-        BosonicMatrixElement[{{\[Alpha]1, \[Alpha]2}, {\[Beta]1, \[Beta]2}}, b1,
-            "Basis" -> "Coherent", "Generators" -> {b1, bd1, b2, bd2}] -
+        BosonicMatrixElement[{{\[Alpha]1, \[Alpha]2}, {\[Beta]1, \[Beta]2}}, b1, $v2,
+            "Basis" -> "Coherent"] -
         \[Beta]1 Exp[Conjugate[\[Alpha]1] \[Beta]1 - (Abs[\[Alpha]1]^2 + Abs[\[Beta]1]^2)/2] *
             Exp[Conjugate[\[Alpha]2] \[Beta]2 - (Abs[\[Alpha]2]^2 + Abs[\[Beta]2]^2)/2]
     ],
@@ -380,9 +380,9 @@ VerificationTest[
 (* Operators of different modes commute, and an operator that cancels only once ordered
    is zero, not a stray term with a negative power. *)
 VerificationTest[
-    {BosonicMatrixElement[{{m1, m2}, {n1, n2}}, Commutator[b1, bd2], "Generators" -> {b1, bd1, b2, bd2}],
-     BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1 - b1 ** bd1 + 1, "Generators" -> {b1, bd1, b2, bd2}],
-     BosonicMatrixElement[{m, n}, adv ** av - av ** adv + 1]},
+    {BosonicMatrixElement[{{m1, m2}, {n1, n2}}, Commutator[b1, bd2], $v2],
+     BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1 - b1 ** bd1 + 1, $v2],
+     BosonicMatrixElement[{m, n}, adv ** av - av ** adv + 1, $v]},
     {0, 0, 0},
     TestID -> "BME-Modes-CancellationIsZero"
 ]
@@ -390,11 +390,11 @@ VerificationTest[
 (* One mode reads the same with a scalar index, a one-component index vector, or a
    labelled field variable, on every route: polynomial, wing and closed form. *)
 VerificationTest[
-    {BosonicMatrixElement[{{m}, {n}}, adv ** av],
-     BosonicMatrixElement[{{2}, {0}}, Exp[z adv]],
+    {BosonicMatrixElement[{{m}, {n}}, adv ** av, $v],
+     BosonicMatrixElement[{{2}, {0}}, Exp[z adv], $v],
      BosonicMatrixElement[{{1}, {0}}, DisplacementOperator[\[Alpha]]],
-     BosonicMatrixElement[{m, n}, bd1 ** b1],
-     BosonicMatrixElement[{2, 0}, Exp[z bd1]]},
+     BosonicMatrixElement[{m, n}, bd1 ** b1, {{bd1}, {b1}}],
+     BosonicMatrixElement[{2, 0}, Exp[z bd1], {{bd1}, {b1}}]},
     {Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2], \[Alpha] E^(-Abs[\[Alpha]]^2/2),
      Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2]},
     TestID -> "BME-Modes-OneModeSpellings"
@@ -403,7 +403,7 @@ VerificationTest[
 (* Exponentials are still read one mode at a time; several modes stay unevaluated rather
    than feed an index vector to the single-mode wing formula. *)
 VerificationTest[
-    Head[BosonicMatrixElement[{{2, 1}, {0, 0}}, Exp[z bd1]]],
+    Head[BosonicMatrixElement[{{2, 1}, {0, 0}}, Exp[z bd1], $v2]],
     BosonicMatrixElement,
     TestID -> "BME-Modes-ExponentialUnevaluated"
 ]

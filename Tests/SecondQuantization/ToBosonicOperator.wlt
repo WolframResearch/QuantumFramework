@@ -1,21 +1,24 @@
 Needs["Wolfram`QuantumFramework`"]
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
+$v = FieldVariables[];
+$vab = FieldVariables[{\[FormalA], \[FormalB]}];
+
 
 BeginTestSection["ToBosonicOperator - single mode"]
 
 (* a^dagger a (number operator) via ** matches direct composition *)
 VerificationTest[
     With[{a = AnnihilationOperator[6]},
-        ToBosonicOperator[SuperDagger[\[FormalA]] ** \[FormalA], 6]["Matrix"] == (SuperDagger[a] @ a)["Matrix"]
+        ToBosonicOperator[SuperDagger[\[FormalA]] ** \[FormalA], $v, 6]["Matrix"] == (SuperDagger[a] @ a)["Matrix"]
     ],
     True,
     TestID -> "ToBosonicOperator-NumberOperator"
 ]
 
-(* Only the dagger appears; automatic var detection must still find the mode *)
+(* Only the creator appears; it realizes as the adjoint of its mode *)
 VerificationTest[
-    ToBosonicOperator[SuperDagger[\[FormalA]], 6]["Matrix"] == AnnihilationOperator[6]["Dagger"]["Matrix"],
+    ToBosonicOperator[SuperDagger[\[FormalA]], $v, 6]["Matrix"] == AnnihilationOperator[6]["Dagger"]["Matrix"],
     True,
     TestID -> "ToBosonicOperator-OnlyDagger"
 ]
@@ -23,7 +26,7 @@ VerificationTest[
 (* (a^dagger)^2 a^2 via repeated ** matches direct repeated composition *)
 VerificationTest[
     With[{a = AnnihilationOperator[]},
-        ToBosonicOperator[SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA], $FockSize]["Matrix"] ==
+        ToBosonicOperator[SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA], $v, $FockSize]["Matrix"] ==
             (SuperDagger[a] @ SuperDagger[a] @ a @ a)["Matrix"]
     ],
     True,
@@ -32,7 +35,7 @@ VerificationTest[
 
 (* Explicit size overrides $FockSize *)
 VerificationTest[
-    ToBosonicOperator[SuperDagger[\[FormalA]] ** \[FormalA], {\[FormalA]}, 8]["Matrix"] ==
+    ToBosonicOperator[SuperDagger[\[FormalA]] ** \[FormalA], $v, 8]["Matrix"] ==
         (SuperDagger[AnnihilationOperator[8]] @ AnnihilationOperator[8])["Matrix"],
     True,
     TestID -> "ToBosonicOperator-ExplicitSize"
@@ -44,6 +47,7 @@ VerificationTest[
         ToBosonicOperator[
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] **
                 GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2],
+            $v,
             6
         ]["Matrix"] == (SuperDagger[a] @ SuperDagger[a] @ a @ a)["Matrix"]
     ],
@@ -55,7 +59,7 @@ VerificationTest[
 VerificationTest[
     With[{alpha = 0.3 + 0.1 I, a = AnnihilationOperator[6]},
         With[{concreteGen = alpha SuperDagger[a] - Conjugate[alpha] a},
-            ToBosonicOperator[Exp[concreteGen], 6]["Matrix"] == Exp[concreteGen]["Matrix"]
+            ToBosonicOperator[Exp[concreteGen], $v, 6]["Matrix"] == Exp[concreteGen]["Matrix"]
         ]
     ],
     True,
@@ -71,8 +75,8 @@ BeginTestSection["ToBosonicOperator - two mode"]
    local names via Module, as FieldVariables[] is typically used throughout this codebase *)
 VerificationTest[
     Module[{a1 = AnnihilationOperator[6, {1}], a2 = AnnihilationOperator[6, {2}], v1, v1dag, v2, v2dag},
-        {v1, v1dag, v2, v2dag} = FieldVariables[{1, 2}];
-        ToBosonicOperator[v1dag ** v2 + v2dag ** v1, {v1, v2}, 6]["Matrix"] ==
+        {{v1dag, v2dag}, {v1, v2}} = FieldVariables[{1, 2}];
+        ToBosonicOperator[v1dag ** v2 + v2dag ** v1, FieldVariables[{1, 2}], 6]["Matrix"] ==
             (SuperDagger[a1] @ a2 + SuperDagger[a2] @ a1)["Matrix"]
     ],
     True,
@@ -81,7 +85,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{a1 = AnnihilationOperator[4, {1}], a2 = AnnihilationOperator[4, {2}]},
-        ToBosonicOperator[\[FormalA] ** \[FormalB] + SuperDagger[\[FormalA]], 4]["Matrix"] ==
+        ToBosonicOperator[\[FormalA] ** \[FormalB] + SuperDagger[\[FormalA]], $vab, 4]["Matrix"] ==
             (a1 @ a2 + SuperDagger[a1])["Matrix"]
     ],
     True,
@@ -91,7 +95,7 @@ VerificationTest[
 VerificationTest[
     Module[{a1 = AnnihilationOperator[4, {1}], a2 = AnnihilationOperator[4, {2}]},
         Chop[Norm[Flatten[
-            ToBosonicOperator[Exp[0.1 (\[FormalA] ** \[FormalB] + SuperDagger[\[FormalA]])], 4]["Matrix"] -
+            ToBosonicOperator[Exp[0.1 (\[FormalA] ** \[FormalB] + SuperDagger[\[FormalA]])], $vab, 4]["Matrix"] -
                 Exp[0.1 (a1 @ a2 + SuperDagger[a1])]["Matrix"]
         ]]]
     ],
@@ -102,7 +106,8 @@ VerificationTest[
 VerificationTest[
     With[{a = AnnihilationOperator[6]},
         ToBosonicOperator[
-            Evaluate @ BosonicNormalOrder[\[FormalA] ** SuperDagger[\[FormalA]] ** \[FormalA], FieldVariables[]],
+            Evaluate @ BosonicNormalOrder[\[FormalA] ** SuperDagger[\[FormalA]] ** \[FormalA], $v],
+            $v,
             6
         ]["Matrix"] == (a + SuperDagger[a] @ a @ a)["Matrix"]
     ],
@@ -122,7 +127,7 @@ BeginTestSection["ToBosonicOperator - exponentials and other wrapping functions"
 VerificationTest[
     Module[{alpha = 0.3 + 0.1 I, a = AnnihilationOperator[6]},
         Chop[Norm[Flatten[
-            ToBosonicOperator[Exp[alpha SuperDagger[\[FormalA]] - Conjugate[alpha] \[FormalA]], 6]["Matrix"] -
+            ToBosonicOperator[Exp[alpha SuperDagger[\[FormalA]] - Conjugate[alpha] \[FormalA]], $v, 6]["Matrix"] -
                 MatrixExp[alpha SuperDagger[a] - Conjugate[alpha] a]["Matrix"]
         ]]]
     ],
@@ -134,7 +139,7 @@ VerificationTest[
 VerificationTest[
     Module[{alpha = 0.3 + 0.1 I},
         Chop[Norm[Flatten[
-            ToBosonicOperator[Exp[alpha SuperDagger[\[FormalA]] - Conjugate[alpha] \[FormalA]], 6]["Matrix"] -
+            ToBosonicOperator[Exp[alpha SuperDagger[\[FormalA]] - Conjugate[alpha] \[FormalA]], $v, 6]["Matrix"] -
                 DisplacementOperator[alpha, 6, "Ordering" -> "Weak"]["Matrix"]
         ]]]
     ],
@@ -148,7 +153,7 @@ VerificationTest[
     Module[{alpha = 0.3 + 0.1 I, a = AnnihilationOperator[6], v = \[FormalA], vdag},
         vdag = SuperDagger[v];
         Chop[Norm[Flatten[
-            ToBosonicOperator[Exp[alpha vdag - Conjugate[alpha] v], {v}, 6]["Matrix"] -
+            ToBosonicOperator[Exp[alpha vdag - Conjugate[alpha] v], {{vdag}, {v}}, 6]["Matrix"] -
                 Exp[alpha SuperDagger[a] - Conjugate[alpha] a]["Matrix"]
         ]]]
     ],
@@ -160,7 +165,7 @@ VerificationTest[
 VerificationTest[
     With[{a = AnnihilationOperator[6]},
         Chop[Norm[Flatten[
-            ToBosonicOperator[Cos[SuperDagger[\[FormalA]] + \[FormalA]], 6]["Matrix"] -
+            ToBosonicOperator[Cos[SuperDagger[\[FormalA]] + \[FormalA]], $v, 6]["Matrix"] -
                 Cos[SuperDagger[a] + a]["Matrix"]
         ]]]
     ],
@@ -172,7 +177,7 @@ VerificationTest[
 VerificationTest[
     With[{a = AnnihilationOperator[6]},
         Chop[Norm[Flatten[
-            ToBosonicOperator[2^(SuperDagger[\[FormalA]] + \[FormalA]), 6]["Matrix"] -
+            ToBosonicOperator[2^(SuperDagger[\[FormalA]] + \[FormalA]), $v, 6]["Matrix"] -
                 MatrixExp[Log[2] (SuperDagger[a] + a)]["Matrix"]
         ]]]
     ],
