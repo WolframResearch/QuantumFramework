@@ -165,25 +165,25 @@ QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumO
 
 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
-    FullSimplify @ QuantumOperator[
-        Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]],
-        "Label" -> Subscript["R", "X"][angle]
+    If[ dimension == 2,
+        QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[1], "Label" -> Subscript["R", "X"][angle]],
+        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]], "Label" -> Subscript["R", "X"][angle]]
     ],
     opts
 ]
 
 QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
-    FullSimplify @ QuantumOperator[
-        Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]],
-        "Label" -> Subscript["R", "Y"][angle]
+    If[ dimension == 2,
+        QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[2], "Label" -> Subscript["R", "Y"][angle]],
+        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]], "Label" -> Subscript["R", "Y"][angle]]
     ],
     opts
 ]
 
 QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
-    FullSimplify @ QuantumOperator[
-        Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]],
-        "Label" -> Subscript["R", "Z"][angle]
+    If[ dimension == 2,
+        QuantumOperator[DiagonalMatrix[FullSimplify[{Exp[- I angle / 2], Exp[I angle / 2]}]], "Label" -> Subscript["R", "Z"][angle]],
+        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]], "Label" -> Subscript["R", "Z"][angle]]
     ],
     opts
 ]
