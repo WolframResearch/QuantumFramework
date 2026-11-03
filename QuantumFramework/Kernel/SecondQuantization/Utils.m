@@ -14,7 +14,7 @@ PackageExport["OperatorVariance"]
 
 PackageExport["FieldVariables"]
 
-PackageScope["OrderVariables"]
+PackageScope["ResolveLadderVariables"]
 
 PackageExport["ToBosonicOperator"]
 
@@ -53,6 +53,53 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 FormalSymbolQ[var_Symbol]:=StringStartsQ[ToString[FullForm[var]],"\\[Formal"];
 
 FormalSymbolQ[_]:=False;
+
+
+General::ladvars = "`1` does not declare ladder operators; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first, or a WeylAlgebra.";
+General::ladflat = "The flat list `1` is no longer accepted; write `2`, creators first.";
+General::ladpairs = "`1` lists one {creator, annihilator} pair per mode; write `2`, the creators of every mode first.";
+General::ladlen = "The creators `1` and the annihilators `2` differ in number.";
+General::ladvar = "`1` cannot name a ladder operator.";
+General::laddup = "`1` is declared more than once in `2`.";
+General::laddagger = "The annihilator `1` carries a dagger; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first.";
+General::ladpair = "The creator `1` is paired with `2` instead of `3`.";
+General::ladalg = "`1` is not a Weyl algebra.";
+
+daggerVariables[vars_] := With[{as = DeleteDuplicates[Flatten[vars] /. SuperDagger[v_] :> v]}, {SuperDagger /@ as, as}]
+
+ResolveLadderVariables[f_, alg_NonCommutativeAlgebra] :=
+    Replace[alg["Structure"], {
+        {"Weyl", vars_} :> ResolveLadderVariables[f, vars],
+        _ :> (Message[f::ladalg, alg]; $Failed)
+    }]
+
+ResolveLadderVariables[f_, vars : {Except[_List] ..}] := (Message[f::ladflat, vars, daggerVariables[vars]]; $Failed)
+
+ResolveLadderVariables[f_, vars : {cs : {__}, as : {__}}] :=
+    With[{
+        bad = SelectFirst[Join[cs, as],
+            NumericQ[#] || ! MatchQ[#, _Symbol | Except[Plus | Times | Power | List | NonCommutativeMultiply | GeneralizedPower, _Symbol][___]] &, None],
+        dup = FirstCase[Tally[Join[cs, as]], {v_, k_ /; k > 1} :> v, None],
+        cross = If[Length[cs] === Length[as],
+            FirstCase[Transpose[{cs, as}], {SuperDagger[x_], a_} /; x =!= a && MemberQ[as, x] :> {SuperDagger[x], a, x}, None], None]
+    },
+        Which[
+            ! FreeQ[vars, {___, x_, ___, SuperDagger[x_], ___} | {___, SuperDagger[x_], ___, x_, ___}],
+                Message[f::ladpairs, vars, daggerVariables[vars]]; $Failed,
+            Length[cs] =!= Length[as], Message[f::ladlen, cs, as]; $Failed,
+            bad =!= None, Message[f::ladvar, bad]; $Failed,
+            dup =!= None, Message[f::laddup, dup, vars]; $Failed,
+            MemberQ[as, _SuperDagger], Message[f::laddagger, FirstCase[as, _SuperDagger]]; $Failed,
+            cross =!= None, Message[f::ladpair, Sequence @@ cross]; $Failed,
+            True, <|
+                "Creators" -> cs, "Annihilators" -> as, "Generators" -> Join[cs, as],
+                "Algebra" -> WeylAlgebra[vars],
+                "Modes" -> AssociationThread[Join[cs, as], Join[#, #] & @ Range[Length[cs]]]
+            |>
+        ]
+    ]
+
+ResolveLadderVariables[f_, vars_] := (Message[f::ladvars, vars]; $Failed)
 
 
 $nonuls = {0. -> 0, 0. I -> 0, Complex[0., 0.] -> 0, Complex[x_, 0.] :> x,
@@ -101,20 +148,6 @@ LiftNCScalars[expr_, vars_List] := expr //. {
         FreeQ[c, Alternatives @@ vars] :>
             c NonCommutativeMultiply[x, y, z]
 }
-
-
-(* Working order for default behavior of NCA in version 15. *)
-OrderVariables[vars_List, direction_String : "Normal"] := Block[{annihilators, creators},
-
-    annihilators = Select[vars, FreeQ[#, SuperDagger] &];
-
-    creators     = Select[vars, !FreeQ[#, SuperDagger] &];
-
-    If[ direction === "Antinormal",
-        Join[Sort[annihilators],Sort[creators]],
-        Join[Sort[creators],Sort[annihilators]]
-    ]
-]
 
 
 ToBosonicOperator::usage =

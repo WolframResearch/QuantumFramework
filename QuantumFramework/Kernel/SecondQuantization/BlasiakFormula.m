@@ -2,176 +2,51 @@
 
 Package["Wolfram`QuantumFramework`SecondQuantization`"]
 
-PackageScope["BlasiakNormalOrder"]
-
 PackageScope["MultiModeBlasiakOrder"]
 
-PackageScope["ParseBlasiakMonomial"]
 
+General::ladpoly = "`1` is not a polynomial in the ladder operators."
 
-
-ncPower[_, 0] := 1
-ncPower[op_, 1] := op
-ncPower[op_, p_] := GeneralizedPower[NonCommutativeMultiply, op, p]
-
-blasiakBuildTerm[coeff_, 0, 0, b_, bdag_] := coeff
-blasiakBuildTerm[coeff_, 0, q_, b_, bdag_] := coeff ncPower[b, q]
-blasiakBuildTerm[coeff_, p_, 0, b_, bdag_] := coeff ncPower[bdag, p]
-blasiakBuildTerm[coeff_, p_, q_, b_, bdag_] := coeff ncPower[bdag, p] ** ncPower[b, q]
-
-
-
-blasiakExponentsQ[v_] := v =!= {} && VectorQ[v, IntegerQ[#] && NonNegative[#] &]
-
-
-blasiakCoefficient[cumVec_, powers_, k_] :=
-    (1 / k!) Sum[
-        Binomial[k, j] (-1)^(k - j) Times @@ MapThread[FactorialPower, {Most[cumVec] + j, powers}],
-        {j, 0, k}
-    ]
-
-
-BlasiakNormalOrder::badexponents =
-    "expected equal-length vectors of non-negative integers, got `1` and `2`"
-
-BlasiakNormalOrder[rList_ ? blasiakExponentsQ, sList_ ? blasiakExponentsQ, var_] /;
-    Length[rList] === Length[sList] :=
-With[{
-    excess = Total[rList - sList],
-    b = var,
-    bdag = SuperDagger[var]
-},
-    If[ excess >= 0,
-        With[{cumulative = FoldList[Plus, 0, rList - sList]},
-            Sum[
-                blasiakBuildTerm[
-                    blasiakCoefficient[cumulative, sList, k],
-                    excess + k, k, b, bdag
-                ],
-                {k, First[sList], Total[sList]}
-            ]
+(* A normal-ordered polynomial is <|{p1, \[Ellipsis], pn, q1, \[Ellipsis], qn} -> coefficient|>, and each mode of a product of two
+   normal-ordered monomials reorders by a^q a\[Dagger]^r = \[Sum]_k Binomial[q, k] FactorialPower[r, k] a\[Dagger]^(r-k) a^(q-k). *)
+blasiakProduct[n_][kp_ -> cp_, kq_ -> cq_] :=
+    (Join[#[[All, 1]], #[[All, 2]]] -> cp cq Times @@ #[[All, 3]]) & /@ Tuples @ Table[
+        With[{p = kp[[i]], q = kp[[n + i]], r = kq[[i]], s = kq[[n + i]]},
+            Table[{p + r - k, q + s - k, Binomial[q, k] FactorialPower[r, k]}, {k, 0, Min[q, r]}]
         ],
-
-        With[{
-            cumulative = FoldList[Plus, 0, Reverse[sList] - Reverse[rList]],
-            reversedPowers = Reverse[rList]
-        },
-            Sum[
-                blasiakBuildTerm[
-                    blasiakCoefficient[cumulative, reversedPowers, k],
-                    k, k - excess, b, bdag
-                ],
-                {k, Last[rList], Total[rList]}
-            ]
-        ]
+        {i, n}
     ]
-]
 
-BlasiakNormalOrder[rList_, sList_, var_] :=
-    (Message[BlasiakNormalOrder::badexponents, rList, sList]; $Failed)
+blasiakTimes[n_][pp_, qq_] := DeleteCases[Merge[Flatten @ Outer[blasiakProduct[n], Normal[pp], Normal[qq], 1], Total], 0]
 
-
-
-ParseBlasiakMonomial::badfactor = "unsupported non-ladder factor: `1`"
-
-blasiakFactorType[f_, var_, bdag_] := Replace[f, {
-    x_ /; x === var  :> {"b", 1},
-    x_ /; x === bdag :> {"bdag", 1},
-    GeneralizedPower[NonCommutativeMultiply, x_, n_] /; x === var  :> {"b", n},
-    GeneralizedPower[NonCommutativeMultiply, x_, n_] /; x === bdag :> {"bdag", n},
-    Power[x_, n_] /; x === var  :> {"b", n},
-    Power[x_, n_] /; x === bdag :> {"bdag", n},
-    _ :> {"unknown", 0}
-}]
-
-ParseBlasiakMonomial[expr_, var_] := Module[{factors, typed, bad, blocks},
-
-    factors = Replace[expr, {ncm_NonCommutativeMultiply :> List @@ ncm, e_ :> {e}}];
-    typed = blasiakFactorType[#, var, SuperDagger[var]] & /@ factors;
-
-    bad = FirstPosition[typed, {"unknown", _}, None, {1}];
-    If[ bad =!= None,
-        Message[ParseBlasiakMonomial::badfactor, factors[[First[bad]]]];
-        Return[$Failed, Module]
-    ];
-
-    blocks = {#[[1, 1]], Total[#[[All, 2]]]} & /@ Split[typed, First[#1] === First[#2] &];
-
-    blocks = Join[
-        If[blocks =!= {} && blocks[[1, 1]] === "b", {{"bdag", 0}}, {}],
-        blocks,
-        If[blocks =!= {} && blocks[[-1, 1]] === "bdag", {{"b", 0}}, {}]
-    ];
-
-    {Reverse[blocks[[1 ;; ;; 2, 2]]], Reverse[blocks[[2 ;; ;; 2, 2]]]}
-]
-
-
-
-blasiakModePolynomial[factors_List, {b_, bdag_}] :=
-With[{modeFactors = Select[factors, ! FreeQ[#, b | bdag] &]},
-    If[ modeFactors === {},
-        1,
-        Replace[
-            ParseBlasiakMonomial[NonCommutativeMultiply @@ modeFactors, b],
-            {
-                {rList_, sList_} :> BlasiakNormalOrder[rList, sList, b],
-                _ :> $Failed
-            }
-        ]
+blasiakPolynomial[lv_, e_] :=
+    With[{gens = Alternatives @@ lv["Generators"], zero = ConstantArray[0, Length[lv["Generators"]]], n = Length[lv["Creators"]]},
+        Replace[e, {
+            s_ /; FreeQ[s, gens] :> <|zero -> s|>,
+            g : gens :> <|Boole[SameQ[g, #]] & /@ lv["Generators"] -> 1|>,
+            (GeneralizedPower[NonCommutativeMultiply, g : gens, k_Integer ? NonNegative] | Power[g : gens, k_Integer ? NonNegative]) :>
+                <|k (Boole[SameQ[g, #]] & /@ lv["Generators"]) -> 1|>,
+            (GeneralizedPower[NonCommutativeMultiply, x_, k_Integer ? NonNegative] | Power[x_, k_Integer ? NonNegative]) :>
+                With[{px = blasiakPolynomial[lv, x]}, Nest[blasiakTimes[n][#, px] &, <|zero -> 1|>, k]],
+            s_Plus :> Merge[blasiakPolynomial[lv, #] & /@ List @@ s, Total],
+            m_NonCommutativeMultiply :> Fold[blasiakTimes[n], blasiakPolynomial[lv, #] & /@ List @@ m],
+            t_Times :> With[{op = Select[List @@ t, ! FreeQ[#, gens] &]},
+                If[Length[op] === 1, t / First[op] blasiakPolynomial[lv, First[op]], Throw[t, "ladpoly"]]
+            ],
+            f_ :> Throw[f, "ladpoly"]
+        }]
     ]
-]
 
+blasiakWord[lv_, e_] :=
+    Replace[
+        MapThread[Replace[{#1, #2}, {{_, 0} -> Nothing, {g_, 1} :> g, {g_, k_} :> GeneralizedPower[NonCommutativeMultiply, g, k]}] &,
+            {lv["Generators"], e}],
+        {{} -> 1, {x_} :> x, w_ :> NonCommutativeMultiply @@ w}
+    ]
 
-MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=
-With[{altVars = Alternatives @@ vars},
-Module[{expr, factors, scalarFactors, modePolys, result},
-
-    expr = exprIn //. {
-        GeneralizedPower[NonCommutativeMultiply,
-            NonCommutativeMultiply[args__], n_Integer ? Positive] :>
-                NonCommutativeMultiply @@ Flatten[ConstantArray[{args}, n]],
-        Power[NonCommutativeMultiply[args__], n_Integer ? Positive] :>
-            NonCommutativeMultiply @@ Flatten[ConstantArray[{args}, n]],
-        NonCommutativeMultiply[a___, NonCommutativeMultiply[b__], c___] :>
-            NonCommutativeMultiply[a, b, c]
-    };
-
-    expr = LiftNCScalars[expr, vars];
-
-    factors = Catenate @ Map[
-        Replace[{ncm_NonCommutativeMultiply :> List @@ ncm, f_ :> {f}}],
-        Replace[expr, {p : (_Times | _NonCommutativeMultiply) :> List @@ p, e_ :> {e}}]
-    ];
-
-    {scalarFactors, factors} =
-        Lookup[GroupBy[factors, FreeQ[#, altVars] &], {True, False}, {}];
-
-    modePolys = blasiakModePolynomial[factors, #] & /@ Partition[vars, 2];
-
-    If[ MemberQ[modePolys, $Failed], Return[$Failed, Module] ];
-
-    result = NonCommutativeMultiply @@ DeleteCases[modePolys, 1];
-
-    result = result //. {
-        NonCommutativeMultiply[a___, b_ + c_, d___] :>
-            NonCommutativeMultiply[a, b, d] + NonCommutativeMultiply[a, c, d],
-        NonCommutativeMultiply[a___, Times[c_, b__], d___] /; FreeQ[c, altVars] :>
-            c NonCommutativeMultiply[a, b, d],
-        NonCommutativeMultiply[a___, c_, d___] /; FreeQ[c, altVars] :>
-            c NonCommutativeMultiply[a, d]
-    };
-
-    result = result /. {
-        NonCommutativeMultiply[x_] :> x,
-        NonCommutativeMultiply[] -> 1
-    };
-
-    result = result /. NonCommutativeMultiply[args__] :>
-        NonCommutativeMultiply @@ SortBy[{args}, {
-            FreeQ[#, SuperDagger] &,
-            First @ FirstPosition[vars, v_ /; ! FreeQ[#, v], {Infinity}, {1}] &
-        }];
-
-    (Times @@ scalarFactors) result
-]]
+MultiModeBlasiakOrder[expr_, lv_Association, f_] :=
+    Catch[
+        Total @ KeyValueMap[#2 blasiakWord[lv, #1] &, DeleteCases[Expand /@ blasiakPolynomial[lv, expr], 0]],
+        "ladpoly",
+        (Message[f::ladpoly, #1]; $Failed) &
+    ]

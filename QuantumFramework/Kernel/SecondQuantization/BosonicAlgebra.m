@@ -2,8 +2,6 @@
 
 Package["Wolfram`QuantumFramework`SecondQuantization`"]
 
-PackageExport["BosonicRelations"]
-
 PackageExport["BosonicNormalOrder"]
 
 PackageExport["BosonicAntinormalOrder"]
@@ -19,194 +17,98 @@ PackageExport["BosonicMatrixElement"]
 PackageScope["vevPolynomialQ"]
 
 
-BosonicRelations::usage =
-"\!\(\*RowBox[{\"BosonicRelations\", \"[\", RowBox[{StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns the list of bosonic commutation relations for the operators in vars.";
-
-BosonicRelations[vars_List] :=
-Block[{pairs},
-    pairs = Subsets[LexicographicSort@vars, {2}];
-    Map[
-        If[ MatchQ[#, {x_, SuperDagger[x_]} | {SuperDagger[x_], x_}],
-            Commutator[#[[1]], #[[2]]] - 1,
-            Commutator[#[[1]], #[[2]]]
-        ] &,
-        pairs
-    ]
-]
-
-
-grobnerNormalOrder[expr_, vars_List, scalars_List, direction_String : "Normal"] :=
-Block[{
-    orderedVars = OrderVariables[vars, direction],
-    rels,
-    alg
-},
-    rels = BosonicRelations[vars];
-    If[ Length[scalars] > 0,
-        alg = NonCommutativeAlgebra["ScalarVariables" -> scalars];
-        NonCommutativePolynomialReduce[expr, rels, orderedVars, alg][[2]],
-        NonCommutativePolynomialReduce[expr, rels, NonCommutativeAlgebra[<|"Generators"-> orderedVars|>]][[2]]
-    ]
-]
-
-
 BosonicNormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings expr into normal order using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: Automatic (default), \"GrobnerBasis\", or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
+"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings expr into normal order, where vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra declares the creators and annihilators, with [\!\(\*SubscriptBox[\"a\", \"i\"]\), \!\(\*SubscriptBox[\"c\", \"i\"]\)] = 1.\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the method: Automatic (default) or \"Blasiak\".";
 
 BosonicNormalOrder::unknownMethod = "Unknown Method: `1`."
 
-Options[BosonicNormalOrder] = {Method -> Automatic, "Scalars" -> {}}
+Options[BosonicNormalOrder] = {Method -> Automatic}
 
-(* Ordering is linear: a sum maps over its summands, and the map stays on
-   this kernel (parallel sub-kernels do not load the paclet).  A summand the
-   monomial reducer rejects fails the whole sum rather than leaving a
-   $Failed inside a Plus. *)
-linearOverSums[f_][expr_] :=
-    If[ MatchQ[expr, _Plus],
-        Replace[Map[f, expr], p_ /; ! FreeQ[p, $Failed] :> $Failed],
-        f[expr]
+expandCoefficients[expr_, lv_] :=
+    With[{mono = _NonCommutativeMultiply | GeneralizedPower[NonCommutativeMultiply, Alternatives @@ lv["Generators"], _] | Alternatives @@ lv["Generators"]},
+        Total @ KeyValueMap[Expand[Total[#2]] #1 &,
+            GroupBy[
+                Replace[Replace[expr, {s_Plus :> List @@ s, s_ :> {s}}],
+                    {m : mono :> {m, 1}, Times[c__, m : mono] :> {m, Times[c]}, c_ :> {1, c}}, {1}],
+                First -> Last
+            ]
+        ]
     ]
 
-(* With no field variables there is nothing to reduce: a c-number is already in
-   normal order, so return it unchanged. *)
-BosonicNormalOrder[expr_, {}, OptionsPattern[]] := expr
+ladderOrder[lv_, Automatic, _] :=
+    expandCoefficients[
+        NonCommutativeExpand[
+            # //. GeneralizedPower[NonCommutativeMultiply, w_NonCommutativeMultiply, k_Integer ? Positive] :>
+                NonCommutativeMultiply @@ Catenate[ConstantArray[List @@ w, k]],
+            lv["Algebra"]
+        ],
+        lv
+    ] &
 
-BosonicNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
-With[{
-    method = OptionValue[Method],
-    scalars = OptionValue["Scalars"],
-    all = vevVars[vars]
-},
-    Replace[method, {
-        (* NonCommutativePolynomialReduce reduces a whole Plus itself. *)
-        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, all, scalars],
-        (* MultiModeBlasiakOrder takes one monomial at a time. *)
-        "Blasiak" :> linearOverSums[MultiModeBlasiakOrder[#, all, scalars] &][expr],
-        _ :> (Message[BosonicNormalOrder::unknownMethod, method]; $Failed)
-    }]
-]
+ladderOrder[lv_, "Blasiak", f_] := MultiModeBlasiakOrder[#, lv, f] &
+
+BosonicNormalOrder[expr_, vars_, OptionsPattern[]] :=
+    With[{lv = ResolveLadderVariables[BosonicNormalOrder, vars], method = OptionValue[Method]},
+        Which[
+            lv === $Failed, $Failed,
+            ! MatchQ[method, Automatic | "Blasiak"], Message[BosonicNormalOrder::unknownMethod, method]; $Failed,
+            True, ladderOrder[lv, method, BosonicNormalOrder][expr]
+        ]
+    ]
 
 
 (* a -> a\[Dagger], a\[Dagger] -> -a is an automorphism ([a\[Dagger], -a] = 1) carrying a normal-ordered
    monomial to an anti-ordered one, so conjugating by it turns any normal-ordering
    method into an anti-normal one.  "Inverse" maps the result back. *)
-ladderSwap[expr_, vars_List, direction_String : "Forward"] :=
-Block[{
-    swap = Catenate @ Map[
-        If[ direction === "Inverse",
-            {SuperDagger[#] -> #, # -> -SuperDagger[#]} &,
-            {SuperDagger[#] -> -#, # -> SuperDagger[#]} &
+ladderSwap[expr_, lv_Association, direction_String : "Forward"] :=
+    LiftNCScalars[
+        expr /. If[ direction === "Inverse",
+            Join[Thread[lv["Creators"] -> lv["Annihilators"]], Thread[lv["Annihilators"] -> -lv["Creators"]]],
+            Join[Thread[lv["Creators"] -> -lv["Annihilators"]], Thread[lv["Annihilators"] -> lv["Creators"]]]
         ],
-        Select[vars, FreeQ[#, SuperDagger] &]
+        lv["Generators"]
     ]
-},
-    LiftNCScalars[expr /. swap, vars]
-]
 
 
 BosonicAntinormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilation operator to the left of every creation operator, using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: Automatic (default), \"GrobnerBasis\", or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
+"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilator to the left of every creator, where vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra declares the ladder operators.\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the method: Automatic (default) or \"Blasiak\".";
 
 BosonicAntinormalOrder::unknownMethod = "Unknown Method: `1`."
 
 Options[BosonicAntinormalOrder] = Options[BosonicNormalOrder]
 
-(* With no field variables there is nothing to reorder: a c-number is already in
-   anti-normal order, so return it unchanged. *)
-BosonicAntinormalOrder[expr_, {}, OptionsPattern[]] := expr
-
-BosonicAntinormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
-With[{
-    method = OptionValue[Method],
-    scalars = OptionValue["Scalars"],
-    all = vevVars[vars]
-},
-    Replace[method, {
-        (* NonCommutativePolynomialReduce reduces a whole Plus itself. *)
-        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, all, scalars, "Antinormal"],
-        (* Normal-order each swapped monomial, then swap back. *)
-        "Blasiak" :> linearOverSums[
-            ladderSwap[
-                MultiModeBlasiakOrder[ladderSwap[#, all], all, scalars],
-                all,
-                "Inverse"
-            ] &
-        ][expr],
-        _ :> (Message[BosonicAntinormalOrder::unknownMethod, method]; $Failed)
-    }]
-]
-
-
-bosonicReduce[poly_, ncVars_List] :=
-Block[{rels, scalars, alg},
-    rels = BosonicRelations[ncVars];
-    scalars = DeleteDuplicates @ Cases[
-        {poly},
-        s_Symbol /; !FormalSymbolQ[s] && !MemberQ[ncVars, s] && !NumericQ[s],
-        Infinity
-    ];
-    alg = NonCommutativeAlgebra["ScalarVariables" -> scalars];
-    NonCommutativePolynomialReduce[poly, rels, OrderVariables[ncVars], alg][[2]]
-]
-
-
-BosonicBCHTerms::usage =
-"\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"]\"}]\) Computes the nth-order term of the BCH series log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]), reduced using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"ncVars\", \"TI\"]}], \"]\"}]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
-
-BosonicBCHTerms[ops_List, n_Integer] := BosonicBCHTerms[ops, n, ExtractNCVars[ops]]
-
-BosonicBCHTerms[ops_List, n_Integer, ncVars_List] :=
-Block[{bchTerm},
-    bchTerm = ResourceFunction["BakerCampbellHausdorffTerms"][ops, n];
-    bosonicReduce[NonCommutativeExpand[bchTerm], ncVars]
-]
-
-
-BosonicZassenhausTerms::usage =
-"\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"]\"}]\) Computes the nth term of the Zassenhaus formula and reduces the expression using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"ncVars\", \"TI\"]}], \"]\"}]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
-
-BosonicZassenhausTerms[ops_List, n_Integer] := BosonicZassenhausTerms[ops, n, ExtractNCVars[ops]]
-
-BosonicZassenhausTerms[ops_List, n_Integer, ncVars_List] :=
-Block[{zassTerm},
-    zassTerm = ResourceFunction["ZassenhausTerms"][ops, n];
-    bosonicReduce[NonCommutativeExpand[zassTerm], ncVars]
-]
-
-
-BosonicVEV::usage =
-"\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] by normal-ordering expr and extracting the scalar (c-number) part.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"]}], \"]\"}]\) Auto-detects non-commutative variables from expr.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Passes method options to BosonicNormalOrder.";
-
-BosonicVEV::novars =
-"No field variables were recognized in `1`. Ladder operators must be Formal symbols (see FieldVariables), or be given explicitly as BosonicVEV[expr, vars]."
-
-Options[BosonicVEV] = Options[BosonicNormalOrder];
-
-BosonicVEV[expr_, opts : OptionsPattern[]] :=
-    With[{vars = ExtractNCVars[{expr}]},
-        (* Non-formal symbols are scalars, so with no field variables the only
-           operator structure left is a ** joining c-numbers; SuperDagger instead
-           means ladder operators were meant but not written as Formal symbols.
-           Short-circuit before re-dispatching: BosonicVEV[expr, {}] would re-match
-           this same rule ({} is absorbed as empty options), so calling it here would
-           recurse without bound. *)
-        With[{value = Which[
-            vars =!= {},
-                BosonicVEV[expr, vars, opts],
-            FreeQ[expr, SuperDagger],
-                vevCollapse[expr],
-            True,
-                Message[BosonicVEV::novars, expr]; $Failed
-        ]},
-            (* An unevaluated inner call means there is nothing to read off; let
-               this call stay unevaluated too rather than echo the vars back. *)
-            value /; ! MatchQ[value, _BosonicVEV]
+BosonicAntinormalOrder[expr_, vars_, OptionsPattern[]] :=
+    With[{lv = ResolveLadderVariables[BosonicAntinormalOrder, vars], method = OptionValue[Method]},
+        Which[
+            lv === $Failed, $Failed,
+            ! MatchQ[method, Automatic | "Blasiak"], Message[BosonicAntinormalOrder::unknownMethod, method]; $Failed,
+            True, ladderSwap[ladderOrder[lv, method, BosonicAntinormalOrder][ladderSwap[expr, lv]], lv, "Inverse"]
         ]
     ]
 
-vevVars[vars_List] :=
-    DeleteDuplicates @
-        Catenate[{#, SuperDagger[#]} & /@ DeleteDuplicates[vars /. SuperDagger[v_] :> v]]
+
+BosonicBCHTerms::usage =
+"\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the nth-order term of the BCH series log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]) in normal order, for the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra.";
+
+BosonicBCHTerms[ops_List, n_Integer, vars_] :=
+    Replace[ResolveLadderVariables[BosonicBCHTerms, vars],
+        lv_Association :> NonCommutativeExpand[ResourceFunction["BakerCampbellHausdorffTerms"][ops, n], lv["Algebra"]]
+    ]
+
+
+BosonicZassenhausTerms::usage =
+"\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the nth term of the Zassenhaus formula in normal order, for the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra.";
+
+BosonicZassenhausTerms[ops_List, n_Integer, vars_] :=
+    Replace[ResolveLadderVariables[BosonicZassenhausTerms, vars],
+        lv_Association :> NonCommutativeExpand[ResourceFunction["ZassenhausTerms"][ops, n], lv["Algebra"]]
+    ]
+
+
+BosonicVEV::usage =
+"\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] for the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra, by normal ordering expr and keeping its c-number part.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Passes the method to BosonicNormalOrder.";
+
+Options[BosonicVEV] = Options[BosonicNormalOrder];
 
 vevCollapse[expr_] := expr //. {
     GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
@@ -218,13 +120,12 @@ vevPolynomialQ[expr_, vars_] :=
         PolynomialQ[vevCollapse[expr] /. Thread[vars -> syms], syms]
     ]
 
-(* The condition sits on the left-hand side so a non-polynomial never reaches
-   BosonicNormalOrder: the reducer would both fail and leak its own messages. *)
-BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] /;
-        vevPolynomialQ[expr, vevVars[vars]] :=
-    With[{all = vevVars[vars]},
-        vevCollapse[BosonicNormalOrder[expr, all, opts] /. $nonuls] /.
-            (Alternatives @@ all -> 0)
+BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
+    With[{lv = ResolveLadderVariables[BosonicVEV, vars]},
+        If[ lv === $Failed,
+            $Failed,
+            vevCollapse[BosonicNormalOrder[expr, vars, opts] /. $nonuls] /. Thread[lv["Generators"] -> 0]
+        ] /; lv === $Failed || vevPolynomialQ[expr, lv["Generators"]]
     ]
 
 
@@ -271,7 +172,7 @@ coherentOverlap[\[Alpha]_, \[Beta]_] :=
 ladderSum[element_, {ms_, ns_}, expr_, vs_List] :=
     Module[{x, y, k = Length[vs], vars, p},
         vars = Join[Array[x, k], Array[y, k]];
-        p = Expand[vevCollapse[BosonicNormalOrder[expr, vevVars[vs]]] /. Thread[Join[SuperDagger /@ vs, vs] -> vars]];
+        p = Expand[vevCollapse[BosonicNormalOrder[expr, {SuperDagger /@ vs, vs}]] /. Thread[Join[SuperDagger /@ vs, vs] -> vars]];
         Which[
             p === 0, 0,
             k == 1,
@@ -325,7 +226,7 @@ BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
         ] /;
             Length[ms] === Length[vs] && Length[ns] === Length[vs] &&
                 FreeQ[expr, _QuantumOperator | _QuantumState] &&
-                    vevPolynomialQ[expr, vevVars[vs]]
+                    vevPolynomialQ[expr, Join[SuperDagger /@ vs, vs]]
     ]
 
 

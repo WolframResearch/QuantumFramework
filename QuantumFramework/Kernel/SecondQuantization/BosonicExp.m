@@ -97,10 +97,10 @@ rulesNO = {
         ],
 
     Exp[alpha_. v_?FormalSymbolQ] ** expr_ /; shiftPolynomialQ[expr, v] :>
-        BosonicNormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] + alpha}, {v, SuperDagger[v]}] ** Exp[alpha v],
+        BosonicNormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] + alpha}, {{SuperDagger[v]}, {v}}] ** Exp[alpha v],
 
     expr_ ** Exp[beta_. SuperDagger[v_?FormalSymbolQ]] /; shiftPolynomialQ[expr, v] :>
-        Exp[beta SuperDagger[v]] ** BosonicNormalOrder[expr /. {SuperDagger[v]-> SuperDagger[v], v -> v + beta}, {v, SuperDagger[v]}],
+        Exp[beta SuperDagger[v]] ** BosonicNormalOrder[expr /. {SuperDagger[v]-> SuperDagger[v], v -> v + beta}, {{SuperDagger[v]}, {v}}],
 
     Exp[lambda_*(adagL : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])) **
             v_?FormalSymbolQ ** (adagR : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _]))] :>
@@ -162,10 +162,10 @@ rulesAN = {
         ],
 
     expr_ ** Exp[alpha_. v_?FormalSymbolQ] /; shiftPolynomialQ[expr, v] :>
-        Exp[alpha v] ** BosonicAntinormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] - alpha}, {v, SuperDagger[v]}],
+        Exp[alpha v] ** BosonicAntinormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] - alpha}, {{SuperDagger[v]}, {v}}],
 
     Exp[beta_. SuperDagger[v_?FormalSymbolQ]] ** expr_ /; shiftPolynomialQ[expr, v] :>
-        BosonicAntinormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v], v -> v - beta}, {v, SuperDagger[v]}] ** Exp[beta SuperDagger[v]],
+        BosonicAntinormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v], v -> v - beta}, {{SuperDagger[v]}, {v}}] ** Exp[beta SuperDagger[v]],
 
     Exp[lambda_*(aL : (v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, _])) **
             SuperDagger[v_?FormalSymbolQ] ** (aR : (v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, _]))] :>
@@ -384,7 +384,7 @@ ncCommutator[a_, b_, vars_, scalars_] :=
 ncCommutator[a_, b_, vars_, scalars_, assum_] :=
     ncCommutator[a, b, vars, scalars, assum] =
         Simplify[
-            BosonicNormalOrder[Commutator[a, b], vars, "Scalars" -> scalars],
+            BosonicNormalOrder[Commutator[a, b], {SuperDagger /@ #, #} & @ Sort @ DeleteDuplicates[vars /. SuperDagger[w_] :> w]],
             assum
         ]
 
