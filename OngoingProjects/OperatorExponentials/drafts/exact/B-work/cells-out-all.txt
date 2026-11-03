@@ -1,0 +1,105 @@
+=== 01 (0. s) messages: {}
+{f1*g1 + f2*g2, 0, 0}
+
+=== 02 (0. s) messages: {}
+k11*kb11 + 2*k12*kb12 + k22*kb22
+
+=== 04 (0. s) messages: {}
+I
+
+=== 05 (0. s) messages: {}
+{KroneckerDelta[0, m], {{1, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}
+
+=== 06 (0. s) messages: {}
+{1 + 3*z*zb + z^2*zb^2, 0}
+
+=== 07 (0. s) messages: {}
+{1 + 3*al*Conjugate[al] + al^2*Conjugate[al]^2, 0}
+
+=== 08 (0. s) messages: {}
+{0, 0}
+
+=== 10 (0.2 s) messages: {}
+{E^(f*SuperDagger[\[FormalA]1])**E^(-(\[FormalA]1*Conjugate[f]))/E^((f*Conjugate[f])/2), f^n/Sqrt[n!], E^(f*fb), (f^n*fb^n)/(E^(f*fb)*n!)}
+
+=== 11 (0.1 s) messages: {}
+E^(-Abs[al]^2)
+
+=== 16 (0. s) messages: {}
+{2*z*zb + z^3*zb + 4*z^2*zb^2 + z^3*zb^3, 0}
+
+=== 17 (0.6 s) messages: {}
+{NormalOrdered[E^((-1 + E^(-b))*SuperDagger[\[FormalA]1]**\[FormalA]1)], E^b/(-1 + E^b), 0}
+
+=== 27 (0. s) messages: {}
+{\[FormalA]1 + f, \[FormalA]1*Cosh[Sqrt[x*xb]] + (x*Sinh[Sqrt[x*xb]]*SuperDagger[\[FormalA]1])/Sqrt[x*xb], (\[FormalA]1*xb*Sinh[Sqrt[x*xb]])/Sqrt[x*xb] + Cosh[Sqrt[x*xb]]*SuperDagger[\[FormalA]1]}
+
+=== 28 (0.1 s) messages: {}
+{{{5/(3*Sqrt[2]), ((-5*I)/3)/Sqrt[2], (2*Sqrt[2])/3, ((2*I)/3)*Sqrt[2]}, {(-I)/Sqrt[2], 1/Sqrt[2], 0, 0}, {(2*Sqrt[2])/3, ((-2*I)/3)*Sqrt[2], 5/(3*Sqrt[2]), ((5*I)/3)/Sqrt[2]}, {0, 0, I/Sqrt[2], 1/Sqrt[2]}}, {{{0, 0, 0, 0}, {0, 0, 0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}}}
+
+=== 30 (0. s) messages: {}
+{{{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, 4/5, 4/5, 4/3}
+
+=== 31 (0.6 s) messages: {}
+{E^(-((e*r*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]2]*Tan[Sqrt[-(e*eb*r^2)]])/Sqrt[-(e*eb*r^2)]))**Sec[Sqrt[-(e*eb*r^2)]]^(SuperDagger[\[FormalA]1]**\[FormalA]1 + SuperDagger[\[FormalA]2]**\[FormalA]2)**E^((eb*r*\[FormalA]1**\[FormalA]2*Tan[Sqrt[-(e*eb*r^2)]])/Sqrt[-(e*eb*r^2)])*Sec[Sqrt[-(e*eb*r^2)]], 0}
+
+=== 32 (0.5 s) messages: {}
+{E^(-1/2*(E^(I*Arg[xi])*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]1]*Tanh[Abs[xi]]))**Sech[Abs[xi]]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((\[FormalA]1**\[FormalA]1*Tanh[Abs[xi]])/(2*E^(I*Arg[xi]))), E^(-(f*SuperDagger[\[FormalA]1]))**E^(\[FormalA]1*Conjugate[f])/E^((f*Conjugate[f])/2), E^((f^2*Tanh[r])/(2*E^(I*phi)))*E^(-(f*SuperDagger[\[FormalA]1]))**E^(((-2*\[FormalA]1*f + \[FormalA]1**\[FormalA]1)*Tanh[r])/(2*E^(I*phi))), E^(-1/2*(f*fb) + (f^2*Tanh[r])/(2*E^(I*phi)))*Sqrt[Sech[r]], 0}
+
+=== 33 (0. s) messages: {}
+{E^((f^2*Tanh[r])/(2*E^(I*phi)))*E^(-(f*SuperDagger[\[FormalA]1]))**E^(((-2*\[FormalA]1*f + \[FormalA]1**\[FormalA]1)*Tanh[r])/(2*E^(I*phi))), E^(-(f*Sech[r]*SuperDagger[\[FormalA]1])), 0}
+
+=== 34 (0. s) messages: {}
+{E^(-(f*SuperDagger[\[FormalA]1]))**E^(\[FormalA]1*Conjugate[f])/E^((f*Conjugate[f])/2), \[FormalA]1 + f}
+
+=== 35 (1.7 s) messages: {}
+{E^(-1/2*(E^(I*Arg[xi])*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]1]*Tanh[Abs[xi]]))**Sech[Abs[xi]]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((\[FormalA]1**\[FormalA]1*Tanh[Abs[xi]])/(2*E^(I*Arg[xi]))), \[FormalA]1*Cosh[Sqrt[x*xb]] + (x*Sinh[Sqrt[x*xb]]*SuperDagger[\[FormalA]1])/Sqrt[x*xb], {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}}}
+
+=== 36 (0.9 s) messages: {}
+{{{Cos[th], -(E^(I*chi)*Sin[th])}, {Sin[th]/E^(I*chi), Cos[th]}}, 0}
+
+=== 38 (0.2 s) messages: {}
+{NormalOrdered[E^(-(lam*SuperDagger[\[FormalA]1]**\[FormalA]1))], E^(-1/2*(E^(I*Arg[-xi])*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]1]*Tanh[Abs[xi]]))**Sech[Abs[xi]]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((\[FormalA]1**\[FormalA]1*Tanh[Abs[xi]])/(2*E^(I*Arg[-xi]))), E^(y*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], 2]*(Cosh[2*Sqrt[l^2]] + (l*Sinh[2*Sqrt[l^2]])/Sqrt[l^2])), 1/Sqrt[1 - 4*x*yy], 0}
+
+=== 43 (0. s) messages: {}
+{0, 0}
+
+=== 45 (0. s) messages: {}
+{{0, 0}, {0, 0}}
+
+=== 49 (1.7 s) messages: {}
+{NormalOrdered[E^((-1 + xi^c)*SuperDagger[\[FormalA]1]**\[FormalA]1)], ConditionalExpression[(c*n - z)^(-1), Re[c*n] > Re[z]]}
+
+=== 51 (0. s) messages: {}
+{0, (2*f*fb*g^2)/w}
+
+=== 52 (0. s) messages: {}
+0
+
+=== 53 (0. s) messages: {}
+{1, 0}
+
+=== 58 (0. s) messages: {}
+{2*u12, 2*u11, 0}
+
+=== 60 (0.1 s) messages: {}
+{\[FormalA]1*E^(I*t*w), SuperDagger[\[FormalA]1]/E^(I*t*w)}
+
+=== 61 (0. s) messages: {}
+E^((-I)*t1*w + I*t2*w)
+
+=== 62 (0. s) messages: {}
+0
+
+=== 68 (0. s) messages: {}
+NormalOrdered[E^((-1 + E^(I*t*w))*SuperDagger[\[FormalA]1]**\[FormalA]1)]
+
+=== 69 (1.3 s) messages: {}
+{NormalOrdered[E^((-1 + E^(-(beta*(mu + w))))*SuperDagger[\[FormalA]1]**\[FormalA]1)], 1 + (-1 + E^(beta*(mu + w)))^(-1)}
+
+=== 70 (0. s) messages: {}
+{NormalOrdered[E^((-1 + E^h)*SuperDagger[\[FormalA]1]**\[FormalA]1)], (1 - m)^(-1), False}
+
+=== 71 (0. s) messages: {}
+NormalOrdered[E^((-1 + E^h)*SuperDagger[\[FormalA]1]**\[FormalA]1)]
+

@@ -1,0 +1,16 @@
+{a, ad} = FieldVariables[{1}];
+{a1, a1d, a2, a2d} = FieldVariables[{1, 2}];
+res = <||>;
+SetAttributes[put, HoldRest];
+put[k_, v_] := (res[k] = TimeConstrained[v, 120, $TimedOut]);
+put["numConj", BosonicExpSimplify[Exp[l ad ** a] ** Exp[y ad ** ad] ** Exp[-l ad ** a], {a, ad}]];
+put["numConj1", BosonicExpSimplify[Exp[l ad ** a] ** Exp[x ad] ** Exp[-l ad ** a], {a, ad}]];
+put["swap2", BosonicExpOrder[Exp[x a ** a] ** Exp[y ad ** ad]]];
+put["swap2vev", BosonicMatrixElement[{0, 0}, Evaluate[BosonicExpOrder[Exp[x a ** a] ** Exp[y ad ** ad]]]]];
+put["vevSwap", BosonicVEV[Exp[x a ** a] ** Exp[y ad ** ad]]];
+put["mm", BosonicExpOrder[Exp[h11 a1d ** a1 + h12 a1d ** a2 + h21 a2d ** a1 + h22 a2d ** a2]]];
+put["bme2k", BosonicMatrixElement[{2 k, 0}, Exp[y ad ** ad]]];
+put["bmen", BosonicMatrixElement[{n, 0}, Exp[y ad ** ad]]];
+put["conjDispS", BosonicExpSimplify[Exp[I t w ad ** a] ** a ** Exp[-I t w ad ** a], {a, ad}, Assumptions -> Element[t w, Reals]]];
+put["hcomm", BosonicNormalOrder[With[{H = (A ad ** ad + Ab a ** a + 2 c ad ** a)/2 + f ad + fb a}, H ** a - a ** H], {a, ad}]];
+WriteString["stdout", StringRiffle[KeyValueMap[#1 <> " -> " <> ToString[InputForm[#2]] &, res], "\n\n"], "\n"];

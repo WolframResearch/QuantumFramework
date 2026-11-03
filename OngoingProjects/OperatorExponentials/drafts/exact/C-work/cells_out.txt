@@ -1,0 +1,48 @@
+=== C001
+-I
+=== C002
+E^((u*v)/2)*E^(u*SuperDagger[\[FormalA]1])**E^(\[FormalA]1*v)
+=== C003
+{E^(-(\[FormalA]1*Conjugate[al]) - \[FormalA]1*Conjugate[be] + (-(be*Conjugate[al]) + al*Conjugate[be])/2 + al*SuperDagger[\[FormalA]1] + be*SuperDagger[\[FormalA]1]), E^(-(\[FormalA]1*Conjugate[al]) - \[FormalA]1*Conjugate[be] + (be*Conjugate[al] - al*Conjugate[be])/2 + al*SuperDagger[\[FormalA]1] + be*SuperDagger[\[FormalA]1]), 1, I*(-1/2*(p2*q1) + (p1*q2)/2)}
+=== C004
+{-q0 + (\[FormalA]1 + SuperDagger[\[FormalA]1])/Sqrt[2], -p0 - (I*(\[FormalA]1 - SuperDagger[\[FormalA]1]))/Sqrt[2], E^(-((q0*(\[FormalA]1 - SuperDagger[\[FormalA]1]))/Sqrt[2]) + (I*p0*(\[FormalA]1 + SuperDagger[\[FormalA]1]))/Sqrt[2])}
+=== C006
+{E^(al*SuperDagger[\[FormalA]1])**E^(-(\[FormalA]1*Conjugate[al]))/E^((al*Conjugate[al])/2), E^((al*Conjugate[al])/2)*E^(-(\[FormalA]1*Conjugate[al]))**E^(al*SuperDagger[\[FormalA]1]), \[FormalA]1 - al}
+=== C007
+{{0, 0, 0, 0, 0, 0}, E^(al*SuperDagger[\[FormalA]1])**(\[FormalA]1 + al)}
+=== C008
+{E^(-1/2*Abs[al]^2), E^((-Abs[al]^2 - Abs[be]^2)/2 + be*Conjugate[al]), {0, 0}}
+=== C009
+{\[FormalA]1*(Cosh[Sqrt[-t^2]] + (I*t*Sinh[Sqrt[-t^2]])/Sqrt[-t^2]), 0}
+=== C018
+{{{s12, s22}, {-s11, -s12}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}}
+=== C024
+{0, 0, 1}
+=== C025
+{E^((Conjugate[xi]*\[FormalA]1**\[FormalA]1 - xi*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]1])/2), 1, ArcTanh[x]}
+=== C026
+{\[FormalA]1*Cosh[Sqrt[r^2]] - (E^(I*th)*r*Sinh[Sqrt[r^2]]*SuperDagger[\[FormalA]1])/Sqrt[r^2], {{0, 0, -1/4 - I/10, -3/20 + I/20}, {0, 0, -3/20 + I/20, 1/10 - I/5}, {-1/4 + I/10, -3/20 - I/20, 0, 0}, {-3/20 - I/20, 1/10 + I/5, 0, 0}}, 0}
+=== C027
+{E^(-1/2*(E^(I*Arg[xi])*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]1]*Tanh[Abs[xi]]))**Sech[Abs[xi]]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((\[FormalA]1**\[FormalA]1*Tanh[Abs[xi]])/(2*E^(I*Arg[xi]))), Sqrt[Sech[Abs[xi]]], 0}
+=== C046
+{{-3/16, 0, 0}, 0}
+=== C047
+{{1, Sqrt[3/2]*ze, (Sqrt[15/2]*ze^2)/2, (Sqrt[35]*ze^3)/4, (3*Sqrt[35/2]*ze^4)/8}, {0, 0, 0, 0, 0}, 0, (1 - x)^(-2*k)}
+=== C048
+{E^((GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], 2]*Tanh[r])/2)**Sech[r]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^(-1/2*(GeneralizedPower[NonCommutativeMultiply, \[FormalA]1, 2]*Tanh[r])), E^((xi*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], 2]*Tan[Sqrt[-(xi*Conjugate[xi])]])/(2*Sqrt[-(xi*Conjugate[xi])]))**Sec[Sqrt[-(xi*Conjugate[xi])]]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((Sqrt[-(xi*Conjugate[xi])]*GeneralizedPower[NonCommutativeMultiply, \[FormalA]1, 2]*Tan[Sqrt[-(xi*Conjugate[xi])]])/(2*xi)), E^((xi*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]2]*Tan[Sqrt[-(xi*Conjugate[xi])]])/Sqrt[-(xi*Conjugate[xi])])**Sec[Sqrt[-(xi*Conjugate[xi])]]^(SuperDagger[\[FormalA]1]**\[FormalA]1 + SuperDagger[\[FormalA]2]**\[FormalA]2)**E^((Sqrt[-(xi*Conjugate[xi])]*\[FormalA]1**\[FormalA]2*Tan[Sqrt[-(xi*Conjugate[xi])]])/xi)*Sec[Sqrt[-(xi*Conjugate[xi])]], {Tanh[r]/r, Sech[r]}}
+=== C049
+{\[FormalA]1*Cosh[Sqrt[r^2]] - (E^(I*th)*r*Sinh[Sqrt[r^2]]*SuperDagger[\[FormalA]1])/Sqrt[r^2], (Cosh[2*Sqrt[r^2]]*(1 + 2*SuperDagger[\[FormalA]1]**\[FormalA]1) - (r*(E^((2*I)*th)*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], 2] + \[FormalA]1**\[FormalA]1)*Sinh[2*Sqrt[r^2]])/(E^(I*th)*Sqrt[r^2]))/4, 0, 0}
+=== C055
+{{1/2 + n, 1/2 + n, 0}, {0, 0, 0, {0, 0, 0}}}
+=== C057
+{g1*Conjugate[f1] + g2*Conjugate[f2], g1*Conjugate[f1] + g2*Conjugate[f2]}
+=== C058
+{{Cosh[Sqrt[-th^2]]*SuperDagger[\[FormalA]1] + (E^(I*ph)*th*Sinh[Sqrt[-th^2]]*SuperDagger[\[FormalA]2])/Sqrt[-th^2], (Sqrt[-th^2]*Sinh[Sqrt[-th^2]]*SuperDagger[\[FormalA]1])/(E^(I*ph)*th) + Cosh[Sqrt[-th^2]]*SuperDagger[\[FormalA]2]}, {{0, 0}, {0, 0}}}
+=== C059
+{E^(-(\[FormalA]1*Conjugate[f]) - \[FormalA]1*Conjugate[g] + (-(g*Conjugate[f]) + f*Conjugate[g])/2 + f*SuperDagger[\[FormalA]1] + g*SuperDagger[\[FormalA]1]), E^((-Abs[f]^2 - Abs[g]^2)/2 + g*Conjugate[f]), {0, 0}}
+=== C060
+{\[FormalA]1 + al, (Conjugate[al] + SuperDagger[\[FormalA]1])**(\[FormalA]1 + al)}
+=== C061
+{\[FormalA]1*alc + ((alc*be - al*bec)*e)/2 - \[FormalA]1*(alc + bec*e) - al*SuperDagger[\[FormalA]1] + (al + be*e)*SuperDagger[\[FormalA]1], 0}
+=== C094
+{\[FormalA]1*(Cosh[Sqrt[s^2]] - (s*Sinh[Sqrt[s^2]])/Sqrt[s^2]), 0}

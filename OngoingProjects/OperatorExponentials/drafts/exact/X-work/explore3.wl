@@ -1,0 +1,13 @@
+{a, ad} = FieldVariables[{1}];
+{a1, ad1, a2, ad2} = FieldVariables[{1, 2}];
+emit[k_, v_] := WriteString["stdout", k, " -> ", ToString[InputForm[v]], "\n"];
+vars = {a1, ad1, a2, ad2};
+b1 = u11 a1 + u12 a2 + v11 ad1 + v12 ad2;
+b2d = cu21 ad1 + cu22 ad2 + cv21 a1 + cv22 a2;
+b2 = u21 a1 + u22 a2 + v21 ad1 + v22 ad2;
+emit["c3", TimeConstrained[BosonicNormalOrder[a1 ** ad1 - ad1 ** a1, vars], 60]];
+emit["c1", TimeConstrained[BosonicNormalOrder[b1 ** b2d - b2d ** b1, vars], 60]];
+emit["c1s", TimeConstrained[BosonicNormalOrder[b1 ** b2d - b2d ** b1, vars, "Scalars" -> {u11, u12, v11, v12, cu21, cu22, cv21, cv22}], 60]];
+emit["cbb", TimeConstrained[BosonicNormalOrder[b1 ** b2 - b2 ** b1, vars], 60]];
+emit["vev", TimeConstrained[BosonicVEV[Exp[c a ** a] ** Exp[d ad ** ad], {a, ad}], 60]];
+emit["vev1", TimeConstrained[BosonicVEV[Exp[zb a] ** Exp[w ad], {a, ad}], 60]];

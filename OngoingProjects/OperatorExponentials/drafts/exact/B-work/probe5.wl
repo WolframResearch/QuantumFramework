@@ -1,0 +1,15 @@
+{a, ad} = FieldVariables[{1}];
+{a1, a1d, a2, a2d} = FieldVariables[{1, 2}];
+v = {a1, a1d, a2, a2d};
+res = <||>;
+SetAttributes[put, HoldRest];
+put[k_, v_] := (res[k] = TimeConstrained[v, 120, $TimedOut]);
+put["sqNum2", BosonicExpSimplify[Exp[Log[3] (a1 ** a1 - a1d ** a1d)/2] ** a1 ** Exp[-Log[3] (a1 ** a1 - a1d ** a1d)/2], v]];
+put["sqSym2", BosonicExpSimplify[Exp[r (a1 ** a1 - a1d ** a1d)/2] ** a1 ** Exp[-r (a1 ** a1 - a1d ** a1d)/2], v, "Scalars" -> {r}]];
+put["sqSym2b", BosonicExpSimplify[Exp[r (a1 ** a1 - a1d ** a1d)/2] ** a2 ** Exp[-r (a1 ** a1 - a1d ** a1d)/2], v, "Scalars" -> {r}]];
+put["bsSym", BosonicExpSimplify[Exp[th I (a1d ** a2 + a2d ** a1)] ** a1 ** Exp[-th I (a1d ** a2 + a2d ** a1)], v, "Scalars" -> {th}]];
+put["ord1", BosonicExpOrder[Exp[-beta (w + mu) ad ** a]]];
+put["ord2", BosonicExpOrder[Exp[-beta w ad ** a]]];
+put["ord3", BosonicExpOrder[Exp[-x ad ** a]]];
+put["ord4", BosonicExpOrder[Exp[-(w + mu) ad ** a]]];
+WriteString["stdout", StringRiffle[KeyValueMap[#1 <> " -> " <> ToString[InputForm[#2]] &, res], "\n\n"], "\n"];

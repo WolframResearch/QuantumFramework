@@ -1,0 +1,22 @@
+su2 algebra spin1/2, spin1 -> {{{{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}}, {{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}}}
+su2 spin1/2 0<r<pi/2 -> {{0, 0}, {0, 0}}
+su2 spin1 0<r<pi/2 -> {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
+su2 spin1/2 pi/2<r<pi: LHS and RHS -> {{{Cos[r], E^(I*ph)*Sin[r]}, {-(Sin[r]/E^(I*ph)), Cos[r]}}, {{-Cos[r], -(E^(I*ph)*Sin[r])}, {Sin[r]/E^(I*ph), -Cos[r]}}}
+su2 spin1 pi/2<r<pi -> {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
+su11 algebra -> {{{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}}
+su11 identity -> {{0, 0}, {0, 0}}
+fermion pair algebra; Jm-Jp^dag; algebra with c1.c2 -> {{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {{2, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, -2}}}
+fermion pair state (all r) -> {0, 0, 0, 0}
+two-mode vacuum ODE residual, initial value -> {0, 1}
+(z1 z2)^n/n! coefficient is |n,n> amplitude/sqrt(n!^2) check -> 0
+boson Gaussian det identity N=1,2,3 -> {0, 0, 0}
+boson exponent form N=2 -> 0
+fermion vacuum: annihilation (exact), (norm^2)^2 - det(I+ZZ^dag) -> {{0}, 0}
+normal-ordered Taylor identity on generic cubic -> 0
+flow ODE residual at a random numeric point -> 0
+fermion projector :e^{-sum N}: and prod(1-N_i) vs |0><0| (exact) -> {{0}, {0}}
+fermion e^{c^dag h c} - :exp[c^dag(e^h-1)c]: (exact); Tr - det(1+e^h) -> {{0}, 0}
+boson two-mode trace integral vs 1/det(I-M) -> 0
+spectral radius and norm of Mb -> {0.33920296148943585, 0.45858234995360503}
+fermion {b_i,b_j^dag} - (uu^dag+vv^dag)_ij, {b_i,b_j} - (uv^T+vu^T)_ij -> {{0}, {0}}
+fermion X-009 -> {<|"canonical action" -> 2.482534153247273*^-16, "uu^dag+vv^dag-I" -> 4.441318798950779*^-16, "uv^T+vu^T" -> 1.3092278833360675*^-16, "Z,W antisym" -> {3.3306690738754696*^-16, 3.5571561302006606*^-16}, "|c0|-det(uu^dag)^(1/4)" -> 1.1105998511409609*^-16, "factorization (eta/2 = -1/2)" -> 2.3714374201337737*^-15, "with +1/2 instead" -> 1.784582221755907|>, <|"canonical action" -> 3.433175098891678*^-16, "uu^dag+vv^dag-I" -> 2.2230126550701944*^-16, "uv^T+vu^T" -> 7.850462293418876*^-17, "Z,W antisym" -> {4.47545209131181*^-16, 2.6945789820192466*^-16}, "|c0|-det(uu^dag)^(1/4)" -> 1.1103260800681343*^-16, "factorization (eta/2 = -1/2)" -> 2.3301462827935277*^-15, "with +1/2 instead" -> 2.043945459524209|>}

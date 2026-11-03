@@ -1,0 +1,17 @@
+{a, ad} = FieldVariables[{1}];
+res = <||>;
+SetAttributes[put, HoldRest];
+put[k_, v_] := (res[k] = TimeConstrained[v, 90, $TimedOut]);
+put["bmeDispHeld", BosonicMatrixElement[{3, 1}, DisplacementOperator[al]]];
+put["bmeDispNormal", BosonicMatrixElement[{3, 1}, DisplacementOperator[al, Infinity, "Ordering" -> "Normal"]]];
+put["bmeSqNormal", BosonicMatrixElement[{2, 0}, SqueezeOperator[xi, Infinity, "Ordering" -> "Normal"]]];
+put["braid", BosonicExpBraid[Exp[x a ** a] ** Exp[b ad]]];
+put["orderXB", BosonicExpOrder[Exp[x a ** a] ** Exp[b ad]]];
+put["simpXB", BosonicExpSimplify[Exp[x a ** a] ** Exp[b ad], {a, ad}]];
+put["conjSq", BosonicExpSimplify[Exp[(xb a ** a - x ad ** ad)/2] ** a ** Exp[-(xb a ** a - x ad ** ad)/2], {a, ad}]];
+put["conjAff2", BosonicExpSimplify[Exp[p a ** a + q ad ** ad + s ad + u a] ** a ** Exp[-(p a ** a + q ad ** ad + s ad + u a)], {a, ad}, "Scalars" -> {p, q, s, u}]];
+put["conjH", BosonicExpSimplify[Exp[I t ((A ad ** ad + Ab a ** a + 2 c ad ** a)/2 + f ad + fb a)] ** a ** Exp[-I t ((A ad ** ad + Ab a ** a + 2 c ad ** a)/2 + f ad + fb a)], {a, ad}, "Scalars" -> {A, Ab, c, f, fb, t}]];
+put["conjDisp", BosonicExpSimplify[Exp[fb a - f ad] ** a ** Exp[-(fb a - f ad)], {a, ad}]];
+{a1, a1d} = FieldVariables[{1}]; {b2, b2d} = {Subscript[\[FormalA], 2], SuperDagger[Subscript[\[FormalA], 2]]};
+put["fv12", FieldVariables[{1, 2}]];
+WriteString["stdout", StringRiffle[KeyValueMap[#1 <> " -> " <> ToString[InputForm[#2]] &, res], "\n\n"], "\n"];

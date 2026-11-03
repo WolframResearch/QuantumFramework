@@ -1,0 +1,13 @@
+{a, ad} = FieldVariables[{1}];
+{a1, ad1, a2, ad2} = FieldVariables[{1, 2}];
+emit[k_, v_] := WriteString["stdout", k, " -> ", ToString[InputForm[v]], "\n"];
+b1 = u11 a1 + u12 a2 + v11 ad1 + v12 ad2;
+b2d = cu21 ad1 + cu22 ad2 + cv21 a1 + cv22 a2;
+emit["c1", TimeConstrained[BosonicNormalOrder[b1 ** b2d - b2d ** b1], 60]];
+emit["c2", TimeConstrained[BosonicNormalOrder[NonCommutativeExpand[b1 ** b2d - b2d ** b1]], 60]];
+emit["c3", TimeConstrained[BosonicNormalOrder[a1 ** ad1 - ad1 ** a1], 60]];
+emit["c4", TimeConstrained[BosonicNormalOrder[(u a1) ** (w ad1)], 60]];
+emit["c5", TimeConstrained[BosonicNormalOrder[(a1 + a2) ** (ad1 + ad2)], 60]];
+emit["coh h", TimeConstrained[BosonicMatrixElement[{z, w}, Exp[h ad ** a], "Basis" -> "Coherent"], 60]];
+qi = QuantumInterferometer[{"S"[1/3 Exp[I/2]] -> 1, "S"[1/4 Exp[-I]] -> 2, "BS"[3/5, 9/10] -> {1, 2}}, 2];
+emit["qi bog", TimeConstrained[First[qi]["Bogoliubov"], 60]];

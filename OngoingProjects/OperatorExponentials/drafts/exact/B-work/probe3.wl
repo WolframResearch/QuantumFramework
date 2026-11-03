@@ -1,0 +1,20 @@
+{a, ad} = FieldVariables[{1}];
+{a1, a1d, a2, a2d} = FieldVariables[{1, 2}];
+res = <||>;
+SetAttributes[put, HoldRest];
+put[k_, v_] := (res[k] = TimeConstrained[v, 120, $TimedOut]);
+put["conjLin", BosonicExpSimplify[Exp[(xb a ** a - x ad ** ad)/2] ** (a + f) ** Exp[-(xb a ** a - x ad ** ad)/2], {a, ad}]];
+put["conjAdag", BosonicExpSimplify[Exp[(xb a ** a - x ad ** ad)/2] ** ad ** Exp[-(xb a ** a - x ad ** ad)/2], {a, ad}]];
+put["tms", BosonicExpSimplify[Exp[r (eb a1 ** a2 - e a1d ** a2d)] ** a1 ** Exp[-r (eb a1 ** a2 - e a1d ** a2d)], {a1, a1d, a2, a2d}, "Scalars" -> {r, e, eb}]];
+put["bs", BosonicExpSimplify[Exp[th (e a1d ** a2 - eb a2d ** a1)] ** a1 ** Exp[-th (e a1d ** a2 - eb a2d ** a1)], {a1, a1d, a2, a2d}, "Scalars" -> {th, e, eb}]];
+put["tmsOrder", BosonicExpOrder[Exp[r (eb a1 ** a2 - e a1d ** a2d)]]];
+put["projFock", BosonicMatrixElement[{1, 1}, ad ** NormalOrdered[Exp[-ad ** a]] ** a]];
+put["projCoh", BosonicMatrixElement[{al, al}, ad ** NormalOrdered[Exp[-ad ** a]] ** a, "Basis" -> "Coherent"]];
+With[{s = SqueezeOperator[xi, Infinity, "Ordering" -> "Normal"], d = DisplacementOperator[-f, Infinity, "Ordering" -> "Normal"]},
+  put["SUf", s ** d];
+  put["braidMid", BosonicExpBraid[Exp[Conjugate[tau]/2 a ** a] ** Exp[-f ad]]];
+  put["orderMid", BosonicExpOrder[BosonicExpBraid[Exp[Conjugate[tau]/2 a ** a] ** Exp[-f ad]]]];
+  put["numPast", BosonicExpOrder[Sech[r]^(1/2 + ad ** a) ** Exp[-f ad]]];
+];
+put["conjPoly", BosonicExpSimplify[Exp[th (a1d ** a2 - a2d ** a1)] ** (a1d ** a1d ** a2) ** Exp[-th (a1d ** a2 - a2d ** a1)], {a1, a1d, a2, a2d}, "Scalars" -> {th}]];
+WriteString["stdout", StringRiffle[KeyValueMap[#1 <> " -> " <> ToString[InputForm[#2]] &, res], "\n\n"], "\n"];

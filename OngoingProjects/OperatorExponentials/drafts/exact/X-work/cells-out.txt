@@ -1,0 +1,32 @@
+=== c01
+{E^(al*SuperDagger[\[FormalA]1])**E^(-(\[FormalA]1*Conjugate[al]))/E^((al*Conjugate[al])/2), E^((al*Conjugate[al])/2)*E^(-(\[FormalA]1*Conjugate[al]))**E^(al*SuperDagger[\[FormalA]1]), E^(al*SuperDagger[\[FormalA]1])**E^(-(\[FormalA]1*Conjugate[al]))/E^((al*Conjugate[al])/2), E^((al*Conjugate[al])/2)*E^(-(\[FormalA]1*Conjugate[al]))**E^(al*SuperDagger[\[FormalA]1])}
+=== c02
+{\[FormalA]1 + al, \[FormalA]1 - al}
+=== c03
+{E^(-(\[FormalA]1*Conjugate[al]) - \[FormalA]1*Conjugate[be] + (-(be*Conjugate[al]) + al*Conjugate[be])/2 + al*SuperDagger[\[FormalA]1] + be*SuperDagger[\[FormalA]1]), 0}
+=== c04
+{E^(-1/2*(E^(I*Arg[xi])*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]1]*Tanh[Abs[xi]]))**Sech[Abs[xi]]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((\[FormalA]1**\[FormalA]1*Tanh[Abs[xi]])/(2*E^(I*Arg[xi]))), E^(-1/2*(E^(I*th)*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], 2]*Tanh[r]))**Sech[r]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^((\[FormalA]1**\[FormalA]1*Tanh[r])/(2*E^(I*th)))}
+=== c05
+\[FormalA]1*Cosh[r] - E^(I*th)*Sinh[r]*SuperDagger[\[FormalA]1]
+=== c06
+{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0}
+=== c07
+E^(-(E^(I*th)*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]2]*Tanh[r]))**Sech[r]^(SuperDagger[\[FormalA]1]**\[FormalA]1 + SuperDagger[\[FormalA]2]**\[FormalA]2)**E^((\[FormalA]1**\[FormalA]2*Tanh[r])/E^(I*th))*Sech[r]
+=== c10
+E^((E^(I*ph)*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], 2]*Tanh[r])/2)**Sech[r]^(1/2 + SuperDagger[\[FormalA]1]**\[FormalA]1)**E^(-1/2*(\[FormalA]1**\[FormalA]1*Tanh[r])/E^(I*ph))
+=== c13
+{\[FormalA]1*Cosh[Sqrt[(-4*p*qq + s^2)*t^2]] - (t*Sinh[Sqrt[(-4*p*qq + s^2)*t^2]]*(\[FormalA]1*s + 2*qq*SuperDagger[\[FormalA]1]))/Sqrt[(-4*p*qq + s^2)*t^2], 0, 0}
+=== c14
+{\[FormalA]1 + z11*SuperDagger[\[FormalA]1] + z12*SuperDagger[\[FormalA]2], \[FormalA]2 + z12*SuperDagger[\[FormalA]1] + z22*SuperDagger[\[FormalA]2]}
+=== c16
+NormalOrdered[E^((-1 + E^lam)*SuperDagger[\[FormalA]1]**\[FormalA]1)]
+=== c17
+{KroneckerDelta[0, n]*KroneckerDelta[m, n], E^((-Abs[w]^2 - Abs[z]^2)/2), Inactive[Sum][((-1)^Wolfram`QuantumFramework`SecondQuantization`BosonicExp`PackagePrivate`SeriesIndex["k"]*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]1], Wolfram`QuantumFramework`SecondQuantization`BosonicExp`PackagePrivate`SeriesIndex["k"]]**GeneralizedPower[NonCommutativeMultiply, \[FormalA]1, Wolfram`QuantumFramework`SecondQuantization`BosonicExp`PackagePrivate`SeriesIndex["k"]])/Wolfram`QuantumFramework`SecondQuantization`BosonicExp`PackagePrivate`SeriesIndex["k"]!, {Wolfram`QuantumFramework`SecondQuantization`BosonicExp`PackagePrivate`SeriesIndex["k"], 0, Infinity}]}
+=== c18
+ConditionalExpression[-(-1 + E^lam)^(-1), E^Re[lam] < 1]
+=== c19
+{{{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}}
+=== c20
+{{\[FormalA]1*Cosh[r] + E^(I*th)*Sinh[r]*SuperDagger[\[FormalA]2], \[FormalA]2*Cosh[r] + E^(I*th)*Sinh[r]*SuperDagger[\[FormalA]1]}, {{0, E^(I*th)*Tanh[r]}, {E^(I*th)*Tanh[r], 0}}, {{0, Tanh[r]/E^(I*th)}, {Tanh[r]/E^(I*th), 0}}, {{Sech[r], 0}, {0, Sech[r]}}, Sech[r], E^(-(E^(I*th)*SuperDagger[\[FormalA]1]**SuperDagger[\[FormalA]2]*Tanh[r]))**Sech[r]^(SuperDagger[\[FormalA]1]**\[FormalA]1 + SuperDagger[\[FormalA]2]**\[FormalA]2)**E^((\[FormalA]1**\[FormalA]2*Tanh[r])/E^(I*th))*Sech[r]}
+=== c21
+{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, True, E^((-Abs[w]^2 - Abs[z]^2)/2 + E^h*w*Conjugate[z])}
