@@ -130,9 +130,9 @@ BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
 
 
 BosonicMatrixElement::usage =
-"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]poly\[VerticalSeparator]n\[RightAngleBracket] for a polynomial in the field variables of a single mode, by normal ordering and the closed form for \[LeftAngleBracket]m\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]n\[RightAngleBracket]. The Fock indices may be symbolic.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) Returns \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]poly\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states of amplitude \[Alpha] and \[Beta], by normal ordering and \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]\[Beta]\[RightAngleBracket] = \!\(\*SuperscriptBox[OverscriptBox[\"\[Alpha]\", \"_\"], \"p\"]\)\!\(\*SuperscriptBox[\"\[Beta]\", \"q\"]\)\[LeftAngleBracket]\[Alpha]\[VerticalBar]\[Beta]\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", SubscriptBox[StyleBox[\"m\", \"TI\"], StyleBox[\"2\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", SubscriptBox[StyleBox[\"n\", \"TI\"], StyleBox[\"2\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"]}], \"]\"}]\) Returns the element between multimode Fock states, one index per mode, for a polynomial in the field variables of several independent modes. The modes are the \"Generators\" in the order given, or else the field variables of poly, sorted; declare them when poly does not touch every mode. With \"Basis\"->\"Coherent\" the indices are amplitude vectors.";
+"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] for expr built from the ladder operators vars = {{c}, {a}} or a WeylAlgebra: a polynomial through its normal order and the closed form for \[LeftAngleBracket]m\[VerticalSeparator]\!\(\*SuperscriptBox[\"c\", \"p\"]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]n\[RightAngleBracket], a product of exponentials through its disentangled form. The Fock indices may be symbolic.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns the element between multimode Fock states for a polynomial in the modes of vars, index k pairing with mode k.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) Returns \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states, the indices then being amplitudes.";
 
-Options[BosonicMatrixElement] = {"Basis" -> "Fock", "Generators" -> Automatic}
+Options[BosonicMatrixElement] = {"Basis" -> "Fock"}
 
 SetAttributes[BosonicMatrixElement, HoldRest]
 
@@ -169,10 +169,10 @@ fockLadderElement[m_, n_, p_, q_] :=
 coherentOverlap[\[Alpha]_, \[Beta]_] :=
     Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]
 
-ladderSum[element_, {ms_, ns_}, expr_, vs_List] :=
-    Module[{x, y, k = Length[vs], vars, p},
+ladderSum[element_, {ms_, ns_}, expr_, lv_Association] :=
+    Module[{x, y, k = Length[lv["Annihilators"]], vars, p},
         vars = Join[Array[x, k], Array[y, k]];
-        p = Expand[vevCollapse[BosonicNormalOrder[expr, {SuperDagger /@ vs, vs}]] /. Thread[Join[SuperDagger /@ vs, vs] -> vars]];
+        p = Expand[vevCollapse[BosonicNormalOrder[expr, {lv["Creators"], lv["Annihilators"]}]] /. Thread[lv["Generators"] -> vars]];
         Which[
             p === 0, 0,
             k == 1,
@@ -198,17 +198,7 @@ ladderSum[element_, {ms_, ns_}, expr_, vs_List] :=
 coherentBasisQ[opts___] :=
     OptionValue[BosonicMatrixElement, {opts}, "Basis"] === "Coherent"
 
-(* Any formal symbol may name a mode, so a formal scalar is told apart only by declaring
-   the generators; left Automatic the variables are inferred as before.  Declared
-   generators keep the order given and inferred ones are sorted, so an index vector
-   always has a settled mode to sit against. *)
-fieldVariables[expr_, opts___] :=
-    DeleteDuplicates[
-        Replace[OptionValue[BosonicMatrixElement, {opts}, "Generators"],
-            Automatic :> Sort[ExtractNCVars[{expr}]]] /. SuperDagger[w_] :> w
-    ]
-
-BosonicMatrixElement[{{m_}, {n_}}, expr_, opts : OptionsPattern[]] := BosonicMatrixElement[{m, n}, expr, opts]
+BosonicMatrixElement[{{m_}, {n_}}, rest__] := BosonicMatrixElement[{m, n}, rest]
 
 BosonicMatrixElement[{m_, n_}, c_ ? NumericQ, opts : OptionsPattern[]] /;
         Length[Flatten[{m}]] === Length[Flatten[{n}]] :=
@@ -217,27 +207,40 @@ BosonicMatrixElement[{m_, n_}, c_ ? NumericQ, opts : OptionsPattern[]] /;
         {Flatten[{m}], Flatten[{n}]}
     ]
 
-BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
-    With[{vs = fieldVariables[expr, opts], ms = Flatten[{m}], ns = Flatten[{n}]},
-        If[ coherentBasisQ[opts],
-            Times @@ MapThread[coherentOverlap, {ms, ns}] *
-                ladderSum[Conjugate[#1]^#3 #2^#4 &, {ms, ns}, expr, vs],
-            ladderSum[fockLadderElement, {ms, ns}, expr, vs]
-        ] /;
-            Length[ms] === Length[vs] && Length[ns] === Length[vs] &&
-                FreeQ[expr, _QuantumOperator | _QuantumState] &&
-                    vevPolynomialQ[expr, Join[SuperDagger /@ vs, vs]]
+BosonicMatrixElement[{_, _}, Except[_DisplacementOperator | _SqueezeOperator | _ ? NumericQ], OptionsPattern[]] :=
+    (Message[BosonicMatrixElement::argrx, BosonicMatrixElement, 2, 3]; $Failed)
+
+BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
+    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, r},
+        pair = If[AssociationQ[lv], {First[lv["Creators"]], First[lv["Annihilators"]]}];
+        r = Which[
+            lv === $Failed || ! FreeQ[expr, _QuantumOperator | _QuantumState], $Failed,
+            Length[ms] === Length[ns] === Length[lv["Annihilators"]] && vevPolynomialQ[expr, lv["Generators"]],
+                If[ coherentBasisQ[opts],
+                    Times @@ MapThread[coherentOverlap, {ms, ns}] ladderSum[Conjugate[#1]^#3 #2^#4 &, {ms, ns}, expr, lv],
+                    ladderSum[fockLadderElement, {ms, ns}, expr, lv]
+                ],
+            Length[lv["Annihilators"]] =!= 1 || ListQ[m] || ListQ[n], $Failed,
+            coherentBasisQ[opts],
+                Replace[numberDiagonal[expr, pair, j],
+                    f : Except[$Failed] :> Exp[-(Abs[m]^2 + Abs[n]^2)/2] Sum[f (Conjugate[m] n)^j/j!, {j, 0, Infinity}]],
+            True,
+                Replace[normalProductElement[expr, pair, m, n, j],
+                    $Failed /; ! FreeQ[expr, E] :>
+                        normalProductElement[BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}], pair, m, n, j]]
+        ];
+        r /; lv === $Failed || r =!= $Failed
     ]
 
 
 (* Normal ordering changes the function: :Exp[c n]: is (1 + c)^n on the diagonal. *)
-numberDiagonal[expr_, v_, k_] :=
-    With[{nn = SuperDagger[v] ** v},
+numberDiagonal[expr_, {cr_, an_}, k_] :=
+    With[{nn = cr ** an},
         With[{f = Replace[expr, {
                     NormalOrdered[Exp[c_. w_], _] /; w === nn :> (1 + c)^k,
                     e_ :> ReplaceAll[e, nn -> k]
                 }]},
-            If[FreeQ[f, v | SuperDagger[v] | NormalOrdered], f, $Failed]
+            If[FreeQ[f, cr | an | NormalOrdered], f, $Failed]
         ]
     ]
 
@@ -246,35 +249,36 @@ numberDiagonal[expr_, v_, k_] :=
    and the latter's parity rule is the vanishing of the odd coefficients. *)
 wing[m_, k_, p_, x_] := SeriesCoefficient[Exp[p], {x, 0, m - k}] Sqrt[m!/k!]
 
-wingPolynomial[s_, target_, v_, x_] :=
-    With[{p = s /. target -> x /. NonCommutativeMultiply -> Times},
-        If[FreeQ[p, v | _SuperDagger] && PolynomialQ[p, x] && TrueQ[(p /. x -> 0) == 0],
-            p, $Failed]
+wingPolynomial[s_, pair_, side_, x_] :=
+    Module[{c, a},
+        With[{p = s /. Thread[pair -> {c, a}] /. If[side === "Up", c, a] -> x /. NonCommutativeMultiply -> Times},
+            If[FreeQ[p, c | a] && PolynomialQ[p, x] && TrueQ[(p /. x -> 0) == 0], p, $Failed]
+        ]
     ]
 
-normalFactor[fac_, v_, k_, x_] :=
+normalFactor[fac_, pair_, k_, x_] :=
     With[{s = Replace[fac, {Exp[e_] :> e, _ :> None}]},
         With[{
-            up = If[s === None, $Failed, wingPolynomial[s, SuperDagger[v], v, x]],
-            dn = If[s === None, $Failed, wingPolynomial[s, v, v, x]]
+            up = If[s === None, $Failed, wingPolynomial[s, pair, "Up", x]],
+            dn = If[s === None, $Failed, wingPolynomial[s, pair, "Down", x]]
         },
             Which[
                 up =!= $Failed, "Up" -> up,
                 dn =!= $Failed, "Down" -> dn,
-                True, Replace[numberDiagonal[fac, v, k], f : Except[$Failed] :> "Diagonal" -> f]
+                True, Replace[numberDiagonal[fac, pair, k], f : Except[$Failed] :> "Diagonal" -> f]
             ]
         ]
     ]
 
 (* scalar Exp[P[ad]] f[n] Exp[Q[a]], any factor absent.  Wings of a kind commute so their
    exponents add; between Fock states the middle sum runs only to Min[m, n]. *)
-normalProductElement[expr_, v_, m_, n_, j_] :=
+normalProductElement[expr_, pair_, m_, n_, j_] :=
     Module[{x, terms, scalar, tagged, u, w, f, r},
         terms = If[Head[expr] === Times, List @@ expr, {expr}];
-        scalar = Times @@ Select[terms, FreeQ[#, v | SuperDagger[v]] &];
-        tagged = Replace[Times @@ Select[terms, ! FreeQ[#, v | SuperDagger[v]] &],
+        scalar = Times @@ Select[terms, FreeQ[#, Alternatives @@ pair] &];
+        tagged = Replace[Times @@ Select[terms, ! FreeQ[#, Alternatives @@ pair] &],
             {q_NonCommutativeMultiply :> List @@ q, q_ :> {q}}];
-        tagged = normalFactor[#, v, j, x] & /@ tagged;
+        tagged = normalFactor[#, pair, j, x] & /@ tagged;
         If[MemberQ[tagged, $Failed], Return[$Failed, Module]];
         (* The factors are assembled as one normally ordered product, so they must arrive
            in that order: an antinormal product would otherwise be silently reordered and
@@ -294,21 +298,4 @@ normalProductElement[expr_, v_, m_, n_, j_] :=
             True, $Failed
         ];
         If[FreeQ[r, SeriesCoefficient], r, $Failed]
-    ]
-
-BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
-    Module[{v = Replace[fieldVariables[expr, opts], {{u_} :> u, _ :> None}], j, r},
-        r = Which[
-            v === None || ListQ[m] || ListQ[n], $Failed,
-            coherentBasisQ[opts],
-                Replace[numberDiagonal[expr, v, j],
-                    f : Except[$Failed] :>
-                        Exp[-(Abs[m]^2 + Abs[n]^2)/2] Sum[f (Conjugate[m] n)^j/j!, {j, 0, Infinity}]],
-            True,
-                (* A mixed exponential is not yet a product of wings; disentangle and retry. *)
-                Replace[normalProductElement[expr, v, m, n, j],
-                    $Failed /; ! FreeQ[expr, E] :>
-                        normalProductElement[BosonicExpOrder[expr, {{SuperDagger[v]}, {v}}], v, m, n, j]]
-        ];
-        r /; r =!= $Failed && FreeQ[expr, _QuantumOperator | _QuantumState]
     ]

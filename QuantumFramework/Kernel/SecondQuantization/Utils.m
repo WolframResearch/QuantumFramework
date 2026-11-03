@@ -18,11 +18,7 @@ PackageScope["ResolveLadderVariables"]
 
 PackageExport["ToBosonicOperator"]
 
-PackageScope["ExtractNCVars"]
-
 PackageScope["LiftNCScalars"]
-
-PackageScope["FormalSymbolQ"]
 
 PackageScope["$nonuls"]
 
@@ -48,11 +44,6 @@ OperatorVariance::usage =
 
 OperatorVariance[state_QuantumState, op_QuantumOperator]:= 
 	Tr[state["Operator"]@(op^2)]-Tr[state["Operator"]@op]^2
-
-
-FormalSymbolQ[var_Symbol]:=StringStartsQ[ToString[FullForm[var]],"\\[Formal"];
-
-FormalSymbolQ[_]:=False;
 
 
 General::ladvars = "`1` does not declare ladder operators; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first, or a WeylAlgebra.";
@@ -109,34 +100,20 @@ cNumberQ[expr_, vars_] := FreeQ[expr /. $nonuls, Alternatives @@ vars]
 
 
 FieldVariables::usage =
-"\!\(\*RowBox[{\"FieldVariables\", \"[\", \"]\"}]\) returns the default field variables {\[FormalA], \!\(\*SuperscriptBox[\"\[FormalA]\", \"\[Dagger]\"])\)}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"]}], \"]\"}]\) returns {var, \!\(\*SuperscriptBox[StyleBox[\"var\", \"TI\"], \"\[Dagger]\"]\)} for a formal symbol \!\(\*StyleBox[\"var\", \"TI\"]\).\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) returns field variables indexed by \!\(\*StyleBox[\"labels\", \"TI\"]\), using \[FormalA] as base.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"], \",\", StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) returns {\!\(\*SubscriptBox[StyleBox[\"var\", \"TI\"], \"L\"]\), \!\(\*SubsuperscriptBox[StyleBox[\"var\", \"TI\"], \"L\", \"\[Dagger]\"]\)} for each label L in \!\(\*StyleBox[\"labels\", \"TI\"]\).";
+"\!\(\*RowBox[{\"FieldVariables\", \"[\", \"]\"}]\) returns the ladder variables {{\!\(\*SuperscriptBox[\"\[FormalA]\", \"\[Dagger]\"]\)}, {\[FormalA]}} of one mode, creators first.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"]}], \"]\"}]\) returns {{\!\(\*SuperscriptBox[StyleBox[\"var\", \"TI\"], \"\[Dagger]\"]\)}, {var}}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"var\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \"]\"}]\) returns {{\!\(\*SubsuperscriptBox[StyleBox[\"var\", \"TI\"], \"1\", \"\[Dagger]\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[StyleBox[\"var\", \"TI\"], \"1\"]\), \[Ellipsis]}}, mode k being the k-th symbol.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"], \",\", StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) returns one mode per label L, named var with L appended; FieldVariables[labels] uses \[FormalA].";
 
-FieldVariables::notformal =
-"The variable `1` is not a strict Mathematica Formal symbol. Please use \\[Formal`1`] instead."
+FieldVariables[] := FieldVariables[\[FormalA]]
 
-FieldVariables[] := {\[FormalA], SuperDagger[\[FormalA]]}
+FieldVariables[var_Symbol] := {{SuperDagger[var]}, {var}}
 
-FieldVariables[var_Symbol ?FormalSymbolQ] := {var, SuperDagger[var]}
-
-FieldVariables[vars : {__Symbol ? FormalSymbolQ}] :=
-    Flatten[{#, SuperDagger[#]} & /@ vars]
+FieldVariables[vars : {__Symbol}] := {SuperDagger /@ vars, vars}
 
 FieldVariables[labels_List] := FieldVariables[\[FormalA], labels]
 
-FieldVariables[var_Symbol ?FormalSymbolQ, labels_List] :=
-    Flatten[  
-        Table[
-            {Symbol[SymbolName[var] <> ToString[L]], SuperDagger[Symbol[SymbolName[var] <> ToString[L]]]},
-            {L, labels}
-        ]
-    ]
-
-FieldVariables[var_Symbol, args___] /; !FormalSymbolQ[var] :=
-    (Message[FieldVariables::notformal, var]; $Failed)
+FieldVariables[var_Symbol, labels_List] :=
+    FieldVariables[Symbol[SymbolName[var] <> ToString[#]] & /@ labels]
 
 
-ExtractNCVars[ops_List] :=
-    DeleteDuplicates @ Cases[ops, (v : (_? FormalSymbolQ | SuperDagger[_? FormalSymbolQ])) :> v, {0, Infinity}]
 
 
 
@@ -151,28 +128,25 @@ LiftNCScalars[expr_, vars_List] := expr //. {
 
 
 ToBosonicOperator::usage =
-"\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"]}], \"]\"}]\) realizes a symbolic expression expr built from field variables (see FieldVariables) as a truncated \!\(\*RowBox[{\"QuantumOperator\", \"[\", \"]\"}]\), replacing each annihilation variable with \!\(\*RowBox[{\"AnnihilationOperator\", \"[\", \"]\"}]\) and each \!\(\*SuperscriptBox[\"\[Dagger]\", \"\"]\)-decorated variable with its adjoint, and realizing \[FormalCapitalX]**\[FormalCapitalY] as operator composition.\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) uses vars as the ordered list of annihilation-type field variables, assigning mode k to vars[[k]].\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) truncates each mode to Fock space dimension size (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).";
+"\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) realizes expr, built from the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra, as a truncated \!\(\*RowBox[{\"QuantumOperator\", \"[\", \"]\"}]\): \!\(\*SubscriptBox[\"a\", \"k\"]\) becomes \!\(\*RowBox[{\"AnnihilationOperator\", \"[\", RowBox[{\"$FockSize\", \",\", RowBox[{\"{\", \"k\", \"}\"}]}], \"]\"}]\), \!\(\*SubscriptBox[\"c\", \"k\"]\) its adjoint, and ** operator composition.\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) truncates each mode to Fock space dimension size.";
 
-ToBosonicOperator[expr_, vars_List : Automatic, size : _Integer?Positive : $FockSize] :=
-    Block[{annihilators, rules},
-        annihilators = If[vars === Automatic,
-            DeleteDuplicates[
-                Cases[expr,(v : (_ ? FormalSymbolQ | SuperDagger[_ ? FormalSymbolQ])) :> v, {0, Infinity}] /.
-                    SuperDagger[v_] :> v
-            ],
-            vars
-        ];
-        rules = Flatten @ MapIndexed[
-            With[{op = AnnihilationOperator[size, {First[#2]}]},
-                {#1 -> op, SuperDagger[#1] -> op["Dagger"]}
-            ] &,
-            annihilators
-        ];
-        expr /. {
-            GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n],
-            Power[base_, x_] /; FreeQ[base, Alternatives @@ annihilators] && !FreeQ[x, Alternatives @@ annihilators] :>
-                MatrixExp[Log[base] x]
-        } /. Prepend[rules, NonCommutativeMultiply -> boseCompose]
+ToBosonicOperator[expr_] := (Message[ToBosonicOperator::argr, ToBosonicOperator, 2]; $Failed)
+
+ToBosonicOperator[expr_, vars_, size : _Integer?Positive : $FockSize] :=
+    With[{lv = ResolveLadderVariables[ToBosonicOperator, vars]},
+        If[ lv === $Failed,
+            $Failed,
+            With[{ops = Table[AnnihilationOperator[size, {k}], {k, Length[lv["Annihilators"]]}], g = Alternatives @@ lv["Generators"]},
+                expr /. {
+                    GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n],
+                    Power[base_, x_] /; FreeQ[base, g] && ! FreeQ[x, g] :> MatrixExp[Log[base] x]
+                } /. Join[
+                    {NonCommutativeMultiply -> boseCompose},
+                    Thread[lv["Creators"] -> (#["Dagger"] & /@ ops)],
+                    Thread[lv["Annihilators"] -> ops]
+                ]
+            ]
+        ]
     ]
 
 boseCompose[] := 1
