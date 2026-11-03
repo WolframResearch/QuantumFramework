@@ -819,4 +819,159 @@ VerificationTest[
     TestID -> "Helper-ArbitraryPrecisionTinyScale"
 ]
 
+
+(* ========== Concurrence: amplitude damping of an entangled pair, symbolic in the rates ========== *)
+
+(* Sin[th] |00> + Cos[th] |11> under independent amplitude damping of each qubit, rates gA and gB, with
+   QF's "-" = |1><0|, so |0> decays to |1>. With pX = Exp[-gX tau] the pair stays the X state
+       rho00,00 = Sin^2 pA pB, rho01,01 = Sin^2 pA (1 - pB), rho10,10 = Sin^2 (1 - pA) pB,
+       rho11,11 = Cos^2 + Sin^2 (1 - pA) (1 - pB), rho00,11 = Sin Cos Sqrt[pA pB],
+   whose concurrence 2 Max[0, |rho00,11| - Sqrt[rho01,01 rho10,10]] is (Yu and Eberly, PRL 93, 140404 (2004))
+       C = 2 Sqrt[pA pB] |Sin[th]| Max[0, |Cos[th]| - |Sin[th]| Sqrt[(1 - pA) (1 - pB)]].
+   QuantumEvolve has no jump-only form (a None Hamiltonian returns unevaluated), so the Hamiltonian is the
+   zero operator. *)
+dampedPairArgs = Sequence[
+    QuantumOperator[0 IdentityMatrix[4]],
+    {QuantumOperator["-", {1}], QuantumOperator["-", {2}]} -> {\[Gamma]A, \[Gamma]B},
+    QuantumState[{Sin[\[Theta]], 0, 0, Cos[\[Theta]]}],
+    \[Tau]
+];
+dampedPairAssumptions = \[Gamma]A >= 0 && \[Gamma]B >= 0 && \[Tau] >= 0 && 0 < \[Theta] < Pi / 2;
+dampedPairClosedForm[th_, gA_, gB_, tau_] := With[{pA = Exp[-gA tau], pB = Exp[-gB tau]},
+    2 Sqrt[pA pB] Abs[Sin[th]] Max[0, Abs[Cos[th]] - Abs[Sin[th]] Sqrt[(1 - pA) (1 - pB)]]
+];
+realWithinQ[tol_] := VectorQ[#1, NumericQ] && VectorQ[#1, Im[#] == 0 &] && Max[Abs[#1 - #2]] < tol &;
+
+(* the evolved state, under real nonnegative rates, is the X state above: unit trace, Hermitian and
+   positive, the coherence bounded by the populations it joins, |rho00,11|^2 <= rho00,00 rho11,11, and
+   decaying at (gA + gB) / 2, the mean of the two damping rates *)
+VerificationTest[
+    With[{
+        rho = Normal @ QuantumEvolve[dampedPairArgs, Assumptions -> dampedPairAssumptions]["DensityMatrix"],
+        pA = Exp[-\[Gamma]A \[Tau]], pB = Exp[-\[Gamma]B \[Tau]], s = Sin[\[Theta]], c = Cos[\[Theta]]
+    },
+        FullSimplify[
+            {
+                rho - {
+                    {s^2 pA pB, 0, 0, s c Sqrt[pA pB]},
+                    {0, s^2 pA (1 - pB), 0, 0},
+                    {0, 0, s^2 (1 - pA) pB, 0},
+                    {s c Sqrt[pA pB], 0, 0, c^2 + s^2 (1 - pA) (1 - pB)}
+                },
+                Tr[rho],
+                rho - ConjugateTranspose[rho],
+                Abs[rho[[1, 4]]]^2 <= rho[[1, 1]] rho[[4, 4]] && rho[[2, 2]] >= 0 && rho[[3, 3]] >= 0
+            },
+            dampedPairAssumptions
+        ]
+    ],
+    {ConstantArray[0, {4, 4}], 1, ConstantArray[0, {4, 4}], True},
+    {},
+    TestID -> "Concurrence-DampedPair-XState"
+]
+
+(* only qubit A decays: no population reaches |01>, the coherence falls as Sqrt[pA], and the concurrence
+   reduces symbolically to Sin[2 th] Exp[-gA tau / 2], a decay with no death *)
+VerificationTest[
+    FullSimplify[
+        conc[QuantumEvolve[dampedPairArgs, Assumptions -> dampedPairAssumptions]] /. \[Gamma]B -> 0,
+        dampedPairAssumptions
+    ],
+    Sin[2 \[Theta]] Exp[-\[Gamma]A \[Tau] / 2],
+    {},
+    TestID -> "Concurrence-DampedPair-OneSidedDecay-Symbolic"
+]
+
+(* The concurrence built with no assumptions and evaluated afterwards, as in a plot over the parameters.
+   When a rate is zero an eigenvalue of rho.rho-tilde is exactly zero; machine numbers substituted into the
+   closed form leave it as round-off of either sign, and an unclipped square root turns it imaginary: Max
+   then cannot compare, and the value stays unevaluated. Tolerance 10^-6: a round-off zero under a square
+   root is of order Sqrt[eps]. *)
+dampedPairConcurrence = conc @ QuantumEvolve[dampedPairArgs];
+dampedPairAt[th_, gA_, gB_, tau_] := dampedPairConcurrence /. {\[Theta] -> th, \[Gamma]A -> gA, \[Gamma]B -> gB, \[Tau] -> tau};
+dampedPairGrid = Tuples[{N[{Pi/6, Pi/4, Pi/3, 5 Pi/12}], {0.3, 1.3, 3.1}}];
+dampedPairExactGrid = Tuples[{{Pi/6, Pi/3}, {3/10, 31/10}}];
+
+(* one qubit decays, the other is untouched: C = |Sin[2 th]| Exp[-g tau / 2] on either side *)
+VerificationTest[
+    Join[dampedPairAt[#1, 1., 0., #2] & @@@ dampedPairGrid, dampedPairAt[#1, 0., 0.7, #2] & @@@ dampedPairGrid],
+    Join[Abs[Sin[2 #1]] Exp[-#2 / 2] & @@@ dampedPairGrid, Abs[Sin[2 #1]] Exp[-0.7 #2 / 2] & @@@ dampedPairGrid],
+    {},
+    SameTest -> realWithinQ[10^-6],
+    TestID -> "Concurrence-DampedPair-OneSidedDecay-Machine"
+]
+
+(* no decay on either side: the evolution is the identity and the pure state keeps C = |Sin[2 th]| *)
+VerificationTest[
+    dampedPairAt[#1, 0., 0., #2] & @@@ dampedPairGrid,
+    Abs[Sin[2 #1]] & @@@ dampedPairGrid,
+    {},
+    SameTest -> realWithinQ[10^-6],
+    TestID -> "Concurrence-DampedPair-NoDecay-Machine"
+]
+
+(* equal rates: with more weight on the decaying |00>, |Sin[th]| > |Cos[th]|, the populations of |01> and
+   |10> outgrow the coherence and the entanglement dies at the finite time 1 - Exp[-tau] = |Cot[th]|, after
+   which C is exactly 0; with more weight on |11> it only decays. The times are 0.9, 1 and 1.1 death times
+   of th = 5 Pi/12, and the same times for th = Pi/12, which never dies. *)
+dampedPairDeathTimes = -{0.9, 1, 1.1} Log[1 - Cot[5 Pi/12.]];
+VerificationTest[
+    dampedPairAt[#1, 1., 1., #2] & @@@ Tuples[{N[{Pi/12, 5 Pi/12}], dampedPairDeathTimes}],
+    dampedPairClosedForm[#1, 1., 1., #2] & @@@ Tuples[{N[{Pi/12, 5 Pi/12}], dampedPairDeathTimes}],
+    {},
+    SameTest -> realWithinQ[10^-6],
+    TestID -> "Concurrence-DampedPair-SuddenDeath-Machine"
+]
+
+(* across the death time of th = 5 Pi/12 the concurrence is positive before, zero to round-off at, and
+   exactly 0 after *)
+VerificationTest[
+    With[{c = dampedPairAt[5 Pi/12., 1., 1., #] & /@ dampedPairDeathTimes},
+        {c[[1]] > 0, Abs[c[[2]]] < 10^-12, c[[3]] == 0}
+    ],
+    {True, True, True},
+    {},
+    TestID -> "Concurrence-DampedPair-DeathTime-Machine"
+]
+
+(* at the exact death time of th = 5 Pi/12, Exp[-tau] = Sqrt[3] - 1, the coherence equals the geometric mean
+   of the |01> and |10> populations, |rho00,11| = Sqrt[rho01,01 rho10,10] = (Sqrt[3] - 1) / 4, and the
+   concurrence is exactly 0. The state is reduced before the concurrence is taken: the closed form built
+   without assumptions holds this zero as nested radicals that N cannot certify (N::meprec). *)
+VerificationTest[
+    conc @ QuantumState[
+        RootReduce @ FullSimplify[Normal[QuantumEvolve[dampedPairArgs]["DensityMatrix"]] /.
+            {\[Theta] -> 5 Pi/12, \[Gamma]A -> 1, \[Gamma]B -> 1, \[Tau] -> -Log[Sqrt[3] - 1]}],
+        {2, 2}
+    ],
+    0,
+    {},
+    TestID -> "Concurrence-DampedPair-DeathTime-Exact"
+]
+
+(* the symbolic result is the Yu-Eberly closed form at unequal nonzero rates, exact and read to 20 digits.
+   The two-rate form, equal rates included, is compared at exact points rather than by FullSimplify: its
+   Wootters values are nested radicals, Sqrt[a +- 2 E^(g tau) Cos[th] Sqrt[...]], that FullSimplify does
+   not denest. *)
+VerificationTest[
+    N[dampedPairAt[#1, 1, 3/10, #2] & @@@ dampedPairExactGrid, 20],
+    N[dampedPairClosedForm[#1, 1, 3/10, #2] & @@@ dampedPairExactGrid, 20],
+    {},
+    SameTest -> realWithinQ[10^-15],
+    TestID -> "Concurrence-DampedPair-ExactClosedForm"
+]
+
+(* long times: a surviving pair, |Cos[th]| > |Sin[th]|, loses entanglement as the product of the two
+   coherences, C ~ 2 Sin[th] (Cos[th] - Sin[th]) Exp[-(gA + gB) tau / 2]. The relative correction is led
+   by the slower rate: Sqrt[(1 - pA) (1 - pB)] ~ 1 - (pA + pB) / 2 gives
+   C / C_asymptotic - 1 ~ Sin[th] / (2 (Cos[th] - Sin[th])) Exp[-gB tau] for gB < gA. Exact at th = Pi/6,
+   gA = 1, gB = 3/10, tau = 60, where the next order is below 10^-8 of the coefficient. *)
+VerificationTest[
+    N[(dampedPairAt[Pi/6, 1, 3/10, 60] / (2 Sin[Pi/6] (Cos[Pi/6] - Sin[Pi/6]) Exp[-39]) - 1) Exp[18], 20],
+    N[Sin[Pi/6] / (2 (Cos[Pi/6] - Sin[Pi/6])), 20],
+    {},
+    SameTest -> (Abs[#1 - #2] < 10^-8 &),
+    TestID -> "Concurrence-DampedPair-LongTime"
+]
+
 EndTestSection[]

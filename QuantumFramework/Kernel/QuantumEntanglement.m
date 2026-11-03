@@ -756,9 +756,13 @@ Y[n_] := Y[n] = Catenate @ Table[y[{j, k}, n], {k, 2, n}, {j, k - 1}]
    rho.rho-tilde, which is similar to the positive-semidefinite Sqrt[rho].rho-tilde.Sqrt[rho] and so real
    and non-negative. Eigenvalues needs only the characteristic polynomial, where the operator square root
    Sqrt[rho] (MatrixPower) needs the eigenvectors, which blow up into huge unsimplified Root objects on
-   exact input and stall on symbolic input; exact stays exact. The real part of each eigenvalue is kept;
-   a numeric one is clipped at zero and a symbolic one is left as it is, so that the closed form simplifies
-   under real assumptions and evaluates to a real number at numeric parameter values.
+   exact input and stall on symbolic input; exact stays exact. The real part of each eigenvalue is kept
+   and clipped at zero by Ramp, numeric or symbolic: an eigenvalue that is exactly zero for some parameter
+   values, as for a qubit that does not decay, cancels to round-off of either sign once machine numbers are
+   substituted into the closed form, and the square root of a negative round-off is imaginary. Ramp keeps
+   the closed form real at every numeric parameter value and still simplifies under real assumptions. A
+   positive round-off survives the clip, so machine numbers substituted into the closed form leave an error
+   of order Sqrt[eps] where an eigenvalue vanishes; exact values substituted first and N applied after avoid it.
 
    On approximate numbers the square roots of computed eigenvalues are not taken: round-off of order eps
    in a zero eigenvalue becomes order Sqrt[eps] in the value, about 1e-8 on machine numbers, which reads a
@@ -800,7 +804,7 @@ concurrenceMatrixVector[mat_, {d1_, d2_}] := With[{
 		],
 		With[{cmat = Conjugate[mat]},
 			Function[{ya, yb}, With[{omat = Normal @ KroneckerProduct[ya, yb]},
-				wootterCombination @ Sqrt[If[NumericQ[#], Max[0, #], #] & /@ Re[Eigenvalues[mat . omat . cmat . omat]]]
+				wootterCombination @ Sqrt[Ramp[Re[Eigenvalues[mat . omat . cmat . omat]]]]
 			]]
 		]
 	]
