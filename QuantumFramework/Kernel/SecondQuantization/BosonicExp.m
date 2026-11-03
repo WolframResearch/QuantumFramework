@@ -122,9 +122,9 @@ rulesNO = {
 
     Exp[alpha_. v1_?FormalSymbolQ ** v2_?FormalSymbolQ + beta_. SuperDagger[v1_?FormalSymbolQ] ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
         With[{Omega = Sqrt[alpha beta]},
-            Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]] **
-                Sec[Omega] Exp[Log[Sec[Omega]] (SuperDagger[v1] ** v1 + SuperDagger[v2] ** v2)] **
-                Exp[(alpha Tan[Omega]/Omega) v1 ** v2]
+            Sec[Omega] (Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]] **
+                Exp[Log[Sec[Omega]] (SuperDagger[v1] ** v1 + SuperDagger[v2] ** v2)] **
+                Exp[(alpha Tan[Omega]/Omega) v1 ** v2])
         ],
 
     modeSwap[ladderRank],
@@ -187,9 +187,9 @@ rulesAN = {
 
     Exp[alpha_. v1_?FormalSymbolQ ** v2_?FormalSymbolQ + beta_. SuperDagger[v1_?FormalSymbolQ] ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
         With[{Omega = Sqrt[alpha beta]},
-            Exp[(alpha Tan[Omega]/Omega) v1 ** v2] **
-                Sec[Omega] Exp[-Log[Sec[Omega]] (v1 ** SuperDagger[v1] + v2 ** SuperDagger[v2])] **
-                Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]]
+            Sec[Omega] (Exp[(alpha Tan[Omega]/Omega) v1 ** v2] **
+                Exp[-Log[Sec[Omega]] (v1 ** SuperDagger[v1] + v2 ** SuperDagger[v2])] **
+                Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]])
         ],
 
     modeSwap[4 - ladderRank[#] &],

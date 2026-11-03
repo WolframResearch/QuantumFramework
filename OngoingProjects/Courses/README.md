@@ -1,14 +1,14 @@
 # QuantumFramework – Ongoing Projects: Courses
 
-> **Note:** This section is part of an ongoing effort to develop educational materials in the form of three books.
+> **Note:** This section is part of an ongoing effort to develop educational materials in the form of four books.
 
 ---
 
 ## Overview
-The **OngoingProjects/Courses** directory is a living project focused on authoring and curating three textbooks (or comprehensive digital books) designed to teach and explore quantum computation through the Wolfram Quantum Framework.
+The **OngoingProjects/Courses** directory is a living project focused on authoring and curating four textbooks (or comprehensive digital books) designed to teach and explore quantum computation through the Wolfram Quantum Framework.
 
 ## Goals
-- **Write three complete books** that serve as in-depth educational resources for quantum computing using the Wolfram Language and the QuantumFramework.
+- **Write four complete books** that serve as in-depth educational resources for quantum computing using the Wolfram Language and the QuantumFramework.
 - Cover theoretical foundations, practical examples, and advanced topics within each volume.
 - Leverage the expressive symbolic and numeric capabilities of the Wolfram Quantum Framework throughout the texts.
 
@@ -17,6 +17,7 @@ The **OngoingProjects/Courses** directory is a living project focused on authori
 - **[Book 1: Introduction to quantum computing](https://github.com/WolframResearch/QuantumFramework/tree/main/OngoingProjects/Courses/IntroToQuantumComputing)** Concepts of quantum mechanics, quantum states, operators, measurement, entanglement, and quantum algorithms .
 - **[Book 2: Quantum optics](https://github.com/WolframResearch/QuantumFramework/tree/main/OngoingProjects/Courses/QuantumOptics)** Construction and simulation of 2nd quantization cases with special attention to quantum topics.
 - **[Book 3: Quantum optimization](https://github.com/WolframResearch/QuantumFramework/tree/main/OngoingProjects/Courses/QuantumOptimization)** application of quantum computing for quantum optimization.
+- **[Book 4: Introduction to quantum information and science](https://github.com/WolframResearch/QuantumFramework/tree/main/OngoingProjects/Courses/IntroductionToQuantumInformationAndScience)** Qubit Explained: the qubit, its states, measurement, and dynamics, taught by computing.
 
 ## How to Contribute
 - Contributions are welcomed! Please fork the repository, create a branch for the book you’d like to work on (e.g., `book1-writing`), and open a pull request for proposed sections, examples, or diagrams.

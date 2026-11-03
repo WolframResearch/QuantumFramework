@@ -218,9 +218,21 @@ Enclose @ Module[{max, basePS, baseAssoc, m1, m2, anchor, phase},
 
 
 (* ============================================================================ *)
-(* From QuantumCircuitOperator: fold over normal operators                      *)
+(* From QuantumCircuitOperator                                                  *)
 (* ============================================================================ *)
 
+(* A circuit whose every gate is in the compiled Clifford set, on wires 1..n,   *)
+(* folds on the n-qubit tableau in one compiled call: the cost is polynomial in *)
+(* n and the result is defined up to a global phase, as for every gate applied *)
+(* to a tableau.                                                                *)
+PauliStabilizer[qco_QuantumCircuitOperator] /; Min[qco["FullInputOrder"], 1] >= 1 :=
+    With[{gates = stabilizerExecutionPlan[qco]["Gates"]},
+        applyCompiledFold[PauliStabilizer[qco["Max"]], gates] /; ListQ[gates]
+    ]
+
+(* Any other circuit folds over its normal operators. Each operator becomes a   *)
+(* stabilizer on all qubits that records its global phase, which builds a dense *)
+(* matrix on every qubit of the circuit.                                        *)
 PauliStabilizer[qco_QuantumCircuitOperator] := Fold[
     Collect[#1 /. ps_PauliStabilizer :> #2[ps], _PauliStabilizer, Simplify] &,
     PauliStabilizer[qco["Max"]],

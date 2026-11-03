@@ -548,4 +548,47 @@ VerificationTest[
     TestID -> "emit-operator-unserializable-tensor-power-named-once"
 ]
 
+(* sx is the single-qubit principal square root of X (stdgates.inc), so sx, sxdg and csx import
+   on the wires they name, as sqrt(X), its adjoint, and controlled sqrt(X) *)
+sxMatrix = {{1 + I, 1 - I}, {1 - I, 1 + I}} / 2;
+
+VerificationTest[
+    Normal /@ Through[QuantumCircuitOperator[
+        "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nsx q[0];\nsxdg q[1];\ncsx q[0], q[1];"
+    ]["Operators"]["Matrix"]],
+    {sxMatrix, ConjugateTranspose[sxMatrix], ArrayFlatten[{{IdentityMatrix[2], 0}, {0, sxMatrix}}]},
+    TestID -> "import-sx-sxdg-csx-matrices"
+]
+
+VerificationTest[
+    QuantumCircuitOperator["OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\nsx q[0];"]["Arity"],
+    1,
+    TestID -> "import-sx-is-one-qubit"
+]
+
+(* csx takes its first operand as control: reversing the operands moves the control wire *)
+VerificationTest[
+    exactQ[
+        QuantumCircuitOperator["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\ncsx q[1], q[0];"],
+        QuantumOperator[ArrayFlatten[{{IdentityMatrix[2], 0}, {0, sxMatrix}}], {2, 1}]
+    ],
+    True,
+    TestID -> "import-csx-control-wire"
+]
+
+(* the Bell circuit as qiskit transpiles it to the IBM native set {x, sx, rz, cz}; importing it
+   gives the Bell unitary up to a global phase *)
+VerificationTest[
+    With[{
+        u = N @ Normal @ bell["Matrix"],
+        v = N @ Normal @ QuantumCircuitOperator[
+            "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nrz(pi/2) q[0];\nsx q[0];\nrz(pi/2) q[0];\nrz(pi/2) q[1];\nsx q[1];\nrz(pi) q[1];\ncz q[0], q[1];\nsx q[1];\nrz(pi/2) q[1];"
+        ]["Matrix"]
+    },
+        Chop[Abs[Tr[ConjugateTranspose[u] . v]] / Length[u] - 1]
+    ],
+    0,
+    TestID -> "native-sx-set-bell-up-to-phase"
+]
+
 EndTestSection[]
