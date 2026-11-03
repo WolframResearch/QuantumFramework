@@ -47,8 +47,6 @@ controlledZGate = ReplacePart[
     ]
 ];
 
-numericFunctionQ[f_Symbol] := MemberQ[Attributes[f], NumericFunction]
-
 (* A bare symbol is a symbolic scalar shorthand (a scalar-eigenvalue diagonal operator).
    Numeric constants (E, Pi, ...) are numbers, not parameters: they stay scalar
    coefficients, so the base of Power[E, ...] is never lifted to an operator. *)

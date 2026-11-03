@@ -48,6 +48,7 @@ PackageScope["alignDimensions"]
 
 PackageScope["MatrixInverse"]
 PackageScope["matrixFunction"]
+PackageScope["numericFunctionQ"]
 PackageScope["zeroBasePower"]
 PackageScope["diagonalMatrixQ"]
 PackageScope["matrixExponential"]
@@ -451,6 +452,12 @@ MatrixInverse[matrix_] := If[
    the eigenvalue's own on the normal and eigenvector routes; on the Schur route of a
    nearly defective matrix it is one for the whole matrix, and it can take in an
    eigenvalue the decomposition has resolved. *)
+(* A head whose functions act on numbers: Sin, Exp, Power, ... An object's rule for f[obj]
+   tests the head with this before reading the arguments, so a List or any other head
+   that is not a NumericFunction is rejected at once instead of after a scan over the
+   ways to split a long argument sequence. *)
+numericFunctionQ[f_Symbol] := MemberQ[Attributes[f], NumericFunction]
+
 matrixFunction[f : Plus | Minus | Times | Conjugate, mat_, {left___}, {right___}, ___] := f[left, mat, right]
 
 (* The power M^p of an inexact matrix for a real exponent p that is not an Integer
