@@ -8,6 +8,9 @@ Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 normalizeIndex[expr_, s_] :=
     expr /. Inactive[Sum][b_, {i_, lo_, hi_}] :> Inactive[Sum][b /. i -> s, {s, lo, hi}]
 
+$v1 = {{SuperDagger[\[FormalA]]}, {\[FormalA]}};
+$v2 = {{SuperDagger[\[FormalA]], SuperDagger[\[FormalB]]}, {\[FormalA], \[FormalB]}};
+
 (* The anti-normal rule set is the image of rulesNO under the automorphism
    a -> a^dagger, a^dagger -> -a, which carries creator-left words to annihilator-left
    ones and sends a^dagger a to -(a a^dagger + 1).  Each expected form below was checked
@@ -18,9 +21,9 @@ BeginTestSection["BosonicExpOrder - Ordering option"]
 
 (* the default must remain the normal-ordering behaviour that predates the option *)
 VerificationTest[
-    BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]] ===
+    BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]], $v1] ===
         BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]],
-            "Ordering" -> "Normal"],
+            $v1, "Ordering" -> "Normal"],
     True,
     TestID -> "BosonicExpAnti-DefaultIsNormal"
 ]
@@ -29,7 +32,7 @@ VerificationTest[
    loudly rather than fall through to one of them *)
 VerificationTest[
     BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]],
-        "Ordering" -> "NotAnOrdering"],
+        $v1, "Ordering" -> "NotAnOrdering"],
     $Failed,
     {BosonicExpOrder::ordering},
     TestID -> "BosonicExpAnti-RejectsUnknownOrdering"
@@ -44,8 +47,8 @@ BeginTestSection["BosonicExpOrder - anti-normal number-operator exponentials"]
    Equivalently (1-c)^-(n+1) with c = 1 - e^-l, which is where the sign flip comes from. *)
 VerificationTest[
     BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]],
-        "Ordering" -> "Antinormal"],
-    AntinormalOrdered[E^((1 - E^(-\[Lambda]))*\[FormalA]**SuperDagger[\[FormalA]])],
+        $v1, "Ordering" -> "Antinormal"],
+    AntinormalOrdered[E^((1 - E^(-\[Lambda]))*\[FormalA]**SuperDagger[\[FormalA]]), $v1],
     TestID -> "BosonicExpAnti-NumberOperatorAAdag"
 ]
 
@@ -53,9 +56,9 @@ VerificationTest[
    absorbs into the AntinormalOrdered argument *)
 VerificationTest[
     BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     AntinormalOrdered[
-        E^(-\[Lambda] + (1 - E^(-\[Lambda]))*\[FormalA]**SuperDagger[\[FormalA]])],
+        E^(-\[Lambda] + (1 - E^(-\[Lambda]))*\[FormalA]**SuperDagger[\[FormalA]]), $v1],
     TestID -> "BosonicExpAnti-NumberOperatorAdagA"
 ]
 
@@ -63,7 +66,7 @@ VerificationTest[
 VerificationTest[
     normalizeIndex[
         BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]],
-            "Ordering" -> "Antinormal"]["Series"], k],
+            $v1, "Ordering" -> "Antinormal"]["Series"], k],
     Inactive[Sum][
         ((1 - E^(-\[Lambda]))^k*GeneralizedPower[NonCommutativeMultiply, \[FormalA], k]**
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], k])/k!,
@@ -79,7 +82,7 @@ BeginTestSection["BosonicExpOrder - anti-normal linear and quadratic rules"]
 (* Weyl splitting: the Gaussian prefactor flips sign and the factors swap order *)
 VerificationTest[
     BosonicExpOrder[Exp[\[Alpha]*SuperDagger[\[FormalA]] + \[Beta]*\[FormalA]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     E^(\[FormalA]*\[Beta])**E^(\[Alpha]*SuperDagger[\[FormalA]])/E^((\[Alpha]*\[Beta])/2),
     TestID -> "BosonicExpAnti-WeylSplitting"
 ]
@@ -87,7 +90,7 @@ VerificationTest[
 (* the reordering rule matches the opposite input shape to its normal counterpart *)
 VerificationTest[
     BosonicExpOrder[Exp[\[Beta]*SuperDagger[\[FormalA]]]**Exp[\[Alpha]*\[FormalA]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     E^(\[FormalA]*\[Alpha])**E^(\[Beta]*SuperDagger[\[FormalA]])/E^(\[Alpha]*\[Beta]),
     TestID -> "BosonicExpAnti-ReorderProduct"
 ]
@@ -98,7 +101,7 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Beta]*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]]**
             Exp[\[Alpha]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     E^((\[Alpha]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2])/
             (1 - 4*\[Alpha]*\[Beta]))**
         (1 - 4*\[Alpha]*\[Beta])^(\[FormalA]**SuperDagger[\[FormalA]])**
@@ -112,7 +115,7 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Alpha]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2] +
             \[Beta]*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     E^((\[Alpha]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]*
             Tan[2*Sqrt[\[Alpha]*\[Beta]]])/(2*Sqrt[\[Alpha]*\[Beta]]))**
         Sec[2*Sqrt[\[Alpha]*\[Beta]]]^(1/2 - \[FormalA]**SuperDagger[\[FormalA]])**
@@ -132,7 +135,7 @@ VerificationTest[
     BosonicExpOrder[
         (SuperDagger[\[FormalA]]**SuperDagger[\[FormalA]]**\[FormalA])**
             Exp[\[Alpha]*\[FormalA]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     E^(\[FormalA]*\[Alpha])**(2*\[Alpha] + \[FormalA]*\[Alpha]^2 +
         \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] -
         2*\[Alpha]*\[FormalA]**SuperDagger[\[FormalA]] - 2*SuperDagger[\[FormalA]]),
@@ -144,7 +147,7 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Beta]*SuperDagger[\[FormalA]]]**
             (SuperDagger[\[FormalA]]**\[FormalA]**\[FormalA]),
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     (-2*\[FormalA] + 2*\[Beta] - 2*\[Beta]*\[FormalA]**SuperDagger[\[FormalA]] +
         GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]**SuperDagger[\[FormalA]] +
         \[Beta]^2*SuperDagger[\[FormalA]])**E^(\[Beta]*SuperDagger[\[FormalA]]),
@@ -164,13 +167,13 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Lambda]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]**
             SuperDagger[\[FormalA]]**\[FormalA]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     AntinormalOrdered[
         (1/Sqrt[1 + 2*\[Lambda]*
             GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]])**
         E^((1 - 1/Sqrt[1 + 2*\[Lambda]*
             GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]])**
-            \[FormalA]**SuperDagger[\[FormalA]])],
+            \[FormalA]**SuperDagger[\[FormalA]]), $v1],
     TestID -> "BosonicExpAnti-Thm44-L2R1"
 ]
 
@@ -179,11 +182,11 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Lambda]*SuperDagger[\[FormalA]]**
             GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     AntinormalOrdered[
         (1 + \[FormalA]*\[Lambda])^(-2)**
         E^(((\[FormalA]*\[Lambda])/(1 + \[FormalA]*\[Lambda]))**
-            \[FormalA]**SuperDagger[\[FormalA]])],
+            \[FormalA]**SuperDagger[\[FormalA]]), $v1],
     TestID -> "BosonicExpAnti-Thm44-L0R2"
 ]
 
@@ -192,10 +195,10 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Lambda]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]**
             SuperDagger[\[FormalA]]],
-        "Ordering" -> "Antinormal"],
+        $v1, "Ordering" -> "Antinormal"],
     AntinormalOrdered[
         E^(((\[FormalA]*\[Lambda])/(1 + \[FormalA]*\[Lambda]))**
-            \[FormalA]**SuperDagger[\[FormalA]])],
+            \[FormalA]**SuperDagger[\[FormalA]]), $v1],
     TestID -> "BosonicExpAnti-Thm44-L2R0"
 ]
 
@@ -211,7 +214,7 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Alpha]*SuperDagger[\[FormalA]]**\[FormalB] +
             \[Beta]*\[FormalA]**SuperDagger[\[FormalB]]],
-        "Ordering" -> "Antinormal"],
+        $v2, "Ordering" -> "Antinormal"],
     E^((\[Beta]*\[FormalA]**SuperDagger[\[FormalB]]*Tanh[Sqrt[\[Alpha]*\[Beta]]])/
             Sqrt[\[Alpha]*\[Beta]])**
         Cosh[Sqrt[\[Alpha]*\[Beta]]]^(\[FormalA]**SuperDagger[\[FormalA]] -
@@ -226,7 +229,7 @@ VerificationTest[
     BosonicExpOrder[
         Exp[\[Alpha]*\[FormalA]**\[FormalB] +
             \[Beta]*SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]]],
-        "Ordering" -> "Antinormal"],
+        $v2, "Ordering" -> "Antinormal"],
     Sec[Sqrt[\[Alpha]*\[Beta]]]*(E^((\[Alpha]*\[FormalA]**\[FormalB]*Tan[Sqrt[\[Alpha]*\[Beta]]])/
             Sqrt[\[Alpha]*\[Beta]])**
         Sec[Sqrt[\[Alpha]*\[Beta]]]^(-\[FormalA]**SuperDagger[\[FormalA]] -
@@ -245,7 +248,7 @@ VerificationTest[
         am = Normal[AnnihilationOperator[big]["Matrix"]];
         idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
         ord = BosonicExpOrder[Exp[0.15 SuperDagger[\[FormalA]]]**Exp[-0.25 \[FormalB]]**
-            Exp[0.3 SuperDagger[\[FormalB]]]**Exp[0.2 \[FormalA]], "Ordering" -> "Antinormal"];
+            Exp[0.3 SuperDagger[\[FormalB]]]**Exp[0.2 \[FormalA]], $v2, "Ordering" -> "Antinormal"];
         Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] -
             KroneckerProduct[
                 (MatrixExp[0.15 ConjugateTranspose[am]] . MatrixExp[0.2 am])[[;; 3, ;; 3]],
@@ -263,7 +266,7 @@ VerificationTest[
         idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
         rank = Which[FreeQ[#, SuperDagger], 3, FreeQ[# /. SuperDagger[_] -> 1, \[FormalA] | \[FormalB]], 1, True, 2] &;
         in = Exp[0.15 SuperDagger[\[FormalA]]]**Exp[0.3 SuperDagger[\[FormalB]]]**Exp[-0.25 \[FormalB]]**Exp[0.2 \[FormalA]];
-        ord = BosonicExpOrder[in, "Ordering" -> "Antinormal"];
+        ord = BosonicExpOrder[in, $v2, "Ordering" -> "Antinormal"];
         {
             rank /@ List @@ Replace[ord, c_ m_NonCommutativeMultiply /; FreeQ[c, \[FormalA] | \[FormalB]] :> m],
             Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] -

@@ -6,6 +6,7 @@ Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 $a = \[FormalA];
 $ad = SuperDagger[\[FormalA]];
 $n = $ad ** $a;
+$vars = {{$ad}, {$a}};
 
 (* Displacement generator \[Alpha] a\[Dagger] - Conjugate[\[Alpha]] a. *)
 $disp = \[Alpha] $ad - Conjugate[\[Alpha]] $a;
@@ -23,7 +24,7 @@ BeginTestSection["BosonicExpSimplify - adjacent pair reduction"]
 
 (* [\[Alpha] a\[Dagger], \[Beta] a] = -\[Alpha]\[Beta] is a c-number, so the Weyl/BCH shortcut applies. *)
 VerificationTest[
-    BosonicExpSimplify[Exp[\[Alpha] $ad] ** Exp[\[Beta] $a]],
+    BosonicExpSimplify[Exp[\[Alpha] $ad] ** Exp[\[Beta] $a], $vars],
     Exp[-\[Alpha] \[Beta]/2] Exp[\[Alpha] $ad + \[Beta] $a],
     {},
     TestID -> "BosonicExpSimplify-WeylPairCentralCommutator"
@@ -33,7 +34,7 @@ VerificationTest[
    own, so compare the generators rather than their printed form. *)
 VerificationTest[
     sameGeneratorQ[
-        BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[\[Gamma] $n]],
+        BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[\[Gamma] $n], $vars],
         (\[Beta] + \[Gamma]) $n
     ],
     True,
@@ -44,7 +45,7 @@ VerificationTest[
 (* An exponential times its inverse must collapse to the identity, not to a
    two-factor product. This is the pre-pass that In[77] needed. *)
 VerificationTest[
-    BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[-\[Beta] $n]],
+    BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[-\[Beta] $n], $vars],
     1,
     {},
     TestID -> "BosonicExpSimplify-InversePairCancels"
@@ -54,7 +55,7 @@ VerificationTest[
    an adjacent window, not the whole expression. *)
 VerificationTest[
     BosonicExpSimplify[
-        Exp[\[Alpha] $ad] ** Exp[\[Beta] $n] ** Exp[-\[Beta] $n] ** Exp[\[Gamma] $a]],
+        Exp[\[Alpha] $ad] ** Exp[\[Beta] $n] ** Exp[-\[Beta] $n] ** Exp[\[Gamma] $a], $vars],
     Exp[-\[Alpha] \[Gamma]/2] Exp[\[Alpha] $ad + \[Gamma] $a],
     {},
     TestID -> "BosonicExpSimplify-InversePairInsideLongerProduct"
@@ -69,7 +70,7 @@ BeginTestSection["BosonicExpSimplify - conjugation"]
 VerificationTest[
     sameGeneratorQ[
         FullSimplify @ BosonicExpSimplify[
-            Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n]],
+            Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n], $vars],
         \[Alpha] Exp[\[Beta]] $ad - Conjugate[\[Alpha]] Exp[-\[Beta]] $a
     ],
     True,
@@ -83,7 +84,7 @@ VerificationTest[
     sameGeneratorQ[
         FullSimplify[
             BosonicExpSimplify[
-                Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n]] /. \[Beta] -> -I \[Omega] t],
+                Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n], $vars] /. \[Beta] -> -I \[Omega] t],
         \[Alpha] Exp[-I \[Omega] t] $ad - Conjugate[\[Alpha]] Exp[I \[Omega] t] $a
     ],
     True,
@@ -96,7 +97,7 @@ VerificationTest[
    so only the per-factor distribution can finish it:
    e^(\[Alpha] a\[Dagger]) a a e^(-\[Alpha] a\[Dagger]) = (a - \[Alpha])(a - \[Alpha]). *)
 VerificationTest[
-    BosonicExpSimplify[Exp[\[Alpha] $ad] ** $a ** $a ** Exp[-\[Alpha] $ad]],
+    BosonicExpSimplify[Exp[\[Alpha] $ad] ** $a ** $a ** Exp[-\[Alpha] $ad], $vars],
     ($a - \[Alpha]) ** ($a - \[Alpha]),
     {},
     TestID -> "BosonicExpSimplify-ConjugationDistributesOverFactors"
@@ -106,7 +107,7 @@ VerificationTest[
    Flat pattern lets the single-factor rule absorb the run:
    e^(\[Beta] n) a\[Dagger] a e^(-\[Beta] n) = a\[Dagger] a. *)
 VerificationTest[
-    BosonicExpSimplify[Exp[\[Beta] $n] ** $ad ** $a ** Exp[-\[Beta] $n]],
+    BosonicExpSimplify[Exp[\[Beta] $n] ** $ad ** $a ** Exp[-\[Beta] $n], $vars],
     $ad ** $a,
     {},
     TestID -> "BosonicExpSimplify-ConjugationOfNumberOperatorIsFixed"
@@ -123,7 +124,7 @@ BeginTestSection["BosonicExpSimplify - four-factor gap"]
 VerificationTest[
     sameGeneratorQ[
         FullSimplify @ First @ BosonicExpSimplify[
-            Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n]],
+            Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n], $vars],
         \[Alpha] Exp[\[Beta]] $ad - Conjugate[\[Alpha]] Exp[-\[Beta]] $a
     ],
     True,
@@ -133,7 +134,7 @@ VerificationTest[
 
 VerificationTest[
     Last @ BosonicExpSimplify[
-        Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n]],
+        Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n], $vars],
     Exp[\[Beta] $n],
     {},
     TestID -> "BosonicExpSimplify-FourFactorSecondFactorIsNumberExponential"
@@ -141,7 +142,7 @@ VerificationTest[
 
 VerificationTest[
     Length @ BosonicExpSimplify[
-        Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n]],
+        Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n], $vars],
     2,
     {},
     TestID -> "BosonicExpSimplify-FourFactorReducesToTwoFactors"
@@ -156,14 +157,14 @@ BeginTestSection["BosonicExpSimplify - declines silently"]
    claimed. The input must come back untouched and, crucially, with no
    NonCommutativePolynomialReduce::ncpv leaking out of the internals. *)
 VerificationTest[
-    BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[$disp]],
+    BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[$disp], $vars],
     Exp[\[Beta] $n] ** Exp[$disp],
     {},
     TestID -> "BosonicExpSimplify-NonCentralPairReturnsInputSilently"
 ]
 
 VerificationTest[
-    BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[$disp] ** Exp[\[Beta] $n]],
+    BosonicExpSimplify[Exp[\[Beta] $n] ** Exp[$disp] ** Exp[\[Beta] $n], $vars],
     Exp[\[Beta] $n] ** Exp[$disp] ** Exp[\[Beta] $n],
     {},
     TestID -> "BosonicExpSimplify-NonInverseSandwichReturnsInputSilently"
@@ -176,7 +177,7 @@ BeginTestSection["BosonicExpSimplify - polynomial past exponential"]
 
 (* a e^(\[Alpha] a\[Dagger]) = e^(\[Alpha] a\[Dagger]) (a + \[Alpha]). *)
 VerificationTest[
-    BosonicExpSimplify[$a ** Exp[\[Alpha] $ad]],
+    BosonicExpSimplify[$a ** Exp[\[Alpha] $ad], $vars],
     Exp[\[Alpha] $ad] ** (\[Alpha] + $a),
     {},
     TestID -> "BosonicExpSimplify-PolynomialPastCreationExponential"
@@ -201,7 +202,7 @@ VerificationTest[
             MatrixExp[(\[Alpha] /. num) ad - Conjugate[\[Alpha] /. num] av];
         (* Scalars before matrices, so MatrixExp only sees a numeric matrix. *)
         expo = FullSimplify @ exponentOf @ First @ BosonicExpSimplify[
-            Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n]];
+            Exp[\[Beta] $n] ** Exp[$disp] ** Exp[-\[Beta] $n] ** Exp[\[Beta] $n], $vars];
         rhs = MatrixExp[expo /. num /. {$ad -> ad, $a -> av}] .
             MatrixExp[(\[Beta] /. num) nOp];
         blk = Normal[#][[;; keep, ;; keep]] &;
@@ -226,6 +227,7 @@ $squeeze[z_] := Exp[1/2 Conjugate[z] $a ** $a - 1/2 z $ad ** $ad];
 VerificationTest[
     BosonicExpSimplify[
         $squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])],
+        $vars,
         Assumptions -> r > 0 && \[Theta] \[Element] Reals
     ],
     $a Cosh[r] - E^(I \[Theta]) Sinh[r] $ad,
@@ -236,6 +238,7 @@ VerificationTest[
 VerificationTest[
     BosonicExpSimplify[
         $squeeze[-r E^(I \[Theta])] ** $ad ** $squeeze[r E^(I \[Theta])],
+        $vars,
         Assumptions -> r > 0 && \[Theta] \[Element] Reals
     ],
     $ad Cosh[r] - E^(-I \[Theta]) Sinh[r] $a,
@@ -243,24 +246,23 @@ VerificationTest[
     TestID -> "BosonicExpSimplify-AssumptionsSqueezedCreation"
 ]
 
-(* The option must survive the explicit-vars overload alongside "Scalars". *)
+(* A WeylAlgebra declares the same ladder operators as the lists, and the option survives it. *)
 VerificationTest[
     BosonicExpSimplify[
         $squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])],
-        {$a, $ad},
-        "Scalars" -> {r, \[Theta]},
+        WeylAlgebra[$vars],
         Assumptions -> r > 0 && \[Theta] \[Element] Reals
     ],
     $a Cosh[r] - E^(I \[Theta]) Sinh[r] $ad,
     {},
-    TestID -> "BosonicExpSimplify-AssumptionsWithExplicitVars"
+    TestID -> "BosonicExpSimplify-AssumptionsWithWeylAlgebra"
 ]
 
 (* Assumptions are additive only: with none supplied the result must still be
    the unassumed closed form, equal to the assumed one under Simplify. *)
 VerificationTest[
     Simplify[
-        BosonicExpSimplify[$squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])]] -
+        BosonicExpSimplify[$squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])], $vars] -
             ($a Cosh[r] - E^(I \[Theta]) Sinh[r] $ad),
         r > 0 && \[Theta] \[Element] Reals
     ],
