@@ -167,7 +167,21 @@ QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumO
 
 (* exp(-i angle/2 sigma_k) for the generalized Pauli operator sigma_k; for a qubit,
    cos(angle/2) - i sin(angle/2) sigma_k, since sigma_k^2 = 1 *)
-rotationMatrix[3, angle_, 2] := DiagonalMatrix[FullSimplify[{Exp[- I angle / 2], Exp[I angle / 2]}]]
+rotationMatrix[3, angle_, 2] := DiagonalMatrix[zRotationPhases[angle]]
+
+(* FullSimplify of the phases e^(-+i angle/2) is kept only where it can change their form: an
+   exact angle, or a symbolic one holding a number or a numeric constant such as Pi. For an
+   inexact number, or symbols with integer and rational coefficients only, it returns the
+   phases as they are, at several milliseconds per angle. *)
+zRotationPhases[angle_] := With[{phases = {Exp[- I angle / 2], Exp[I angle / 2]}},
+    If[ InexactNumberQ[angle] || ! NumericQ[angle] && FreeQ[angle, _Real | _Complex | _ ? numericConstantQ],
+        phases,
+        FullSimplify[phases]
+    ]
+]
+
+numericConstantQ[s_Symbol] := NumericQ[s]
+numericConstantQ[_] := False
 rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
 rotationMatrix[k_, angle_, dimension_] := Map[FullSimplify, Normal @ matrixExponential[- I angle / 2 pauliMatrix[k, dimension]], {2}]
 
@@ -198,7 +212,7 @@ QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Pos
 
 QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
-        QuantumOperator[DiagonalMatrix[FullSimplify[{Exp[- I angle / 2], Exp[I angle / 2]}]], "Label" -> Subscript["R", "Z"][angle]],
+        QuantumOperator[rotationMatrix[3, angle, 2], "Label" -> Subscript["R", "Z"][angle]],
         FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]], "Label" -> Subscript["R", "Z"][angle]]
     ],
     opts
