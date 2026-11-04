@@ -73,8 +73,10 @@ Scan[
     Tuples[{Keys[$pauli], {3, 4}}]
 ];
 
-(* a qudit rotation keeps the form of exp(-i theta/2 sigma_k) as the operator exponential
-   gives it after FullSimplify, not only its value *)
+(* a qudit rotation is stored as the operator exponential exp(-i theta/2 sigma_k) gives it
+   after FullSimplify, as the gate was built before it had a rule on its wire. FullSimplify
+   of the d = 4 R_Y has more than one form, and which it returns depends on what the kernel
+   has simplified before, so the two are compared in the same kernel. *)
 Scan[
     Function[{gd},
         VerificationTest[

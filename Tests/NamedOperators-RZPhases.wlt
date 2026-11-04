@@ -1,7 +1,7 @@
 (* R_Z(theta) = diag(e^(-i theta/2), e^(i theta/2)). Its phases are passed through
-   FullSimplify except for an inexact angle or a single parameter (theta, theta[1],
-   Subscript[theta, 1]) times an integer or a rational, where FullSimplify returns them
-   unchanged. So a new symbolic R_Z costs no more than a general 2x2 operator, and every
+   FullSimplify except for an inexact angle or, with no $Assumptions, a single parameter
+   (theta, theta[1], Subscript[theta, 1]) times an integer or a rational, where
+   FullSimplify returns them unchanged. So a new symbolic R_Z costs no more than a general 2x2 operator, and every
    angle keeps the matrix it had.
 
    References are independent of the route under test: the phases passed through
@@ -15,7 +15,10 @@
                           Sin[theta], f[t], (1 + theta)^2 - theta^2, Log[x]/Log[2],
                           ArcCos[x] + ArcSin[x]); substituting a value afterwards, the
                           derivative in theta
-     exactly solvable     0, 1/3, Sqrt[2], Pi/2, Pi/7, ArcCos[1/3], the default Pi/2
+     exactly solvable     0, 1/3, Sqrt[2], Pi/2, Pi/7, ArcCos[1/3], and numeric functions of
+                          an integer, ArcCos[2], ArcCos[3], ProductLog[1]; the default Pi/2
+     assumptions          theta under $Assumptions = (theta == Pi) is simplified to
+                          diag(-i, i)
      mixed                theta + Pi/2, theta + 2 Pi, theta + ArcTan[1/2],
                           theta + Log[3] - Log[3/2], theta/Log[2], i theta, Degree theta,
                           0.5 theta, 0.3 + theta
@@ -39,7 +42,7 @@ $angles = {
     \[Theta] + \[Phi], \[Theta] - \[Phi], 2 \[Theta] + 2 \[Phi], 2 \[Theta] + 4, a \[Theta] + b, \[Theta] \[Phi],
     \[Theta][1] + \[Theta][2], f[t], \[Theta]^2, Sqrt[2] \[Theta], Sin[\[Theta]], (1 + \[Theta])^2 - \[Theta]^2,
     Log[x] / Log[2], ArcCos[x] + ArcSin[x],
-    0, 1 / 3, Sqrt[2], Pi / 2, Pi / 7, ArcCos[1 / 3],
+    0, 1 / 3, Sqrt[2], Pi / 2, Pi / 7, ArcCos[1 / 3], ArcCos[2], ArcCos[3], ProductLog[1],
     \[Theta] + Pi / 2, \[Theta] + 2 Pi, \[Theta] + ArcTan[1 / 2], \[Theta] + Log[3] - Log[3 / 2], \[Theta] / Log[2],
     I \[Theta], Degree \[Theta], 0.5 \[Theta], 0.3 + \[Theta],
     0.3, 1.5 + 0.5 I, N[1 / 3, 30]
@@ -67,6 +70,12 @@ VerificationTest[
     {rzMatrix[] === simplifiedForm[Pi / 2], Precision[rzMatrix[N[1 / 3, 30]]] >= 30},
     {True, True},
     TestID -> "RZPhases-default-angle-and-precision"
+]
+
+VerificationTest[
+    Block[{$Assumptions = \[Theta] == Pi}, {rzMatrix[\[Theta]], rzMatrix[\[Theta]] === simplifiedForm[\[Theta]]}],
+    {{{-I, 0}, {0, I}}, True},
+    TestID -> "RZPhases-assumptions"
 ]
 
 VerificationTest[

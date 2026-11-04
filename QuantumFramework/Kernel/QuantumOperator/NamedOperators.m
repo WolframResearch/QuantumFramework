@@ -170,18 +170,19 @@ QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumO
 rotationMatrix[3, angle_, 2] := DiagonalMatrix[zRotationPhases[angle]]
 
 (* FullSimplify of the phases e^(-+i angle/2) costs several milliseconds per angle. It is
-   skipped for an inexact number, and for a single parameter (theta, theta[1],
-   Subscript[theta, 1]) times an integer or a rational, where it returns the phases as they
-   are; any other angle, a sum or a function of parameters among them, keeps it. *)
+   skipped for an inexact number, and, with no $Assumptions, for a single parameter (theta,
+   theta[1], Subscript[theta, 1]) times an integer or a rational, where it returns the
+   phases as they are; any other angle, a sum, a function of parameters or a numeric
+   function of an integer such as ArcCos[2] among them, keeps it. *)
 zRotationPhases[angle_] := With[{phases = {Exp[- I angle / 2], Exp[I angle / 2]}},
-    If[ InexactNumberQ[angle] || MatchQ[angle, _ ? angleParameterQ | (_Integer | _Rational) _ ? angleParameterQ],
+    If[ InexactNumberQ[angle] || $Assumptions === True && MatchQ[angle, _ ? angleParameterQ | (_Integer | _Rational) _ ? angleParameterQ],
         phases,
         FullSimplify[phases]
     ]
 ]
 
 angleParameterQ[s_Symbol] := ! NumericQ[s]
-angleParameterQ[(s_Symbol ? angleParameterQ)[__Integer]] := True
+angleParameterQ[e : (_Symbol ? angleParameterQ)[__Integer]] := ! NumericQ[e]
 angleParameterQ[Subscript[_Symbol ? angleParameterQ, __Integer]] := True
 angleParameterQ[_] := False
 rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]

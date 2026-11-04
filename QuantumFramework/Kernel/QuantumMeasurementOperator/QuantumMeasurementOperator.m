@@ -7,7 +7,7 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 QuantumMeasurementOperator::invalidName = "`1` is not a recognized QuantumMeasurementOperator constructor"
 QuantumMeasurementOperator::invalidArgs = "QuantumMeasurementOperator constructor `1` did not match any rule"
-QuantumMeasurementOperator::numfunc = "`1` is not defined for a measurement operator, which holds the operators of all its outcomes in one; only multiplying it by a number and Conjugate are. To measure with effects {E1, E2, ...}, give them to QuantumMeasurementOperator, which takes the square root of each."
+QuantumMeasurementOperator::numfunc = "`1` is not defined for a measurement operator, which holds the operators of all its outcomes in one; only multiplying it by a number, Conjugate, and adding two measurement operators are. To measure with effects {E1, E2, ...}, give them to QuantumMeasurementOperator, which takes the square root of each."
 
 
 quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]], _ ? targetsQ]] := True
