@@ -57,9 +57,10 @@ QuantumEntangledQ::zero = QuantumEntanglementMonotone::zero =
     "The state has no normalized form: it is a state vector of norm 0, or a density matrix whose trace is 0, for approximate entries within the round-off of its diagonal."
 
 QuantumEntangledQ::notphysical = QuantumEntanglementMonotone::notphysical =
-    "The state is not physical: its density matrix in the computational basis is not Hermitian and positive semidefinite to the precision of its entries, or, with symbolic entries, for any real values of its parameters. An approximate state known only to an accuracy e, as from a numerical solution, can be given Tolerance -> e in QuantumEntanglementMonotone."
+    "The state is not physical: its density matrix in the computational basis is not Hermitian and positive semidefinite to the precision of its entries, or, with symbolic entries, for any real values of its parameters. An approximate state known only to an accuracy e, as from a numerical solution, can be given Tolerance -> e in QuantumEntanglementMonotone and QuantumEntangledQ."
 
-QuantumEntanglementMonotone::tolerance = "Tolerance must be Automatic or a nonnegative real number; it is `1`."
+QuantumEntangledQ::tolerance = QuantumEntanglementMonotone::tolerance = "Tolerance must be Automatic or a nonnegative real number; it is `1`."
+QuantumEntangledQ::tolmethod = "Tolerance applies to the methods Automatic, \"Negativity\" and \"LogNegativity\", which test the partial transpose; the method is `1`."
 QuantumEntanglementMonotone::assumptions = "The assumptions `1` contradict each other, so no value of the parameters meets them."
 
 QuantumEntanglementMonotone::measurement =
@@ -373,9 +374,75 @@ measurementFitsQ[qs_, qm_QuantumMeasurementOperator, split_] := With[{d = qs["Bi
    physical parameter values cannot be found is Indeterminate. Invalid arguments and states, and the mutual
    informations and the discord, which are positive on separable states too, are refused before any of this, by
    entanglementArguments. *)
-QuantumEntangledQ[qs_ ? QuantumStateQ, args___] := With[{a = entanglementArguments[QuantumEntangledQ, qs, {args}]},
-    If[FailureQ[a], a, entangledQ[qs, Sequence @@ a]]
+Options[QuantumEntangledQ] = {Tolerance -> Automatic};
+
+QuantumEntangledQ[qs_ ? QuantumStateQ, args___, opts : OptionsPattern[]] := Which[
+    FilterRules[{opts}, Except[Options[QuantumEntangledQ]]] =!= {},
+    entanglementFailure[QuantumEntangledQ, "InvalidArguments", "args", {{args, opts}}],
+    ! MatchQ[OptionValue[Tolerance], Automatic | _ ? (NumericQ[#] && Im[#] == 0 && # >= 0 &)],
+    entanglementFailure[QuantumEntangledQ, "InvalidTolerance", "tolerance", {OptionValue[Tolerance]}],
+    True,
+    Block[{$stateTolerance = OptionValue[Tolerance]}, With[{a = entanglementArguments[QuantumEntangledQ, qs, {args}]},
+        Which[
+            FailureQ[a], a,
+            ! NumericQ[$stateTolerance], entangledQ[qs, Sequence @@ a],
+            ! MatchQ[Last[a], Automatic | "Negativity" | "LogNegativity"],
+            entanglementFailure[QuantumEntangledQ, "InvalidMethod", "tolmethod", {Last[a]}],
+            True, toleratedEntangledQ[qs, Sequence @@ a]
+        ]
+    ]]
 ]
+
+(* Whether every state within an accuracy e of the approximate density matrix qs is entangled across the split.
+
+   Tolerance -> e states that the true state rho0 is within e of the given matrix in operator norm, as in
+   QuantumEntanglementMonotone (stateToleranceCut). A matrix with an eigenvalue below -e is refused before this, by
+   entanglementArguments. The answer must hold for every such rho0: True when each is entangled, False when each is
+   separable, and Indeterminate when the data allow both, as near the time a decaying pair loses its entanglement.
+
+   The decision is read on h, the Hermitian part of the split state in the computational frame with trace 1, n its
+   dimension. The error Delta = rho0 - h has operator norm at most e', which is e times the dimension of the parts the
+   split traces out (each partial trace adds up that many diagonal blocks), times the frame factor of frameRoundoff
+   for a frame that is not unitary, plus the round-off cut of h's own entries (criterionCut). Three bounds follow, each
+   from the Hilbert-Schmidt norm, ||Delta||_2 <= Sqrt[n] e', which the partial transpose and the realignment keep,
+   since both only move entries:
+   - partial transpose: ||Delta^T_B||_op <= ||Delta^T_B||_2 = ||Delta||_2, so by Weyl's inequality every eigenvalue of
+     rho0^T_B is within Sqrt[n] e' of one of h^T_B. A smallest eigenvalue below -Sqrt[n] e' proves every rho0
+     entangled; one above Sqrt[n] e' proves every rho0 has a positive partial transpose, hence separable on 2 x 2 and
+     2 x 3 (pptSeparableQ).
+   - realignment: R(Delta) is dA^2 x dB^2, of rank at most min(dA, dB)^2, so ||R(Delta)||_1 <= min(dA, dB) Sqrt[n] e'.
+     ||R(h)||_1 - 1 above that proves every rho0 violates the realignment criterion, as Automatic reads it beyond
+     2 x 3.
+   - purity ball: rho0 is separable when ||rho0 - I/n||_2 <= 1 / Sqrt[n (n - 1)], which is Tr[rho0^2] <= 1 / (n - 1)
+     (Gurvits and Barnum, PRA 66, 062311 (2002)), and ||rho0 - I/n||_2 <= ||h - I/n||_2 + Sqrt[n] e'.
+   The negativity methods answer with the partial transpose alone, as without Tolerance. These bounds are not tight
+   (the partial transpose moves an operator-norm error by at most min(dA, dB) e', not Sqrt[n] e'), so near a boundary
+   the answer is Indeterminate somewhat earlier than it must be, never wrong. A state vector, and an exact or symbolic
+   state, carry no error to bound: they are answered as without Tolerance. *)
+toleratedEntangledQ[qs_, split_, method_] := If[
+    qs["MatrixQ"] && ArrayQ[qs["State"], 2, NumericQ] && Precision[qs["State"]] < Infinity,
+    With[{bp = qs["Bipartition", split]},
+        With[{h = # / Re[Tr[#]] & @ hermitianPart[Normal @ computationalForm[bp]["DensityMatrix"]], d = bp["Dimensions"]},
+            With[{n = Length[h], ep = SetPrecision[$stateTolerance, Infinity] frameRoundoff[qs] qs["Dimension"] / bp["Dimension"] + criterionCut[h]},
+                With[{low = SetPrecision[Min[Re[Eigenvalues[partialTransposeMatrix[h, d]]]], Infinity], bound = Sqrt[n] ep},
+                    Which[
+                        low < - bound, True,
+                        low > bound && n <= 6, False,
+                        method === Automatic && n > 6 &&
+                            SetPrecision[Total[SingularValueList[realignedMatrix[h, d], Tolerance -> 0]], Infinity] - 1 > Min[d] bound,
+                        True,
+                        method === Automatic && SetPrecision[Norm[h - IdentityMatrix[n] / n, "Frobenius"], Infinity] + bound <= 1 / Sqrt[n (n - 1)],
+                        False,
+                        True, Indeterminate
+                    ]
+                ]
+            ]
+        ]
+    ],
+    entangledQ[qs, split, method]
+]
+
+realignedMatrix[m_, d_] := ArrayReshape[Transpose[ArrayReshape[m, Join[d, d]], 2 <-> 3], d ^ 2]
 
 QuantumEntangledQ[args___] /; ! MatchQ[{args}, {_ ? QuantumStateQ, ___}] :=
     entanglementFailure[QuantumEntangledQ, "InvalidState", "state", {If[{args} === {}, "missing", First[{args}]]}]

@@ -1096,6 +1096,84 @@ VerificationTest[
 ]
 
 
+(* ========== Entanglement of an approximate state known to a given accuracy ========== *)
+
+(* With equal rates and th = Pi/3 the pair Sin[th] |00> + Cos[th] |11> loses its entanglement at the finite time
+   1 - Exp[-tau] = Cot[th] (Yu and Eberly): there the smallest eigenvalue of the partial transpose crosses 0, and the
+   solver's error, about 10^-7 at that time, gives it either sign. With Tolerance -> 10^-6 the answer holds for every
+   state within that accuracy: entangled well before, separable well after (2 x 2, a positive partial transpose is
+   separable), and Indeterminate at the death time itself. *)
+VerificationTest[
+    With[{ev = numericDampedPair[Pi/3., 1., 1.], td = - Log[1 - Cot[Pi/3.]]},
+        QuantumEntangledQ[ev /. \[FormalT] -> #, Tolerance -> 10^-6] & /@ {0.5, td - 0.01, td, td + 0.01, 1.5}
+    ],
+    {True, True, Indeterminate, False, False},
+    {},
+    TestID -> "Tolerance-EntangledQ-SuddenDeath"
+]
+
+(* The isotropic qutrit state p |Phi><Phi| + (1 - p) I / 9 at p = 1/2 has smallest partial-transpose eigenvalue -1/9
+   and realignment value ||R||_1 - 1 = 2/3. An error e moves the first by up to 3 e and the second by up to 9 e: at
+   e = 0.05 the partial transpose no longer decides, the realignment that Automatic reads beyond 2 x 3 still proves
+   entanglement, and at e = 0.1 neither does. *)
+VerificationTest[
+    With[{iso = QuantumState[N[Outer[Times, Flatten[IdentityMatrix[3]], Flatten[IdentityMatrix[3]]] / 6 + IdentityMatrix[9] / 18], {3, 3}]},
+        {
+            QuantumEntangledQ[iso, Tolerance -> 10^-6],
+            QuantumEntangledQ[iso, Tolerance -> 0.05],
+            QuantumEntangledQ[iso, "Negativity", Tolerance -> 0.05],
+            QuantumEntangledQ[iso, Tolerance -> 0.1]
+        }
+    ],
+    {True, True, Indeterminate, Indeterminate},
+    {},
+    TestID -> "Tolerance-EntangledQ-IsotropicQutrits"
+]
+
+(* The isotropic qutrit state at p = 1/20 is at Hilbert-Schmidt distance (1/20) Sqrt[8/9] from I/9, inside the ball
+   of radius 1 / Sqrt[72] in which every state is separable (Gurvits and Barnum): separable for e = 10^-6, whose
+   9 x 9 neighborhood stays inside, and Indeterminate for e = 0.03, whose neighborhood reaches past it. *)
+VerificationTest[
+    With[{iso = QuantumState[N[Outer[Times, Flatten[IdentityMatrix[3]], Flatten[IdentityMatrix[3]]] / 60 + 19 IdentityMatrix[9] / 180], {3, 3}]},
+        {QuantumEntangledQ[iso, Tolerance -> 10^-6], QuantumEntangledQ[iso, Tolerance -> 0.03]}
+    ],
+    {False, Indeterminate},
+    {},
+    TestID -> "Tolerance-EntangledQ-PurityBall"
+]
+
+(* Two qubits of GHZ hold (|00><00| + |11><11|) / 2, classically correlated and separable, but with a partial
+   transpose of eigenvalue 0: adding e (|00><11| + |11><00|) gives it the eigenvalue -e, an entangled state within any
+   accuracy. So without Tolerance it is separable, with any Tolerance Indeterminate, while the cut of one qubit from
+   the other two is entangled either way. *)
+VerificationTest[
+    With[{g = QuantumState[N @ Normal @ QuantumState["GHZ"[3]]["DensityMatrix"], {2, 2, 2}]},
+        {
+            QuantumEntangledQ[g, {{1}, {2}}],
+            QuantumEntangledQ[g, {{1}, {2}}, Tolerance -> 10^-6],
+            QuantumEntangledQ[g, {{1}, {2, 3}}, Tolerance -> 10^-6]
+        }
+    ],
+    {False, Indeterminate, True},
+    {},
+    TestID -> "Tolerance-EntangledQ-ClassicalCorrelations"
+]
+
+(* an accuracy that is not a nonnegative number, a method other than the partial-transpose tests, and an unknown
+   option are refused; an exact state has no error to bound and is answered as without Tolerance *)
+VerificationTest[
+    {
+        FailureQ @ QuantumEntangledQ[QuantumState["PhiPlus"], Tolerance -> -1],
+        FailureQ @ QuantumEntangledQ[QuantumState[N @ Normal @ QuantumState["PhiPlus"]["DensityMatrix"], {2, 2}], "Concurrence", Tolerance -> 10^-6],
+        FailureQ @ QuantumEntangledQ[QuantumState["PhiPlus"], Foo -> 1],
+        QuantumEntangledQ[QuantumState["PhiPlus"], Tolerance -> 1/10]
+    },
+    {True, True, True, True},
+    {QuantumEntangledQ::tolerance, QuantumEntangledQ::tolmethod, QuantumEntangledQ::args},
+    TestID -> "Tolerance-EntangledQ-Refusals"
+]
+
+
 (* ========== Monotones of a symbolic state under assumptions on its parameters ========== *)
 
 (* The Werner state p |Psi-><Psi-| + (1 - p) I / 4 is entangled exactly for p > 1/3, with concurrence (3 p - 1) / 2
