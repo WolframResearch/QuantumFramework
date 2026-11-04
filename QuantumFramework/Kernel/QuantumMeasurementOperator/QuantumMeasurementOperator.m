@@ -298,8 +298,8 @@ QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurem
         qmo1["Targets"]
     ]
 
-QuantumMeasurementOperator /: f_Symbol[left : Except[_QuantumMeasurementOperator] ...,
-    qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+QuantumMeasurementOperator /: (f_Symbol ? numericFunctionQ)[left : Except[_QuantumMeasurementOperator] ...,
+    qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] :=
     QuantumMeasurementOperator[f[left, qmo["Operator"], right], qmo["Target"]]
 
 

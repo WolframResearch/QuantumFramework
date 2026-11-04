@@ -242,7 +242,7 @@ QuantumState /: Unequal[qs__QuantumState] := ! Equal[qs]
 
 (* numeric function *)
 
-QuantumState /: f_Symbol[left : Except[_QuantumState] ..., qs_QuantumState, right : Except[_QuantumState | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
+QuantumState /: (f_Symbol ? numericFunctionQ)[left : Except[_QuantumState] ..., qs_QuantumState, right : Except[_QuantumState | OptionsPattern[]] ..., opts : OptionsPattern[]] :=
     Enclose @ QuantumState[
         ConfirmBy[If[MatchQ[f, Times | Conjugate] && qs["VectorQ"], f[left, qs["StateVector"], right], matrixFunction[f, qs["DensityMatrix"], {left}, {right}, opts]], stateQ],
         qs["Basis"]

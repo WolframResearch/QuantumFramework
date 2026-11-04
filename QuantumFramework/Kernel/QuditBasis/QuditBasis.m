@@ -143,7 +143,7 @@ QuditBasis /: HoldPattern[Times[qb__QuditBasis ? QuditBasisQ]] /; Length[{qb}] >
 
 (* numeric function *)
 
-QuditBasis /: f_Symbol[left : Except[_QuditBasis] ..., qb_QuditBasis, right : Except[_QuditBasis | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
+QuditBasis /: (f_Symbol ? numericFunctionQ)[left : Except[_QuditBasis] ..., qb_QuditBasis, right : Except[_QuditBasis | OptionsPattern[]] ..., opts : OptionsPattern[]] :=
     Enclose @ QuditBasis[
         qb["Names"],
         ArrayReshape[
