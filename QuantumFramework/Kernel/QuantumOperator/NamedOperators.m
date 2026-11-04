@@ -165,8 +165,10 @@ QuantumOperator[("Identity" | "I")[dim_Integer ? Positive], opts___] :=
 QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumOperator["I"[args], opts]]
 
 
-(* exp(-i angle/2 sigma_k) for the generalized Pauli operator sigma_k; for a qubit,
-   cos(angle/2) - i sin(angle/2) sigma_k, since sigma_k^2 = 1 *)
+(* exp(-i angle/2 sigma_k) for a qubit: cos(angle/2) - i sin(angle/2) sigma_k, since
+   sigma_k^2 = 1. A qudit rotation is the operator exponential of the generalized Pauli
+   operator passed through FullSimplify, built by the rules without a wire below and then
+   placed on its wire, so it is stored as FullSimplify returns it. *)
 rotationMatrix[3, angle_, 2] := DiagonalMatrix[zRotationPhases[angle]]
 
 (* FullSimplify of the phases e^(-+i angle/2) costs several milliseconds per angle. It is
@@ -185,17 +187,16 @@ angleParameterQ[s_Symbol] := ! NumericQ[s]
 angleParameterQ[e : (_Symbol ? angleParameterQ)[__Integer]] := ! NumericQ[e]
 angleParameterQ[Subscript[_Symbol ? angleParameterQ, __Integer]] := True
 angleParameterQ[_] := False
-rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
-rotationMatrix[k_, angle_, dimension_] :=
-    Normal @ FullSimplify[QuantumOperator[Exp[- I angle / 2 QuantumOperator[{"PauliX", "PauliY", "PauliZ"}[[k]][dimension]]]]]["Matrix"]
 
-QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
+
+QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : 2 : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
     singleQuditGate[rotationMatrix[1, angle, dimension], qudit, Subscript["R", "X"][angle], opts]
 
-QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : 2 : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
     singleQuditGate[rotationMatrix[2, angle, dimension], qudit, Subscript["R", "Y"][angle], opts]
 
-QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : 2 : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
     singleQuditGate[rotationMatrix[3, angle, dimension], qudit, Subscript["R", "Z"][angle], opts]
 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[

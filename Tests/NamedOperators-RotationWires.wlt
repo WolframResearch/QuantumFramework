@@ -73,16 +73,30 @@ Scan[
     Tuples[{Keys[$pauli], {3, 4}}]
 ];
 
-(* a qudit rotation is stored as the operator exponential exp(-i theta/2 sigma_k) gives it
-   after FullSimplify, as the gate was built before it had a rule on its wire. FullSimplify
-   of the d = 4 R_Y has more than one form, and which it returns depends on what the kernel
-   has simplified before, so the two are compared in the same kernel. *)
+(* a qudit rotation is stored as FullSimplify returns the operator exponential
+   exp(-i theta/2 sigma_k), and is the same object whether it is built on {2}, placed on {2}
+   after being built without a wire, or given as name -> 2 in a circuit. FullSimplify of the
+   d = 4 R_Y has more than one form, and which it returns depends on what the kernel has
+   simplified before: in a fresh kernel it is a RootSum, which re-expanding the matrix would
+   change, but after the tests above it is already expanded. So these checks hold the three
+   routes to one object in any kernel, and the fresh-kernel form was checked against the
+   code before the rotation rules, one kernel per case. *)
 Scan[
     Function[{gd},
         VerificationTest[
-            Normal[QuantumOperator[gd[[1]][\[Theta], gd[[2]]], {2}]["Matrix"]] ===
-                Normal[FullSimplify[QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]]["Matrix"]],
-            True,
+            With[{
+                op = gd[[1]][\[Theta], gd[[2]]],
+                exp = FullSimplify[QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]]
+            },
+                With[{qo = QuantumOperator[op, {2}]},
+                    {
+                        Normal[qo["State"]["StateVector"]] === Normal[exp["State"]["StateVector"]],
+                        qo === QuantumOperator[QuantumOperator[op], {2}],
+                        qo === QuantumCircuitOperator[{op -> 2}]["Elements"][[1]]
+                    }
+                ]
+            ],
+            {True, True, True},
             TestID -> "RotationWires-" <> gd[[1]] <> "-qudit-form-" <> ToString[gd[[2]]]
         ]
     ],
