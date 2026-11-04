@@ -18,7 +18,7 @@ PackageScope["vevPolynomialQ"]
 
 
 BosonicNormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings expr into normal order, where vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra declares the creators and annihilators, with [\!\(\*SubscriptBox[\"a\", \"i\"]\), \!\(\*SubscriptBox[\"c\", \"i\"]\)] = 1.\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the method: Automatic (default) or \"Blasiak\".";
+"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"a\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"]\"}]\) brings expr into normal order in the annihilators \!\(\*SubscriptBox[StyleBox[\"a\", \"TI\"], \"i\"]\) and creators \!\(\*SubsuperscriptBox[StyleBox[\"a\", \"TI\"], \"i\", \"\[Dagger]\"]\).\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"c\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"a\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}]}], \"]\"}]\) takes the creators \!\(\*SubscriptBox[StyleBox[\"c\", \"TI\"], \"i\"]\).\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"alg\", \"TI\"]}], \"]\"}]\) uses the WeylAlgebra alg.";
 
 BosonicNormalOrder::unknownMethod = "Unknown Method: `1`."
 
@@ -71,7 +71,7 @@ ladderSwap[expr_, lv_Association, direction_String : "Forward"] :=
 
 
 BosonicAntinormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilator to the left of every creator, where vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra declares the ladder operators.\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the method: Automatic (default) or \"Blasiak\".";
+"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) brings expr into anti-normal order in the ladder operators vars.";
 
 BosonicAntinormalOrder::unknownMethod = "Unknown Method: `1`."
 
@@ -88,7 +88,7 @@ BosonicAntinormalOrder[expr_, vars_, OptionsPattern[]] :=
 
 
 BosonicBCHTerms::usage =
-"\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the nth-order term of the BCH series log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]) in normal order, for the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra.";
+"\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the nth-order term of log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]) in normal order.";
 
 BosonicBCHTerms[ops_List, n_Integer, vars_] :=
     Replace[ResolveLadderVariables[BosonicBCHTerms, vars],
@@ -97,7 +97,7 @@ BosonicBCHTerms[ops_List, n_Integer, vars_] :=
 
 
 BosonicZassenhausTerms::usage =
-"\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the nth term of the Zassenhaus formula in normal order, for the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra.";
+"\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the nth term of the Zassenhaus formula in normal order.";
 
 BosonicZassenhausTerms[ops_List, n_Integer, vars_] :=
     Replace[ResolveLadderVariables[BosonicZassenhausTerms, vars],
@@ -106,7 +106,7 @@ BosonicZassenhausTerms[ops_List, n_Integer, vars_] :=
 
 
 BosonicVEV::usage =
-"\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] for the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra, by normal ordering expr and keeping its c-number part.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Passes the method to BosonicNormalOrder.";
+"\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket].";
 
 Options[BosonicVEV] = Options[BosonicNormalOrder];
 
@@ -132,7 +132,7 @@ BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
 
 
 BosonicMatrixElement::usage =
-"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] for expr built from the ladder operators vars = {{c}, {a}} or a WeylAlgebra: a polynomial through its normal order and the closed form for \[LeftAngleBracket]m\[VerticalSeparator]\!\(\*SuperscriptBox[\"c\", \"p\"]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]n\[RightAngleBracket], a product of exponentials through its disentangled form. The Fock indices may be symbolic.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns the element between multimode Fock states for a polynomial in the modes of vars, index k pairing with mode k.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) Returns \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states, the indices then being amplitudes.";
+"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] in the ladder operators vars.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the element of poly between multimode Fock states.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) gives \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states.";
 
 Options[BosonicMatrixElement] = {"Basis" -> "Fock"}
 

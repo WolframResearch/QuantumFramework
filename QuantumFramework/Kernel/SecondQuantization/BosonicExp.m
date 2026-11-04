@@ -242,6 +242,12 @@ expSeriesTerm[ord_, coeff_, pair_] := With[{k = SeriesIndex["k"]},
 
 
 
+NormalOrdered::usage =
+"\!\(\*RowBox[{\"NormalOrdered\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) represents the normal-ordered product :expr: in the ladder operators vars.";
+
+AntinormalOrdered::usage =
+"\!\(\*RowBox[{\"AntinormalOrdered\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) represents the anti-normal-ordered product of expr in the ladder operators vars.";
+
 NormalOrdered /: Times[s_, NormalOrdered[expr_, vars_]] :=
     With[{lv = ResolveLadderVariables[NormalOrdered, vars]},
         NormalOrdered[s expr, vars] /; AssociationQ[lv] && FreeQ[s, Alternatives @@ lv["Generators"]]
@@ -356,7 +362,7 @@ expApplyRules[expr_, assum_, rules_, lv_] :=
 
 
 BosonicExpOrder::usage =
-"\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) brings an expression built from exponentials of the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra into normal order, using the boson disentangling identities.\n\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Ordering\\\"->\", \"\\\"Antinormal\\\"\"}], \"]\"}]\) brings expr into anti-normal order, with every annihilator to the left of every creator.\n\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{\[Ellipsis], \",\", \"TimeConstraint->\", StyleBox[\"t\", \"TI\"]}], \"]\"}]\) limits simplification to \!\(\*StyleBox[\"t\", \"TI\"]\) seconds (default 30).";
+"\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) brings a product of exponentials of the ladder operators vars into normal order.\n\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Ordering\\\"->\", \"\\\"Antinormal\\\"\"}], \"]\"}]\) brings it into anti-normal order.";
 
 BosonicExpOrder::ordering = "`1` is not a valid setting for \"Ordering\"; use \"Normal\" or \"Antinormal\"."
 
@@ -388,7 +394,7 @@ BosonicExpOrder[expr_, vars_, opts : OptionsPattern[]] :=
 
 
 BosonicExpSimplify::usage =
-"\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) simplifies a product of exponentials, or a conjugation by an exponential, of the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra, returning a closed form when the algebra closes and expr unchanged otherwise.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{\[Ellipsis], \",\", \"Assumptions->\", StyleBox[\"assum\", \"TI\"]}], \"]\"}]\) uses \!\(\*StyleBox[\"assum\", \"TI\"]\) as simplifying assumptions while reducing.";
+"\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) simplifies products of exponentials and functions of number operators in the ladder operators vars.";
 
 Options[BosonicExpSimplify] = {Assumptions :> $Assumptions};
 
@@ -579,7 +585,7 @@ rulesBraidLeft[lv_] := {
 }
 
 BosonicExpBraid::usage =
-"\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) moves the left factor of an adjacent pair of exponentials of the ladder operators vars past the right one, transporting the right generator by the adjoint action of the left: \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) becomes \!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{\"A\", \",\", \"B\"}], \"]\"}]]\)\!\(\*SuperscriptBox[\"e\", \"A\"]\). It reorders only, performing no ordering, merging or cancellation.\n\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Direction\\\"->\", \"\\\"Left\\\"\"}], \"]\"}]\) instead moves the right factor left, as \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) becomes \!\(\*SuperscriptBox[\"e\", \"B\"]\)\!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{RowBox[{\"-\", \"B\"}], \",\", \"A\"}], \"]\"}]]\).";
+"\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) moves the left exponential of an adjacent pair past the right one, \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) \[Rule] \!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{\"A\", \",\", \"B\"}], \"]\"}]]\)\!\(\*SuperscriptBox[\"e\", \"A\"]\).\n\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Direction\\\"->\", \"\\\"Left\\\"\"}], \"]\"}]\) moves the right one left, \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) \[Rule] \!\(\*SuperscriptBox[\"e\", \"B\"]\)\!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{RowBox[{\"-\", \"B\"}], \",\", \"A\"}], \"]\"}]]\).";
 
 BosonicExpBraid::direction = "`1` is not a valid setting for \"Direction\"; use \"Right\" or \"Left\"."
 

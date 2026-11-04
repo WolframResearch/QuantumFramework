@@ -104,7 +104,7 @@ cNumberQ[expr_, vars_] := FreeQ[expr /. $nonuls, Alternatives @@ vars]
 
 
 FieldVariables::usage =
-"\!\(\*RowBox[{\"FieldVariables\", \"[\", \"]\"}]\) returns the ladder variables {{\!\(\*SuperscriptBox[\"\[FormalA]\", \"\[Dagger]\"]\)}, {\[FormalA]}} of one mode, creators first.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"]}], \"]\"}]\) returns {{\!\(\*SuperscriptBox[StyleBox[\"var\", \"TI\"], \"\[Dagger]\"]\)}, {var}}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"var\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \"]\"}]\) returns {{\!\(\*SubsuperscriptBox[StyleBox[\"var\", \"TI\"], \"1\", \"\[Dagger]\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[StyleBox[\"var\", \"TI\"], \"1\"]\), \[Ellipsis]}}, mode k being the k-th symbol.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"], \",\", StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) returns one mode per label L, named var with L appended; FieldVariables[labels] uses \[FormalA].";
+"\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{}], \"]\"}]\) gives the ladder variables {{\!\(\*SuperscriptBox[\"\[FormalA]\", \"\[Dagger]\"]\)}, {\[FormalA]}}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"]}], \"]\"}]\) gives {{\!\(\*SuperscriptBox[StyleBox[\"var\", \"TI\"], \"\[Dagger]\"]\)}, {var}}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"var\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"]\"}]\) gives {{\!\(\*SubsuperscriptBox[StyleBox[\"var\", \"TI\"], \"1\", \"\[Dagger]\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[StyleBox[\"var\", \"TI\"], \"1\"]\), \[Ellipsis]}}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"], \",\", StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) gives one mode per label, named var with the label appended.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) uses \[FormalA].";
 
 FieldVariables[] := FieldVariables[\[FormalA]]
 
@@ -132,7 +132,7 @@ LiftNCScalars[expr_, vars_List] := expr //. {
 
 
 ToBosonicOperator::usage =
-"\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) realizes expr, built from the ladder operators vars = {{\!\(\*SubscriptBox[\"c\", \"1\"]\), \[Ellipsis]}, {\!\(\*SubscriptBox[\"a\", \"1\"]\), \[Ellipsis]}} or a WeylAlgebra, as a truncated \!\(\*RowBox[{\"QuantumOperator\", \"[\", \"]\"}]\): \!\(\*SubscriptBox[\"a\", \"k\"]\) becomes \!\(\*RowBox[{\"AnnihilationOperator\", \"[\", RowBox[{\"$FockSize\", \",\", RowBox[{\"{\", \"k\", \"}\"}]}], \"]\"}]\), \!\(\*SubscriptBox[\"c\", \"k\"]\) its adjoint, and ** operator composition.\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) truncates each mode to Fock space dimension size.";
+"\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) realizes expr in the ladder operators vars as a truncated QuantumOperator.\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) truncates each mode to dimension size.";
 
 ToBosonicOperator[expr_] := (Message[ToBosonicOperator::argr, ToBosonicOperator, 2]; $Failed)
 
