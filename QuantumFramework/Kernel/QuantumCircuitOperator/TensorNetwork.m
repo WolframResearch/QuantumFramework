@@ -25,10 +25,32 @@ Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options
    qudit order is that state's tensor transposed by the rank of each qudit; reading it this way
    spares building the sorted operator. *)
 sortedTensor[op_ ? QuantumOperatorQ] /; op["VectorQ"] && op["Order"] === op["FullOrder"] &&
+    op["OutputQudits"] + op["InputQudits"] > 0 && Length[op["State"]["Dimensions"]] === op["OutputQudits"] + op["InputQudits"] &&
+    packedTensorQ[op["StateVector"], op["OutputQudits"] + op["InputQudits"]] :=
+    sortedLevels[
+        ArrayReshape[Developer`ToPackedArray[Normal[op["StateVector"] + 0.]], op["State"]["Dimensions"]],
+        Join[Ordering[Ordering[op["OutputOrder"]]], Ordering[Ordering[op["InputOrder"]]] + op["OutputQudits"]]
+    ]
+
+sortedTensor[op_ ? QuantumOperatorQ] /; op["VectorQ"] && op["Order"] === op["FullOrder"] &&
     op["OutputQudits"] + op["InputQudits"] > 0 && ArrayDepth[op["StateTensor"]] === op["OutputQudits"] + op["InputQudits"] :=
     sortedLevels[op["StateTensor"], Join[Ordering[Ordering[op["OutputOrder"]]], Ordering[Ordering[op["InputOrder"]]] + op["OutputQudits"]]]
 
 sortedTensor[op_] := If[op["MatrixQ"], op["Double"], op]["Tensor"]
+
+(* A rank-r SparseArray stores each nonzero entry with its r positions, about 16 + 8 r bytes,
+   against 16 bytes for every entry of a packed array. A vector of machine numbers dense
+   enough that its packed tensor is no larger is passed to the network packed: for a full
+   state on n qubits that is 16 bytes per amplitude instead of 16 + 8 n. Exact and symbolic
+   entries stay as they are, since packing would turn them into machine numbers. The array
+   is read from v + 0., a new SparseArray, since Normal of v itself keeps a dense copy in v
+   for as long as the state lives. *)
+packedTensorQ[v_SparseArray, rank_Integer] := With[{values = v["NonzeroValues"]},
+    NumericQ[v["Background"]] && v["Background"] == 0 && Length[values] > 0 && VectorQ[values, MachineNumberQ] &&
+        16 Length[v] <= (16 + 8 rank) Length[values]
+]
+
+packedTensorQ[___] := False
 
 sortedLevels[tensor_, perm_] /; perm === Range[Length[perm]] := tensor
 
