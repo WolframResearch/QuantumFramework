@@ -313,8 +313,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    With[{v = First @ FieldVariables[{1}]},
-        BosonicExpOrder[DisplacementOperator[\[Alpha], Infinity], {{SuperDagger[v]}, {v}}]],
+    BosonicExpOrder[DisplacementOperator[\[Alpha], Infinity], FieldVariables[{1}]],
     DisplacementOperator[\[Alpha], Infinity, "Ordering" -> "Normal"],
     TestID -> "DisplacementOperatorNormal"
 ]
@@ -843,7 +842,7 @@ VerificationTest[
     FullSimplify[
         BosonicMatrixElement[{1, 0},
             Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]**
-                Exp[\[Beta] SuperDagger[\[FormalA]] - Conjugate[\[Beta]] \[FormalA]]] -
+                Exp[\[Beta] SuperDagger[\[FormalA]] - Conjugate[\[Beta]] \[FormalA]], $vA] -
         Exp[-(\[Alpha] Conjugate[\[Alpha]] + \[Beta] Conjugate[\[Beta]])/2 - Conjugate[\[Alpha]] \[Beta]] (\[Alpha] + \[Beta])
     ],
     0,
