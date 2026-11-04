@@ -974,4 +974,125 @@ VerificationTest[
     TestID -> "Concurrence-DampedPair-LongTime"
 ]
 
+(* ========== Monotones of an approximate state known to a given accuracy ========== *)
+
+(* A numerical solution of the master equation is known only to the solver's error, about 10^-8 here, far above the
+   round-off of its machine entries. At a zero rate the exact state has a zero eigenvalue (the |00>,|11> block is
+   rank one when only qubit A decays), which that error pushes to either sign. Tolerance -> e accepts a state with no
+   eigenvalue below -e (Weyl's inequality: a state within e of a density matrix has none) and reads the monotone on
+   the nearest density matrix. The method, its references and the error each monotone keeps are in the comments of
+   toleratedState and stateToleranceCut in QuantumEntanglement.m. *)
+numericDampedPair[th_, gA_, gB_] := QuantumEvolve[
+    QuantumOperator[0 IdentityMatrix[4]],
+    {QuantumOperator["-", {1}], QuantumOperator["-", {2}]} -> {gA, gB},
+    QuantumState[{Sin[th], 0, 0, Cos[th]}],
+    {\[FormalT], 0, 4}
+];
+numericDampedPairAt[th_, gA_, gB_, tau_] := numericDampedPair[th, gA, gB] /. \[FormalT] -> tau;
+numericZeroRateGrid = Tuples[{N[{Pi/8, Pi/3}], {0.3, 1.3, 3.}}];
+(* the X state's partial transpose has the block {{rho01,01, rho00,11}, {rho00,11, rho10,10}}, whose smaller
+   eigenvalue is the only one that can be negative *)
+xStateNegativity[th_, gA_, gB_, tau_] := With[{pA = Exp[-gA tau], pB = Exp[-gB tau], s = Sin[th], c = Cos[th]},
+    With[{a = s^2 pA (1 - pB), b = s^2 (1 - pA) pB, z = s c Sqrt[pA pB]}, Max[0, Sqrt[((a - b) / 2)^2 + z^2] - (a + b) / 2]]
+];
+
+(* the solver leaves the zero eigenvalue at -2.4 10^-9 at th = Pi/3, gA = 1, gB = 0, tau = 1.3: the default, the
+   round-off of the entries, refuses it, an accuracy below that eigenvalue refuses it, one above accepts it *)
+VerificationTest[
+    With[{st = numericDampedPairAt[Pi/3., 1., 0., 1.3]},
+        {
+            FailureQ[QuantumEntanglementMonotone[st, "Concurrence"]],
+            FailureQ[QuantumEntanglementMonotone[st, "Concurrence", Tolerance -> 10^-10]],
+            NumericQ[QuantumEntanglementMonotone[st, "Concurrence", Tolerance -> 10^-8]]
+        }
+    ],
+    {True, True, True},
+    {QuantumEntanglementMonotone::notphysical, QuantumEntanglementMonotone::notphysical},
+    TestID -> "Tolerance-WeylCut"
+]
+
+(* only qubit A decays: the concurrence of the numerical state is Sin[2 th] Exp[-gA tau / 2] and its negativity the
+   X-state value, to within 10^-6. The scale is the solver's: its entries are good to about 10^-8, and the correction,
+   of the size of the most negative eigenvalue, at most about 5 10^-8 on this grid, is far below the 10^-6 tested. This
+   test checks the physics of the accepted state; the
+   projection itself is checked on the Bell-diagonal state below. *)
+VerificationTest[
+    With[{e = 10^-6},
+        {
+            Max[Abs[(QuantumEntanglementMonotone[numericDampedPairAt[#1, 1., 0., #2], "Concurrence", Tolerance -> e] - Sin[2 #1] Exp[-#2 / 2]) & @@@ numericZeroRateGrid]] < 10^-6,
+            Max[Abs[(QuantumEntanglementMonotone[numericDampedPairAt[#1, 1., 0., #2], "Negativity", Tolerance -> e] - xStateNegativity[#1, 1., 0., #2]) & @@@ numericZeroRateGrid]] < 10^-6
+        }
+    ],
+    {True, True},
+    {},
+    TestID -> "Tolerance-NumericOneSidedDecay"
+]
+
+(* a state with no negative eigenvalue is not moved: at two nonzero rates the smallest eigenvalue is far above the
+   solver's error, and the value with an accuracy given is the value without one *)
+VerificationTest[
+    With[{st = numericDampedPairAt[Pi/3., 1., 0.3, 1.3]},
+        QuantumEntanglementMonotone[st, #, Tolerance -> 10^-6] - QuantumEntanglementMonotone[st, #] & /@ {"Concurrence", "Negativity"}
+    ],
+    {0., 0.},
+    {},
+    TestID -> "Tolerance-ValidStateUnchanged"
+]
+
+(* the correction is the Hilbert-Schmidt-nearest density matrix (Smolin, Gambetta and Smith, PRL 108, 070502
+   (2012)): on the Bell-diagonal state with weights
+   {7/10, 2/10, 1/10 + d, -d}, the negative weight is set to 0 and the others lowered by d / 3, so the concurrence
+   2 lambda_max - 1 is 2/5 - 2 d / 3 and the negativity lambda_max - 1/2 is 1/5 - d / 3; clipping and rescaling would
+   give 2/5 - 7 d / 5 *)
+VerificationTest[
+    With[{d = 10^-7, bell = Normal @ QuantumState[#]["DensityMatrix"] & /@ {"PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"}},
+        With[{st = QuantumState[N[{7/10, 2/10, 1/10 + d, -d} . bell], {2, 2}]},
+            {
+                QuantumEntanglementMonotone[st, "Concurrence", Tolerance -> 10^-6] - (2/5 - 2 d / 3),
+                QuantumEntanglementMonotone[st, "Negativity", Tolerance -> 10^-6] - (1/5 - d / 3)
+            }
+        ]
+    ],
+    {0, 0},
+    {},
+    SameTest -> (Max[Abs[#1]] < 10^-12 &),
+    TestID -> "Tolerance-NearestStateProjection"
+]
+
+(* a matrix with an eigenvalue far below the accuracy is not a state and stays refused; an exact matrix is exact,
+   so an accuracy does not admit its negative eigenvalue; an accuracy that is not a nonnegative number is refused *)
+VerificationTest[
+    {
+        FailureQ @ QuantumEntanglementMonotone[QuantumState[N[{{1/2, 0, 0, 1/2}, {0, -1/100, 0, 0}, {0, 0, 1/100, 0}, {1/2, 0, 0, 1/2}}], {2, 2}], Tolerance -> 10^-6],
+        FailureQ @ QuantumEntanglementMonotone[QuantumState[{{1/2, 0, 0, 1/2}, {0, -10^-9, 0, 0}, {0, 0, 10^-9, 0}, {1/2, 0, 0, 1/2}}, {2, 2}], Tolerance -> 10^-6],
+        FailureQ @ QuantumEntanglementMonotone[QuantumState["PhiPlus"], Tolerance -> -1]
+    },
+    {True, True, True},
+    {QuantumEntanglementMonotone::notphysical, QuantumEntanglementMonotone::notphysical, QuantumEntanglementMonotone::tolerance},
+    TestID -> "Tolerance-Refusals"
+]
+
+(* the accuracy covers the anti-Hermitian part too: the Bell state plus an antisymmetric error of operator norm 0.3 e
+   is within e of a density matrix, refused at the round-off of its entries and accepted at Tolerance -> e, its
+   negativity that of the Bell state to within the error *)
+VerificationTest[
+    With[{e = 10^-6, st = QuantumState[N[Normal @ QuantumState["PhiPlus"]["DensityMatrix"] + 3/10 10^-6 SparseArray[{{2, 3} -> 1, {3, 2} -> -1}, {4, 4}]], {2, 2}]},
+        {
+            FailureQ[QuantumEntanglementMonotone[st, "Negativity"]],
+            Abs[QuantumEntanglementMonotone[st, "Negativity", Tolerance -> e] - 1/2] < e
+        }
+    ],
+    {True, True},
+    {QuantumEntanglementMonotone::notphysical},
+    TestID -> "Tolerance-AntiHermitianError"
+]
+
+(* a rule that is not an option is refused with the arguments, as a split *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState["PhiPlus"], "Negativity", Foo -> 1],
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumEntanglementMonotone::args, "MessageParameters" -> {{"Negativity", Foo -> 1}}|>],
+    {QuantumEntanglementMonotone::args},
+    TestID -> "Tolerance-UnknownOption"
+]
+
 EndTestSection[]

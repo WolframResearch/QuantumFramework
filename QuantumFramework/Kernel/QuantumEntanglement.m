@@ -57,7 +57,9 @@ QuantumEntangledQ::zero = QuantumEntanglementMonotone::zero =
     "The state has no normalized form: it is a state vector of norm 0, or a density matrix whose trace is 0, for approximate entries within the round-off of its diagonal."
 
 QuantumEntangledQ::notphysical = QuantumEntanglementMonotone::notphysical =
-    "The state is not physical: its density matrix in the computational basis is not Hermitian and positive semidefinite to the precision of its entries, or, with symbolic entries, for any real values of its parameters."
+    "The state is not physical: its density matrix in the computational basis is not Hermitian and positive semidefinite to the precision of its entries, or, with symbolic entries, for any real values of its parameters. An approximate state known only to an accuracy e, as from a numerical solution, can be given Tolerance -> e in QuantumEntanglementMonotone."
+
+QuantumEntanglementMonotone::tolerance = "Tolerance must be Automatic or a nonnegative real number; it is `1`."
 
 QuantumEntanglementMonotone::measurement =
     "The measurement acts on qudits of dimensions `1`, but it must measure the second part, of dimension `2`: give one on a single qudit of that dimension, or one on both parts with the second as its target."
@@ -209,13 +211,38 @@ unphysicalStateQ[qs_] := ! qs["VectorQ"] && With[{computationalQ = qs["Computati
    frame can, proves nothing and is read. Values are compared by the number they hold, as roundoffSign compares them. *)
 approximateUnphysicalQ[m_, k_] := With[{s = Max[Abs[m]]},
     TrueQ[Precision[s] > 0 && arrayDigits[m] > Log10[Length[m]] + 1] && With[{r = m / s, machineQ = Precision[m] === MachinePrecision},
-        With[{t = Re[Tr[r]], cut = SetPrecision[k, Infinity] If[machineQ, criterionCut[m], Length[m] 10 ^ -Floor[arrayDigits[m]]]},
-            SetPrecision[Max[Abs[r - ConjugateTranspose[r]]], Infinity] > cut ||
+        With[{t = Re[Tr[r]], roundoff = SetPrecision[k, Infinity] If[machineQ, criterionCut[m], Length[m] 10 ^ -Floor[arrayDigits[m]]]},
+        With[{cut = Max[stateToleranceCut[], roundoff]},
+            SetPrecision[Max[Abs[r - ConjugateTranspose[r]]], Infinity] > Max[2 stateToleranceCut[] SetPrecision[t, Infinity], roundoff] ||
                 SetPrecision[t, Infinity] <= 0 ||
                 ! PositiveDefiniteMatrixQ[If[machineQ, hermitianPart[r] / t + N[cut] IdentityMatrix[Length[r]], SetPrecision[hermitianPart[r] / t, 2 wholeDigits[m]] + cut IdentityMatrix[Length[r]]]]
-        ]
+        ]]
     ]
 ]
+
+(* The accuracy of an approximate state, given with Tolerance -> e.
+
+   The test above reads a machine matrix as exact up to the round-off of its entries, n 10^(2 - p). A state produced
+   by a numerical method is known only to that method's error, which is far larger: a solution of the Lindblad equation
+   from NDSolve holds about 8 digits. When the true state has a zero eigenvalue, as a pure part has, or a pair in which
+   one qubit does not decay, that error puts the eigenvalue at either sign, and the round-off cut refuses a physical
+   state. Finite statistics do the same to a tomographic estimate of a state of low rank, which almost always comes
+   out with negative eigenvalues (Knips et al., arXiv:1512.06866 (2015)). A matrix does not record how it was made, so
+   the accuracy is stated by the caller: e bounds the operator norm of the difference between the matrix and the true
+   state. A bound in trace norm serves as well, since the trace norm is never below the operator norm; a posteriori
+   trace-norm bounds for numerical solutions of the Lindblad equation are derived by Etienney, Robin and Rouchon,
+   Quantum 10, 2031 (2026), doi:10.22331/q-2026-03-16-2031.
+
+   The cut is Weyl's inequality: an eigenvalue of a Hermitian matrix moves by at most the operator norm of a Hermitian
+   perturbation, so a matrix within e of a density matrix has no eigenvalue below -e, and one that has is within e of
+   none. The test is strict, so an eigenvalue of exactly -e is refused as well. The anti-Hermitian part is held to the
+   same accuracy: every entry of (m - m^dagger) / Tr[m] is at most its operator norm, at most 2 e, so the entries of
+   r - r^dagger, r the matrix divided by its largest entry, are compared with 2 e Tr[r]. The literature has no universal threshold for small negative eigenvalues; the decision is made against a
+   stated error, as tomography makes it against a confidence region (de Gois and Kleinmann, PRA 109, 062417 (2024)).
+   Automatic keeps the round-off of the entries alone. An exact matrix is exact, and the accuracy does not apply. *)
+$stateTolerance = Automatic;
+
+stateToleranceCut[] := If[NumericQ[$stateTolerance], SetPrecision[$stateTolerance, Infinity], 0]
 
 (* An exact matrix m is not Hermitian when an entry of m - m^dagger is a nonzero Gaussian rational, or another entry
    whose magnitude, read with 60 digits by SetPrecision, keeps a digit; an entry that keeps none, a zero written as
@@ -721,9 +748,87 @@ nonnegativeQ[v_, c_] := If[c["Kind"] === "Symbolic", forAllQ[c, realForm[v, c] >
    The default method is decided on the two-part state, after the split and the partial trace: the concurrence for
    a pure state and for two qubits, where it is exact, and the negativity for a mixed state beyond two qubits, where
    the concurrence is only a lower bound that a local unitary can change. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, args___] := With[{a = entanglementArguments[QuantumEntanglementMonotone, qs, {args}]},
-    If[FailureQ[a], a, entanglementMonotone[qs, Sequence @@ a]]
+Options[QuantumEntanglementMonotone] = {Assumptions :> $Assumptions, Tolerance -> Automatic};
+
+(* A rule that is not an option of QuantumEntanglementMonotone is refused with the arguments, as any argument that is
+   neither a split nor a method is. *)
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, args___, opts : OptionsPattern[]] := Which[
+    FilterRules[{opts}, Except[Options[QuantumEntanglementMonotone]]] =!= {},
+    entanglementFailure[QuantumEntanglementMonotone, "InvalidArguments", "args", {{args, opts}}],
+    ! MatchQ[OptionValue[Tolerance], Automatic | _ ? (NumericQ[#] && Im[#] == 0 && # >= 0 &)],
+    entanglementFailure[QuantumEntanglementMonotone, "InvalidTolerance", "tolerance", {OptionValue[Tolerance]}],
+    True,
+    Block[{$stateTolerance = OptionValue[Tolerance]}, With[{a = entanglementArguments[QuantumEntanglementMonotone, qs, {args}]},
+        If[FailureQ[a], a, assumedMonotone[toleratedState[qs], a, OptionValue[Assumptions]]]
+    ]]
 ]
+
+(* The monotone of a state accepted within an accuracy e.
+
+   Such a state may have eigenvalues down to -e, which no density matrix has, so the monotone is read on the nearest
+   density matrix in the Hilbert-Schmidt norm, the projection of Smolin, Gambetta and Smith, PRL 108, 070502 (2012),
+   doi:10.1103/PhysRevLett.108.070502 ("Fast algorithm for Subproblem 1", p. 3): the eigenvectors are kept, and the
+   eigenvalues mu are replaced by their projection onto the probability simplex, Ramp[mu - theta] with the one shift
+   theta that leaves a trace of 1. That sets the smallest eigenvalues to 0 and lowers all the others by one common
+   amount; clipping the negative eigenvalues and rescaling would instead scale the others, which is not the nearest
+   state. Under Gaussian noise of equal variance in a complete orthonormal operator basis this projection is also the
+   maximum-likelihood state (same paper); here it is used only as the nearest state.
+
+   How far the value can move, for a state of dimension n split into two parts, d the smaller of their dimensions. The
+   correction moves the state by at most 2 (n - 1) e in trace norm: the eigenvalues raised to 0 total at most
+   (n - 1) e, and the others fall by the same total; the bound is approached as n - 1 eigenvalues tend to -e. The
+   negativity moves at most in proportion: Vidal and Werner, PRA 65, 032314 (2002), doi:10.1103/PhysRevA.65.032314,
+   Sec. IV (proof of Proposition 7), give ||A^T_A||_1 <= d ||A||_1 for a Hermitian A on C^d (x) C^d; with parts of
+   unequal dimension the transpose of a part of dimension d multiplies the trace norm by at most d, and transposing
+   either part gives the same trace norm, so |N(rho) - N(sigma)| <= (d / 2) ||rho - sigma||_1, and the correction
+   moves the negativity by at most d (n - 1) e. The concurrence does not move in proportion: it is
+   continuous (Guo, Hou and Wang, Quantum Inf. Process. 12, 2641 (2013), doi:10.1007/s11128-013-0552-6, Proposition 2,
+   which gives no rate), but not Lipschitz. Mixing a weight e of |01><01| into Sin[th] |00> + Cos[th] |11> after
+   amplitude damping of qubit A alone (QF's "-" is |1><0|, so the damping takes |0> to |1>) lowers the
+   concurrence by 2 Sqrt[e rho10,10] to first order, through the coherence penalty Sqrt[rho01,01 rho10,10] of the X
+   state, so near a state with a zero eigenvalue of rho.rho-tilde the concurrence is known only to about Sqrt[e].
+   Any procedure that always returns a density matrix biases the estimate of a function of it, in tomography toward
+   more entanglement (Schwemmer et al., PRL 114, 080403 (2015), doi:10.1103/PhysRevLett.114.080403); here that bias
+   is of the size of the correction, so at most d (n - 1) e for the negativity and of order Sqrt[e] for the
+   concurrence.
+
+   A state with no negative eigenvalue, and every state when no accuracy is given, is read as it is. *)
+toleratedState[qs_] := If[
+    NumericQ[$stateTolerance] && qs["MatrixQ"] && ArrayQ[qs["State"], 2, NumericQ] && Precision[qs["State"]] < Infinity,
+    With[{es = Eigensystem[With[{h = hermitianPart[Normal @ qs["Computational"]["DensityMatrix"]]}, h / Re[Tr[h]]]]},
+        If[Min[Re[es[[1]]]] < 0, QuantumState[nearestDensityMatrix[es], qs["Dimensions"]], qs]
+    ],
+    qs
+]
+
+(* The nearest density matrix from the eigensystem {mu, v} of a Hermitian matrix of trace 1, the eigenvectors v as
+   rows. The eigenvectors are orthonormalized first: for a degenerate eigenvalue at arbitrary precision Eigensystem
+   returns eigenvectors orthonormal only to well below the precision it reports, and the product would carry that
+   error into the state. *)
+nearestDensityMatrix[{mu_, v_}] := With[{w = Orthogonalize[v]}, Transpose[w] . DiagonalMatrix[simplexProjection[Re[mu]]] . Conjugate[w]]
+
+(* The Euclidean projection of a real vector mu onto the probability simplex, the eigenvalue step of the projection
+   above: with s the entries sorted down and k the last position where s_k exceeds (Total[s[[;; k]]] - 1) / k, every
+   entry is lowered by that amount at k and cut at 0. For mu summing to 1 the shift is minus the total of the entries
+   past k divided by k, the accumulator of Smolin, Gambetta and Smith's steps 2 to 4. *)
+simplexProjection[mu_] := With[{s = ReverseSort[mu]},
+    With[{k = Last @ Pick[Range[Length[s]], Thread[s - (Accumulate[s] - 1) / Range[Length[s]] > 0]]},
+        Ramp[mu - (Total[s[[;; k]]] - 1) / k]
+    ]
+]
+
+(* With assumptions on the parameters of a symbolic state, the state is simplified under them before the monotone is
+   read, its intermediate eigenvalues are simplified under them (assumedSimplify), and so is the value. *)
+assumedMonotone[qs_, a_, True] := entanglementMonotone[qs, Sequence @@ a]
+
+assumedMonotone[qs_, a_, given_] := Block[{$Assumptions = given},
+    If[ ArrayQ[qs["State"], _, NumericQ],
+        entanglementMonotone[qs, Sequence @@ a],
+        assumedSimplify @ entanglementMonotone[qs["Simplify"], Sequence @@ a]
+    ]
+]
+
+assumedSimplify[x_] := If[TrueQ[$Assumptions], x, TimeConstrained[Simplify[x], 2 $entanglementSignTime, x]]
 
 QuantumEntanglementMonotone[args___] /; ! MatchQ[{args}, {_ ? QuantumStateQ, ___}] :=
     entanglementFailure[QuantumEntanglementMonotone, "InvalidState", "state", {If[{args} === {}, "missing", First[{args}]]}]
@@ -804,7 +909,7 @@ concurrenceMatrixVector[mat_, {d1_, d2_}] := With[{
 		],
 		With[{cmat = Conjugate[mat]},
 			Function[{ya, yb}, With[{omat = Normal @ KroneckerProduct[ya, yb]},
-				wootterCombination @ Sqrt[Ramp[Re[Eigenvalues[mat . omat . cmat . omat]]]]
+				wootterCombination @ Sqrt[Ramp[assumedSimplify[Re[Eigenvalues[mat . omat . cmat . omat]]]]]
 			]]
 		]
 	]
