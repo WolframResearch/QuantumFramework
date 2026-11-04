@@ -169,21 +169,24 @@ QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumO
    cos(angle/2) - i sin(angle/2) sigma_k, since sigma_k^2 = 1 *)
 rotationMatrix[3, angle_, 2] := DiagonalMatrix[zRotationPhases[angle]]
 
-(* FullSimplify of the phases e^(-+i angle/2) is kept only where it can change their form: an
-   exact angle, or a symbolic one holding a number or a numeric constant such as Pi. For an
-   inexact number, or symbols with integer and rational coefficients only, it returns the
-   phases as they are, at several milliseconds per angle. *)
+(* FullSimplify of the phases e^(-+i angle/2) costs several milliseconds per angle. It is
+   skipped for an inexact number, and for a single parameter (theta, theta[1],
+   Subscript[theta, 1]) times an integer or a rational, where it returns the phases as they
+   are; any other angle, a sum or a function of parameters among them, keeps it. *)
 zRotationPhases[angle_] := With[{phases = {Exp[- I angle / 2], Exp[I angle / 2]}},
-    If[ InexactNumberQ[angle] || ! NumericQ[angle] && FreeQ[angle, _Real | _Complex | _ ? numericConstantQ],
+    If[ InexactNumberQ[angle] || MatchQ[angle, _ ? angleParameterQ | (_Integer | _Rational) _ ? angleParameterQ],
         phases,
         FullSimplify[phases]
     ]
 ]
 
-numericConstantQ[s_Symbol] := NumericQ[s]
-numericConstantQ[_] := False
+angleParameterQ[s_Symbol] := ! NumericQ[s]
+angleParameterQ[(s_Symbol ? angleParameterQ)[__Integer]] := True
+angleParameterQ[Subscript[_Symbol ? angleParameterQ, __Integer]] := True
+angleParameterQ[_] := False
 rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
-rotationMatrix[k_, angle_, dimension_] := Map[FullSimplify, Normal @ matrixExponential[- I angle / 2 pauliMatrix[k, dimension]], {2}]
+rotationMatrix[k_, angle_, dimension_] :=
+    Normal @ FullSimplify[QuantumOperator[Exp[- I angle / 2 QuantumOperator[{"PauliX", "PauliY", "PauliZ"}[[k]][dimension]]]]]["Matrix"]
 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
     singleQuditGate[rotationMatrix[1, angle, dimension], qudit, Subscript["R", "X"][angle], opts]

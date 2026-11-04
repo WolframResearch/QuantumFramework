@@ -73,6 +73,20 @@ Scan[
     Tuples[{Keys[$pauli], {3, 4}}]
 ];
 
+(* a qudit rotation keeps the form of exp(-i theta/2 sigma_k) as the operator exponential
+   gives it after FullSimplify, not only its value *)
+Scan[
+    Function[{gd},
+        VerificationTest[
+            Normal[QuantumOperator[gd[[1]][\[Theta], gd[[2]]], {2}]["Matrix"]] ===
+                Normal[FullSimplify[QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]]["Matrix"]],
+            True,
+            TestID -> "RotationWires-" <> gd[[1]] <> "-qudit-form-" <> ToString[gd[[2]]]
+        ]
+    ],
+    Tuples[{Keys[$pauli], {3, 4}}]
+];
+
 VerificationTest[
     With[{qo = QuantumOperator["RZ"[\[Theta]], {3}]},
         {qo["Order"], qo["Label"], zeroQ[cm[qo] - DiagonalMatrix[{Exp[- I \[Theta] / 2], Exp[I \[Theta] / 2]}]]}
