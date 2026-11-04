@@ -456,7 +456,37 @@ conjugateParts[b_, GeneralizedPower[NonCommutativeMultiply, x_, n_Integer ? Posi
 
 conjugateParts[___] := $Failed
 
-expReduceRules[lv_] := {
+numberFunctionQ[f_, {cr_, an_}] := Module[{k}, ! FreeQ[f, cr ** an] && FreeQ[f /. cr ** an -> k, cr | an]]
+
+balancedWordQ[w_List, {cr_, an_}] :=
+    MatchQ[w, {(cr | an | GeneralizedPower[NonCommutativeMultiply, cr | an, _Integer ? Positive]) ..}] &&
+        Total[getNCPower[#, cr] - getNCPower[#, an] & /@ w] == 0
+
+numberPolynomial[w_List, {cr_, an_}] :=
+    BosonicNormalOrder[NonCommutativeMultiply @@ w, {{cr}, {an}}] /.
+        GeneralizedPower[NonCommutativeMultiply, cr, k_] ** GeneralizedPower[NonCommutativeMultiply, an, k_] :>
+            Product[cr ** an - j, {j, 0, k - 1}]
+
+(* a^q f(N) = f(N + q) a^q and f(N) ad^p = ad^p f(N + p), and functions of one N commute.
+   A word with as many ad as a beside a function of N is itself a polynomial in N, ad^k a^k
+   = N (N - 1) ... (N - k + 1). Ladder powers only move outward, never into ad f(N) a = N f(N - 1),
+   whose cancellation would lose the vacuum. *)
+shiftRules[{cr_, an_}] := {
+    NonCommutativeMultiply[l___, f_, w__, r___] /; numberFunctionQ[f, {cr, an}] && balancedWordQ[{w}, {cr, an}] :>
+        ncJoin[l, Together[f numberPolynomial[{w}, {cr, an}]], r],
+    NonCommutativeMultiply[l___, w__, f_, r___] /; numberFunctionQ[f, {cr, an}] && balancedWordQ[{w}, {cr, an}] :>
+        ncJoin[l, Together[numberPolynomial[{w}, {cr, an}] f], r],
+    NonCommutativeMultiply[l___, f_, g_, r___] /; numberFunctionQ[f, {cr, an}] && numberFunctionQ[g, {cr, an}] :>
+        ncJoin[l, Together[f g], r],
+    NonCommutativeMultiply[l___, x : (an | GeneralizedPower[NonCommutativeMultiply, an, _Integer ? Positive]), f_, r___] /;
+            numberFunctionQ[f, {cr, an}] :>
+        ncJoin[l, f /. cr ** an -> cr ** an + getNCPower[x, an], x, r],
+    NonCommutativeMultiply[l___, f_, x : (cr | GeneralizedPower[NonCommutativeMultiply, cr, _Integer ? Positive]), r___] /;
+            numberFunctionQ[f, {cr, an}] :>
+        ncJoin[l, x, f /. cr ** an -> cr ** an + getNCPower[x, cr], r]
+}
+
+expReduceRules[lv_] := Join[{
     NonCommutativeMultiply[l___, 1, r___] :> ncJoin[l, r],
 
     NonCommutativeMultiply[l___, Exp[b_], mid_, Exp[c_], r___] /; inverseExponentsQ[b, c] :>
@@ -481,7 +511,7 @@ expReduceRules[lv_] := {
                 ncJoin[l, Exp[b], op - cmt, r] /; zeroQ[cmt2]
             ]
         ]
-}
+}, Catenate[shiftRules /@ ladderPairs[lv]]]
 
 BosonicExpSimplify[expr_, opts : OptionsPattern[]] := (Message[BosonicExpSimplify::argr, BosonicExpSimplify, 2]; $Failed)
 
