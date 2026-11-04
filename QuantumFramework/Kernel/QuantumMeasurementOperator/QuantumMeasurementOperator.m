@@ -7,7 +7,7 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 QuantumMeasurementOperator::invalidName = "`1` is not a recognized QuantumMeasurementOperator constructor"
 QuantumMeasurementOperator::invalidArgs = "QuantumMeasurementOperator constructor `1` did not match any rule"
-QuantumMeasurementOperator::numfunc = "`1` is not defined for a measurement operator, which holds the operators of all its outcomes in one; only multiplying it by a number is. To measure with effects {E1, E2, ...}, give them to QuantumMeasurementOperator, which takes the square root of each."
+QuantumMeasurementOperator::numfunc = "`1` is not defined for a measurement operator, which holds the operators of all its outcomes in one; only multiplying it by a number and Conjugate are. To measure with effects {E1, E2, ...}, give them to QuantumMeasurementOperator, which takes the square root of each."
 
 
 quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]], _ ? targetsQ]] := True
@@ -303,10 +303,14 @@ QuantumMeasurementOperator /: Times[left : Except[_QuantumMeasurementOperator] .
     qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] :=
     QuantumMeasurementOperator[Times[left, qmo["Operator"], right], qmo["Target"]]
 
+(* the complex conjugate conjugates each outcome's operator, so it is again a measurement *)
+QuantumMeasurementOperator /: Conjugate[qmo_QuantumMeasurementOperator] :=
+    QuantumMeasurementOperator[Conjugate[qmo["Operator"]], qmo["Target"]]
+
 (* a measurement operator holds the operators of all its outcomes in one operator, with an
-   extra wire for the outcome, so a function of that operator is not a function of each
-   outcome's operator *)
-QuantumMeasurementOperator /: (f_Symbol ? (numericFunctionQ[#] && # =!= Times &))[left : Except[_QuantumMeasurementOperator] ...,
+   extra wire for the outcome, so any other function of that operator is not a function of
+   each outcome's operator *)
+QuantumMeasurementOperator /: (f_Symbol ? (numericFunctionQ[#] && ! MatchQ[#, Times | Conjugate] &))[left : Except[_QuantumMeasurementOperator] ...,
     qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] := (
     Message[QuantumMeasurementOperator::numfunc, f];
     Failure["UndefinedFunction", <|"MessageTemplate" :> QuantumMeasurementOperator::numfunc, "MessageParameters" -> {f}|>]
