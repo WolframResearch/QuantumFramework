@@ -60,6 +60,7 @@ QuantumEntangledQ::notphysical = QuantumEntanglementMonotone::notphysical =
     "The state is not physical: its density matrix in the computational basis is not Hermitian and positive semidefinite to the precision of its entries, or, with symbolic entries, for any real values of its parameters. An approximate state known only to an accuracy e, as from a numerical solution, can be given Tolerance -> e in QuantumEntanglementMonotone."
 
 QuantumEntanglementMonotone::tolerance = "Tolerance must be Automatic or a nonnegative real number; it is `1`."
+QuantumEntanglementMonotone::assumptions = "The assumptions `1` contradict each other, so no value of the parameters meets them."
 
 QuantumEntanglementMonotone::measurement =
     "The measurement acts on qudits of dimensions `1`, but it must measure the second part, of dimension `2`: give one on a single qudit of that dimension, or one on both parts with the second as its target."
@@ -757,6 +758,10 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, args___, opts : OptionsPattern[
     entanglementFailure[QuantumEntanglementMonotone, "InvalidArguments", "args", {{args, opts}}],
     ! MatchQ[OptionValue[Tolerance], Automatic | _ ? (NumericQ[#] && Im[#] == 0 && # >= 0 &)],
     entanglementFailure[QuantumEntanglementMonotone, "InvalidTolerance", "tolerance", {OptionValue[Tolerance]}],
+    (* Under assumptions that cannot all hold, Simplify may return any value at all, with only a warning: the Werner
+       concurrence comes out as 1 under False. *)
+    Simplify[OptionValue[Assumptions]] === False,
+    entanglementFailure[QuantumEntanglementMonotone, "InvalidAssumptions", "assumptions", {OptionValue[Assumptions]}],
     True,
     Block[{$stateTolerance = OptionValue[Tolerance]}, With[{a = entanglementArguments[QuantumEntanglementMonotone, qs, {args}]},
         If[FailureQ[a], a, assumedMonotone[toleratedState[qs], a, OptionValue[Assumptions]]]
@@ -981,10 +986,34 @@ entanglementMonotone[qs_, biPartition_, "Concurrence"] := Enclose @ With[{bp = C
 ]
 
 
-entanglementMonotone[qs_, biPartition_, "Negativity"] := Enclose[(ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"] - 1) / 2]
+entanglementMonotone[qs_, biPartition_, "Negativity"] := Enclose @ With[{bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]},
+    With[{s = exactPureSchmidtSum[qs, bp]}, If[FailureQ[s], (bp["Transpose", {2}]["TraceNorm"] - 1) / 2, (s ^ 2 - 1) / 2]]
+]
 
 
-entanglementMonotone[qs_, biPartition_, "LogNegativity"] := Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"]
+entanglementMonotone[qs_, biPartition_, "LogNegativity"] := Enclose @ With[{bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]},
+    With[{s = exactPureSchmidtSum[qs, bp]}, If[FailureQ[s], Log2[bp["Transpose", {2}]["TraceNorm"]], 2 Log2[s]]]
+]
+
+(* The partial transpose of a pure two-part state with Schmidt coefficients s_i has eigenvalues s_i^2 and +- s_i s_j,
+   i < j, so its trace norm is (Sum[s_i])^2: the negativity is ((Sum[s_i])^2 - 1) / 2 and the log-negativity
+   2 Log2[Sum[s_i]] (Vidal and Werner, PRA 65, 032314 (2002), Sec. III). For an exact numeric pure state the s_i^2 are
+   the nonzero eigenvalues of its min(dA, dB)-sized reduced state, which are found where the exact trace norm of the
+   dA dB x dA dB partial transpose, a singular-value problem in the full dimension, may not finish: a 3 x 3 product
+   state of nested radicals takes milliseconds this way and more than two minutes that way. Any other state, and an
+   exact one not read as pure (pureImpurity), returns $Failed and takes the trace norm. *)
+exactPureSchmidtSum[qs_, bp_] := With[{c = computationalForm[bp], d = bp["Dimensions"]},
+    With[{a = Normal @ If[c["VectorQ"], c["StateVector"], c["DensityMatrix"]]},
+        If[ ArrayQ[a, _, NumericQ] && Precision[a] === Infinity && pureImpurity[qs, bp] === 0,
+            Total @ Sqrt @ Select[
+                Eigenvalues @ If[c["VectorQ"], With[{m = ArrayReshape[a, d]}, If[d[[1]] <= d[[2]], m . ConjugateTranspose[m], ConjugateTranspose[m] . m]],
+                    TensorContract[ArrayReshape[a, Join[d, d]], If[d[[1]] <= d[[2]], {{2, 4}}, {{1, 3}}]]],
+                ! PossibleZeroQ[#] &
+            ],
+            $Failed
+        ]
+    ]
+]
 
 
 (* The entanglement entropy and the Renyi entanglement entropies are entropies of the reduced state, entanglement

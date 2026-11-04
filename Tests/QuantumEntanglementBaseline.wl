@@ -2,7 +2,8 @@
    with no other kernel running: minimum of 7 runs, ClearSystemCache[] before each, QF property cache off.
    "BaselineAnswer" is "correct", "wrong" (fast but wrong) or "unfinished" (no answer within 300 s).
    "Limit" (seconds) applies only to wrong or unfinished cases. G10-G13: 1 s each, approved 2026-10-21 after their fixes
-   (measured 0.02-0.1 s); G14 by the same rule once fixed the same day. G15: PROPOSED, pending the exact-input fix. *)
+   (measured 0.02-0.1 s); G14 by the same rule once fixed the same day. G15: 10 s, met once the negativity
+   of an exact pure state was read off its Schmidt coefficients (measured 0.3 s). *)
 
 <|
     "G1" -> <|"BaselineAnswer" -> "correct", "Seconds" -> 43.606073, "Answer" -> "67 -> 0"|>,

@@ -1095,4 +1095,142 @@ VerificationTest[
     TestID -> "Tolerance-UnknownOption"
 ]
 
+
+(* ========== Monotones of a symbolic state under assumptions on its parameters ========== *)
+
+(* The Werner state p |Psi-><Psi-| + (1 - p) I / 4 is entangled exactly for p > 1/3, with concurrence (3 p - 1) / 2
+   and negativity (3 p - 1) / 4 there and 0 below. Without assumptions the concurrence is a Max over square roots of
+   conjugated p; the assumptions decide every comparison, so the value is the threshold law itself, and the same
+   assumptions given through $Assumptions act as the option does. *)
+VerificationTest[
+    Block[{p},
+        With[{w = QuantumState[p Outer[Times, {0, 1, -1, 0}, {0, 1, -1, 0}] / 2 + (1 - p) IdentityMatrix[4] / 4, {2, 2}]},
+            Expand[{
+                QuantumEntanglementMonotone[w, "Concurrence", Assumptions -> 1/3 < p <= 1],
+                QuantumEntanglementMonotone[w, "Concurrence", Assumptions -> 0 <= p < 1/3],
+                QuantumEntanglementMonotone[w, "Negativity", Assumptions -> 1/3 < p <= 1],
+                Block[{$Assumptions = 1/3 < p <= 1}, QuantumEntanglementMonotone[w, "Concurrence"]]
+            } - {(3 p - 1) / 2, 0, (3 p - 1) / 4, (3 p - 1) / 2}]
+        ]
+    ],
+    {0, 0, 0, 0},
+    {},
+    TestID -> "Assumptions-WernerThreshold"
+]
+
+(* Cos[th] |00> + Sin[th] |11> with 0 < th < Pi/2 has Schmidt coefficients Cos[th] and Sin[th]: concurrence
+   2 Cos[th] Sin[th] = Sin[2 th], negativity Cos[th] Sin[th], half of it as for every pure pair of qubits, and
+   entanglement entropy the binary entropy of Cos[th]^2. Under the assumptions every conjugate and absolute value of
+   th is resolved. *)
+VerificationTest[
+    Block[{th},
+        With[{ps = QuantumState[{Cos[th], 0, 0, Sin[th]}, {2, 2}], asm = 0 < th < Pi/2},
+            With[{v = {
+                QuantumEntanglementMonotone[ps, "Concurrence", Assumptions -> asm],
+                QuantumEntanglementMonotone[ps, "Negativity", Assumptions -> asm],
+                QuantityMagnitude @ QuantumEntanglementMonotone[ps, "EntanglementEntropy", Assumptions -> asm]
+            }},
+                {
+                    FreeQ[v, Conjugate | Abs],
+                    Simplify[v - {Sin[2 th], Sin[2 th] / 2, - Cos[th]^2 Log2[Cos[th]^2] - Sin[th]^2 Log2[Sin[th]^2]}, asm]
+                }
+            ]
+        ]
+    ],
+    {True, {0, 0, 0}},
+    {},
+    TestID -> "Assumptions-PureStateMonotones"
+]
+
+(* Only qubit A decays, with "-" = |1><0| on it: the pair Sin[th] |00> + Cos[th] |11> keeps its |01>, |10>
+   populations at 0, its coherence falls as Exp[-g t / 2], and the concurrence is Sin[2 th] Exp[-g t / 2] with no
+   sudden death. With the assumptions the monotone returns that closed form directly. *)
+VerificationTest[
+    Block[{g, t, th},
+        QuantumEntanglementMonotone[
+            QuantumEvolve[QuantumOperator[0 IdentityMatrix[4]], {QuantumOperator["-", {1}], QuantumOperator["-", {2}]} -> {g, 0}, QuantumState[{Sin[th], 0, 0, Cos[th]}], t],
+            "Concurrence",
+            Assumptions -> 0 < th < Pi/2 && g > 0 && t > 0
+        ] - Sin[2 th] Exp[- g t / 2]
+    ],
+    0,
+    {},
+    TestID -> "Assumptions-OneSidedDamping"
+]
+
+(* a state of numbers has no parameters for the assumptions to act on: its value is the one without them *)
+VerificationTest[
+    Block[{p},
+        With[{w = QuantumState[N[4/5 Outer[Times, {0, 1, -1, 0}, {0, 1, -1, 0}] / 2 + 1/5 IdentityMatrix[4] / 4], {2, 2}]},
+            QuantumEntanglementMonotone[w, "Concurrence", Assumptions -> p > 0] === QuantumEntanglementMonotone[w, "Concurrence"]
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Assumptions-NumericStateUnchanged"
+]
+
+(* assumptions that no parameter value meets are refused: Simplify under them may return any value *)
+VerificationTest[
+    Block[{p},
+        With[{w = QuantumState[p Outer[Times, {0, 1, -1, 0}, {0, 1, -1, 0}] / 2 + (1 - p) IdentityMatrix[4] / 4, {2, 2}]},
+            FailureQ /@ {
+                QuantumEntanglementMonotone[w, "Concurrence", Assumptions -> p > 1 && p < 0],
+                QuantumEntanglementMonotone[w, "Concurrence", Assumptions -> False]
+            }
+        ]
+    ],
+    {True, True},
+    {QuantumEntanglementMonotone::assumptions, QuantumEntanglementMonotone::assumptions},
+    TestID -> "Assumptions-Contradictory"
+]
+
+
+(* ========== Negativity of an exact pure state ========== *)
+
+(* The partial transpose of a pure pair with Schmidt coefficients s_i has eigenvalues s_i^2 and +- s_i s_j, so the
+   negativity is ((Sum[s_i])^2 - 1) / 2 and the log-negativity 2 Log2[Sum[s_i]]. The maximally entangled pair of
+   qutrits has s_i = 1 / Sqrt[3]: negativity 1 and log-negativity Log2[3], as a state vector and as a density matrix. *)
+VerificationTest[
+    With[{v = Flatten[IdentityMatrix[3]] / Sqrt[3]},
+        Flatten @ Table[
+            QuantumEntanglementMonotone[QuantumState[s, {3, 3}], m],
+            {s, {v, Outer[Times, v, v]}}, {m, {"Negativity", "LogNegativity"}}
+        ]
+    ],
+    {1, Log2[3], 1, Log2[3]},
+    {},
+    TestID -> "ExactPureNegativity-MaximallyEntangledQutrits"
+]
+
+(* a product of two qutrit states with nested-radical amplitudes has one Schmidt coefficient, 1, and negativity
+   exactly 0; through the 9 x 9 partial transpose the exact trace norm does not finish in two minutes *)
+VerificationTest[
+    TimeConstrained[
+        With[{v = Normalize @ Flatten @ KroneckerProduct[{1, 2^(1/3), I}, {Sqrt[2], 1 - I, 3^(1/4)}]},
+            QuantumEntanglementMonotone[QuantumState[Outer[Times, v, Conjugate[v]], {3, 3}], "Negativity"]
+        ],
+        10
+    ],
+    0,
+    {},
+    TestID -> "ExactPureNegativity-NestedRadicalProduct"
+]
+
+(* an entangled exact pair of a qutrit and a qubit, part A the larger: the exact value agrees to 30 digits with
+   ((Total of the absolute eigenvalues of the partial transpose) - 1) / 2 computed at 50 digits *)
+VerificationTest[
+    With[{v = Normalize[{1, 2, I, 3^(1/4), 0, 1 - I}]},
+        With[{rho = Outer[Times, v, Conjugate[v]]},
+            Abs[
+                N[QuantumEntanglementMonotone[QuantumState[rho, {3, 2}], "Negativity"], 40] -
+                (Total[Abs[Eigenvalues[N[Flatten[Transpose[ArrayReshape[rho, {3, 2, 3, 2}], {1, 4, 3, 2}], {{1, 2}, {3, 4}}], 50]]]] - 1) / 2
+            ] < 10^-30
+        ]
+    ],
+    True,
+    {},
+    TestID -> "ExactPureNegativity-QutritQubit"
+]
+
 EndTestSection[]
