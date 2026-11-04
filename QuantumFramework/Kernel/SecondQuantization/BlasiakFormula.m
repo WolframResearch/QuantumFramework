@@ -44,6 +44,8 @@ blasiakWord[lv_, e_] :=
         {{} -> 1, {x_} :> x, w_ :> NonCommutativeMultiply @@ w}
     ]
 
+MultiModeBlasiakOrder[exprs_List, lv_Association, f_] := MultiModeBlasiakOrder[#, lv, f] & /@ exprs
+
 MultiModeBlasiakOrder[expr_, lv_Association, f_] :=
     Catch[
         Total @ KeyValueMap[#2 blasiakWord[lv, #1] &, DeleteCases[Expand /@ blasiakPolynomial[lv, expr], 0]],

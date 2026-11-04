@@ -202,9 +202,15 @@ expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
 ]
 
 
+exponentTerm[t_, g_] :=
+    With[{f = Replace[t, {u_Times :> List @@ u, u_ :> {u}}]},
+        Times @@ Select[f, ! FreeQ[#, g] &] -> Times @@ Select[f, FreeQ[#, g] &]
+    ]
+
 canonicalizeGenerators[expr_, lv_] :=
     With[{g = Alternatives @@ lv["Generators"]},
-        (expr /. Exp[e_] :> Exp[Expand[e]]) //.
+        (expr /. Exp[e_] :> Exp[Total @ KeyValueMap[#1 #2 &,
+            GroupBy[exponentTerm[#, g] & /@ Replace[Expand[e], {s_Plus :> List @@ s, s_ :> {s}}], First -> Last, Total]]]) //.
             NonCommutativeMultiply[l___, x : g, y : g, r___] /; lv["Modes"][x] > lv["Modes"][y] :>
                 NonCommutativeMultiply[l, y, x, r]
     ]
@@ -430,9 +436,25 @@ expConjugate[b_, Exp[g_], lv_] /; ncPolyQ[{b, g}, lv] :=
     expOrFailed @ adAction[b, g, lv]
 
 expConjugate[b_, op_, lv_] /; ncPolyQ[{b, op}, lv] :=
-    adAction[b, op, lv]
+    Replace[adAction[b, op, lv], $Failed :> conjugateParts[b, op, lv]]
 
 expConjugate[___] := $Failed
+
+conjugateParts[b_, op_Plus, lv_] :=
+    With[{gs = expConjugate[b, #, lv] & /@ List @@ op}, If[MemberQ[gs, $Failed], $Failed, Total[gs]]]
+
+conjugateParts[b_, op_Times, lv_] :=
+    With[{s = Select[op, FreeQ[#, Alternatives @@ lv["Generators"]] &]},
+        If[s === 1, $Failed, Replace[expConjugate[b, op / s, lv], g : Except[$Failed] :> s g]]
+    ]
+
+conjugateParts[b_, op_NonCommutativeMultiply, lv_] :=
+    With[{gs = expConjugate[b, #, lv] & /@ List @@ op}, If[MemberQ[gs, $Failed], $Failed, NonCommutativeMultiply @@ gs]]
+
+conjugateParts[b_, GeneralizedPower[NonCommutativeMultiply, x_, n_Integer ? Positive], lv_] :=
+    Replace[expConjugate[b, x, lv], g : Except[$Failed] :> GeneralizedPower[NonCommutativeMultiply, g, n]]
+
+conjugateParts[___] := $Failed
 
 expReduceRules[lv_] := {
     NonCommutativeMultiply[l___, 1, r___] :> ncJoin[l, r],
@@ -450,7 +472,7 @@ expReduceRules[lv_] := {
 
     NonCommutativeMultiply[l___, Exp[b1_], Exp[b2_], r___] /; ncPolyQ[{b1, b2}, lv] :>
         With[{c = ncCommutator[b1, b2, lv]},
-            ncJoin[l, Exp[c / 2] Exp[b1 + b2], r] /; cNumberQ[c, lv["Generators"]]
+            ncJoin[l, Exp[c / 2] Exp[Expand[b1 + b2]], r] /; cNumberQ[c, lv["Generators"]]
         ],
 
     NonCommutativeMultiply[l___, op_, Exp[b_], r___] /; ncPolyQ[{op, b}, lv] :>

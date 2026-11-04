@@ -120,6 +120,8 @@ vevPolynomialQ[expr_, vars_] :=
         PolynomialQ[vevCollapse[expr] /. Thread[vars -> syms], syms]
     ]
 
+BosonicVEV[exprs_List, vars_, opts : OptionsPattern[]] := BosonicVEV[#, vars, opts] & /@ exprs
+
 BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
     With[{lv = ResolveLadderVariables[BosonicVEV, vars]},
         If[ lv === $Failed,
@@ -242,8 +244,10 @@ numberDiagonal[expr_, {cr_, an_}, k_] :=
         With[{f = Replace[expr, {
                     NormalOrdered[Exp[c_. w_], _] /; w === nn :> (1 + c)^k,
                     e_ :> ReplaceAll[e, nn -> k]
-                }] /. Power[b_ /; TrueQ[b == 0], p_ /; TrueQ[Simplify[p >= 0, k >= 0]]] :>
-                    (1 + b) KroneckerDelta[p, 0]},
+                }] /. {
+                    Power[b_ /; TrueQ[b == 0], p_ /; TrueQ[Simplify[p >= 0, k >= 0]]] :> (1 + b) KroneckerDelta[p, 0],
+                    Power[b_ /; TrueQ[b == 0], p_ /; ! FreeQ[p, k]] :> Piecewise[{{1 + b, p == 0}}, b^p]
+                }},
             If[FreeQ[f, cr | an | NormalOrdered], f, $Failed]
         ]
     ]
