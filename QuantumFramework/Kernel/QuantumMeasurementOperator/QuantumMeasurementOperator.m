@@ -7,6 +7,7 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 QuantumMeasurementOperator::invalidName = "`1` is not a recognized QuantumMeasurementOperator constructor"
 QuantumMeasurementOperator::invalidArgs = "QuantumMeasurementOperator constructor `1` did not match any rule"
+QuantumMeasurementOperator::numfunc = "`1` is not defined for a measurement operator, which holds the operators of all its outcomes in one; only multiplying it by a number is. To measure with effects {E1, E2, ...}, give them to QuantumMeasurementOperator, which takes the square root of each."
 
 
 quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]], _ ? targetsQ]] := True
@@ -298,9 +299,18 @@ QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurem
         qmo1["Targets"]
     ]
 
-QuantumMeasurementOperator /: (f_Symbol ? numericFunctionQ)[left : Except[_QuantumMeasurementOperator] ...,
+QuantumMeasurementOperator /: Times[left : Except[_QuantumMeasurementOperator] ...,
     qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] :=
-    QuantumMeasurementOperator[f[left, qmo["Operator"], right], qmo["Target"]]
+    QuantumMeasurementOperator[Times[left, qmo["Operator"], right], qmo["Target"]]
+
+(* a measurement operator holds the operators of all its outcomes in one operator, with an
+   extra wire for the outcome, so a function of that operator is not a function of each
+   outcome's operator *)
+QuantumMeasurementOperator /: (f_Symbol ? (numericFunctionQ[#] && # =!= Times &))[left : Except[_QuantumMeasurementOperator] ...,
+    qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] := (
+    Message[QuantumMeasurementOperator::numfunc, f];
+    Failure["UndefinedFunction", <|"MessageTemplate" :> QuantumMeasurementOperator::numfunc, "MessageParameters" -> {f}|>]
+)
 
 
 
