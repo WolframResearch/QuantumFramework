@@ -493,10 +493,18 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
             ] ->
             Take[input, UpTo[Length[qo["FullInputOrder"]]]]
         ];
+    (* a controlled operator on one set of wires moves its output wires with the same map
+       as its input wires, so it stays an operator on one set of wires *)
     outputRepl =
-        Thread[
-            Take[qo["FullOutputOrder"], UpTo[Length[output]]] ->
-            Take[output, UpTo[Length[qo["FullOutputOrder"]]]]];
+        If[ TrueQ[controlQ] && qo["ControlOrder"] =!= {} && Sort[qo["FullOutputOrder"]] === Sort[qo["FullInputOrder"]],
+            Thread[
+                Take[Join[#, Complement[qo["FullOutputOrder"], #]] & @ Join[Sort @ qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[output]]] ->
+                Take[output, UpTo[Length[qo["FullOutputOrder"]]]]
+            ],
+            Thread[
+                Take[qo["FullOutputOrder"], UpTo[Length[output]]] ->
+                Take[output, UpTo[Length[qo["FullOutputOrder"]]]]]
+        ];
     QuantumOperator[
         qo["State"],
         {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
