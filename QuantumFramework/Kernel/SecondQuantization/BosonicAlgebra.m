@@ -248,10 +248,10 @@ numberDiagonal[expr_, {cr_, an_}, k_] :=
         ]
     ]
 
-(* A wing is an exponential of one operator alone, so its element is a Taylor coefficient
-   of Exp[P]: a displacement's linear wing and a squeeze's quadratic one share a formula,
+(* A wing is a function of one operator alone, x^p Exp[P], so its element is a Taylor
+   coefficient: a displacement's linear wing and a squeeze's quadratic one share a formula,
    and the latter's parity rule is the vanishing of the odd coefficients. *)
-wing[m_, k_, p_, x_] := SeriesCoefficient[Exp[p], {x, 0, m - k}] Sqrt[m!/k!]
+wing[m_, k_, g_, x_] := SeriesCoefficient[g, {x, 0, m - k}] Sqrt[m!/k!]
 
 wingPolynomial[s_, pair_, side_, x_] :=
     Module[{c, a},
@@ -259,6 +259,14 @@ wingPolynomial[s_, pair_, side_, x_] :=
             If[FreeQ[p, c | a] && PolynomialQ[p, x] && TrueQ[(p /. x -> 0) == 0], p, $Failed]
         ]
     ]
+
+normalFactor[cr_, {cr_, _}, _, _] := "Creators" -> 1
+
+normalFactor[GeneralizedPower[NonCommutativeMultiply, cr_, p_Integer ? Positive], {cr_, _}, _, _] := "Creators" -> p
+
+normalFactor[an_, {_, an_}, _, _] := "Annihilators" -> 1
+
+normalFactor[GeneralizedPower[NonCommutativeMultiply, an_, q_Integer ? Positive], {_, an_}, _, _] := "Annihilators" -> q
 
 normalFactor[fac_, pair_, k_, x_] :=
     With[{s = Replace[fac, {Exp[e_] :> e, _ :> None}]},
@@ -274,36 +282,47 @@ normalFactor[fac_, pair_, k_, x_] :=
         ]
     ]
 
-(* scalar Exp[P[ad]] f[n] Exp[Q[a]], any factor absent.  Wings of a kind commute so their
-   exponents add; between Fock states the middle sum runs only to Min[m, n].  Between
-   coherent states the wings are the numbers P[Conjugate[m]] and Q[n], and the middle is
-   summed in t before the amplitudes go in, so a zero amplitude meets no 0^j. *)
+(* scalar Exp[P[ad]] ad^p f[n] a^q Exp[Q[a]], any factor absent.  Factors of a kind commute,
+   so the up side is x^p Exp[P] and the down side x^q Exp[Q]; between Fock states the middle
+   sum runs only to Min[m, n].  Without exponentials the element is read in closed form, and
+   it vanishes for n < q before f[n - q] is evaluated, so a^dagger f[N] a keeps the vacuum
+   even when f[n - 1] is singular at n = 0.  Between coherent states both sides are numbers
+   and the middle is summed in t before the amplitudes go in, so a zero amplitude meets no 0^j.
+   The factors must arrive in normal order: an antinormal product would otherwise be silently
+   reordered and keep its own scalar, wrong by the exponential of the commutator. *)
 normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
-    Module[{x, t, terms, scalar, tagged, u, w, f, r},
+    Module[{x, t, terms, scalar, tagged, u, w, p, q, fu, fd, f, mono, r},
         terms = If[Head[expr] === Times, List @@ expr, {expr}];
         scalar = Times @@ Select[terms, FreeQ[#, Alternatives @@ pair] &];
         tagged = Replace[Times @@ Select[terms, ! FreeQ[#, Alternatives @@ pair] &],
             {q_NonCommutativeMultiply :> List @@ q, q_ :> {q}}];
         tagged = normalFactor[#, pair, j, x] & /@ tagged;
         If[MemberQ[tagged, $Failed], Return[$Failed, Module]];
-        (* The factors are assembled as one normally ordered product, so they must arrive
-           in that order: an antinormal product would otherwise be silently reordered and
-           keep its own scalar, which is wrong by the exponential of the commutator. *)
-        If[ ! OrderedQ[First /@ tagged /. {"Up" -> 1, "Diagonal" -> 2, "Down" -> 3}],
+        If[ ! OrderedQ[First /@ tagged /. {"Up" | "Creators" -> 1, "Diagonal" -> 2, "Down" | "Annihilators" -> 3}],
             Return[$Failed, Module]
         ];
         u = Total[Cases[tagged, ("Up" -> c_) :> c]];
         w = Total[Cases[tagged, ("Down" -> c_) :> c]];
+        p = Total[Cases[tagged, ("Creators" -> c_) :> c]];
+        q = Total[Cases[tagged, ("Annihilators" -> c_) :> c]];
+        fu = x^p Exp[u];
+        fd = x^q Exp[w];
         f = Times @@ Cases[tagged, ("Diagonal" -> g_) :> g];
+        mono = scalar KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]] (f /. j -> n - q) &;
         r = Which[
             coherent,
-                scalar Exp[(u /. x -> Conjugate[m]) + (w /. x -> n) - (Abs[m]^2 + Abs[n]^2)/2] *
+                scalar (fu /. x -> Conjugate[m]) (fd /. x -> n) Exp[-(Abs[m]^2 + Abs[n]^2)/2] *
                     (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n),
-            u === 0 && w === 0, scalar (f /. j -> n) KroneckerDelta[m, n],
-            w === 0, scalar wing[m, n, u, x] (f /. j -> n),
-            u === 0, scalar (f /. j -> m) wing[n, m, w, x],
+            fu === 1 && fd === 1, scalar (f /. j -> n) KroneckerDelta[m, n],
+            u === 0 && w === 0,
+                If[ IntegerQ[m] && IntegerQ[n],
+                    If[m >= p && n >= q, mono[], 0],
+                    Piecewise[{{mono[], m >= p && n >= q}}, 0]
+                ],
+            fd === 1, scalar wing[m, n, fu, x] (f /. j -> n),
+            fu === 1, scalar (f /. j -> m) wing[n, m, fd, x],
             IntegerQ[m] && IntegerQ[n],
-                scalar Sum[wing[m, j, u, x] f wing[n, j, w, x], {j, 0, Min[m, n]}],
+                scalar Sum[wing[m, j, fu, x] f wing[n, j, fd, x], {j, 0, Min[m, n]}],
             True, $Failed
         ];
         If[FreeQ[r, SeriesCoefficient], r, $Failed]
