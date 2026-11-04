@@ -47,7 +47,7 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 
 
 General::ladvars = "`1` does not declare ladder operators; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first, or a WeylAlgebra.";
-General::ladflat = "The flat list `1` is no longer accepted; write `2`, creators first.";
+General::ladflat = "The list `1` mixes creators and annihilators; give the annihilators alone, `2`, or {{creators}, {annihilators}}.";
 General::ladpairs = "`1` lists one {creator, annihilator} pair per mode; write `2`, the creators of every mode first.";
 General::ladlen = "The creators `1` and the annihilators `2` differ in number.";
 General::ladvar = "`1` cannot name a ladder operator.";
@@ -64,7 +64,11 @@ ResolveLadderVariables[f_, alg_NonCommutativeAlgebra] :=
         _ :> (Message[f::ladalg, alg]; $Failed)
     }]
 
-ResolveLadderVariables[f_, vars : {Except[_List] ..}] := (Message[f::ladflat, vars, daggerVariables[vars]]; $Failed)
+ResolveLadderVariables[f_, vars : {Except[_List] ..}] :=
+    If[ FreeQ[vars, SuperDagger],
+        ResolveLadderVariables[f, {SuperDagger /@ vars, vars}],
+        Message[f::ladflat, vars, First @ daggerVariables[vars] /. SuperDagger[v_] :> v]; $Failed
+    ]
 
 ResolveLadderVariables[f_, vars : {cs : {__}, as : {__}}] :=
     With[{

@@ -213,7 +213,7 @@ BosonicMatrixElement[{_, _}, Except[_DisplacementOperator | _SqueezeOperator | _
     (Message[BosonicMatrixElement::argrx, BosonicMatrixElement, 2, 3]; $Failed)
 
 BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
-    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, t, r},
+    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, r},
         pair = If[AssociationQ[lv], {First[lv["Creators"]], First[lv["Annihilators"]]}];
         r = Which[
             lv === $Failed || ! FreeQ[expr, _QuantumOperator | _QuantumState], $Failed,
@@ -223,14 +223,10 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
                     ladderSum[fockLadderElement, {ms, ns}, expr, lv]
                 ],
             Length[lv["Annihilators"]] =!= 1 || ListQ[m] || ListQ[n], $Failed,
-            (* summed in t before the amplitudes go in, so a zero amplitude meets no 0^j *)
-            coherentBasisQ[opts],
-                Replace[numberDiagonal[expr, pair, j],
-                    f : Except[$Failed] :> Exp[-(Abs[m]^2 + Abs[n]^2)/2] (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n)],
             True,
-                Replace[normalProductElement[expr, pair, m, n, j],
+                Replace[normalProductElement[expr, pair, m, n, j, coherentBasisQ[opts]],
                     $Failed /; ! FreeQ[expr, E] :>
-                        normalProductElement[BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}], pair, m, n, j]]
+                        normalProductElement[BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}], pair, m, n, j, coherentBasisQ[opts]]]
         ];
         r /; lv === $Failed || r =!= $Failed
     ]
@@ -279,9 +275,11 @@ normalFactor[fac_, pair_, k_, x_] :=
     ]
 
 (* scalar Exp[P[ad]] f[n] Exp[Q[a]], any factor absent.  Wings of a kind commute so their
-   exponents add; between Fock states the middle sum runs only to Min[m, n]. *)
-normalProductElement[expr_, pair_, m_, n_, j_] :=
-    Module[{x, terms, scalar, tagged, u, w, f, r},
+   exponents add; between Fock states the middle sum runs only to Min[m, n].  Between
+   coherent states the wings are the numbers P[Conjugate[m]] and Q[n], and the middle is
+   summed in t before the amplitudes go in, so a zero amplitude meets no 0^j. *)
+normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
+    Module[{x, t, terms, scalar, tagged, u, w, f, r},
         terms = If[Head[expr] === Times, List @@ expr, {expr}];
         scalar = Times @@ Select[terms, FreeQ[#, Alternatives @@ pair] &];
         tagged = Replace[Times @@ Select[terms, ! FreeQ[#, Alternatives @@ pair] &],
@@ -298,6 +296,9 @@ normalProductElement[expr_, pair_, m_, n_, j_] :=
         w = Total[Cases[tagged, ("Down" -> c_) :> c]];
         f = Times @@ Cases[tagged, ("Diagonal" -> g_) :> g];
         r = Which[
+            coherent,
+                scalar Exp[(u /. x -> Conjugate[m]) + (w /. x -> n) - (Abs[m]^2 + Abs[n]^2)/2] *
+                    (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n),
             u === 0 && w === 0, scalar (f /. j -> n) KroneckerDelta[m, n],
             w === 0, scalar wing[m, n, u, x] (f /. j -> n),
             u === 0, scalar (f /. j -> m) wing[n, m, w, x],
