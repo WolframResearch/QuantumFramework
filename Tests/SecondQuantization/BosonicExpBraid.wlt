@@ -5,6 +5,7 @@ $a = \[FormalA];
 $ad = SuperDagger[\[FormalA]];
 $n = $ad ** $a;
 $disp = \[Alpha] $ad - Conjugate[\[Alpha]] $a;
+$vars = {{$ad}, {$a}};
 
 exponentOf[Exp[x_]] := x;
 exponentOf[_] := $Failed;
@@ -39,7 +40,7 @@ BeginTestSection["BosonicExpBraid - number-operator generator"]
 (* The identity that motivated the function:
    e^(\[Beta] n) D(\[Alpha]) = e^(\[Alpha] e^\[Beta] a\[Dagger] - \[Alpha]\[Conjugate] e^-\[Beta] a) e^(\[Beta] n). *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[$disp]],
+    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[$disp], $vars],
     Exp[\[Alpha] Exp[\[Beta]] $ad - Conjugate[\[Alpha]] Exp[-\[Beta]] $a] ** Exp[\[Beta] $n],
     {},
     TestID -> "BosonicExpBraid-NumberPastDisplacement"
@@ -48,7 +49,7 @@ VerificationTest[
 VerificationTest[
     braidHoldsQ[
         Exp[\[Beta] $n] ** Exp[$disp],
-        BosonicExpBraid[Exp[\[Beta] $n] ** Exp[$disp]],
+        BosonicExpBraid[Exp[\[Beta] $n] ** Exp[$disp], $vars],
         {\[Beta] -> 0.3 + 0.2 I, \[Alpha] -> 0.5 - 0.4 I}
     ],
     True,
@@ -59,7 +60,7 @@ VerificationTest[
 (* Any partner is allowed, including GeneralizedPower and unordered products.
    Each a\[Dagger] picks up e^\[Lambda], each a picks up e^-\[Lambda]. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Lambda] $n] ** Exp[\[Xi] $ad ** $ad]],
+    BosonicExpBraid[Exp[\[Lambda] $n] ** Exp[\[Xi] $ad ** $ad], $vars],
     Exp[\[Xi] Exp[2 \[Lambda]] $ad ** $ad] ** Exp[\[Lambda] $n],
     {},
     TestID -> "BosonicExpBraid-NumberPastQuadraticPartner"
@@ -67,7 +68,7 @@ VerificationTest[
 
 VerificationTest[
     BosonicExpBraid[
-        Exp[\[Lambda] $n] ** Exp[\[Xi] GeneralizedPower[NonCommutativeMultiply, $a, 3]]],
+        Exp[\[Lambda] $n] ** Exp[\[Xi] GeneralizedPower[NonCommutativeMultiply, $a, 3]], $vars],
     Exp[\[Xi] Exp[-3 \[Lambda]] GeneralizedPower[NonCommutativeMultiply, $a, 3]] ** Exp[\[Lambda] $n],
     {},
     TestID -> "BosonicExpBraid-NumberPastGeneralizedPower"
@@ -76,7 +77,7 @@ VerificationTest[
 (* a**a\[Dagger] = n + 1 differs from n by a central term, so the ad-action is the
    same and this partner comes back untouched - it is NOT normal-ordered. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Lambda] $n] ** Exp[\[Xi] $a ** $ad]],
+    BosonicExpBraid[Exp[\[Lambda] $n] ** Exp[\[Xi] $a ** $ad], $vars],
     Exp[\[Xi] $a ** $ad] ** Exp[\[Lambda] $n],
     {},
     TestID -> "BosonicExpBraid-DoesNotOrderThePartner"
@@ -89,7 +90,7 @@ BeginTestSection["BosonicExpBraid - linear and quadratic generators"]
 
 (* Ad_(\[Alpha] a\[Dagger]) shifts a by -\[Alpha] and fixes a\[Dagger]. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Alpha] $ad] ** Exp[\[Lambda] $n]],
+    BosonicExpBraid[Exp[\[Alpha] $ad] ** Exp[\[Lambda] $n], $vars],
     Exp[\[Lambda] $ad ** ($a - \[Alpha])] ** Exp[\[Alpha] $ad],
     {},
     TestID -> "BosonicExpBraid-CreationPastNumber"
@@ -98,7 +99,7 @@ VerificationTest[
 VerificationTest[
     braidHoldsQ[
         Exp[\[Alpha] $ad] ** Exp[\[Lambda] $n],
-        BosonicExpBraid[Exp[\[Alpha] $ad] ** Exp[\[Lambda] $n]],
+        BosonicExpBraid[Exp[\[Alpha] $ad] ** Exp[\[Lambda] $n], $vars],
         {\[Lambda] -> -0.35 + 0.1 I, \[Alpha] -> 0.4 - 0.2 I}
     ],
     True,
@@ -112,7 +113,7 @@ VerificationTest[
     sameBraidQ[
         BosonicExpBraid[
             Exp[(1/4) (GeneralizedPower[NonCommutativeMultiply, $ad, 2] -
-                GeneralizedPower[NonCommutativeMultiply, $a, 2])] ** Exp[\[Alpha] $ad]],
+                GeneralizedPower[NonCommutativeMultiply, $a, 2])] ** Exp[\[Alpha] $ad], $vars],
         Exp[\[Alpha] (Cosh[1/2] $ad - Sinh[1/2] $a)] **
             Exp[(1/4) (GeneralizedPower[NonCommutativeMultiply, $ad, 2] -
                 GeneralizedPower[NonCommutativeMultiply, $a, 2])]
@@ -125,7 +126,7 @@ VerificationTest[
 VerificationTest[
     braidHoldsQ[
         Exp[(1/4) ($ad ** $ad - $a ** $a)] ** Exp[\[Alpha] $ad],
-        BosonicExpBraid[Exp[(1/4) ($ad ** $ad - $a ** $a)] ** Exp[\[Alpha] $ad]],
+        BosonicExpBraid[Exp[(1/4) ($ad ** $ad - $a ** $a)] ** Exp[\[Alpha] $ad], $vars],
         {\[Alpha] -> 0.3 - 0.25 I}
     ],
     True,
@@ -140,7 +141,7 @@ BeginTestSection["BosonicExpBraid - direction"]
 
 (* Left transport: e^A e^B = e^B e^(Ad_-B A). *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[\[Alpha] $ad], "Direction" -> "Left"],
+    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[\[Alpha] $ad], $vars, "Direction" -> "Left"],
     Exp[\[Alpha] $ad] ** Exp[\[Beta] $ad ** ($a + \[Alpha])],
     {},
     TestID -> "BosonicExpBraid-LeftDirection"
@@ -149,7 +150,7 @@ VerificationTest[
 VerificationTest[
     braidHoldsQ[
         Exp[\[Beta] $n] ** Exp[\[Alpha] $ad],
-        BosonicExpBraid[Exp[\[Beta] $n] ** Exp[\[Alpha] $ad], "Direction" -> "Left"],
+        BosonicExpBraid[Exp[\[Beta] $n] ** Exp[\[Alpha] $ad], $vars, "Direction" -> "Left"],
         {\[Beta] -> 0.2 - 0.3 I, \[Alpha] -> 0.45 + 0.15 I}
     ],
     True,
@@ -158,7 +159,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[$disp], "Direction" -> "Sideways"],
+    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[$disp], $vars, "Direction" -> "Sideways"],
     $Failed,
     {BosonicExpBraid::direction},
     TestID -> "BosonicExpBraid-RejectsUnknownDirection"
@@ -172,7 +173,7 @@ BeginTestSection["BosonicExpBraid - stays in its lane"]
 (* Commuting exponentials are swapped, never merged - merging belongs to
    BosonicExpSimplify. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[\[Gamma] $n]],
+    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[\[Gamma] $n], $vars],
     Exp[\[Gamma] $n] ** Exp[\[Beta] $n],
     {},
     TestID -> "BosonicExpBraid-DoesNotMergeCommutingPair"
@@ -180,7 +181,7 @@ VerificationTest[
 
 (* An exponential and its inverse are swapped, never cancelled. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[-\[Beta] $n]],
+    BosonicExpBraid[Exp[\[Beta] $n] ** Exp[-\[Beta] $n], $vars],
     Exp[-\[Beta] $n] ** Exp[\[Beta] $n],
     {},
     TestID -> "BosonicExpBraid-DoesNotCancelInversePair"
@@ -188,7 +189,7 @@ VerificationTest[
 
 (* A generator outside the recognized families transports nothing, silently. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Lambda] $ad ** $a ** $a] ** Exp[\[Alpha] $ad]],
+    BosonicExpBraid[Exp[\[Lambda] $ad ** $a ** $a] ** Exp[\[Alpha] $ad], $vars],
     Exp[\[Lambda] $ad ** $a ** $a] ** Exp[\[Alpha] $ad],
     {},
     TestID -> "BosonicExpBraid-UnrecognizedGeneratorIsInert"
@@ -196,7 +197,7 @@ VerificationTest[
 
 (* Mixed families in one generator (number + linear) are not claimed. *)
 VerificationTest[
-    BosonicExpBraid[Exp[\[Lambda] $n + \[Alpha] $ad] ** Exp[\[Gamma] $a]],
+    BosonicExpBraid[Exp[\[Lambda] $n + \[Alpha] $ad] ** Exp[\[Gamma] $a], $vars],
     Exp[\[Lambda] $n + \[Alpha] $ad] ** Exp[\[Gamma] $a],
     {},
     TestID -> "BosonicExpBraid-MixedFamilyIsInert"
@@ -211,7 +212,7 @@ BeginTestSection["BosonicExpBraid - multimode"]
 VerificationTest[
     Module[{b = \[FormalB], bd = SuperDagger[\[FormalB]]},
         BosonicExpBraid[
-            Exp[\[Lambda] $n + \[Mu] bd ** b] ** Exp[\[Alpha] $ad ** b]]
+            Exp[\[Lambda] $n + \[Mu] bd ** b] ** Exp[\[Alpha] $ad ** b], {{$ad, bd}, {$a, b}}]
     ],
     Module[{b = \[FormalB], bd = SuperDagger[\[FormalB]]},
         Exp[\[Alpha] Exp[\[Lambda] - \[Mu]] $ad ** b] ** Exp[\[Lambda] $n + \[Mu] bd ** b]
@@ -223,7 +224,7 @@ VerificationTest[
 (* A cross-mode generator (beam splitter) is not a recognized family. *)
 VerificationTest[
     Module[{b = \[FormalB], bd = SuperDagger[\[FormalB]]},
-        BosonicExpBraid[Exp[\[Theta] $ad ** b] ** Exp[\[Alpha] $ad]]
+        BosonicExpBraid[Exp[\[Theta] $ad ** b] ** Exp[\[Alpha] $ad], {{$ad, bd}, {$a, b}}]
     ],
     Module[{b = \[FormalB]},
         Exp[\[Theta] $ad ** b] ** Exp[\[Alpha] $ad]

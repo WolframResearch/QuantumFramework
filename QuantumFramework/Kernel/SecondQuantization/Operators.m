@@ -58,7 +58,7 @@ DisplacementOperator[\[Alpha]_, \[Infinity], Optional[order_?orderQ, {1}], Optio
         ordering = Replace[OptionValue["Ordering"], Automatic -> "Weak"],
         a, adag
     },
-        {a, adag} = FieldVariables[order];
+        {{adag}, {a}} = FieldVariables[order];
         Switch[ordering,
             "Normal",
             Exp[-\[Alpha] Conjugate[\[Alpha]]/2] * Exp[\[Alpha] * adag] ** Exp[-Conjugate[\[Alpha]] * a],
@@ -120,7 +120,7 @@ SqueezeOperator[xi_, \[Infinity], Optional[order_?orderQ, {1}], OptionsPattern[]
         tau = Exp[I Arg[xi]] Tanh[Abs[xi]],
         a, adag
     },
-        {a, adag} = FieldVariables[order];
+        {{adag}, {a}} = FieldVariables[order];
         Replace[
             Switch[ordering,
                 "Normal",

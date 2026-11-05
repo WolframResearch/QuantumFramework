@@ -3,7 +3,7 @@ Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
 (* Shared scaffolding: a battery of monomials/polynomials to check invariants over, and a
    structural predicate asserting that no creator precedes an annihilator in any monomial *)
-$antiVars = {\[FormalA], SuperDagger[\[FormalA]]};
+$antiVars = {{SuperDagger[\[FormalA]]}, {\[FormalA]}};
 
 $antiBattery = {
     SuperDagger[\[FormalA]] ** \[FormalA],
@@ -26,7 +26,7 @@ $antiOrderedQ[expr_, vars_] := AllTrue[
                     FirstCase[term, _NonCommutativeMultiply, term, {0, Infinity}],
                     {NonCommutativeMultiply[f__] :> {f}, f_ :> {f}}
                 ],
-                ! FreeQ[#, Alternatives @@ vars] &
+                ! FreeQ[#, Alternatives @@ Flatten[vars]] &
             ]
         ]
     ]
@@ -97,7 +97,7 @@ BeginTestSection["BosonicAntinormalOrder - two modes"]
 VerificationTest[
     BosonicAntinormalOrder[
         SuperDagger[\[FormalA]] ** \[FormalA] ** SuperDagger[\[FormalB]] ** \[FormalB],
-        {\[FormalA], SuperDagger[\[FormalA]], \[FormalB], SuperDagger[\[FormalB]]}],
+        {{SuperDagger[\[FormalA]], SuperDagger[\[FormalB]]}, {\[FormalA], \[FormalB]}}],
     1 - \[FormalA] ** SuperDagger[\[FormalA]] - \[FormalB] ** SuperDagger[\[FormalB]] +
         \[FormalA] ** \[FormalB] ** SuperDagger[\[FormalA]] ** SuperDagger[\[FormalB]],
     TestID -> "Antinormal-TwoModeNumberProduct"
@@ -105,7 +105,7 @@ VerificationTest[
 
 (* Mixed two-mode polynomial: check the operator is preserved *)
 VerificationTest[
-    Module[{vars = {\[FormalA], SuperDagger[\[FormalA]], \[FormalB], SuperDagger[\[FormalB]]}, x},
+    Module[{vars = {{SuperDagger[\[FormalA]], SuperDagger[\[FormalB]]}, {\[FormalA], \[FormalB]}}, x},
         x = 2 SuperDagger[\[FormalA]] ** \[FormalA] +
             SuperDagger[\[FormalA]] ** SuperDagger[\[FormalB]] ** \[FormalA] ** \[FormalB];
         Simplify[
@@ -121,13 +121,12 @@ EndTestSection[]
 
 BeginTestSection["BosonicAntinormalOrder - scalars"]
 
-(* Symbolic coefficients declared through "Scalars" must survive the reduction *)
+(* Symbols outside vars are scalars and must survive the reduction *)
 VerificationTest[
     BosonicAntinormalOrder[
         \[Alpha] SuperDagger[\[FormalA]] ** \[FormalA] +
             \[Beta] SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA],
-        $antiVars,
-        "Scalars" -> {\[Alpha], \[Beta]}],
+        $antiVars],
     -\[Alpha] + 2 \[Beta] + (\[Alpha] - 4 \[Beta]) \[FormalA] ** SuperDagger[\[FormalA]] +
         \[Beta] GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2] **
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2],
@@ -140,7 +139,7 @@ EndTestSection[]
 BeginTestSection["BosonicAntinormalOrder - methods"]
 
 (* "Blasiak" reaches anti-normal order by conjugating the normal-ordering formula with the
-   automorphism a -> a^dagger, a^dagger -> -a; it must agree with the Grobner reduction *)
+   automorphism a -> a^dagger, a^dagger -> -a; it must agree with the Weyl algebra reduction *)
 VerificationTest[
     AllTrue[$antiBattery,
         Simplify[
@@ -148,7 +147,7 @@ VerificationTest[
                 BosonicAntinormalOrder[#, $antiVars]
         ] === 0 &],
     True,
-    TestID -> "Antinormal-BlasiakMatchesGrobner"
+    TestID -> "Antinormal-BlasiakMatchesWeyl"
 ]
 
 (* The conjugating automorphism introduces a sign on odd-degree creator blocks, so the Blasiak

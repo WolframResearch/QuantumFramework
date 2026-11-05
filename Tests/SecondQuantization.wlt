@@ -46,45 +46,45 @@ VerificationTest[
     TestID -> "SQ-coherent-g2-is-one"
 ]
 
-(* BosonicVEV[expr] auto-detects the field variables and must agree with the
-   explicit two-argument form.  Single mode: [a, a^dag] = 1 gives <0|a a^dag|0> = 1,
-   and a annihilates the vacuum so <0|a^dag a|0> = 0. *)
+(* BosonicVEV with the annihilators alone as vars, {a}, must agree with the full form
+   {{a^dag}, {a}}.  Single mode: [a, a^dag] = 1 gives <0|a a^dag|0> = 1, and a
+   annihilates the vacuum so <0|a^dag a|0> = 0. *)
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
         {
-            BosonicVEV[a ** ad],
-            BosonicVEV[a ** ad] === BosonicVEV[a ** ad, {a, ad}],
-            BosonicVEV[ad ** a]
+            BosonicVEV[a ** ad, {a}],
+            BosonicVEV[a ** ad, {a}] === BosonicVEV[a ** ad, {{ad}, {a}}],
+            BosonicVEV[ad ** a, {a}]
         }
     ],
     {1, True, 0},
-    TestID -> "SQ-BosonicVEV-single-mode-auto-detect"
+    TestID -> "SQ-BosonicVEV-single-mode-shorthand"
 ]
 
-(* Auto-detection does real work only with more than one mode.  Independent modes
-   commute, so <0|a a^dag b b^dag|0> = 1, while a fully normal-ordered product has
-   no c-number part: <0|a^dag a b^dag b|0> = 0.  Single-arg must match two-arg. *)
+(* Two modes.  Independent modes commute, so <0|a a^dag b b^dag|0> = 1, while a fully
+   normal-ordered product has no c-number part: <0|a^dag a b^dag b|0> = 0.  The
+   shorthand must match the full form. *)
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]], b = \[FormalB], bd = SuperDagger[\[FormalB]]},
         {
-            BosonicVEV[a ** ad ** b ** bd],
-            BosonicVEV[a ** ad ** b ** bd] === BosonicVEV[a ** ad ** b ** bd, {a, ad, b, bd}],
-            BosonicVEV[ad ** a ** bd ** b]
+            BosonicVEV[a ** ad ** b ** bd, {a, b}],
+            BosonicVEV[a ** ad ** b ** bd, {a, b}] === BosonicVEV[a ** ad ** b ** bd, {{ad, bd}, {a, b}}],
+            BosonicVEV[ad ** a ** bd ** b, {a, b}]
         }
     ],
     {1, True, 0},
-    TestID -> "SQ-BosonicVEV-multimode-auto-detect"
+    TestID -> "SQ-BosonicVEV-multimode-shorthand"
 ]
 
-(* Wick's theorem for the vacuum: <0|a^n (a^dag)^n|0> = n!.  Exercises the
-   auto-detect path on a family, single-arg agreeing with two-arg.  n is kept
-   concrete: the reduction does not accept a symbolic exponent. *)
+(* Wick's theorem for the vacuum: <0|a^n (a^dag)^n|0> = n!, the shorthand agreeing
+   with the full form on the whole family.  n is kept concrete: the reduction does not
+   accept a symbolic exponent. *)
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
         With[{chains = Table[NonCommutativeMultiply @@ Join[ConstantArray[a, n], ConstantArray[ad, n]], {n, 5}]},
             {
-                BosonicVEV /@ chains,
-                (BosonicVEV[#] === BosonicVEV[#, {a, ad}] &) /@ chains
+                BosonicVEV[#, {a}] & /@ chains,
+                (BosonicVEV[#, {a}] === BosonicVEV[#, {{ad}, {a}}] &) /@ chains
             }
         ]
     ],
@@ -93,12 +93,12 @@ VerificationTest[
 ]
 
 (* A symbolic scalar coefficient passes straight through the vacuum projection:
-   <0| lambda (a a^dag) |0> = lambda. *)
+   <0| lambda (a a^dag) |0> = lambda.  Symbols outside vars are scalars. *)
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
         {
-            BosonicVEV[\[Lambda] (a ** ad)],
-            BosonicVEV[\[Lambda] (a ** ad)] === BosonicVEV[\[Lambda] (a ** ad), {a, ad}]
+            BosonicVEV[\[Lambda] (a ** ad), {a}],
+            BosonicVEV[\[Lambda] (a ** ad), {a}] === BosonicVEV[\[Lambda] (a ** ad), {{ad}, {a}}]
         }
     ],
     {\[Lambda], True},
@@ -109,7 +109,7 @@ VerificationTest[
    Fock-space matrix element <0|a a^dag|0> built from the ladder operators. *)
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
-        BosonicVEV[a ** ad] ===
+        BosonicVEV[a ** ad, {a}] ===
             (FockState[0]["Dagger"] @ (AnnihilationOperator[] @ AnnihilationOperator[]["Dagger"]) @ FockState[0])["Scalar"]
     ],
     True,
@@ -123,9 +123,9 @@ VerificationTest[
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]], b = \[FormalB], bd = SuperDagger[\[FormalB]]},
         {
-            BosonicVEV[a ** ad ** b ** bd] === BosonicVEV[a ** ad] BosonicVEV[b ** bd],
-            BosonicVEV[a ** b ** ad ** bd],
-            BosonicVEV[ad ** b ** a ** bd]
+            BosonicVEV[a ** ad ** b ** bd, {a, b}] === BosonicVEV[a ** ad, {a}] BosonicVEV[b ** bd, {b}],
+            BosonicVEV[a ** b ** ad ** bd, {a, b}],
+            BosonicVEV[ad ** b ** a ** bd, {a, b}]
         }
     ],
     {True, 1, 0},
@@ -137,19 +137,16 @@ VerificationTest[
    the balanced a a a^dag a^dag follows Wick, <0|a^2 (a^dag)^2|0> = 2. *)
 VerificationTest[
     With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
-        {BosonicVEV[a ** a ** ad], BosonicVEV[a ** ad ** ad], BosonicVEV[a ** a ** ad ** ad]}
+        {BosonicVEV[a ** a ** ad, {a}], BosonicVEV[a ** ad ** ad, {a}], BosonicVEV[a ** a ** ad ** ad, {a}]}
     ],
     {0, 0, 2},
     TestID -> "SQ-BosonicVEV-number-selection-rule"
 ]
 
-(* A c-number has no field operators, so it is its own vacuum expectation:
-   <0|c|0> = c. The single-argument auto-detect path finds an empty variable list
-   and must return the c-number rather than recurse to the recursion limit; the
-   explicit empty-list form BosonicVEV[c, {}] routes through the same rule. *)
+(* A c-number has no field operators, so it is its own vacuum expectation: <0|c|0> = c. *)
 VerificationTest[
-    {BosonicVEV[7], BosonicVEV[\[Lambda]], BosonicVEV[7, {}]},
-    {7, \[Lambda], 7},
+    {BosonicVEV[7, {\[FormalA]}], BosonicVEV[\[Lambda], {\[FormalA]}]},
+    {7, \[Lambda]},
     TestID -> "SQ-BosonicVEV-cnumber-is-itself"
 ]
 
@@ -160,57 +157,59 @@ VerificationTest[
    operators. Returning the unevaluated call asserts nothing, where returning
    expr itself would claim <0|Cosh[a]|0> == Cosh[a]. *)
 VerificationTest[
-    BosonicVEV[Cosh[\[FormalA]]],
-    BosonicVEV[Cosh[\[FormalA]]],
+    BosonicVEV[Cosh[\[FormalA]], {\[FormalA]}],
+    BosonicVEV[Cosh[\[FormalA]], {\[FormalA]}],
     {},
     TestID -> "SQ-BosonicVEV-nonpolynomial-stays-unevaluated"
 ]
 
 (* The dangerous case: <0|D(\[Alpha])|0> = E^(-Abs[\[Alpha]]^2/2), so a silent 0 or 1 here
-   would be indistinguishable from a real result. Unevaluated is safe; the
-   auto-detected variable list must not leak into the echoed call either. *)
+   would be indistinguishable from a real result. Unevaluated is safe. *)
 VerificationTest[
-    BosonicVEV[Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]],
-    BosonicVEV[Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]],
+    BosonicVEV[Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]], {\[FormalA]}],
+    BosonicVEV[Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]], {\[FormalA]}],
     {},
     TestID -> "SQ-BosonicVEV-displacement-stays-unevaluated"
 ]
 
-(* The explicit-vars form stays unevaluated in its own shape. *)
+(* The full-form vars stays unevaluated in its own shape. *)
 VerificationTest[
-    BosonicVEV[Cosh[\[FormalA]], {\[FormalA], SuperDagger[\[FormalA]]}],
-    BosonicVEV[Cosh[\[FormalA]], {\[FormalA], SuperDagger[\[FormalA]]}],
+    BosonicVEV[Cosh[\[FormalA]], {{SuperDagger[\[FormalA]]}, {\[FormalA]}}],
+    BosonicVEV[Cosh[\[FormalA]], {{SuperDagger[\[FormalA]]}, {\[FormalA]}}],
     {},
     TestID -> "SQ-BosonicVEV-explicit-vars-stays-unevaluated"
 ]
 
-(* An expression naming only one of the two ladder operators still needs both to
-   build the commutation relation; the missing partner is supplied. *)
+(* Naming the annihilator alone supplies its SuperDagger partner. *)
 VerificationTest[
-    {
-        BosonicVEV[\[FormalA] ** SuperDagger[\[FormalA]], {\[FormalA]}],
-        BosonicVEV[\[FormalA] ** SuperDagger[\[FormalA]], {SuperDagger[\[FormalA]]}]
-    },
-    {1, 1},
+    BosonicVEV[\[FormalA] ** SuperDagger[\[FormalA]], {\[FormalA]}],
+    1,
     {},
     TestID -> "SQ-BosonicVEV-completes-the-ladder-pair"
 ]
 
-(* Normal-ordering with no field variables is the identity on the c-number: with
-   nothing to reduce, the reducer is never invoked and the constant passes through
-   unchanged and message-free. *)
+(* A creator cannot stand in the annihilator list. *)
 VerificationTest[
-    {BosonicNormalOrder[7, {}], BosonicNormalOrder[\[Lambda], {}]},
-    {7, \[Lambda]},
-    TestID -> "SQ-BosonicNormalOrder-empty-vars-is-identity"
+    BosonicVEV[\[FormalA] ** SuperDagger[\[FormalA]], {SuperDagger[\[FormalA]]}],
+    $Failed,
+    {BosonicVEV::ladflat},
+    TestID -> "SQ-BosonicVEV-rejects-creator-as-annihilator"
 ]
 
-(* Anti-normal-ordering with no field variables is likewise the identity on the
-   c-number: nothing to reorder, so the constant passes through message-free. *)
+(* A c-number is already in normal and anti-normal order, whatever modes are declared. *)
 VerificationTest[
-    {BosonicAntinormalOrder[7, {}], BosonicAntinormalOrder[\[Lambda], {}]},
-    {7, \[Lambda]},
-    TestID -> "SQ-BosonicAntinormalOrder-empty-vars-is-identity"
+    {BosonicNormalOrder[7, {\[FormalA]}], BosonicNormalOrder[\[Lambda], {\[FormalA]}],
+     BosonicAntinormalOrder[7, {\[FormalA]}], BosonicAntinormalOrder[\[Lambda], {\[FormalA]}]},
+    {7, \[Lambda], 7, \[Lambda]},
+    TestID -> "SQ-ordering-cnumber-is-identity"
+]
+
+(* An empty declaration names no ladder operators and is rejected. *)
+VerificationTest[
+    {BosonicNormalOrder[7, {}], BosonicAntinormalOrder[7, {}]},
+    {$Failed, $Failed},
+    {BosonicNormalOrder::ladvars, BosonicAntinormalOrder::ladvars},
+    TestID -> "SQ-ordering-empty-vars-rejected"
 ]
 
 (* Phase-space functions at the origin alpha = 0. The closed-form kernels carry a
