@@ -312,10 +312,27 @@ VerificationTest[
     TestID -> "LinearCombinationLadderFloat2"
 ]
 
+(* The symbolic displacement is written in the declared variables, FieldVariables[] by
+   default, and normal-orders to its own "Normal" form in the same variables. *)
 VerificationTest[
-    BosonicExpOrder[DisplacementOperator[\[Alpha], Infinity], FieldVariables[{1}]],
-    DisplacementOperator[\[Alpha], Infinity, "Ordering" -> "Normal"],
+    {BosonicExpOrder[DisplacementOperator[\[Alpha], Infinity], FieldVariables[]] ===
+        DisplacementOperator[\[Alpha], Infinity, "Ordering" -> "Normal"],
+     BosonicExpOrder[DisplacementOperator[\[Alpha], Infinity, {\[FormalB]}], {\[FormalB]}] ===
+        DisplacementOperator[\[Alpha], Infinity, {\[FormalB]}, "Ordering" -> "Normal"],
+     And @@ Table[
+        DisplacementOperator[\[Alpha], Infinity, {\[FormalB]}, "Ordering" -> o] === (DisplacementOperator[\[Alpha], Infinity, "Ordering" -> o] /. \[FormalA] -> \[FormalB]) &&
+        SqueezeOperator[\[Xi], Infinity, {\[FormalB]}, "Ordering" -> o] === (SqueezeOperator[\[Xi], Infinity, "Ordering" -> o] /. \[FormalA] -> \[FormalB]),
+        {o, {"Weak", "Normal", "Antinormal"}}]},
+    {True, True, True},
     TestID -> "DisplacementOperatorNormal"
+]
+
+(* A displacement or squeeze acts on one mode; declaring two is refused. *)
+VerificationTest[
+    {DisplacementOperator[\[Alpha], Infinity, {\[FormalA], \[FormalB]}], SqueezeOperator[\[Xi], Infinity, {\[FormalA], \[FormalB]}]},
+    {$Failed, $Failed},
+    {DisplacementOperator::ladone, SqueezeOperator::ladone},
+    TestID -> "SymbolicOperatorOneMode"
 ]
 
 EndTestSection[]
@@ -861,6 +878,34 @@ VerificationTest[
     ],
     {1, True},
     TestID -> "RepeatedOrderingIsStableAndIdempotent"
+]
+
+(* The number operator rotates the ladder operators, e^{-sN} a e^{sN} = e^s a, so an
+   exponential of a alone moves right past e^{sN} as e^{beta a} e^{sN} = e^{sN} e^{beta e^s a},
+   and one of a^dagger moves left. Fock elements are compared with the hand-written
+   <m|e^{beta a}|n> = beta^(n-m) Sqrt[n!/m!]/(n-m)! and the diagonal e^{sn}, for m, n <= 3. *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        With[{low = If[#3 >= #2, #1^(#3 - #2) Sqrt[#3!/#2!]/(#3 - #2)!, 0] &},
+            {Table[BosonicMatrixElement[{m, n}, BosonicExpOrder[Exp[be a] ** Exp[s ad ** a], $vA], $vA] - low[be, m, n] E^(s n), {m, 0, 3}, {n, 0, 3}],
+             Table[BosonicMatrixElement[{m, n}, BosonicExpOrder[Exp[s ad ** a] ** Exp[be ad], $vA], $vA] - E^(s m) low[be, n, m], {m, 0, 3}, {n, 0, 3}]} // Simplify
+        ]
+    ],
+    ConstantArray[0, {2, 4, 4}],
+    TestID -> "LadderExponentialPastNumberExponential"
+]
+
+(* With the ladder exponentials moved past the number factor, D(-alpha) e^{-itN} is in
+   normal order and its coherent element is read directly:
+   <beta|D(-alpha) e^{-itN}|beta> = e^{-|alpha|^2/2 - alpha betabar + (e^{-it} - 1)|beta|^2 + alphabar e^{-it} beta}. *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        Simplify[(BosonicMatrixElement[{be, be}, Exp[-al ad + Conjugate[al] a] ** Exp[-I t ad ** a], $vA, "Basis" -> "Coherent"] /.
+            Abs[x_]^2 :> x Conjugate[x]) -
+            Exp[-al Conjugate[al]/2 - al Conjugate[be] + (E^(-I t) - 1) be Conjugate[be] + Conjugate[al] E^(-I t) be]]
+    ],
+    0,
+    TestID -> "DisplacementTimesNumberExponentialCoherentElement"
 ]
 
 EndTestSection[]

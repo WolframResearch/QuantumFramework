@@ -78,6 +78,12 @@ modeRulesNO[{cr_, an_}, vv_, lv_] := {
     Exp[lambda_. an ** cr] :>
         E^lambda NormalOrdered[Exp[(E^lambda - 1) cr ** an], vv],
 
+    Exp[alpha_. an] ** NormalOrdered[Exp[k_. + c_. cr ** an], vv] /; FreeQ[k, cr | an] :>
+        NormalOrdered[Exp[k + c cr ** an], vv] ** Exp[alpha (1 + c) an],
+
+    NormalOrdered[Exp[k_. + c_. cr ** an], vv] ** Exp[beta_. cr] /; FreeQ[k, cr | an] :>
+        Exp[beta (1 + c) cr] ** NormalOrdered[Exp[k + c cr ** an], vv],
+
     Exp[alpha_. (an ** an | GeneralizedPower[NonCommutativeMultiply, an, 2])] **
             Exp[beta_. (cr ** cr | GeneralizedPower[NonCommutativeMultiply, cr, 2])] :>
         Exp[(beta GeneralizedPower[NonCommutativeMultiply, cr, 2])/(1 - 4 alpha beta)] **
@@ -139,6 +145,12 @@ modeRulesAN[{cr_, an_}, vv_, lv_] := {
 
     Exp[lambda_. cr ** an] :>
         E^(-lambda) AntinormalOrdered[Exp[(1 - E^(-lambda)) an ** cr], vv],
+
+    Exp[beta_. cr] ** AntinormalOrdered[Exp[k_. + c_. an ** cr], vv] /; FreeQ[k, cr | an] :>
+        AntinormalOrdered[Exp[k + c an ** cr], vv] ** Exp[beta (1 - c) cr],
+
+    AntinormalOrdered[Exp[k_. + c_. an ** cr], vv] ** Exp[alpha_. an] /; FreeQ[k, cr | an] :>
+        Exp[alpha (1 - c) an] ** AntinormalOrdered[Exp[k + c an ** cr], vv],
 
     Exp[beta_. (cr ** cr | GeneralizedPower[NonCommutativeMultiply, cr, 2])] **
             Exp[alpha_. (an ** an | GeneralizedPower[NonCommutativeMultiply, an, 2])] :>

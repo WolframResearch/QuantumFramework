@@ -55,6 +55,7 @@ General::laddup = "`1` is declared more than once in `2`.";
 General::laddagger = "The annihilator `1` carries a dagger; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first.";
 General::ladpair = "The creator `1` is paired with `2` instead of `3`.";
 General::ladalg = "`1` is not a Weyl algebra.";
+General::ladone = "`1` declares more than one mode; this operator acts on a single mode.";
 
 daggerVariables[vars_] := With[{as = DeleteDuplicates[Flatten[vars] /. SuperDagger[v_] :> v]}, {SuperDagger /@ as, as}]
 

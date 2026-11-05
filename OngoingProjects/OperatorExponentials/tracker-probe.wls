@@ -100,8 +100,9 @@ chk["P-020 moments |2>", With[{chi = BosonicMatrixElement[{2, 2}, Exp[g bd] ** E
 chk["G-024 Fock from diagonal", And @@ (With[{s = Exp[al Conjugate[al]] coh[{al, al}, #[[1]]] /. Conjugate[al] -> u /. al -> w},
     Simplify[Table[(D[s, {u, m}, {w, k}] /. {u -> 0, w -> 0})/Sqrt[m! k!] - (#[[2]][m, k] /. toAbs), {m, 0, 3}, {k, 0, 3}]] === ConstantArray[0, {4, 4}]] & /@
     {{disp[gg], BosonicMatrixElement[{#1, #2}, DisplacementOperator[gg]] &}, {Exp[c nn], BosonicMatrixElement[{#1, #2}, Exp[c nn], v] &}})];
-chk["C-031 translation coeff", Simplify[ExpToTrig[gaussTrace[coh[{al, al}, Exp[-I t/2] Exp[-a0 Conjugate[a0]/2] Exp[-a0 bd] **
-    BosonicExpBraid[Exp[Conjugate[a0] b] ** Exp[-I t nn], v, "Direction" -> "Left"]]] - 1/(2 I Sin[t/2]) Exp[I a0 Conjugate[a0] Cot[t/2]/2]], 0 < t < Pi] === 0];
+chk["C-031 translation coeff", Simplify[ExpToTrig[gaussTrace[coh[{al, al}, Exp[-I t/2] disp[-a0] ** Exp[-I t nn]]] -
+    1/(2 I Sin[t/2]) Exp[I a0 Conjugate[a0] Cot[t/2]/2]], 0 < t < Pi] === 0];
+chk["ExpOrder D(-a) e^{-itN}", MatchQ[BosonicExpOrder[disp[-a0] ** Exp[-I t nn], v], _. Power[E, _ ? (FreeQ[#, b] &)] ** _NormalOrdered ** Power[E, _ ? (FreeQ[#, bd] &)]]];
 chk["G-040 dispersive", With[{u = Exp[-I chi t (bd1 ** b1 + bd3 ** b3 ** (bd1 ** b1 - bd2 ** b2))]},
     {BosonicMatrixElement[{{1, 0, n}, {1, 0, n}}, u, v3], BosonicMatrixElement[{{0, 1, n}, {0, 1, n}}, u, v3], BosonicMatrixElement[{{1, 0, n}, {0, 1, n}}, u, v3]} ===
         {E^(-I chi (1 + n) t), E^(I chi n t), 0}]];
@@ -110,7 +111,6 @@ chk["B-106 free Xi", Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp
 chk["X-007 diagonal M", Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp[Log[m1] bd1 ** b1 + Log[m2] bd2 ** b2], v2], {k1, 0, Infinity}, {k2, 0, Infinity}] -
     1/Det[IdentityMatrix[2] - DiagonalMatrix[{m1, m2}]], 0 < m1 < 1 && 0 < m2 < 1] === 0];
 Print["--- ideas still open (expect FAIL / unevaluated) ---"];
-chk["ExpOrder D(-a) e^{-itN}", FreeQ[BosonicExpOrder[disp[-a0] ** Exp[-I t nn], v], NonCommutativeMultiply[___, Power[E, _ ? (! FreeQ[#, b] && FreeQ[#, bd] &)], _NormalOrdered, ___]]];
 chk["Idea1 quad3", FreeQ[BosonicExpOrder[Exp[x b ** b + y bd ** bd + w bd ** b], v], Power[E, x b ** b + y bd ** bd + w bd ** b]]];
 chk["Idea3 symbol", FreeQ[NormalOrdered[Exp[c nn], v]["Symbol", 0], "Symbol"]];
 chk["Idea4 multimode", FreeQ[BosonicMatrixElement[{{1, 1}, {0, 0}}, Exp[z bd1 ** bd2], v2], BosonicMatrixElement]];

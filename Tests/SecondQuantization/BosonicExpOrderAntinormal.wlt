@@ -280,4 +280,25 @@ VerificationTest[
     TestID -> "BosonicExpAnti-TwoModeInterleavedProductAntinormalOrders"
 ]
 
+(* In anti-normal order the creators go right: e^{beta a^dagger} e^{sN} = e^{sN} e^{beta e^{-s} a^dagger}
+   and e^{sN} e^{beta a} = e^{beta e^{-s} a} e^{sN}. The anti-normal factor is read on the Fock
+   diagonal by hand, <n|AN[e^{k + c a a^dagger}]|n> = e^k (1 - c)^{-(n+1)}, and the ladder
+   exponential by <m|e^{beta a}|n> = beta^(n-m) Sqrt[n!/m!]/(n-m)!; both products must give
+   their plain-operator elements, for m, n <= 3. *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        With[{low = If[#3 >= #2, #1^(#3 - #2) Sqrt[#3!/#2!]/(#3 - #2)!, 0] &,
+              diag = Function[{f, j}, f /. AntinormalOrdered[Exp[k_. + c_. a ** ad], _] :> E^k (1 - c)^(-(j + 1))]},
+            With[{r1 = BosonicExpOrder[Exp[be ad] ** Exp[s ad ** a], $v1, "Ordering" -> "Antinormal"],
+                  r2 = BosonicExpOrder[Exp[s ad ** a] ** Exp[be a], $v1, "Ordering" -> "Antinormal"]},
+                {MatchQ[r1, _AntinormalOrdered ** Power[E, _]], MatchQ[r2, Power[E, _] ** _AntinormalOrdered],
+                 Simplify @ Table[diag[r1[[1]], m] (r1[[2]] /. Exp[x_ ad] :> low[x, n, m]) - low[be, n, m] E^(s n), {m, 0, 3}, {n, 0, 3}],
+                 Simplify @ Table[(r2[[1]] /. Exp[x_ a] :> low[x, m, n]) diag[r2[[2]], n] - E^(s m) low[be, m, n], {m, 0, 3}, {n, 0, 3}]}
+            ]
+        ]
+    ],
+    {True, True, ConstantArray[0, {4, 4}], ConstantArray[0, {4, 4}]},
+    TestID -> "BosonicExpAnti-LadderExponentialPastNumberExponential"
+]
+
 EndTestSection[]

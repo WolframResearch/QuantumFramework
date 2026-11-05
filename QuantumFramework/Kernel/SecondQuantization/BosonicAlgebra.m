@@ -134,7 +134,7 @@ BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
 BosonicMatrixElement::usage =
 "\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] in the ladder operators vars.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the element of poly between multimode Fock states.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) gives \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states.";
 
-Options[BosonicMatrixElement] = {"Basis" -> "Fock"}
+Options[BosonicMatrixElement] = {"Basis" -> "Fock", Assumptions :> $Assumptions}
 
 SetAttributes[BosonicMatrixElement, HoldRest]
 
@@ -215,7 +215,7 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
             True,
                 Replace[normalProductElement[expr, pair, m, n, j, coherentBasisQ[opts]],
                     $Failed /; ! FreeQ[expr, E] :>
-                        normalProductElement[BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}], pair, m, n, j, coherentBasisQ[opts]]]
+                        normalProductElement[BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}, Assumptions -> OptionValue[Assumptions]], pair, m, n, j, coherentBasisQ[opts]]]
         ];
         r /; lv === $Failed || r =!= $Failed
     ]

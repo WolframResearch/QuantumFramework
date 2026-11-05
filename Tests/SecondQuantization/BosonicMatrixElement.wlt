@@ -433,4 +433,14 @@ VerificationTest[
     TestID -> "BME-Modes-NumberFunctionTrace"
 ]
 
+(* Assumptions reach the reordering: the squeeze exponential's element comes out in hyperbolic
+   functions, <2|S(r)|0> = -Tanh[r] Sqrt[Sech[r]]/Sqrt[2], as an option or through Assuming. *)
+VerificationTest[
+    With[{sq = Exp[r/2 (b ** b - bd ** bd)]},
+        {BosonicMatrixElement[{2, 0}, sq, {{bd}, {b}}, Assumptions -> r > 0], Assuming[r > 0, BosonicMatrixElement[{2, 0}, sq, {{bd}, {b}}]]}
+    ],
+    {-(Sech[r]^(3/2) Sinh[r])/Sqrt[2], -(Sech[r]^(3/2) Sinh[r])/Sqrt[2]},
+    TestID -> "BME-Assumptions-SqueezeElement"
+]
+
 EndTestSection[]
