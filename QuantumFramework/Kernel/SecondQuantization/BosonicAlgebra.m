@@ -172,28 +172,13 @@ coherentOverlap[\[Alpha]_, \[Beta]_] :=
     Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]
 
 ladderSum[element_, {ms_, ns_}, expr_, lv_Association] :=
-    Module[{x, y, k = Length[lv["Annihilators"]], vars, p},
+    Module[{x, y, k = Length[lv["Annihilators"]], vars, p, r, e},
         vars = Join[Array[x, k], Array[y, k]];
         p = Expand[vevCollapse[BosonicNormalOrder[expr, {lv["Creators"], lv["Annihilators"]}]] /. Thread[lv["Generators"] -> vars]];
-        Which[
-            p === 0, 0,
-            k == 1,
-                With[{t = Replace[p, {s_Plus :> List @@ s, s_ :> {s}}]},
-                    (t /. Thread[vars -> 1]) . MapThread[element[First[ms], First[ns], #1, #2] &, Exponent[t, #] & /@ vars]
-                ],
-            True,
-                With[{r = CoefficientRules[p, vars]},
-                    With[{e = Transpose[Keys[r]]},
-                        Values[r] . Times @@ Table[
-                            With[{pq = Transpose[{e[[i]], e[[k + i]]}]},
-                                With[{u = DeleteDuplicates[pq]},
-                                    Lookup[AssociationThread[u, element[ms[[i]], ns[[i]], ##] & @@@ u], pq]
-                                ]
-                            ],
-                            {i, k}
-                        ]
-                    ]
-                ]
+        If[ p === 0, 0,
+            r = CoefficientRules[p, vars];
+            e = Transpose[Keys[r]];
+            Values[r] . Times @@ Table[MapThread[element[ms[[i]], ns[[i]], ##] &, {e[[i]], e[[k + i]]}], {i, k}]
         ]
     ]
 
@@ -213,7 +198,7 @@ BosonicMatrixElement[{_, _}, Except[_DisplacementOperator | _SqueezeOperator | _
     (Message[BosonicMatrixElement::argrx, BosonicMatrixElement, 2, 3]; $Failed)
 
 BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
-    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, r},
+    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, d, r},
         pair = If[AssociationQ[lv], {First[lv["Creators"]], First[lv["Annihilators"]]}];
         r = Which[
             lv === $Failed || ! FreeQ[expr, _QuantumOperator | _QuantumState], $Failed,
@@ -222,6 +207,10 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
                     Times @@ MapThread[coherentOverlap, {ms, ns}] ladderSum[ZeroLimitPower[Conjugate[#1], #3] ZeroLimitPower[#2, #4] &, {ms, ns}, expr, lv],
                     ladderSum[fockLadderElement, {ms, ns}, expr, lv]
                 ],
+            Length[ms] === Length[ns] === Length[lv["Annihilators"]] && Length[ms] > 1 && ! coherentBasisQ[opts] &&
+                    FreeQ[d = expr //. Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ns],
+                        Alternatives @@ lv["Generators"] | _NormalOrdered | _AntinormalOrdered],
+                (d /. NonCommutativeMultiply -> Times) Times @@ MapThread[KroneckerDelta, {ms, ns}],
             Length[lv["Annihilators"]] =!= 1 || ListQ[m] || ListQ[n], $Failed,
             True,
                 Replace[normalProductElement[expr, pair, m, n, j, coherentBasisQ[opts]],

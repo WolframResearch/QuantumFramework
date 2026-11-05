@@ -408,4 +408,29 @@ VerificationTest[
     TestID -> "BME-Modes-ExponentialUnevaluated"
 ]
 
+(* A function of the number operators alone is diagonal in the multimode Fock basis,
+   <m|f(N1, N2)|n> = f(n) delta_{mn}: the dispersive rotation e^{-i chi t (N1 + N3 (N1 - N2))}
+   gives e^{-i chi t (n + 1)} with mode 1 excited, e^{i chi t n} with mode 2 excited, and 0
+   between the two; products and powers of the N_k are read on the same indices. *)
+VerificationTest[
+    With[{u = Exp[-I chi t (bd1 ** b1 + bd3 ** b3 ** (bd1 ** b1 - bd2 ** b2))], v3 = {{bd1, bd2, bd3}, {b1, b2, b3}}},
+        {BosonicMatrixElement[{{1, 0, n}, {1, 0, n}}, u, v3],
+         BosonicMatrixElement[{{0, 1, n}, {0, 1, n}}, u, v3],
+         BosonicMatrixElement[{{1, 0, n}, {0, 1, n}}, u, v3],
+         BosonicMatrixElement[{{2, 3}, {2, 3}}, bd1 ** b1 ** bd2 ** b2 + (bd1 ** b1)^2 Exp[c bd2 ** b2], {{bd1, bd2}, {b1, b2}}]}
+    ],
+    {E^(-I chi (1 + n) t), E^(I chi n t), 0, 6 + 4 E^(3 c)},
+    TestID -> "BME-Modes-NumberFunctionDiagonal"
+]
+
+(* The trace of a product of per-mode Boltzmann factors factorizes into geometric series,
+   Tr x1^N1 x2^N2 = 1/((1 - x1)(1 - x2)) = det(I - diag(x1, x2))^-1. *)
+VerificationTest[
+    Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp[Log[x1] bd1 ** b1 + Log[x2] bd2 ** b2], {{bd1, bd2}, {b1, b2}}],
+        {k1, 0, Infinity}, {k2, 0, Infinity}], 0 < x1 < 1 && 0 < x2 < 1],
+    1/((1 - x1) (1 - x2)),
+    SameTest -> (Simplify[#1 - #2] === 0 &),
+    TestID -> "BME-Modes-NumberFunctionTrace"
+]
+
 EndTestSection[]
