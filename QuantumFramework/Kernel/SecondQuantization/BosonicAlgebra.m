@@ -130,6 +130,11 @@ BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
         ] /; lv === $Failed || vevPolynomialQ[expr, lv["Generators"]]
     ]
 
+BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
+    With[{r = BosonicMatrixElement[ConstantArray[0, {2, Length[ResolveLadderVariables[BosonicVEV, vars]["Annihilators"]]}], expr, vars, ##] & @@ FilterRules[{opts}, Assumptions]},
+        r /; Head[r] =!= BosonicMatrixElement
+    ]
+
 
 BosonicMatrixElement::usage =
 "\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] in the ladder operators vars.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the element of poly between multimode Fock states.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) gives \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states.";
@@ -211,11 +216,14 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
                     FreeQ[d = expr //. Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ns],
                         Alternatives @@ lv["Generators"] | _NormalOrdered | _AntinormalOrdered],
                 (d /. NonCommutativeMultiply -> Times) Times @@ MapThread[KroneckerDelta, {ms, ns}],
-            Length[lv["Annihilators"]] =!= 1 || ListQ[m] || ListQ[n], $Failed,
+            If[ Length[lv["Annihilators"]] === 1, ListQ[m] || ListQ[n],
+                ! MatrixQ[{ms, ns}, IntegerQ] || Length[ms] =!= Length[lv["Annihilators"]] || coherentBasisQ[opts]], $Failed,
             True,
-                Replace[normalProductElement[expr, pair, m, n, j, coherentBasisQ[opts]],
-                    $Failed /; ! FreeQ[expr, E] :>
-                        normalProductElement[BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}, Assumptions -> OptionValue[Assumptions]], pair, m, n, j, coherentBasisQ[opts]]]
+                With[{el = If[Length[lv["Annihilators"]] === 1, normalProductElement[#, pair, m, n, j, coherentBasisQ[opts]] &, multimodeProductElement[#, lv, ms, ns] &]},
+                    Replace[sumProductElement[el, expr, lv["Generators"]],
+                        $Failed /; ! FreeQ[expr, E] :>
+                            sumProductElement[el, BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}, Assumptions -> OptionValue[Assumptions]], lv["Generators"]]]
+                ]
         ];
         r /; lv === $Failed || r =!= $Failed
     ]
@@ -315,4 +323,29 @@ normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
             True, $Failed
         ];
         If[FreeQ[r, SeriesCoefficient], r, $Failed]
+    ]
+
+sumProductElement[f_, expr_, gens_] :=
+    With[{t = Expand[expr /. p_NonCommutativeMultiply :> Distribute[p]] //.
+            NonCommutativeMultiply[l___, s_ x_, r___] /; FreeQ[s, Alternatives @@ gens] :> s NonCommutativeMultiply[l, x, r]},
+        If[ Head[t] === Plus,
+            With[{e = f /@ List @@ t}, If[MemberQ[e, $Failed], $Failed, Total[e]]],
+            f[t]
+        ]
+    ]
+
+(* Creators commute among themselves, as do annihilators, so each multimode wing is a function of
+   commuting variables and its Fock element a multivariate Taylor coefficient. *)
+multimodeProductElement[expr_, lv_, ms_, ns_] :=
+    Module[{x, y, k, xs, ys, ks, fs, side, up, f, dn},
+        {xs, ys, ks} = Array[#, Length[ms]] & /@ {x, y, k};
+        fs = Flatten[Replace[Replace[expr, {t_Times :> List @@ t, t_ :> {t}}], q_NonCommutativeMultiply :> List @@ q, {1}]] //.
+            Join[Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ks], Thread[lv["Creators"] -> xs], Thread[lv["Annihilators"] -> ys]] /.
+            {GeneralizedPower[NonCommutativeMultiply, b_, p_] :> b^p, NonCommutativeMultiply -> Times};
+        side = Boole[Outer[! FreeQ[#1, #2] &, fs, Alternatives @@@ {xs, ks, ys}, 1]];
+        If[ Max[Total[side, {2}]] > 1 || ! OrderedQ[DeleteCases[side = side . {1, 2, 3}, 0]], Return[$Failed, Module]];
+        {up, f, dn} = Times @@ Pick[fs, side, #] & /@ {1, 2, 3};
+        Times @@ Pick[fs, side, 0] Times @@ Sqrt[ms! ns!] Total[
+            SeriesCoefficient[up dn, Sequence @@ Thread[{Join[xs, ys], 0, Join[ms - #, ns - #]}]] (f /. Thread[ks -> #]) / Times @@ (#!) & /@
+                Tuples[Range[0, MapThread[Min, {ms, ns}]]]]
     ]

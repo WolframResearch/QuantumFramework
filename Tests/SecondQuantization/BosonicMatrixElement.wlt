@@ -400,12 +400,11 @@ VerificationTest[
     TestID -> "BME-Modes-OneModeSpellings"
 ]
 
-(* Exponentials are still read one mode at a time; several modes stay unevaluated rather
-   than feed an index vector to the single-mode wing formula. *)
+(* An exponential in one mode of several: the other mode contributes its overlap. *)
 VerificationTest[
-    Head[BosonicMatrixElement[{{2, 1}, {0, 0}}, Exp[z bd1], $v2]],
-    BosonicMatrixElement,
-    TestID -> "BME-Modes-ExponentialUnevaluated"
+    {BosonicMatrixElement[{{2, 1}, {0, 0}}, Exp[z bd1], $v2], BosonicMatrixElement[{{2, 0}, {0, 0}}, Exp[z bd1], $v2]},
+    {0, z^2/Sqrt[2]},
+    TestID -> "BME-Modes-ExponentialOneMode"
 ]
 
 (* A function of the number operators alone is diagonal in the multimode Fock basis,
@@ -441,6 +440,72 @@ VerificationTest[
     ],
     {-(Sech[r]^(3/2) Sinh[r])/Sqrt[2], -(Sech[r]^(3/2) Sinh[r])/Sqrt[2]},
     TestID -> "BME-Assumptions-SqueezeElement"
+]
+
+(* A creator right of an annihilator wing moves across shifted, e^{c a} a^dagger = (a^dagger + c) e^{c a},
+   and the element is linear over the resulting sum, in both bases. *)
+VerificationTest[
+    With[{v = {{bd}, {b}}, ov = Exp[Conjugate[al] be - (Abs[al]^2 + Abs[be]^2)/2]},
+        {
+            Simplify[BosonicMatrixElement[{al, be}, Exp[c b] ** bd, v, "Basis" -> "Coherent"] - (Conjugate[al] + c) Exp[c be] ov],
+            Simplify[BosonicMatrixElement[{al, be}, Exp[c b] + bd, v, "Basis" -> "Coherent"] - (Exp[c be] + Conjugate[al]) ov],
+            Union[Flatten[Table[Simplify[BosonicMatrixElement[{i, k}, Exp[c b] ** bd, v] -
+                BosonicMatrixElement[{i, k}, bd ** Exp[c b], v] - c BosonicMatrixElement[{i, k}, Exp[c b], v]], {i, 0, 3}, {k, 0, 3}]]]
+        }
+    ],
+    {0, 0, {0}},
+    TestID -> "BME-LadderPastWing-Linear"
+]
+
+(* <beta|D(g) a^dagger|beta> = (Conjugate[beta] - Conjugate[g]) <beta|D(g)|beta>, from D a^dagger = (a^dagger - Conjugate[g]) D;
+   an unordered word after D reads as its normal-ordered form. *)
+VerificationTest[
+    With[{v = {{bd}, {b}}, d = Exp[g bd - Conjugate[g] b]},
+        {
+            Simplify[BosonicMatrixElement[{be, be}, d ** bd, v, "Basis" -> "Coherent"] -
+                (Conjugate[be] - Conjugate[g]) BosonicMatrixElement[{be, be}, d, v, "Basis" -> "Coherent"]],
+            Simplify[BosonicMatrixElement[{be, be}, d ** b ** bd, v, "Basis" -> "Coherent"] -
+                BosonicMatrixElement[{be, be}, d ** BosonicNormalOrder[b ** bd, v], v, "Basis" -> "Coherent"]]
+        }
+    ],
+    {0, 0},
+    TestID -> "BME-DisplacementTimesCreatorCoherent"
+]
+
+(* Multimode wings: e^{z a1^dagger a2^dagger}|0,0> = Sum z^k |k,k>, and the two-mode squeezed vacuum
+   <k,k|S2(r e^{i th})|0,0> = e^{i k th} Tanh[r]^k Sech[r] after BosonicExpOrder disentangles S2. *)
+VerificationTest[
+    With[{v2 = {{bd1, bd2}, {b1, b2}}, s2 = Exp[r E^(I th) bd1 ** bd2 - r E^(-I th) b1 ** b2], as = r > 0 && Element[th, Reals]},
+        {
+            Table[BosonicMatrixElement[{{m1, m2}, {0, 0}}, Exp[z bd1 ** bd2], v2], {m1, 0, 2}, {m2, 0, 2}],
+            BosonicMatrixElement[{{1, 1}, {0, 0}}, Exp[z1 bd1] ** Exp[z2 bd2], v2],
+            Table[Simplify[BosonicMatrixElement[{{k, k}, {0, 0}}, s2, v2, Assumptions -> as] - E^(I k th) Tanh[r]^k Sech[r], as], {k, 0, 3}],
+            BosonicMatrixElement[{{1, 2}, {0, 0}}, s2, v2, Assumptions -> as]
+        }
+    ],
+    {{{1, 0, 0}, {0, z, 0}, {0, 0, z^2}}, z1 z2, {0, 0, 0, 0}, 0},
+    TestID -> "BME-Modes-WingFock"
+]
+
+(* Both wings and a middle: <1,1|e^{r(a1^dagger a2^dagger - a1 a2)}|1,1> agrees through r^6 with the
+   term-by-term polynomial expansion, which uses no exponential code. *)
+VerificationTest[
+    With[{v2 = {{bd1, bd2}, {b1, b2}}, K = bd1 ** bd2 - b1 ** b2},
+        Simplify[Normal[Series[BosonicMatrixElement[{{1, 1}, {1, 1}}, Exp[r K], v2, Assumptions -> r > 0], {r, 0, 6}]] -
+            Sum[r^j/j! BosonicMatrixElement[{{1, 1}, {1, 1}}, If[j == 0, 1, NonCommutativeMultiply @@ ConstantArray[K, j]], v2], {j, 0, 6}]]
+    ],
+    0,
+    TestID -> "BME-Modes-WingSeries"
+]
+
+(* BosonicVEV of exponentials goes through the vacuum element, in one or several modes. *)
+VerificationTest[
+    {
+        Simplify[BosonicVEV[Exp[al bd - Conjugate[al] b], {{bd}, {b}}] - Exp[-al Conjugate[al]/2]],
+        BosonicVEV[Exp[r (bd1 ** bd2 - b1 ** b2)], {{bd1, bd2}, {b1, b2}}, Assumptions -> r > 0]
+    },
+    {0, Sech[r]},
+    TestID -> "BME-VEV-Exponential"
 ]
 
 EndTestSection[]

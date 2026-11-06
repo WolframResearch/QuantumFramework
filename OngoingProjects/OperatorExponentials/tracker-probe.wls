@@ -110,9 +110,40 @@ chk["B-106 free Xi", Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp
     1/((1 - Exp[-be0 (e1 - mu)]) (1 - Exp[-be0 (e2 - mu)])), be0 (e1 - mu) > 0 && be0 (e2 - mu) > 0] === 0];
 chk["X-007 diagonal M", Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp[Log[m1] bd1 ** b1 + Log[m2] bd2 ** b2], v2], {k1, 0, Infinity}, {k2, 0, Infinity}] -
     1/Det[IdentityMatrix[2] - DiagonalMatrix[{m1, m2}]], 0 < m1 < 1 && 0 < m2 < 1] === 0];
+dtrace[e_] := FourierTransform[ComplexExpand[coh[{be, be}, e] /. be -> x + I y], {x, y}, {kx, ky}, FourierParameters -> {1, 1}]/Pi /. {kx -> 0, ky -> 0};
+recon[e_, A_] := Simplify[Integrate[Simplify[dtrace[e]] (coh[{z, w0}, disp[-(gx + I gy)]] /. {Conjugate[gx] -> gx, Conjugate[gy] -> gy}),
+    {gx, -Infinity, Infinity}, {gy, -Infinity, Infinity}]/Pi - coh[{z, w0}, A]] === 0;
+chk["P-017 Tr D", Simplify[dtrace[disp[gx + I gy]] - Pi DiracDelta[gx] DiracDelta[gy]] === 0];
+chk["P-017 Q, P symbols", With[{sym = Exp[g Conjugate[al] - Conjugate[g] al]},
+    And[Simplify[coh[{al, al}, disp[g]] - Exp[-g Conjugate[g]/2] sym] === 0,
+        Simplify[(DisplacementOperator[g, Infinity, v, "Ordering" -> "Antinormal"] /. {b -> al, bd -> Conjugate[al]} /. NonCommutativeMultiply -> Times /. toAbs) - Exp[g Conjugate[g]/2] sym] === 0,
+        Simplify[gaussTrace[Exp[g Conjugate[g]/2] sym Exp[Conjugate[z] al + Conjugate[al] w0 - al Conjugate[al]]] Exp[-(z Conjugate[z] + w0 Conjugate[w0])/2] - coh[{z, w0}, disp[g]]] === 0]]];
+chk["P-017 Tr D(a) D(b)+", With[{t = Simplify[dtrace[disp[gx + I gy] ** disp[-(hx + I hy)]]]},
+    Sort[Cases[t, _DiracDelta, Infinity]] === Sort[{DiracDelta[gx - hx], DiracDelta[gy - hy]}] && Simplify[(t /. _DiracDelta -> 1) /. {gx -> hx, gy -> hy}] === Pi]];
+chk["P-017 reconstruction", And[recon[disp[gx + I gy] ** b, b], recon[disp[gx + I gy] ** bd, bd], recon[disp[gx + I gy] ** b ** bd, b ** bd]]];
+chk["coherent D ** a+", Simplify[coh[{be, be}, disp[g] ** bd] - (Conjugate[be] - Conjugate[g]) coh[{be, be}, disp[g]]] === 0];
+realG = {Conjugate[gx] -> gx, Conjugate[gy] -> gy, Conjugate[bx] -> bx, Conjugate[by] -> by};
+wave = Exp[ComplexExpand[(gx + I gy) (ax - I ay) - (gx - I gy) (ax + I ay)]];
+chk["G-027 P of |be>", With[{chi = coh[{bx + I by, bx + I by}, Exp[(gx + I gy) bd] ** Exp[-(gx - I gy) b]] /. realG},
+    Simplify[FourierTransform[ComplexExpand[chi/wave], {gx, gy}, {kx, ky}, FourierParameters -> {1, 1}]/Pi^2 /. {kx -> 0, ky -> 0}] === DiracDelta[ax - bx] DiracDelta[ay - by]]];
+chk["G-027 P of |m> weak", Table[Simplify[Integrate[Exp[ax^2 + ay^2]/m! Nest[(D[#, {ax, 2}] + D[#, {ay, 2}])/4 &, DiracDelta[ax] DiracDelta[ay], m] wave,
+    {ax, -Infinity, Infinity}, {ay, -Infinity, Infinity}] - BosonicMatrixElement[{m, m}, Exp[(gx + I gy) bd] ** Exp[-(gx - I gy) b], v]], {m, 0, 3}] === {0, 0, 0, 0}];
+kernG = coh[{z, w0}, disp[-(gx + I gy)]] /. realG;
+ipG = Integrate[#, {gx, -Infinity, Infinity}, {gy, -Infinity, Infinity}]/Pi &;
+chk["P-020 rho |be>", Simplify[ipG[(coh[{bx + I by, bx + I by}, disp[gx + I gy]] /. realG) kernG] - coh[{z, bx + I by}, 1] coh[{bx + I by, w0}, 1], Element[{bx, by}, Reals]] === 0];
+polyGauss[poly_, gauss_] := Total[(#2 D[gaussTrace[gauss Exp[s1 al + t1 Conjugate[al]]], {s1, #1[[1]]}, {t1, #1[[2]]}] /. {s1 -> 0, t1 -> 0}) & @@@
+    CoefficientRules[Expand[poly /. Conjugate[al] -> cu /. al -> cw], {cw, cu}]];
+chk["P-020 rho |m>", Table[With[{chi = BosonicMatrixElement[{m, m}, DisplacementOperator[al]] /. toAbs},
+    Simplify[polyGauss[Simplify[chi Exp[al Conjugate[al]/2]], Exp[-al Conjugate[al]/2] coh[{z, w0}, disp[-al]]] - coh[{z, 0}, 1] coh[{0, w0}, 1] (Conjugate[z] w0)^m/m!]], {m, 0, 3}] === {0, 0, 0, 0}];
+chk["P-030 measure k=3/4", With[{st = BosonicMatrixElement[{2 # + 1, 1}, Exp[ze bd ** bd/2], v] /. ze -> r Exp[I ph] &},
+    Table[Simplify[1/(2 Pi) Integrate[r (1 - r^2)^(-1/2) ComplexExpand[st[m] Conjugate[st[n]]], {r, 0, 1}, {ph, 0, 2 Pi}]], {m, 0, 2}, {n, 0, 2}] === IdentityMatrix[3]]];
+chk["X-003 TMSV Fock series", With[{s2 = Exp[r E^(I th) bd1 ** bd2 - r E^(-I th) b1 ** b2], as = r > 0 && th \[Element] Reals},
+    And[Table[Simplify[BosonicMatrixElement[{{k, k}, {0, 0}}, s2, v2, Assumptions -> as] - E^(I k th) Tanh[r]^k Sech[r], as], {k, 0, 3}] === {0, 0, 0, 0},
+        BosonicMatrixElement[{{1, 2}, {0, 0}}, s2, v2, Assumptions -> as] === 0]]];
+chk["VEV exponentials", And[Simplify[BosonicVEV[disp[g], v] - Exp[-g Conjugate[g]/2]] === 0,
+    BosonicVEV[Exp[r (bd1 ** bd2 - b1 ** b2)], v2, Assumptions -> r > 0] === Sech[r]]];
 Print["--- ideas still open (expect FAIL / unevaluated) ---"];
 chk["Idea1 quad3", FreeQ[BosonicExpOrder[Exp[x b ** b + y bd ** bd + w bd ** b], v], Power[E, x b ** b + y bd ** bd + w bd ** b]]];
 chk["Idea3 symbol", FreeQ[NormalOrdered[Exp[c nn], v]["Symbol", 0], "Symbol"]];
-chk["Idea4 multimode", FreeQ[BosonicMatrixElement[{{1, 1}, {0, 0}}, Exp[z bd1 ** bd2], v2], BosonicMatrixElement]];
 chk["BME a f(N) direct", FreeQ[BosonicMatrixElement[{1, 2}, b ** (nn + 1)^(-1/2), v], BosonicMatrixElement]];
-chk["mode between", BosonicExpSimplify[(nn + 1)^(-1/2) ** b ** bd2 ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === bd2];
+chk["mode between",BosonicExpSimplify[(nn + 1)^(-1/2) ** b ** bd2 ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === bd2];
