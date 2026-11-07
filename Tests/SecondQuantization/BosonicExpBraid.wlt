@@ -134,6 +134,24 @@ VerificationTest[
     TestID -> "BosonicExpBraid-SqueezePastCreationNumeric"
 ]
 
+(* Any single-mode generator of degree two, H = q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a, braids
+   past a ladder exponential: the image of a^dagger and of a matches sum_k t^k/k! ad_H^k to order t^5,
+   for the general H and for a number term beside linear ones. *)
+VerificationTest[
+    Module[{p, q, w, mu, nu, t, s, h, ad, img},
+        ad[op_] := BosonicNormalOrder[h ** op - op ** h, $vars];
+        img[op_] := FirstCase[BosonicExpBraid[Exp[t h] ** Exp[s op], $vars], Exp[e_] /; ! FreeQ[e, s] :> e/s, $Failed, {0, Infinity}];
+        Table[
+            h = gen;
+            Table[Simplify[Normal[Series[img[op], {t, 0, 5}]] - Sum[t^k/k! Nest[ad, op, k], {k, 0, 5}]], {op, {$ad, $a}}],
+            {gen, {q $a ** $a + p $ad ** $ad + w $n + mu $ad + nu $a, w $n + mu $ad}}
+        ]
+    ],
+    {{0, 0}, {0, 0}},
+    {},
+    TestID -> "BosonicExpBraid-QuadraticPastLadder"
+]
+
 EndTestSection[]
 
 
@@ -195,13 +213,6 @@ VerificationTest[
     TestID -> "BosonicExpBraid-UnrecognizedGeneratorIsInert"
 ]
 
-(* Mixed families in one generator (number + linear) are not claimed. *)
-VerificationTest[
-    BosonicExpBraid[Exp[\[Lambda] $n + \[Alpha] $ad] ** Exp[\[Gamma] $a], $vars],
-    Exp[\[Lambda] $n + \[Alpha] $ad] ** Exp[\[Gamma] $a],
-    {},
-    TestID -> "BosonicExpBraid-MixedFamilyIsInert"
-]
 
 EndTestSection[]
 

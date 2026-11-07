@@ -65,6 +65,35 @@ thm44ANRHS[L_, R_, lambda_, {cr_, an_}] :=
     ]
 
 
+(* e^(w N + p ad^2 + q a^2 + mu ad + nu a) through the su(1,1) matrix exp[{{w, 2 p}, {-2 q, -w}}]: its
+   corner D = Cos[l] - w Sinc[l], l = Sqrt[4 p q - w^2], gives e^(-w/2) D^(-1/2) e^(p S/D ad^2 + u ad)
+   e^(-Log[D] N) e^(q S/D a^2 + v a), S = Sinc[l], with u, v and the scalar from shifting the linear
+   terms away.  Every coefficient is even and regular in l, so l = 0 is its Series limit.  Without squeeze
+   terms D = e^-w, written exactly so that no root takes a principal branch.  The antinormal
+   product is the normal one under a -> ad, ad -> -a, which maps (w, p, q, mu, nu) to (-w, q, p, -nu, mu). *)
+quadraticExp[g_, {cr_, an_}, lv_, s_] :=
+    Module[{x, y, l, coeffs, c, w, p, q, mu, nu, t, m, u, v, e},
+        coeffs = Association @ CoefficientRules[Expand @ dequantize[#, Thread[{cr, an} -> {x, y}]], {x, y}] &;
+        c = coeffs[g];
+        If[ ! SubsetQ[{{0, 0}, {1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, Keys[c]] || ! FreeQ[Values[c], Alternatives @@ lv["Generators"]], Return[$Failed, Module]];
+        c = coeffs[BosonicNormalOrder[g, {{cr}, {an}}] /. $nonuls];
+        If[ AnyTrue[{{{1, 1}}, {{2, 0}, {1, 0}}, {{0, 2}, {0, 1}}, {{1, 0}, {0, 1}}}, SubsetQ[Append[#, {0, 0}], Keys[c]] &], Return[$Failed, Module]];
+        {w, p, q, mu, nu} = {s, 1, 1, s, 1} Lookup[c, Key /@ If[s == 1, Identity, Map[Reverse]] @ {{1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, 0];
+        {t, m, u, v, e} = Which[
+            p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2},
+            PossibleZeroQ[4 p q - w^2], Normal @ Series[#, {l, 0, 0}],
+            True, # /. l -> Sqrt[4 p q - w^2] /. $nonuls
+        ] & @ Join[
+            {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
+            {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
+             nu Sinc[l] - (w nu - 2 q mu) (1 - Cos[l])/l^2,
+             ((q mu^2 + p nu^2) (-2 w - (l^2 - 2 w) Cos[l] + l (1 + w) Sin[l]) + mu nu (l^2 + 2 w^2 + (l^2 (w - 1) - 2 w^2) Cos[l] - l w (1 + w) Sin[l]))/l^4
+            } / (Cos[l] - w Sinc[l])];
+        Exp[Lookup[c, Key[{0, 0}], 0] - s w/2 + e] (ncJoin[
+            Exp[p t GeneralizedPower[NonCommutativeMultiply, #1, 2] + s u #1], Exp[m (1/2 + s #1 ** #2)], Exp[q t GeneralizedPower[NonCommutativeMultiply, #2, 2] + v #2]
+        ] & @@ If[s == 1, {cr, an}, {an, cr}])
+    ]
+
 modeRulesNO[{cr_, an_}, vv_, lv_] := {
     Exp[alpha_. cr + beta_. an] :>
         Exp[(alpha beta)/2] Exp[alpha cr] ** Exp[beta an],
@@ -90,13 +119,7 @@ modeRulesNO[{cr_, an_}, vv_, lv_] := {
             Exp[-Log[1 - 4 alpha beta] cr ** an] **
             Exp[(alpha GeneralizedPower[NonCommutativeMultiply, an, 2])/(1 - 4 alpha beta)] / Sqrt[1 - 4 alpha beta],
 
-    Exp[alpha_. (an ** an | GeneralizedPower[NonCommutativeMultiply, an, 2]) +
-            beta_. (cr ** cr | GeneralizedPower[NonCommutativeMultiply, cr, 2])] :>
-        With[{omega = 2 Sqrt[alpha beta]},
-            Exp[((beta Tan[omega]) GeneralizedPower[NonCommutativeMultiply, cr, 2])/omega] **
-                Exp[Log[Sec[omega]] (1/2 + cr ** an)] **
-                Exp[((alpha Tan[omega]) GeneralizedPower[NonCommutativeMultiply, an, 2])/omega]
-        ],
+    Exp[g_Plus] :> With[{d = quadraticExp[g, {cr, an}, lv, 1]}, d /; d =!= $Failed],
 
     Exp[alpha_. an] ** expr_ /; shiftPolynomialQ[expr, lv] :>
         BosonicNormalOrder[expr /. {cr -> cr + alpha}, vv] ** Exp[alpha an],
@@ -158,13 +181,7 @@ modeRulesAN[{cr_, an_}, vv_, lv_] := {
             Exp[Log[1 - 4 alpha beta] an ** cr] **
             Exp[(beta GeneralizedPower[NonCommutativeMultiply, cr, 2])/(1 - 4 alpha beta)] / Sqrt[1 - 4 alpha beta],
 
-    Exp[alpha_. (an ** an | GeneralizedPower[NonCommutativeMultiply, an, 2]) +
-            beta_. (cr ** cr | GeneralizedPower[NonCommutativeMultiply, cr, 2])] :>
-        With[{omega = 2 Sqrt[alpha beta]},
-            Exp[((alpha Tan[omega]) GeneralizedPower[NonCommutativeMultiply, an, 2])/omega] **
-                Exp[Log[Sec[omega]] (1/2 - an ** cr)] **
-                Exp[((beta Tan[omega]) GeneralizedPower[NonCommutativeMultiply, cr, 2])/omega]
-        ],
+    Exp[g_Plus] :> With[{d = quadraticExp[g, {cr, an}, lv, -1]}, d /; d =!= $Failed],
 
     expr_ ** Exp[alpha_. an] /; shiftPolynomialQ[expr, lv] :>
         Exp[alpha an] ** BosonicAntinormalOrder[expr /. {cr -> cr - alpha}, vv],
@@ -228,22 +245,15 @@ canonicalizeGenerators[expr_, lv_] :=
     ]
 
 
-
-
 ladderPower[op_, 0] := 1
 ladderPower[op_, p_] := GeneralizedPower[NonCommutativeMultiply, op, p]
 
-ladderMonomial[adag_, 0, a_, 0] := 1
-ladderMonomial[adag_, m_, a_, 0] := ladderPower[adag, m]
-ladderMonomial[adag_, 0, a_, k_] := ladderPower[a, k]
-ladderMonomial[adag_, m_, a_, k_] := ladderPower[adag, m] ** ladderPower[a, k]
+ladderMonomial[adag_, m_, a_, k_] := ncJoin[ladderPower[adag, m], ladderPower[a, k]]
 
 orderedMonomial[NormalOrdered, {cr_, an_}, {m_, k_}] := ladderMonomial[cr, m, an, k]
 orderedMonomial[AntinormalOrdered, {cr_, an_}, {m_, k_}] := ladderMonomial[an, k, cr, m]
 
-MakeBoxes[SeriesIndex[s_String], StandardForm] ^:= InterpretationBox[s, SeriesIndex[s]]
-
-MakeBoxes[SeriesIndex[s_String], TraditionalForm] ^:= InterpretationBox[s, SeriesIndex[s]]
+MakeBoxes[SeriesIndex[s_String], StandardForm | TraditionalForm] ^:= InterpretationBox[s, SeriesIndex[s]]
 
 expSeriesTerm[ord_, coeff_, pair_] := With[{k = SeriesIndex["k"]},
     Inactivate[Sum[
@@ -284,14 +294,6 @@ AntinormalOrdered[expr_, vars_]["Series"] :=
     ]
 
 
-dequantizeLadder[expr_, {cr_, an_}, x_, y_] := expr //. {
-    GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
-    cr -> x,
-    an -> y,
-    NonCommutativeMultiply -> Times
-}
-
-
 ladderMode[expr_, lv_] :=
     Replace[Select[ladderPairs[lv], ! FreeQ[expr, Alternatives @@ #] &], {{p_} :> p, _ :> None}]
 
@@ -300,7 +302,7 @@ orderedSeries[ord_, expr_, lambda_, lv_] := Module[{v, x, y, n, coefN},
     v = ladderMode[expr, lv];
     If[v === None, Return[$Failed, Module]];
     n = SeriesIndex["n"];
-    coefN = SeriesCoefficient[dequantizeLadder[expr, v, x, y], {lambda, 0, n}];
+    coefN = SeriesCoefficient[dequantize[expr, Thread[v -> {x, y}]], {lambda, 0, n}];
 
     coefN = coefN /. Piecewise[{{val_, _}}, _] :> val;
     ord[
@@ -320,7 +322,7 @@ orderedSeriesOrder[ord_, expr_, lambda_, order_, lv_] := Module[{v, x, y},
     v = ladderMode[expr, lv];
     If[v === None, Return[$Failed, Module]];
     ord[
-        Normal @ Series[dequantizeLadder[expr, v, x, y], {lambda, 0, order}] /. {x -> First[v], y -> Last[v]},
+        Normal @ Series[dequantize[expr, Thread[v -> {x, y}]], {lambda, 0, order}] /. {x -> First[v], y -> Last[v]},
         ladderVars[lv]
     ]
 ]
@@ -336,14 +338,14 @@ AntinormalOrdered[expr_, vars_]["Series", lambda_Symbol, order_Integer] :=
 ncMonomials[ord_, expr_, pair_] := Module[{x, y},
     Total[
         (#[[2]] orderedMonomial[ord, pair, #[[1]]]) & /@
-        CoefficientRules[Expand[dequantizeLadder[expr, pair, x, y]], {x, y}]
+        CoefficientRules[Expand[dequantize[expr, Thread[pair -> {x, y}]]], {x, y}]
     ]
 ]
 
 
 ladderPolynomialQ[expr_, pair_] :=
     Module[{x, y},
-        With[{d = dequantizeLadder[expr, pair, x, y]},
+        With[{d = dequantize[expr, Thread[pair -> {x, y}]]},
             PolynomialQ[d, {x, y}] && AllTrue[Variables[d], MatchQ[#, x | y] || FreeQ[#, x | y] &]
         ]
     ]
@@ -447,11 +449,8 @@ adAction[b_, op_, lv_] :=
         ]
     ]
 
-expOrFailed[$Failed] := $Failed
-expOrFailed[h_] := Exp[h]
-
 expConjugate[b_, Exp[g_], lv_] /; ncPolyQ[{b, g}, lv] :=
-    expOrFailed @ adAction[b, g, lv]
+    Replace[adAction[b, g, lv], h : Except[$Failed] :> Exp[h]]
 
 expConjugate[b_, op_, lv_] /; ncPolyQ[{b, op}, lv] :=
     Replace[adAction[b, op, lv], $Failed :> conjugateParts[b, op, lv]]
@@ -546,16 +545,12 @@ adFamilyRules[cr_, {cre_, ann_}, _] /; Keys[cr] === {{1, 1}} :=
         {cre -> Exp[lam] cre, ann -> Exp[-lam] ann}
     ]
 
-adFamilyRules[cr_, {cre_, ann_}, _] /; SubsetQ[{{1, 0}, {0, 1}}, Keys[cr]] :=
-    With[{mu = Lookup[cr, Key[{1, 0}], 0], nu = Lookup[cr, Key[{0, 1}], 0]},
-        {cre -> cre + nu, ann -> ann - mu}
-    ]
-
-adFamilyRules[cr_, {cre_, ann_}, _] /; SubsetQ[{{2, 0}, {0, 2}}, Keys[cr]] :=
-    With[{p = Lookup[cr, Key[{2, 0}], 0], q = Lookup[cr, Key[{0, 2}], 0]},
-        With[{lam = 2 Sqrt[p q]},
-            {cre -> Cos[lam] cre + 2 q Sinc[lam] ann,
-             ann -> Cos[lam] ann - 2 p Sinc[lam] cre}
+adFamilyRules[cr_, {cre_, ann_}, _] /; SubsetQ[{{2, 0}, {0, 2}, {1, 1}, {1, 0}, {0, 1}}, Keys[cr]] :=
+    With[{w = Lookup[cr, Key[{1, 1}], 0], p = Lookup[cr, Key[{2, 0}], 0], q = Lookup[cr, Key[{0, 2}], 0],
+            mu = Lookup[cr, Key[{1, 0}], 0], nu = Lookup[cr, Key[{0, 1}], 0]},
+        With[{lam = Sqrt[4 p q - w^2]},
+            {cre -> Cos[lam] cre + Sinc[lam] (w cre + 2 q ann + nu) + (w nu - 2 q mu) Sinc[lam/2]^2/2,
+             ann -> Cos[lam] ann - Sinc[lam] (2 p cre + w ann + mu) + (w mu - 2 p nu) Sinc[lam/2]^2/2}
         ]
     ]
 
@@ -566,7 +561,7 @@ modeAdRules[gen_, pair_, gens_] :=
         adFamilyRules[
             KeyDrop[
                 Association @ CoefficientRules[
-                    Expand @ dequantizeLadder[gen, pair, x, y], {x, y}],
+                    Expand @ dequantize[gen, Thread[pair -> {x, y}]], {x, y}],
                 Key[{0, 0}]
             ],
             pair, gens

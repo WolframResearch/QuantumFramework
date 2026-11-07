@@ -24,6 +24,8 @@ PackageScope["$nonuls"]
 
 PackageScope["cNumberQ"]
 
+PackageScope["dequantize"]
+
 PackageExport["G2Coherence"]
 
 PackageExport["G1Correlation"]
@@ -102,6 +104,8 @@ $nonuls = {0. -> 0, 0. I -> 0, Complex[0., 0.] -> 0, Complex[x_, 0.] :> x,
     Complex[0., y_] :> I y};
 
 cNumberQ[expr_, vars_] := FreeQ[expr /. $nonuls, Alternatives @@ vars]
+
+dequantize[expr_, rules_] := expr //. Join[rules, {GeneralizedPower[NonCommutativeMultiply, b_, p_] :> b^p, NonCommutativeMultiply -> Times}]
 
 
 FieldVariables::usage =

@@ -8,16 +8,16 @@ Legend: ✅ works · 🟡 partly works · ⬜ needs development (idea number) ·
 
 | | Rows |
 |---|---|
-| ✅ works now | 44 (his 29 class a, plus B-053 via Idea 7, B-020 via Ideas 2 and 5, G-012, G-038, G-041 via Idea 5, B-026, B-027, P-020, C-031, G-024 via Idea 2, G-040, B-106, X-003 via Idea 4, P-017 and G-027 from class d via Idea 2) |
+| ✅ works now | ~~44~~ ~~47~~ 49 (his 29 class a, plus B-053 via Idea 7, B-020 via Ideas 2 and 5, G-012, G-038, G-041 via Idea 5, B-026, B-027, P-020, C-031, G-024 via Idea 2, G-040, B-106, X-003 via Idea 4, P-017 and G-027 from class d via Idea 2, C-029, C-032, C-050 via Idea 1, C-022, C-054 via Ideas 1 and 2) |
 | 🟡 partly | 3 (P-026, P-030, X-007: one part works) |
-| ⬜ needs an idea | 16 |
+| ⬜ needs an idea | ~~16~~ ~~13~~ 11 |
 | ➖ out of scope | 66 |
 
 ## Ideas
 
 | Idea | What | Status | Rows it unlocks |
 |---|---|---|---|
-| 1 | one rule for `Exp` of any quadratic (2N×2N matrix, Gauss factors) | ⬜ — `Exp[x b**b + y bd**bd + w bd**b]` returned unchanged | 10 |
+| 1 | one rule for `Exp` of any quadratic (2N×2N matrix, Gauss factors) | 🟡 single mode done (~~`Exp[x b**b + y bd**bd + w bd**b]` returned unchanged~~), quadratic plus linear: `quadraticExp` reads the normal-ordered exponent, disentangles through the su(1,1) matrix and shifts the linear terms away (closed-form u, v and scalar, regular in λ = √(4pq − w²), so the parabolic λ = 0 case such as e^{t x²} is its `Series` limit); antinormal is the normal formula under a → a†, a† → −a. Replaces the pure-squeeze rule with the same output. `adFamilyRules` braids any single-mode generator of degree ≤ 2 (one affine rule replacing the linear and squeeze cases). Checked by exact series of symbols and of Fock elements. Multimode ⬜ | 10 |
 | 2 | coherent elements of ordered products, ⟨α\|e^{P(a†)} f(N) e^{Q(a)}\|β⟩ | ✅ done 2026-11-04, committed `62a54595` (`normalProductElement` with a coherent flag; checked symbolically against D(g)\|β⟩ = e^{(gβ̄−ḡβ)/2}\|β+g⟩ and numerically against 60-level matrices for D, normal and antinormal products, squeeze, wing–f(N)–wing) | 9 |
 | 3 | s-ordered (Weyl) symbol, `NormalOrdered[expr, vars]["Symbol", s]` | ⬜ — no such property | 5 |
 | 4 | several modes in the exponential branch of `BosonicMatrixElement` | ✅ functions of the N_k alone (Fock basis: ⟨m\|f(N₁, …)\|n⟩ = f(n) δ_{mn}, substituting each cr_k ** an_k by n_k). Wings ✅ (~~`⟨1,1\|Exp[z bd1**bd2]\|0,0⟩` unevaluated~~): `multimodeProductElement` turns creators, annihilators and N_k into commuting x, y, k, reads F(x) f(k) G(y), and sums the multivariate Taylor coefficient of F G over 0 ≤ k ≤ min(m, n); integer indices, Fock basis. Coherent basis with several modes and symbolic multimode indices not covered | 4 |
@@ -68,12 +68,12 @@ Legend: ✅ works · 🟡 partly works · ⬜ needs development (idea number) ·
 | ⬜ C-015 | symplectic covariance of Weyl symbols | Idea 7 done | 3 |
 | ⬜ X-006 / P-036 / B-048 | multimode Gaussian vacuum, det(I − ZZ†)^{1/4} | | 1 |
 | ⬜ P2-024 | multimode pair Riccati | | 1 |
-| ⬜ C-019 | Gaussian propagation by linear-fractional map | | 1 |
-| ⬜ C-029 | squeeze-rotation factorization | | 1 |
-| ⬜ C-032 | driven quadratic propagator | | 1 (affine) |
-| ⬜ C-050 | time-dependent SU(1,1) Hamiltonian | | 1 |
-| ⬜ C-022 | coherent elements of a metaplectic operator | Idea 2 done | 1 |
-| ⬜ C-054 | Herman–Kluk for quadratics | Idea 2 done | 1 |
+| ⬜ C-019 | Gaussian propagation by linear-fractional map | Idea 1 done for one mode, but the row is a position-space wavefunction and QF has no exact position representation | 1 |
+| ✅ C-029 | squeeze-rotation factorization | via Idea 1: U_t = e^{−itH}, H = (αq² + βp² + γ(qp + pq))/2, ordered by `BosonicExpOrder`; ⟨0\|U_t\|0⟩ = ϑ_t⟨0\|S(B_t)\|0⟩ = ū_t^{−1/2} with u_t = (A + D + i(C − B))/2 from the classical flow e^{t[[γ, β], [−α, −γ]]}, checked as ⟨0\|U_t\|0⟩⁻² = ū_t for symbolic α, β, γ, t, stable and unstable | — |
+| ✅ C-032 | driven quadratic propagator | via Idea 1 (affine; ~~the audit's `BosonicExpOrder[Exp[-I t (ad**a + 1/2 + f (a + ad)/Sqrt[2])]]` returned unfactored~~): Fock elements m, n ≤ 2 equal those of e^{−it/2 + itf²/2} D(−f/√2) e^{−itN} D(f/√2), symbolic f and all real t (without squeeze terms the ordered form has no root) | — |
+| ✅ C-050 | time-dependent SU(1,1) Hamiltonian | via Idea 1, constant coefficients as in the audit: H = λK₊ + λ̄K₋ + μK₀ (λ̄ an independent symbol); from the ordered e^{−itH}, ω = 2·[a†² coefficient] solves iω̇ = λ̄ω² + μω + λ, ω(0) = 0, and γ, ω̄ read from the a² and N factors solve γ̇ = −λω̄ − λ̄ω − μ, symbolically. Known limit: with squeeze terms the scalar D^{−1/2} is the principal root, right until D first crosses the negative real axis (oscillating evolutions past half a period) | — |
+| ✅ C-022 | coherent elements of a metaplectic operator | via Ideas 1 and 2: for H = (αq² + βp²)/2, the coherent element of the ordered e^{−itH} (labels α = (x + iξ)/√2 real, ᾱ written out) equals 2^{1/2}Y^{−1/2}e^{−iσ(Fz′,z)/2}e^{−(x²+ξ²)/4}e^{−(ξ+ix)²W/4}: label derivatives of the logs agree, prefactor² = 1, ratio → 1 as t → 0, oscillating and squeezing flows. σ(z, z′) = x·ξ′ − ξ·x′ is the atlas's own (from its ⟨φ_z, φ_z′⟩ = e^{iσ(z,z′)/2}e^{−\|z−z′\|²/4}); the opposite sign fails | — |
+| ✅ C-054 | Herman–Kluk for quadratics | via Ideas 1 and 2: (2π)⁻¹∫ u^{1/2}⟨α_w\|φ_{Fz}⟩⟨φ_z\|α_{w′}⟩dz, a 2-D Gaussian in closed form (2π e^{½bᵀM⁻¹b}/√det M), equals the same coherent element, same checks | — |
 | ⬜ C-030 / C-053 | Weyl symbol of a metaplectic operator | | 1, 3 |
 | ✅ B-026 | kernel acting on a vector | Bargmann kernel of D(h) from the coherent element, integrated against Φ = \|1⟩ with weight e^{−ᾱα} (Gaussian formula with a source sᾱ, then ∂_s; A = 1), gives (z̄ − h̄) e^{−\|h\|²/2} e^{z̄h} for symbolic z, h | — |
 | ✅ B-027 | product of kernels | the weighted integral of K_{D(h)} K_{D(k)} (Gaussian formula, A = 1) equals the kernel of D(h) ** D(k) for symbolic z, w, h, k | — |
@@ -111,9 +111,9 @@ From the "QF problems found (exact layer)" section of `Operator-Exponentials-QF-
 | ✅ `BosonicExpSimplify` of S(ξ) ** S(−ξ) left as `E^(X/2 − X/2)` | fixed `1a4ca028` | merged exponent is expanded |
 | ✅ `BosonicExpSimplify` of S (a + f) S⁻¹ | fixed by Idea 7 | |
 | ✅ `BosonicExpSimplify` with a mixed quadratic + linear generator | works | gives b − 2x b† − y |
-| ⬜ `BosonicExpOrder` of e^{c n + linear}, general quadratic + linear | open | Idea 1 (affine form) |
+| ✅ `BosonicExpOrder` of e^{c n + linear}, general quadratic + linear | ~~open~~ fixed by Idea 1 (single mode) | e^{wN + μa† + νa} matches e^{μν(eʷ−1−w)/w²} e^{μ(eʷ−1)/w a†} e^{wN} e^{ν(eʷ−1)/w a} on Fock elements (probe) |
 | ⬜ two-mode general complex-symmetric squeeze in `BosonicExpSimplify` | open | Idea 1 (multimode) |
-| ✅ `BosonicVEV` of a product of exponentials | fixed | ~~`BosonicVEV` itself still unevaluated~~; a second `BosonicVEV` definition routes non-polynomials to `BosonicMatrixElement` between vacuum Fock states, any number of modes, passing `Assumptions` |
+| ✅ `BosonicVEV` of a product of exponentials | fixed | ~~`BosonicVEV` itself still unevaluated~~; ~~a second `BosonicVEV` definition routes non-polynomials~~ `BosonicVEV` is now one definition: `BosonicMatrixElement` between vacuum Fock states, any number of modes, passing `Assumptions` (`Method` dropped) |
 | ⬜ ⟨m\|D(α)\|m⟩, ⟨2m\|S(ξ)\|0⟩ with symbolic m | open | not small: closed forms need a `Piecewise` on the sign of m − n |
 | ➖ Kerr e^{λ n²} in `BosonicExpOrder` | out of reach | not Gaussian; no finite disentangling |
 | ✅ `BosonicExpOrder` of D(−α) ** e^{−itN} | fixed (found checking C-031) | ~~returned e^{−αa†} ** e^{ᾱa} ** :e^{(e^{−it}−1)N}:, not normal-ordered~~. Two rules per ordering in `modeRulesNO`/`modeRulesAN` move a ladder exponential past the number factor, from e^{−sN} a e^{sN} = eˢ a: normal e^{βa} :e^{cN}: = :e^{cN}: e^{β(1+c)a}, antinormal e^{βa†} ⋮e^{caa†}⋮ = ⋮e^{caa†}⋮ e^{β(1−c)a†}, and the mirrored pairs; checked against hand-written Fock elements |
@@ -141,3 +141,7 @@ P-017 and G-027 moved to ✅ (2026-11-05): their distributions come out of `Four
 - 2026-11-05: G-027 moved from ➖ to ✅; class-d parts of P-020 (ρ from χ_W) and P-030 (measure at k = 3/4) ✅. No kernel change. Probe now 64 checks, all pass, all exact.
 - 2026-11-05: D ** a† gap fixed: `BosonicMatrixElement` is linear over sums in the exponential branch (`sumProductElement`), so shifted ladder factors left by `BosonicExpOrder` are read. P-017's reconstruction now uses D ** a† directly. 283 SecondQuantization tests pass (2 new in BosonicMatrixElement.wlt). Probe now 65 checks, all pass.
 - 2026-11-06: Idea 4 done: multimode wings in `BosonicMatrixElement` (`multimodeProductElement`, sharing the `BosonicExpOrder` retry with the single-mode path), X-003 ✅. `BosonicVEV` routes exponentials to the vacuum element. 286 SecondQuantization tests pass (3 new; `BME-Modes-ExponentialUnevaluated` became `BME-Modes-ExponentialOneMode` since the element now evaluates). Probe now 67 checks, all pass.
+- 2026-11-06: cleanup: `BosonicVEV` is one definition through `BosonicMatrixElement`; one `dequantize` helper (Utils.m) replaces `dequantizeLadder`, `vevCollapse` and the hand-written collapses. Idea 1 🟡: single-mode quadratic disentangling and braid (see the Ideas table). 288 SecondQuantization tests pass (2 new). Probe: `Idea1 quad3` moved out of the open section, 68 checks, all pass.
+- 2026-11-06: Idea 1 affine step: quadratic plus linear in one mode, ordering and braid; the e^{c n + linear} gap is fixed. `BosonicExpBraid-MixedFamilyIsInert` removed (number + linear now braids; covered by `BosonicExpBraid-QuadraticPastLadder`). 287 SecondQuantization tests pass. Probe now 69 checks, all pass.
+- 2026-11-06: C-029, C-032, C-050 ✅ via Idea 1, no further kernel change except that a number-plus-linear exponent (no squeeze terms) is now written with e^{wN} exactly, so C-032 holds for all real t. C-019 left ⬜: a position-space statement, and QF has no exact position representation. Probe now 72 checks, all pass.
+- 2026-11-06: C-022 and C-054 ✅ via Ideas 1 and 2, no kernel change: coherent elements of the ordered quadratic propagator against the closed Gaussian and the Herman–Kluk integral (closed-form 2-D Gaussian), oscillating and squeezing. Probe now 74 checks, all pass.

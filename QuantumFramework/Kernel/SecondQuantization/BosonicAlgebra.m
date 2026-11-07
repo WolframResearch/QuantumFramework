@@ -108,31 +108,20 @@ BosonicZassenhausTerms[ops_List, n_Integer, vars_] :=
 BosonicVEV::usage =
 "\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket].";
 
-Options[BosonicVEV] = Options[BosonicNormalOrder];
-
-vevCollapse[expr_] := expr //. {
-    GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
-    NonCommutativeMultiply -> Times
-}
+Options[BosonicVEV] = {Assumptions :> $Assumptions};
 
 vevPolynomialQ[expr_, vars_] :=
     With[{syms = Table[Unique["vev"], Length[vars]]},
-        PolynomialQ[vevCollapse[expr] /. Thread[vars -> syms], syms]
+        PolynomialQ[dequantize[expr, Thread[vars -> syms]], syms]
     ]
 
 BosonicVEV[exprs_List, vars_, opts : OptionsPattern[]] := BosonicVEV[#, vars, opts] & /@ exprs
 
 BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
     With[{lv = ResolveLadderVariables[BosonicVEV, vars]},
-        If[ lv === $Failed,
-            $Failed,
-            vevCollapse[BosonicNormalOrder[expr, vars, opts] /. $nonuls] /. Thread[lv["Generators"] -> 0]
-        ] /; lv === $Failed || vevPolynomialQ[expr, lv["Generators"]]
-    ]
-
-BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
-    With[{r = BosonicMatrixElement[ConstantArray[0, {2, Length[ResolveLadderVariables[BosonicVEV, vars]["Annihilators"]]}], expr, vars, ##] & @@ FilterRules[{opts}, Assumptions]},
-        r /; Head[r] =!= BosonicMatrixElement
+        With[{r = If[AssociationQ[lv], BosonicMatrixElement[ConstantArray[0, {2, Length[lv["Annihilators"]]}], expr, vars, opts], $Failed]},
+            r /; Head[r] =!= BosonicMatrixElement
+        ]
     ]
 
 
@@ -179,7 +168,7 @@ coherentOverlap[\[Alpha]_, \[Beta]_] :=
 ladderSum[element_, {ms_, ns_}, expr_, lv_Association] :=
     Module[{x, y, k = Length[lv["Annihilators"]], vars, p, r, e},
         vars = Join[Array[x, k], Array[y, k]];
-        p = Expand[vevCollapse[BosonicNormalOrder[expr, {lv["Creators"], lv["Annihilators"]}]] /. Thread[lv["Generators"] -> vars]];
+        p = Expand[dequantize[BosonicNormalOrder[expr, {lv["Creators"], lv["Annihilators"]}] /. $nonuls, Thread[lv["Generators"] -> vars]]];
         If[ p === 0, 0,
             r = CoefficientRules[p, vars];
             e = Transpose[Keys[r]];
@@ -213,9 +202,9 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
                     ladderSum[fockLadderElement, {ms, ns}, expr, lv]
                 ],
             Length[ms] === Length[ns] === Length[lv["Annihilators"]] && Length[ms] > 1 && ! coherentBasisQ[opts] &&
-                    FreeQ[d = expr //. Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ns],
+                    FreeQ[d = dequantize[expr, Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ns]],
                         Alternatives @@ lv["Generators"] | _NormalOrdered | _AntinormalOrdered],
-                (d /. NonCommutativeMultiply -> Times) Times @@ MapThread[KroneckerDelta, {ms, ns}],
+                d Times @@ MapThread[KroneckerDelta, {ms, ns}],
             If[ Length[lv["Annihilators"]] === 1, ListQ[m] || ListQ[n],
                 ! MatrixQ[{ms, ns}, IntegerQ] || Length[ms] =!= Length[lv["Annihilators"]] || coherentBasisQ[opts]], $Failed,
             True,
@@ -251,9 +240,9 @@ numberDiagonal[expr_, {cr_, an_}, k_] :=
 wing[m_, k_, g_, x_] := SeriesCoefficient[g, {x, 0, m - k}] Sqrt[m!/k!]
 
 wingPolynomial[s_, pair_, side_, x_] :=
-    Module[{c, a},
-        With[{p = s /. Thread[pair -> {c, a}] /. If[side === "Up", c, a] -> x /. NonCommutativeMultiply -> Times},
-            If[FreeQ[p, c | a] && PolynomialQ[p, x] && TrueQ[(p /. x -> 0) == 0], p, $Failed]
+    Module[{o},
+        With[{p = dequantize[s, Thread[pair -> If[side === "Up", {x, o}, {o, x}]]]},
+            If[FreeQ[p, o] && PolynomialQ[p, x] && TrueQ[(p /. x -> 0) == 0], p, $Failed]
         ]
     ]
 
@@ -339,9 +328,8 @@ sumProductElement[f_, expr_, gens_] :=
 multimodeProductElement[expr_, lv_, ms_, ns_] :=
     Module[{x, y, k, xs, ys, ks, fs, side, up, f, dn},
         {xs, ys, ks} = Array[#, Length[ms]] & /@ {x, y, k};
-        fs = Flatten[Replace[Replace[expr, {t_Times :> List @@ t, t_ :> {t}}], q_NonCommutativeMultiply :> List @@ q, {1}]] //.
-            Join[Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ks], Thread[lv["Creators"] -> xs], Thread[lv["Annihilators"] -> ys]] /.
-            {GeneralizedPower[NonCommutativeMultiply, b_, p_] :> b^p, NonCommutativeMultiply -> Times};
+        fs = dequantize[Flatten[Replace[Replace[expr, {t_Times :> List @@ t, t_ :> {t}}], q_NonCommutativeMultiply :> List @@ q, {1}]],
+            Join[Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ks], Thread[lv["Creators"] -> xs], Thread[lv["Annihilators"] -> ys]]];
         side = Boole[Outer[! FreeQ[#1, #2] &, fs, Alternatives @@@ {xs, ks, ys}, 1]];
         If[ Max[Total[side, {2}]] > 1 || ! OrderedQ[DeleteCases[side = side . {1, 2, 3}, 0]], Return[$Failed, Module]];
         {up, f, dn} = Times @@ Pick[fs, side, #] & /@ {1, 2, 3};

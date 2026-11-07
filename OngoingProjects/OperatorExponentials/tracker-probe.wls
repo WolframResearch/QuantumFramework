@@ -142,8 +142,42 @@ chk["X-003 TMSV Fock series", With[{s2 = Exp[r E^(I th) bd1 ** bd2 - r E^(-I th)
         BosonicMatrixElement[{{1, 2}, {0, 0}}, s2, v2, Assumptions -> as] === 0]]];
 chk["VEV exponentials", And[Simplify[BosonicVEV[disp[g], v] - Exp[-g Conjugate[g]/2]] === 0,
     BosonicVEV[Exp[r (bd1 ** bd2 - b1 ** b2)], v2, Assumptions -> r > 0] === Sech[r]]];
-Print["--- ideas still open (expect FAIL / unevaluated) ---"];
 chk["Idea1 quad3", FreeQ[BosonicExpOrder[Exp[x b ** b + y bd ** bd + w bd ** b], v], Power[E, x b ** b + y bd ** bd + w bd ** b]]];
+chk["Idea1 cn + linear", Simplify[TrigToExp[Table[BosonicMatrixElement[{m, n}, BosonicExpOrder[Exp[w nn + mu bd + nu b], v], v] -
+    BosonicMatrixElement[{m, n}, E^(mu nu (E^w - 1 - w)/w^2) Exp[mu (E^w - 1)/w bd] ** Exp[w nn] ** Exp[nu (E^w - 1)/w b], v], {m, 0, 2}, {n, 0, 2}]], w > 0] === ConstantArray[0, {3, 3}]];
+chk["C-029 vacuum phase", Module[{al, be, ga, t, u, v0, F},
+    v0 = BosonicMatrixElement[{0, 0}, BosonicExpOrder[Exp[-I t (al q ** q + be p ** p + ga (q ** p + p ** q))/2], v], v];
+    F = MatrixExp[t {{ga, be}, {-al, -ga}}];
+    u = (F[[1, 1]] + F[[2, 2]] - I (F[[2, 1]] - F[[1, 2]]))/2;
+    And @@ (Simplify[TrigToExp[v0^-2 - u], t > 0 && #] === 0 & /@ {al be - ga^2 > 0, al be - ga^2 < 0})]];
+chk["C-032 driven osc", Module[{f, t, u},
+    u = BosonicExpOrder[Exp[-I t (nn + 1/2 + f q)], v];
+    Simplify[TrigToExp[Table[BosonicMatrixElement[{m, n}, u, v] - BosonicMatrixElement[{m, n},
+        Exp[-I t/2 + I t f^2/2] Exp[-f/Sqrt[2] bd + f/Sqrt[2] b] ** Exp[-I t nn] ** Exp[f/Sqrt[2] bd - f/Sqrt[2] b], v], {m, 0, 2}, {n, 0, 2}]], t \[Element] Reals] === ConstantArray[0, {3, 3}]]];
+chk["C-050 Riccati", Module[{l, lb, mu, t, u, wing, om, rr, x},
+    u = BosonicExpOrder[Exp[-I t (l bd ** bd/2 + lb b ** b/2 + mu (nn + 1/2)/2)], v];
+    wing[o_] := Coefficient[Expand[First @ Cases[u, Exp[z_] /; ! FreeQ[z, o] && FreeQ[z, nn] :> z, {0, Infinity}]], GeneralizedPower[NonCommutativeMultiply, o, 2]];
+    om = 2 wing[bd]; rr = wing[b];
+    x = Exp[2 Coefficient[Expand[First @ Cases[u, g : Power[_, z_] /; ! FreeQ[z, nn] :> Replace[g, {Power[E, y_] :> y, Power[s_, y_] :> y Log[s]}], {0, Infinity}]], nn]] - 2 rr om;
+    Limit[om, t -> 0] === 0 && Simplify[TrigToExp[{I D[om, t] - (lb om^2 + mu om + l), D[-I Log[x], t] - 2 l rr/x + lb om + mu}]] === {0, 0}]];
+{chk022, chk054} = Module[{al, be, t, F, fa, fb, fc, fd, al2, al2b, qf, labs = {z1, z2, w1, w2}, x, xi, y, w, same, hk},
+    F = MatrixExp[t {{0, be}, {-al, 0}}];
+    {fa, fb, fc, fd} = Flatten[F];
+    al2[{r_, s_}] := (r + I s)/Sqrt[2]; al2b[{r_, s_}] := (r - I s)/Sqrt[2];
+    qf = (BosonicMatrixElement[{aw, aw2}, BosonicExpOrder[Exp[-I t (al q ** q + be p ** p)/2], v], v, "Basis" -> "Coherent"] /. Abs[r_]^2 :> r Conjugate[r]) /.
+        {Conjugate[aw] -> al2b[{z1, z2}], Conjugate[aw2] -> al2b[{w1, w2}]} /. {aw -> al2[{z1, z2}], aw2 -> al2[{w1, w2}]};
+    same[o_] := And @@ (Simplify[TrigToExp[D[Log[qf], {labs}] - D[Log[o], {labs}]], Element[labs, Reals] && t > 0 && #] === {0, 0, 0, 0} &&
+        Simplify[TrigToExp[(qf/o /. Thread[labs -> 0])^2], t > 0 && #] === 1 & /@ {al > 0 && be > 0, al > 0 && be < 0}) && Limit[qf/o /. Thread[labs -> 0], t -> 0] === 1;
+    y = fa + fd + I (fb - fc); w = (fa - fd + I (fb + fc))/y;
+    {x, xi} = {z1, z2} - F . {w1, w2};
+    hk = Module[{zq, zp, ex, mm, bb},
+        ex = -(F . {zq, zp}) . (F . {zq, zp})/4 - (zq^2 + zp^2)/4 + al2b[{z1, z2}] al2[F . {zq, zp}] + al2b[{zq, zp}] al2[{w1, w2}] - (z1^2 + z2^2 + w1^2 + w2^2)/4;
+        mm = -D[ex, {{zq, zp}, 2}]; bb = D[ex, {{zq, zp}}] /. {zq -> 0, zp -> 0};
+        ((fa + fd + I (fc - fb))/2)^(1/2)/Sqrt[Det[mm]] Exp[bb . Inverse[mm] . bb/2 + (ex /. {zq -> 0, zp -> 0})]];
+    {same[Sqrt[2] y^(-1/2) Exp[-I ((F . {w1, w2})[[1]] z2 - (F . {w1, w2})[[2]] z1)/2] Exp[-(x^2 + xi^2)/4] Exp[-(xi + I x)^2 w/4]], same[hk]}];
+chk["C-022 coherent el", chk022];
+chk["C-054 Herman-Kluk", chk054];
+Print["--- ideas still open (expect FAIL / unevaluated) ---"];
 chk["Idea3 symbol", FreeQ[NormalOrdered[Exp[c nn], v]["Symbol", 0], "Symbol"]];
 chk["BME a f(N) direct", FreeQ[BosonicMatrixElement[{1, 2}, b ** (nn + 1)^(-1/2), v], BosonicMatrixElement]];
 chk["mode between",BosonicExpSimplify[(nn + 1)^(-1/2) ** b ** bd2 ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === bd2];

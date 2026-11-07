@@ -433,6 +433,30 @@ VerificationTest[
     TestID -> "SqueezeOperatorConvention2"
 ]
 
+(* Any single-mode exponent of degree two, e^{t(q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a)}, disentangles
+   in either order: the general one, the parabolic (a + a^dagger)^2 + mu a^dagger + nu a where 4pq = w^2 and
+   the coefficients are the l -> 0 limits, and a number term beside linear ones. An ordered product's
+   symbol (a^dagger -> x, a -> y) is the product of its factors' symbols, the middle one read through
+   e^{g N} = :e^{(e^g - 1) N}: and e^{g a a^dagger} = antinormal e^{(1 - e^-g) a a^dagger}; to order t^3 it
+   matches sum_k t^k/k! times the symbol of the ordered H^k. *)
+VerificationTest[
+    Module[{p, q, w, mu, nu, t, x, y, sym, fac},
+        With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+            sym[e_] := e /. GeneralizedPower[NonCommutativeMultiply, o_, k_] :> o^k /. NonCommutativeMultiply -> Times /. {ad -> x, a -> y};
+            fac[n_, mid_][f_] := With[{e = Expand[Replace[f, {Power[E, z_] :> z, Power[b_, z_] :> z Log[b]}]]},
+                Exp[sym[e - Coefficient[e, n] n] + mid[Coefficient[e, n]] x y]];
+            Table[
+                Simplify[Normal[Series[BosonicExpOrder[Exp[t h], $vA, "Ordering" -> o[[1]]] /. c_. NonCommutativeMultiply[f__] :> c Times @@ (fac[o[[2]], o[[3]]] /@ {f}), {t, 0, 3}]] -
+                    Sum[t^k/k! sym[o[[4]][If[k == 0, 1, NonCommutativeMultiply @@ ConstantArray[h, k]], $vA]], {k, 0, 3}]],
+                {h, {q a ** a + p ad ** ad + w ad ** a + mu ad + nu a, (a + ad) ** (a + ad) + mu ad + nu a, w ad ** a + mu ad + nu a}},
+                {o, {{"Normal", ad ** a, E^# - 1 &, BosonicNormalOrder}, {"Antinormal", a ** ad, 1 - E^-# &, BosonicAntinormalOrder}}}
+            ]
+        ]
+    ],
+    ConstantArray[0, {3, 2}],
+    TestID -> "DisentanglingQuadraticPlusLinear"
+]
+
 EndTestSection[]
 
 
