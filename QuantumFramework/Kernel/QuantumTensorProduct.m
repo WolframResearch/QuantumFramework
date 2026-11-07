@@ -40,7 +40,8 @@ QuantumBasis[<|
                 {a_, b_} :> Flatten @ CircleTimes[a, b] /. None -> Sequence[]
             }
         ],
-    "ParameterSpec" -> Values @ GroupBy[Join[qb1["ParameterSpec"], qb2["ParameterSpec"]], First, First @ TakeLargestBy[#, Last, 1] &]
+    "ParameterSpec" -> Values @ GroupBy[Join[qb1["ParameterSpec"], qb2["ParameterSpec"]], First, First @ TakeLargestBy[#, Last, 1] &],
+    "RealSymbols" -> MergeRealSymbols[qb1, qb2]
 |>
 ]
 

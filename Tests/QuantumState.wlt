@@ -1735,3 +1735,249 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumState - declared parameters are real"]
+
+(* Shared inputs: a two-qubit entangling circuit with declared angles, its input
+   α|00> + β|11>, and the same circuit from textbook matrices, wire 1 the leading factor. *)
+declaredRealCircuit = QuantumCircuitOperator[{"RX"[a] -> 1, "RY"[b] -> 2, "CNOT", "RZ"[c] -> 2}, "Parameters" -> {a, b, c}];
+
+declaredRealInput = QuantumState[{\[Alpha], 0, 0, \[Beta]}];
+
+textbookCircuitMatrix[{ta_, tb_, tc_}] := With[{
+    rx = {{Cos[#/2], -I Sin[#/2]}, {-I Sin[#/2], Cos[#/2]}} &,
+    ry = {{Cos[#/2], -Sin[#/2]}, {Sin[#/2], Cos[#/2]}} &,
+    rz = DiagonalMatrix[{E ^ (-I #/2), E ^ (I #/2)}] &,
+    cnot = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}}
+},
+    KroneckerProduct[IdentityMatrix[2], rz[tc]] . cnot . KroneckerProduct[rx[ta], ry[tb]]
+]
+
+(* A parameter declared with "Parameters" is real; every other symbol may be complex.
+   RZ[θ] only phases the amplitudes, so on that domain its output keeps the input norm. *)
+VerificationTest[
+    QuantumOperator["RZ"[\[Theta]], "Parameters" -> {\[Theta]}][QuantumState[{\[Alpha], \[Beta]}]]["Norm"],
+    Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2],
+    TestID -> "DeclaredReal-RZ-Norm"
+]
+
+VerificationTest[
+    QuantumOperator["RZ"[\[Theta]], "Parameters" -> {\[Theta]}][QuantumState[{\[Alpha], \[Beta]}]]["ProbabilitiesList"],
+    {Abs[\[Alpha]] ^ 2, Abs[\[Beta]] ^ 2} / (Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2),
+    TestID -> "DeclaredReal-RZ-Probabilities"
+]
+
+(* A gate angle is real by its role, declared or not; it joins "RealSymbols" and does not
+   become a parameter. *)
+VerificationTest[
+    With[{op = QuantumOperator["RZ"[\[Theta]]]},
+        {op["ParameterArity"], op["Basis"]["RealSymbols"], op["ParameterAssumptions"], op[QuantumState[{\[Alpha], \[Beta]}]]["Norm"]}
+    ],
+    {0, {\[Theta]}, Element[\[Theta], Reals], Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2]},
+    TestID -> "DeclaredReal-RZ-AngleRealByRole"
+]
+
+(* Every angle slot counts: U3 with three angles, a phase, a Pauli-product rotation, and a
+   controlled rotation, whose control keeps its target's angle. *)
+VerificationTest[
+    {
+        QuantumOperator["U3"[t, p, l]][QuantumState[{\[Alpha], \[Beta]}]]["Norm"],
+        QuantumOperator["P"[t]][QuantumState[{\[Alpha], \[Beta]}]]["Norm"],
+        QuantumOperator["R"[t, "X", "Y"]]["ParameterAssumptions"],
+        QuantumOperator["CP"[t]]["ParameterAssumptions"],
+        QuantumOperator["Controlled"["RZ"[t]]]["ParameterAssumptions"]
+    },
+    {
+        Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2], Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2],
+        Element[t, Reals], Element[t, Reals], Element[t, Reals]
+    },
+    TestID -> "DeclaredReal-GateAngles-RealByRole"
+]
+
+(* A circuit of named gates needs no declaration, by either application method. *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{"RX"[a] -> 1, "RY"[b] -> 2, "CNOT", "RZ"[c] -> 2}]},
+        {qc[declaredRealInput]["Norm"], qc[declaredRealInput, Method -> "Schrodinger"]["Norm"]}
+    ],
+    {Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2], Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2]},
+    TestID -> "DeclaredReal-Circuit-Undeclared-Norm"
+]
+
+(* Indexed angles count whole; a numeric angle adds nothing; a substituted value is spent. *)
+VerificationTest[
+    {
+        QuantumOperator["RZ"[\[Theta][1]]]["Basis"]["RealSymbols"],
+        QuantumOperator["RZ"[0.3]]["Basis"]["RealSymbols"],
+        QuantumOperator["RZ"[\[Theta]], "Parameters" -> {\[Theta]}][<|\[Theta] -> x|>]["Basis"]["RealSymbols"]
+    },
+    {{\[Theta][1]}, {}, {}},
+    TestID -> "DeclaredReal-RealSymbols-Bookkeeping"
+]
+
+(* A gate given several wires is its tensor power, and keeps its angle real. *)
+VerificationTest[
+    With[{op = QuantumOperator["RZ"[\[Theta]], {1, 2}]},
+        {op["Basis"]["RealSymbols"], op[declaredRealInput]["Norm"]}
+    ],
+    {{\[Theta]}, Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2]},
+    TestID -> "DeclaredReal-TensorPower-AngleReal"
+]
+
+(* An entangling circuit is unitary for real angles: the norm of its output is the input's. *)
+VerificationTest[
+    declaredRealCircuit[declaredRealInput]["Norm"],
+    Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2],
+    TestID -> "DeclaredReal-Circuit-Norm"
+]
+
+(* The same circuit's probabilities equal those of textbook matrices exactly, at an exact
+   point; wire 1 is the leading tensor factor. *)
+VerificationTest[
+    With[{point = {a -> Pi / 2, b -> Pi / 3, c -> Pi / 2, \[Alpha] -> 1 + 2 I, \[Beta] -> -3 + I / 2}},
+        With[{v = textbookCircuitMatrix[{a, b, c}] . {\[Alpha], 0, 0, \[Beta]} /. point},
+            RootReduce /@ ((declaredRealCircuit[declaredRealInput]["ProbabilitiesList"] /. point) - Abs[v] ^ 2 / Total[Abs[v] ^ 2])
+        ]
+    ],
+    {0, 0, 0, 0},
+    TestID -> "DeclaredReal-Circuit-Probabilities-TextbookMatrices"
+]
+
+(* A normalized Bloch state: no Abs is left on the real Cos and Sin. *)
+VerificationTest[
+    With[{qs = QuantumState[{Cos[\[Theta] / 2], E ^ (I \[Phi]) Sin[\[Theta] / 2]}, "Parameters" -> {\[Theta], \[Phi]}]},
+        {qs["Norm"], Normal @ qs["ProbabilitiesList"]}
+    ],
+    {1, {Cos[\[Theta] / 2] ^ 2, Sin[\[Theta] / 2] ^ 2}},
+    TestID -> "DeclaredReal-Bloch"
+]
+
+VerificationTest[
+    {
+        QuantumState[{\[Alpha], \[Beta]}, "Parameters" -> {\[Theta]}]["ParameterAssumptions"],
+        QuantumState[{\[Alpha], \[Beta]}]["ParameterAssumptions"],
+        QuantumOperator["RZ"[\[Theta]], "Parameters" -> {\[Theta]}]["ParameterAssumptions"],
+        QuantumCircuitOperator[{"RX"[a] -> 1, "RY"[b] -> 2}, "Parameters" -> {a, b}]["ParameterAssumptions"]
+    },
+    {Element[\[Theta], Reals], True, Element[\[Theta], Reals], Element[a | b, Reals]},
+    TestID -> "DeclaredReal-ParameterAssumptions"
+]
+
+(* Giving a parameter a value spends it, so no real assumption is left on that value:
+   c -> 2 I Log[2] makes RZ = diag(2, 1/2), not unitary, and the norm follows the textbook matrices. *)
+VerificationTest[
+    With[{qs = declaredRealCircuit[declaredRealInput][<|c -> 2 I Log[2]|>],
+        point = {a -> Pi / 2, b -> Pi / 3, \[Alpha] -> 1 + 2 I, \[Beta] -> -3 + I / 2}},
+        {qs["Parameters"], RootReduce[(qs["Norm"] /. point) - Norm[textbookCircuitMatrix[{a, b, 2 I Log[2]}] . {\[Alpha], 0, 0, \[Beta]} /. point]]}
+    ],
+    {{a, b}, 0},
+    TestID -> "DeclaredReal-Substituted-Parameter-Is-Spent"
+]
+
+(* An undeclared z stays complex, so E^(I z) contributes |E^(I z)|^2 = E^(-2 Im[z]); the norm is
+   written so that it evaluates to a Real, and at z = 0 it is 1. *)
+VerificationTest[
+    With[{n = QuantumState[{E ^ (I z) Cos[\[Theta]], Sin[\[Theta]]}, "Parameters" -> {\[Theta]}]["Norm"]},
+        {n, Head[N[n /. {z -> 2/5 - 11 I / 10, \[Theta] -> 7/10}]], Simplify[n /. z -> 0]}
+    ],
+    {Sqrt[E ^ (-2 Im[z]) Cos[\[Theta]] ^ 2 + Sin[\[Theta]] ^ 2], Real, 1},
+    TestID -> "DeclaredReal-Undeclared-Exponent-RealNorm"
+]
+
+(* A real θ < 0 takes Sqrt[θ] off the real line; the norm still holds there. *)
+VerificationTest[
+    With[{n = QuantumState[{Sqrt[\[Theta]], \[Alpha]}, "Parameters" -> {\[Theta]}]["Norm"]},
+        {n, n /. {\[Theta] -> -2, \[Alpha] -> 1 + I}}
+    ],
+    {Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Theta]]], 2},
+    TestID -> "DeclaredReal-NegativeParameter-Sqrt"
+]
+
+(* A numerically solved state is real-valued in its norm. *)
+VerificationTest[
+    With[{n = QuantumEvolve[QuantumOperator["X"] + QuantumOperator["Z"], QuantumState["0"], {t, 0, 1}]["Norm"] /. t -> 1/2},
+        {Head[n], Abs[n - 1] < 10 ^ -4}
+    ],
+    {Real, True},
+    TestID -> "DeclaredReal-Evolved-Norm-Real"
+]
+
+VerificationTest[
+    With[{qs = QuantumState[{{Cos[a] ^ 2, x}, {Conjugate[x], Sin[a] ^ 2}}, "Parameters" -> {a}]},
+        {qs["Norm"], Normal @ qs["Weights"], Normal @ qs["ProbabilitiesList"]}
+    ],
+    {1, {Cos[a] ^ 2, Sin[a] ^ 2}, {Cos[a] ^ 2, Sin[a] ^ 2}},
+    TestID -> "DeclaredReal-Mixed"
+]
+
+(* The circuit's probabilities keep one |amplitude|^2 per outcome over the input norm. *)
+VerificationTest[
+    Normal @ declaredRealCircuit[declaredRealInput]["ProbabilitiesList"],
+    {
+        Abs[\[Alpha] Cos[a/2] Cos[b/2] + I \[Beta] Sin[a/2] Sin[b/2]] ^ 2,
+        Abs[-I \[Beta] Cos[b/2] Sin[a/2] + \[Alpha] Cos[a/2] Sin[b/2]] ^ 2,
+        Abs[\[Beta] Cos[a/2] Cos[b/2] - I \[Alpha] Sin[a/2] Sin[b/2]] ^ 2,
+        Abs[-I \[Alpha] Cos[b/2] Sin[a/2] - \[Beta] Cos[a/2] Sin[b/2]] ^ 2
+    } / (Abs[\[Alpha]] ^ 2 + Abs[\[Beta]] ^ 2),
+    TestID -> "DeclaredReal-Circuit-Probabilities-Symbolic"
+]
+
+(* An amplitude that mixes a declared and an undeclared symbol keeps its modulus whole. *)
+VerificationTest[
+    QuantumState[{\[Alpha] + Cos[\[Theta]] \[Beta], \[Beta]}, "Parameters" -> {\[Theta]}]["Norm"],
+    Sqrt[Abs[\[Beta]] ^ 2 + Abs[\[Alpha] + \[Beta] Cos[\[Theta]]] ^ 2],
+    TestID -> "DeclaredReal-CrossTerm-Norm"
+]
+
+(* Moduli of functions of the parameters alone resolve, a pure phase among them; the
+   amplitudes are singular at θ = 1, which no step evaluates. *)
+VerificationTest[
+    {
+        Normal @ QuantumState[{Cos[\[Theta]] + I Sin[\[Theta]], 1}, "Parameters" -> {\[Theta]}]["Weights"],
+        Normal @ QuantumState[{Cos[\[Theta]] / (\[Theta] - 1), Sin[\[Theta]] / (\[Theta] - 1)}, "Parameters" -> {\[Theta]}]["ProbabilitiesList"]
+    },
+    {{1, 1}, {Cos[\[Theta]] ^ 2, Sin[\[Theta]] ^ 2}},
+    TestID -> "DeclaredReal-ParameterOnly-Moduli"
+]
+
+(* Indexed parameters are parameters; an indexed undeclared z[k] stays complex. *)
+VerificationTest[
+    {
+        QuantumState[{Cos[\[Theta][1]], E ^ (I \[Theta][2]) Sin[\[Theta][1]]}, "Parameters" -> {\[Theta][1], \[Theta][2]}]["Norm"],
+        QuantumState[{Cos[\[Theta]] z[1], Sin[\[Theta]] z[2]}, "Parameters" -> {\[Theta]}]["Norm"]
+    },
+    {1, Sqrt[Abs[z[1]] ^ 2 Cos[\[Theta]] ^ 2 + Abs[z[2]] ^ 2 Sin[\[Theta]] ^ 2]},
+    TestID -> "DeclaredReal-Indexed"
+]
+
+(* The compact probabilities sum to 1: written as z Conjugate[z], with the angles real and
+   the amplitudes complex, the total reduces exactly. *)
+VerificationTest[
+    Simplify[
+        ComplexExpand[Total[#["ProbabilitiesList"]] /. Abs[x_] ^ 2 :> x Conjugate[x], {\[Alpha], \[Beta]}],
+        Element[{a, b, c, \[Theta]}, Reals]
+    ] & /@ {
+        declaredRealCircuit[declaredRealInput],
+        QuantumState[{\[Alpha] + Cos[\[Theta]] \[Beta], \[Beta]}, "Parameters" -> {\[Theta]}]
+    },
+    {1, 1},
+    TestID -> "DeclaredReal-Probabilities-SumToOne"
+]
+
+(* A state whose "Norm" is 1 is its own normalization. *)
+VerificationTest[
+    With[{qs = QuantumState[{Cos[\[Theta] / 2], E ^ (I \[Phi]) Sin[\[Theta] / 2]}, "Parameters" -> {\[Theta], \[Phi]}]},
+        qs["Normalized"]["StateVector"] === qs["StateVector"]
+    ],
+    True,
+    TestID -> "DeclaredReal-Bloch-Normalized-Unchanged"
+]
+
+(* Only the declared symbols are real: a formal symbol beside them stays complex. *)
+VerificationTest[
+    Normal @ QuantumState[{\[FormalR] Cos[\[Theta]], Sin[\[Theta]]}, "Parameters" -> {\[Theta]}]["Weights"],
+    {Abs[\[FormalR] Cos[\[Theta]]] ^ 2, Sin[\[Theta]] ^ 2},
+    TestID -> "DeclaredReal-FormalSymbol-StaysComplex"
+]
+
+EndTestSection[]

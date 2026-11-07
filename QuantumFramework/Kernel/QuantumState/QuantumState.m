@@ -262,7 +262,8 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
             qs1["DensityMatrix"] + QuantumState[qs2, qs1["Basis"]]["DensityMatrix"]
         ],
         qs1["Basis"],
-        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
     ]
 
 QuantumState /: HoldPattern[Plus[states__QuantumState]] /; Length[{states}] > 1 :=
@@ -283,7 +284,8 @@ multiplyQuantumStates[qs1_QuantumState, qs2_QuantumState] /; qs1["Dimension"] ==
             QuantumBasis[qs1["Dimensions"]]
         ],
         qs1["Basis"],
-        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
     ]
 
 QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :=
@@ -327,7 +329,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
     ],
     Plus @@ (#["Basis"] & /@ {qs}),
     "Label" -> CirclePlus @@ (#["Label"] & /@ {qs}),
-    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
 ]
 
 
@@ -365,7 +368,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
                     "Output" -> qs1["Output"], "Input" -> qs2["Input"],
                     "Label" -> qs1["Label"] @* qs2["Label"],
                     "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
-                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
                 ]
             ],
         qs1["VectorQ"] && qs1["Picture"] === "Schrodinger" && qs2["Picture"] === "Schrodinger",
@@ -398,7 +402,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
             resBasis = QuantumBasis[
                 "Output" -> outBasis, "Input" -> inBasis,
                 "Label" -> qs1["Label"] @* qs2["Label"],
-                "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+                "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
             ];
             If[ resBasis["ComputationalQ"],
                 QuantumState[state, resBasis],
@@ -423,7 +428,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
                     "Output" -> qs1["Output"], "Input" -> qs2["Input"],
                     "Label" -> qs1["Label"] @* qs2["Label"],
                     "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
-                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
                 ]
             },
                 QuantumState[s, b]

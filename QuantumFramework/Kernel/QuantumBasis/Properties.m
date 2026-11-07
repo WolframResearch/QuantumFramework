@@ -31,7 +31,7 @@ $QuantumBasisProperties = {
     "Label", "LabelHead",
     "Picture",
     "Diagram",
-    "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
+    "ParameterArity", "Parameters", "InitialParameters", "FinalParameters", "ParameterAssumptions"
 };
 
 QuantumBasis["Properties"] := Union @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
@@ -62,7 +62,7 @@ QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] 
 
 QuantumBasisProp[QuantumBasis[data_Association], "ParameterArity"] := Length[data["ParameterSpec"]]
 
-QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec"}]]
+QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec", "RealSymbols"}]]
 
 (* computed *)
 
@@ -333,6 +333,9 @@ QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] 
 ]
 
 QuantumBasisProp[qb_, "Parameters"] := qb["ParameterSpec"][[All, 1]]
+
+(* a declared parameter, or a symbol real by its role, is real; every other symbol may be complex *)
+QuantumBasisProp[qb_, "ParameterAssumptions"] := Element[DeleteDuplicates @ Join[qb["Parameters"], qb["RealSymbols"]], Reals]
 
 QuantumBasisProp[qb_, "InitialParameters"] := qb["ParameterSpec"][[All, 2]]
 

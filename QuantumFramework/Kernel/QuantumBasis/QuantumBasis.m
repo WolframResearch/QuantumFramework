@@ -8,6 +8,7 @@ PackageScope["$QuantumBasisDataKeys"]
 PackageScope["$QuantumBasisStructureProperties"]
 PackageScope["$QuantumBasisPictures"]
 PackageScope["MergeParameterSpecs"]
+PackageScope["MergeRealSymbols"]
 
 
 
@@ -42,7 +43,9 @@ QuantumBasis::phaseSpacePicture = "a phase space basis is already a phase space 
 
 
 
-$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
+(* "RealSymbols": symbols known to be real by their role, such as the angle of a named gate;
+   with the declared parameters they make the real domain of "ParameterAssumptions" *)
+$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec", "RealSymbols"}
 
 (* the basis's data and the shape it gives, which states and operators read off their basis *)
 $QuantumBasisStructureProperties = Join[$QuantumBasisDataKeys, {
@@ -57,7 +60,8 @@ $QuantumBasisDefaults = {
     "Output" -> QuditBasis[],
     "Picture" -> "Schrodinger",
     "Label" -> None,
-    "ParameterSpec" -> {}
+    "ParameterSpec" -> {},
+    "RealSymbols" -> {}
 }
 
 
@@ -73,6 +77,7 @@ quantumBasisQ[QuantumBasis[data : HoldPattern[Association[(_String -> _) ...]]]]
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
 
     ConfirmAssert[ParameterSpecQ[data["ParameterSpec"]]];
+    ConfirmAssert[ListQ[data["RealSymbols"]] && DuplicateFreeQ[data["RealSymbols"]]];
     True,
 
     False &
@@ -272,6 +277,8 @@ MergeParameterSpecs[objs___] := Enclose @ Block[{specs = Catenate[ConfirmBy[#["P
     KeyValueMap[Prepend[#2, #1] &, GroupBy[specs, First, {Min[#[[All, 2]]], Max[#[[All, 3]]]} & ]]
 ]
 
+MergeRealSymbols[objs___] := DeleteDuplicates @ Catenate[If[Head[#] === QuantumBasis, #, #["Basis"]]["RealSymbols"] & /@ {objs}]
+
 
 (* simplify *)
 
@@ -304,20 +311,22 @@ substituteRepresentations[qb_, rules_] :=
         output = substituteRepresentations[qb["Output"], rules],
         input = substituteRepresentations[qb["Input"], rules],
         label = data["Label"] /. rules,
-        spec = DeleteCases[data["ParameterSpec"], {Alternatives @@ Keys[rules], __}]
+        spec = DeleteCases[data["ParameterSpec"], {Alternatives @@ Keys[rules], __}],
+        reals = DeleteCases[data["RealSymbols"], Alternatives @@ Keys[rules]]
     },
         If[ output === qb["Output"]["Representations"] &&
                 input === qb["Input"]["Representations"] &&
                 label === data["Label"],
 
-            QuantumBasis[<|data, "ParameterSpec" -> spec|>],
+            QuantumBasis[<|data, "ParameterSpec" -> spec, "RealSymbols" -> reals|>],
 
             QuantumBasis[
                 "Output" -> output,
                 "Input" -> input,
                 "Label" -> label,
                 "Picture" -> data["Picture"],
-                "ParameterSpec" -> spec
+                "ParameterSpec" -> spec,
+                "RealSymbols" -> reals
             ]
         ]
     ]

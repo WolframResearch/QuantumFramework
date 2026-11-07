@@ -34,6 +34,8 @@ PackageScope["eigenvalues"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
 PackageScope["roundoffChop"]
+PackageScope["symbolicParameters"]
+PackageScope["simplifyOnReals"]
 PackageScope["pauliMatrix"]
 PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
@@ -1719,3 +1721,17 @@ QuditAdjacencyMatrix[xs_ ? VectorQ, dim_ : Automatic] := With[{d = Replace[dim, 
 	Abs[xs] DiagonalMatrix[Mod[Arg[xs], 2 Pi] / (Pi / (2 d)) + 1] + If[d > 1, SparseArray[Band[{2, 1}] -> 1, {d, d}], 0]
 ]
 
+
+(* The parameters of a symbolic expression: its outermost parts that are not numeric and on which no numeric function
+   acts, plain symbols and indexed ones such as x[1] or Subscript[p, 1]. *)
+symbolicParameters[_ ? NumericQ] := {}
+symbolicParameters[h_Symbol[args___]] /; h === List || MemberQ[Attributes[h], NumericFunction] := Catenate[symbolicParameters /@ {args}]
+symbolicParameters[x_] := {x}
+
+(* expr simplified with the symbols reals real and every other symbol complex. ComplexExpand takes the others as
+   complex through one pattern, and writes them through Conjugate rather than Re and Im, so they stay whole; the
+   simplifier, Simplify unless another is given, then works under the reals' reality. *)
+simplifyOnReals[expr_, reals_List, simplify_ : Simplify] := simplify[
+    ComplexExpand[expr, {Except[Alternatives @@ reals]}, TargetFunctions -> {Conjugate}],
+    Element[reals, Reals]
+]

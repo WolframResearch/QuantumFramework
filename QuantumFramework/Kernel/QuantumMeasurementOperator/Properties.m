@@ -321,7 +321,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Auto
                 ],
                 "Input" -> QuantumTensorProduct[inputBasis, tracedOperator["Input"]],
                 "Label" -> "Eigen"[qmo["Label"]],
-                "ParameterSpec" -> qmo["ParameterSpec"]
+                "ParameterSpec" -> qmo["ParameterSpec"],
+                "RealSymbols" -> MergeRealSymbols[qmo]
             ]
         ];
 

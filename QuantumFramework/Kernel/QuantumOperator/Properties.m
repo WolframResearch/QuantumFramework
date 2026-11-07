@@ -1015,32 +1015,33 @@ kakKroneckerFactorSymbolic[mat_, simp_] := Module[{blocks, a0, c0, b, r0, s0},
    Det[u]^(1/4)) is unit modulus under the real-parameter assumption. *)
 kakUnwrapAngle[z_] := - I PowerExpand[Log[Simplify[TrigToExp[z]]]]
 
-(* Structured-symbolic KAK: the same magic-basis factorization in exact arithmetic. ComplexExpand makes
-   Re/Im split once the parameters are declared real, an exact Sqrt[2] separates the eigenvalues,
+(* Structured-symbolic KAK: the same magic-basis factorization in exact arithmetic, with the symbols
+   reals real (simplifyOnReals), so Re/Im split, an exact Sqrt[2] separates the eigenvalues,
    Orthogonalize forces a real-orthonormal eigenbasis, kakUnwrapAngle reads off the continuous angles,
-   and FullSimplify[..., assum] reduces to closed form. Returns the same association as TwoQubitKAK (for
+   and FullSimplify under their reality reduces to closed form. Returns the same association as TwoQubitKAK (for
    a generic dense symbolic matrix the eigensolve is a Root blowup; the caller bounds it). *)
-TwoQubitKAKSymbolic[u_ ? SquareMatrixQ, assum_] /; Dimensions[u] === {4, 4} := Module[{
+TwoQubitKAKSymbolic[u_ ? SquareMatrixQ, reals_List] /; Dimensions[u] === {4, 4} := Module[{
     mb = $MagicBasis, mbd = ConjugateTranspose[$MagicBasis], signs = $kakBellSigns,
-    simp, su, uMagic, m2, proj, k1, theta, coords, corr
+    simp, real, su, uMagic, m2, proj, k1, theta, coords, corr
 },
-    simp = FullSimplify[#, assum] &;
+    simp = FullSimplify[#, Element[reals, Reals]] &;
+    real = simplifyOnReals[#, reals, FullSimplify] &;
     su = u / Det[u] ^ (1/4);
-    uMagic = simp @ ComplexExpand[mbd . su . mb];
-    m2 = simp @ ComplexExpand[Transpose[uMagic] . uMagic];
-    proj = simp @ ComplexExpand @ Transpose[Orthogonalize[
+    uMagic = real[mbd . su . mb];
+    m2 = real[Transpose[uMagic] . uMagic];
+    proj = real @ Transpose[Orthogonalize[
         Eigensystem[ComplexExpand[Re[m2]] + Sqrt[2] ComplexExpand[Im[m2]]][[2]]]];
     If[TrueQ[simp[Re[Det[proj]]] < 0], proj[[All, 1]] = - proj[[All, 1]]];
     theta = simp[kakUnwrapAngle[Diagonal[Transpose[proj] . m2 . proj]] / 2];
-    k1 = simp @ ComplexExpand[uMagic . proj . DiagonalMatrix[Exp[- I theta]]];
+    k1 = real[uMagic . proj . DiagonalMatrix[Exp[- I theta]]];
     If[TrueQ[simp[Re[Det[k1]]] < 0], k1[[All, 1]] = - k1[[All, 1]]; theta[[1]] += Pi];
     coords = simp[Transpose[signs] . theta / 4];
-    corr = simp @ ComplexExpand[mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd];
+    corr = real[mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd];
     <|
         "GlobalPhase" -> simp @ kakUnwrapAngle[Det[u] ^ (1/4)],
-        "Left" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . k1 . mbd . corr], simp],
+        "Left" -> kakKroneckerFactorSymbolic[real[mb . k1 . mbd . corr], simp],
         "Canonical" -> coords,
-        "Right" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . Transpose[proj] . mbd], simp]
+        "Right" -> kakKroneckerFactorSymbolic[real[mb . Transpose[proj] . mbd], simp]
     |>
 ]
 
@@ -1093,7 +1094,7 @@ QuantumCircuitOperator::kaksymbolic = "KAK could not decompose `1` symbolically 
 
 QuantumOperatorProp[qo_, "KAK"] /; qo["Dimension"] == 16 && MatchQ[qo["Dimensions"], {2, 2, 2, 2}] :=
 Enclose @ Module[{
-    mat = Normal @ qo["MatrixRepresentation"], numericQ, vars, assum, data, c, a, b, o1, o2, order,
+    mat = Normal @ qo["MatrixRepresentation"], numericQ, vars, data, c, a, b, o1, o2, order,
     gates, circuit, circMat, residualPhase
 },
     numericQ = MatrixQ[Quiet @ N @ mat, NumericQ];
@@ -1120,10 +1121,9 @@ Enclose @ Module[{
     ,
     (* ---- structured-symbolic path: direct matrix gates, global phase = worker's gp (no projection).
        A generic dense symbolic eigensolve is a Root blowup, so the worker is time-bounded and bails. ---- *)
-        (* the free parameters: actual non-System symbols (Variables misses these inside Cos / E^...) *)
-        vars = DeleteDuplicates @ Cases[mat, _Symbol ? (Context[#] =!= "System`" &), Infinity];
-        assum = Element[vars, Reals];
-        data = TimeConstrained[TwoQubitKAKSymbolic[mat, assum], $kakSymbolicTimeBudget, $Failed];
+        (* the free parameters, plain or indexed, all taken real *)
+        vars = DeleteDuplicates @ symbolicParameters[mat];
+        data = TimeConstrained[TwoQubitKAKSymbolic[mat, vars], $kakSymbolicTimeBudget, $Failed];
         If[ ! AssociationQ[data],
             Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
             Return[QuantumCircuitOperator[{qo}, "Label" -> "KAK"], Module]

@@ -18,7 +18,7 @@ $QuantumStateProperties = {
     "Purity", "Type", "PureStateQ", "MixedStateQ", "MatrixQ", "VectorQ", "UnknownQ", "PhysicalQ",
     "NumericQ", "NumberQ",
     "Kind", "Scalar",
-    "Norm", "TraceNorm", "NormalizedQ",
+    "Norm", "TraceNorm", "NormalizedQ", "ParameterAssumptions",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
     "Projector", "NormalizedProjector",
     "Operator", "NormalizedOperator",
@@ -309,14 +309,19 @@ QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[F
 
 QuantumStateProp[qs_, "Weights"] := Which[
     qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
-    Abs[qs["StateVector"]] ^ 2,
+    refineOnParameters[qs, Abs[qs["StateVector"]] ^ 2],
     qs["PhysicalQ"] || ! qs["NumericQ"],
-    Abs @ Diagonal @ qs["DensityMatrix"],
+    refineOnParameters[qs, Abs @ Diagonal @ qs["DensityMatrix"]],
     True,
     (* the repaired state's own diagonal: asking it for "Weights" retests
        PhysicalQ, which roundoff left by the repair can fail again *)
     Abs @ Diagonal @ qs["Physical"]["DensityMatrix"]
 ]
+
+(* |amplitude|^2 / <v|v>, or the diagonal over the trace, with the normalization taken on the
+   declared parameters' real domain *)
+QuantumStateProp[qs_ ? symbolicParametersQ, "Weight"] :=
+    qs["Weights"] / If[qs["StateType"] === "Vector", Simplify[parameterNormSquared[qs], qs["ParameterAssumptions"]], qs["Norm"]]
 
 QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
 
@@ -533,7 +538,47 @@ QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify", args___] :=
 
 (* normalization *)
 
-QuantumStateProp[qs_, "Norm"] := Simplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]
+QuantumStateProp[qs_ ? symbolicParametersQ, "Norm"] /; qs["StateType"] === "Vector" :=
+    Simplify[Sqrt @ parameterNormSquared[qs], qs["ParameterAssumptions"]]
+
+(* <v|v> on the real domain: conjugation flips each explicit I and conjugates only the complex
+   symbols, the cross terms cancel, and each z Conjugate[z] is |z|^2. Where a Conjugate is left
+   over the sum's reality is not visible, and the sum of the weights |v_i|^2 stands instead *)
+parameterNormSquared[qs_] := With[{v = qs["StateVector"]},
+    Replace[
+        simplifyOnReals[v . Conjugate[v], realSymbols[qs]] //. z_ Conjugate[z_] :> Abs[z] ^ 2,
+        n_ /; ! FreeQ[n, _Conjugate] :> Total[qs["Weights"]]
+    ]
+]
+
+QuantumStateProp[qs_, "Norm"] := Simplify[If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]], qs["ParameterAssumptions"]]
+
+(* the declared parameters and the symbols real by their role, the real domain of "ParameterAssumptions" *)
+realSymbols[qs_] := DeleteDuplicates @ Join[qs["Parameters"], qs["Basis"]["RealSymbols"]]
+
+symbolicParametersQ[qs_] := realSymbols[qs] =!= {} && ! qs["NumericQ"]
+
+(* Abs, Re or Im of a function of the declared parameters alone is a function of real
+   variables, so ComplexExpand with every variable real resolves it; Abs, Re and Im of
+   anything holding another symbol are left as they are *)
+refineOnParameters[qs_ ? symbolicParametersQ, a_] :=
+    With[{reals = realSymbols[qs]}, {onlyParametersQ = parameterOnlyQ[reals]},
+        Map[# /. f : (Abs | Re | Im)[_ ? onlyParametersQ] ^ _. :> simplifyOnReals[f, reals] &, a]
+    ]
+
+refineOnParameters[_, a_] := a
+
+(* No symbol but the parameters, read off the structure, never by evaluating at a point.
+   Heads count, so an undeclared z in z[1] is seen; numeric functions such as Cos do not.
+   The parameters stand in as one fresh symbol, so none the user wrote can pass for them. *)
+parameterOnlyQ[params_][x_] := Module[{r},
+    FreeQ[
+        x /. Thread[params -> r],
+        s_Symbol /; ! MemberQ[{r, Complex, Rational}, s] && ! MemberQ[Attributes[s], NumericFunction | Constant],
+        {0, Infinity},
+        Heads -> True
+    ]
+]
 
 QuantumStateProp[qs_, "TraceNorm"] := Total @ SingularValueList @ qs["DensityMatrix"]
 
@@ -552,6 +597,11 @@ QuantumStateProp[qs_, "NormalizedAmplitudes"] := With[{amplitudes = qs["Amplitud
         If[TrueQ[norm == 0], $Failed, amplitudes / norm]
     ]
 ]
+
+(* divided by the norm on the declared parameters' real domain, so a state "Norm" reports as
+   normalized comes back unchanged *)
+QuantumStateProp[qs_ ? symbolicParametersQ, "NormalizedStateVector"] /; qs["StateType"] === "Vector" :=
+    qs["StateVector"] / qs["Norm"]
 
 QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
 
