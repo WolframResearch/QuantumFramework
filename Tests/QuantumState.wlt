@@ -1734,6 +1734,36 @@ VerificationTest[
     TestID -> "Property-handed-to-the-basis-match-Properties"
 ]
 
+(* A direct sum of states carries the declared parameters of every summand. *)
+VerificationTest[
+    QuantumState[
+        QuantumState[{Cos[x], Sin[x]}, "Parameters" -> {x}],
+        QuantumState[{Cos[y], Sin[y]}, "Parameters" -> {y}]
+    ]["Parameters"],
+    {x, y},
+    TestID -> "DirectSum-keeps-both-parameters"
+]
+
+VerificationTest[
+    QuantumState[
+        QuantumState[{Cos[x], Sin[x]}, "Parameters" -> {x}],
+        QuantumState[{Cos[y], Sin[y]}, "Parameters" -> {y}],
+        QuantumState[{Cos[z], Sin[z]}, "Parameters" -> {z}]
+    ]["Parameters"],
+    {x, y, z},
+    TestID -> "DirectSum-three-summands-keeps-all-parameters"
+]
+
+(* A parameter shared by two summands keeps one entry whose range covers both. *)
+VerificationTest[
+    QuantumState[
+        QuantumState[{Cos[x], Sin[x]}, "ParameterSpec" -> {{x, 0, Pi}}],
+        QuantumState[{Cos[x], Sin[x]}, "ParameterSpec" -> {{x, -1, 1}}]
+    ]["ParameterSpec"],
+    {{x, -1, Pi}},
+    TestID -> "DirectSum-shared-parameter-merges-ranges"
+]
+
 EndTestSection[]
 
 

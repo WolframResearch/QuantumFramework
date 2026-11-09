@@ -24,19 +24,27 @@ Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options
 (* An operator's state holds its qudits in the operator's own order, and its tensor in sorted
    qudit order is that state's tensor transposed by the rank of each qudit; reading it this way
    spares building the sorted operator. *)
-sortedTensor[op_ ? QuantumOperatorQ] /; op["VectorQ"] && op["Order"] === op["FullOrder"] &&
-    op["OutputQudits"] + op["InputQudits"] > 0 && Length[op["State"]["Dimensions"]] === op["OutputQudits"] + op["InputQudits"] &&
-    packedTensorQ[op["StateVector"], op["OutputQudits"] + op["InputQudits"]] :=
-    sortedLevels[
-        ArrayReshape[Developer`ToPackedArray[Normal[op["StateVector"] + 0.]], op["State"]["Dimensions"]],
-        Join[Ordering[Ordering[op["OutputOrder"]]], Ordering[Ordering[op["InputOrder"]]] + op["OutputQudits"]]
+sortedTensor[op_ ? QuantumOperatorQ] := With[{out = op["OutputQudits"], rank = op["OutputQudits"] + op["InputQudits"]},
+    If[ op["VectorQ"] && op["Order"] === op["FullOrder"] && rank > 0,
+        With[{
+            perm = Join[Ordering[Ordering[op["OutputOrder"]]], Ordering[Ordering[op["InputOrder"]]] + out],
+            dims = op["State"]["Dimensions"],
+            v = op["StateVector"]
+        },
+            If[ Length[dims] === rank && packedTensorQ[v, rank],
+                sortedLevels[ArrayReshape[Developer`ToPackedArray[Normal[v + 0.]], dims], perm],
+                With[{t = op["StateTensor"]},
+                    If[ArrayDepth[t] === rank, sortedLevels[t, perm], operatorTensor[op]]
+                ]
+            ]
+        ],
+        operatorTensor[op]
     ]
+]
 
-sortedTensor[op_ ? QuantumOperatorQ] /; op["VectorQ"] && op["Order"] === op["FullOrder"] &&
-    op["OutputQudits"] + op["InputQudits"] > 0 && ArrayDepth[op["StateTensor"]] === op["OutputQudits"] + op["InputQudits"] :=
-    sortedLevels[op["StateTensor"], Join[Ordering[Ordering[op["OutputOrder"]]], Ordering[Ordering[op["InputOrder"]]] + op["OutputQudits"]]]
+sortedTensor[op_] := operatorTensor[op]
 
-sortedTensor[op_] := If[op["MatrixQ"], op["Double"], op]["Tensor"]
+operatorTensor[op_] := If[op["MatrixQ"], op["Double"], op]["Tensor"]
 
 (* A rank-r SparseArray stores each nonzero entry with its r positions, about 16 + 8 r bytes,
    against 16 bytes for every entry of a packed array. A vector of machine numbers dense
@@ -220,17 +228,16 @@ Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNet
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
-    traceOrder, eigenOrder, computationalQ, basis
+    traceOrder, eigenOrder, computationalQ, info, basis, openBasis
 },
     width = circuit["Width"];
-    basis = Confirm @ circuit["TensorNetworkBasis"];
+    info = Confirm @ circuit["TensorNetworkInfo"];
+    basis = If[AssociationQ[info], Confirm @ tensorNetworkBasis[circuit, info], Confirm @ circuit["TensorNetworkBasis"]];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
     computationalQ = TrueQ[OptionValue["Computational"]] || ! phaseSpaceQ &&
         TrueQ[Or @@ Unequal @@@
             ConfirmBy[
-                With[{info = Confirm @ circuit["TensorNetworkInfo"]},
-                    Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2]
-                ],
+                Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2],
                 AllTrue[Equal @@ Through[#["Dimension"]] &]
             ]
         ];
@@ -238,10 +245,13 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     eigenOrder = circuit["Eigenorder"];
     order = Sort /@ circuit["Order"];
     bendQ = (AnyTrue[circuit["Operators"], #["MatrixQ"] &] || circuit["TraceQudits"] > 0) && ! phaseSpaceQ;
+    (* the open indices of the network contracted below: those of this circuit, unless it is bent *)
+    openBasis = basis;
     If[ bendQ,
         (* TODO: handle this case somehow *)
         (* ConfirmAssert[AllTrue[Join[DeleteElements[order[[1]], Join[traceOrder, eigenOrder]], order[[2]]], Positive]]; *)
         circuit = circuit["Bend"];
+        openBasis = Automatic;
         If[ TrueQ[OptionValue["Trace"]] && circuit["TraceQudits"] > 0,
             circuit = circuit /* MapThread["Cap"[#2] -> {#1, #1 + width} &, {circuit["TraceOrder"], circuit["TraceBasis"]["Decompose"]}];
         ]
@@ -250,9 +260,15 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ TensorNetworkContract[net, OptionValue["Path"], FilterRules[{opts}, Options[TensorNetworkContract]]];
-    res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
+    (* A network with no open indices contracts to a single number. It is wrapped as a
+       one-element vector directly: asking for the array dimensions of a large symbolic
+       formula walks the whole expression, which takes seconds on a closed parametrized circuit. *)
+    res = With[{basis = If[openBasis === Automatic, Confirm @ circuit["TensorNetworkBasis"], openBasis]},
         QuantumState[
-            ArrayVector[res],
+            If[ basis["OutputDimensions"] === {} && basis["InputDimensions"] === {} && ! MatchQ[res, _List | _SparseArray],
+                {res},
+                ArrayVector[res]
+            ],
             If[computationalQ, QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]], basis]
         ]
     ];

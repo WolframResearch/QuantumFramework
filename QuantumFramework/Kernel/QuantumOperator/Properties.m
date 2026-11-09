@@ -5,6 +5,7 @@ PackageScope["UnitaryEulerAnglesWithPhase"]
 PackageScope["TwoQubitKAK"]
 PackageScope["TwoQubitKAKSymbolic"]
 PackageScope["$MagicBasis"]
+PackageScope["operatorPropertyQ"]
 
 
 
@@ -93,6 +94,14 @@ QuantumOperatorProp[qo_, "AllProperties"] := Union @ Join[QuantumOperator["Prope
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]]
 
+(* Whether qo answers prop: membership in qo["AllProperties"]. A channel, measurement or Hamiltonian
+   hands every property its operator answers to that operator, and asks this on each such call; the
+   names in QuantumOperator["Properties"], which "AllProperties" always contains, are collected once
+   so the common case skips building the full list. *)
+operatorPropertyNames[] := operatorPropertyNames[] = AssociationThread[QuantumOperator["Properties"], True]
+
+operatorPropertyQ[qo_, prop_] := KeyExistsQ[operatorPropertyNames[], prop] || MemberQ[qo["AllProperties"], prop]
+
 
 qo_QuantumOperator["ValidQ"] := QuantumOperatorQ[qo]
 
@@ -161,35 +170,39 @@ QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], qo["Arity"]]
 
 QuantumOperatorProp[qo_, "FullArity"] := Max[qo["InputQudits"], qo["Range"]]
 
-QuantumOperatorProp[qo_, "FullInputOrder"] := Which[qo["InputDimension"] > 1,
-    Take[
-        If[MatchQ[qo["InputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
-            If[ Length[qo["InputOrder"]] > 0,
-                Join[Complement[Range[Max[qo["InputOrder"]] - qo["InputQudits"] + 1, Max[qo["InputOrder"]]], qo["InputOrder"]], qo["InputOrder"]],
-                Range[qo["InputQudits"]]
-            ],
-        - qo["InputQudits"]
+QuantumOperatorProp[qo_, "FullInputOrder"] := With[{dim = qo["InputDimension"]}, Which[dim > 1,
+    With[{order = qo["InputOrder"], qudits = qo["InputQudits"]},
+        Take[
+            If[MatchQ[order, {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
+                If[ Length[order] > 0,
+                    Join[Complement[Range[Max[order] - qudits + 1, Max[order]], order], order],
+                    Range[qudits]
+                ],
+            - qudits
+        ]
     ],
-    qo["InputDimension"] == 0,
+    dim == 0,
     {1},
     True,
     {}
-]
+]]
 
-QuantumOperatorProp[qo_, "FullOutputOrder"] := Which[qo["OutputDimension"] > 1,
-    Take[
-        If[ MatchQ[qo["OutputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
-            If[ Length[qo["OutputOrder"]] > 0,
-                Join[Complement[Range[Max[qo["OutputOrder"]] - qo["OutputQudits"] + 1, Max[qo["OutputOrder"]]], qo["OutputOrder"]], qo["OutputOrder"]],
-                Range[qo["OutputQudits"]]
-            ],
-        - qo["OutputQudits"]
+QuantumOperatorProp[qo_, "FullOutputOrder"] := With[{dim = qo["OutputDimension"]}, Which[dim > 1,
+    With[{order = qo["OutputOrder"], qudits = qo["OutputQudits"]},
+        Take[
+            If[MatchQ[order, {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
+                If[ Length[order] > 0,
+                    Join[Complement[Range[Max[order] - qudits + 1, Max[order]], order], order],
+                    Range[qudits]
+                ],
+            - qudits
+        ]
     ],
-    qo["OutputDimension"] == 0,
+    dim == 0,
     {1},
     True,
     {}
-]
+]]
 
 QuantumOperatorProp[qo_, "FullOrder"] := {qo["FullOutputOrder"], qo["FullInputOrder"]}
 

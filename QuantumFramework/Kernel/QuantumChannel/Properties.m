@@ -135,5 +135,5 @@ QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=
 (* operator properties *)
 
 QuantumChannelProp[qc_, args : PatternSequence[prop_String, ___]] /;
-    MemberQ[Intersection[qc["Operator"]["AllProperties"], qc["AllProperties"]], prop] := qc["Operator"][args]
+    operatorPropertyQ[qc["Operator"], prop] := qc["Operator"][args]
 

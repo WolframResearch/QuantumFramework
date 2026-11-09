@@ -130,5 +130,5 @@ QuantumHamiltonianOperatorProp[qho_, "FinalEvolutionOperator"] := qho["Evolution
 (* operator properties *)
 
 QuantumHamiltonianOperatorProp[qho_, args : PatternSequence[prop_String, ___]] /;
-    MemberQ[Intersection[qho["QuantumOperator"]["AllProperties"], qho["AllProperties"]], prop] := qho["QuantumOperator"][args]
+    operatorPropertyQ[qho["QuantumOperator"], prop] := qho["QuantumOperator"][args]
 

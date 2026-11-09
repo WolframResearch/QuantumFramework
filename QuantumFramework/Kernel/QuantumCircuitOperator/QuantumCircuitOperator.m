@@ -55,6 +55,11 @@ QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator
 
 QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
+(* Options[CircuitDraw] joins about 300 drawing and Graphics options, built anew on every call. SetOptions
+   changes their values but not their names, so the names are collected once, on first use, to filter the
+   options a circuit keeps; this assumes Options[CircuitDraw] is not reassigned after the paclet loads. *)
+circuitDrawOptionNames[] := circuitDrawOptionNames[] = Keys[Options[CircuitDraw]]
+
 QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = ToList @ OptionValue["Parameters"], picture = OptionValue["Picture"]},
     QuantumCircuitOperator[With[{
         ops = (Confirm[If[BarrierQ[#] || parameters === {} && MatchQ[picture, Automatic | None], #,
@@ -63,7 +68,7 @@ QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @
         <|
             "Elements" -> ops,
             "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None],
-            DeleteDuplicatesBy[First] @ FilterRules[{opts}, Options[CircuitDraw]]
+            DeleteDuplicatesBy[First] @ FilterRules[{opts}, circuitDrawOptionNames[]]
         |>
     ]]
 ]

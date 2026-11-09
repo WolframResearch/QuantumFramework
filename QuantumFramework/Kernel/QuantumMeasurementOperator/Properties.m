@@ -401,5 +401,5 @@ QuantumMeasurementOperatorProp[qmo_, prop : "Double", args___] :=
 
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___]] /;
-    MemberQ[Intersection[qmo["Operator"]["AllProperties"], qmo["AllProperties"]], prop] := qmo["Operator"][args]
+    operatorPropertyQ[qmo["Operator"], prop] := qmo["Operator"][args]
 

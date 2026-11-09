@@ -114,7 +114,7 @@ DisplacementOperator[\[Alpha]_, size_Integer ? Positive, order_?orderQ, OptionsP
 
 
 SqueezeOperator::usage =
-"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering; Automatic, the default, is \"Normal\" for a matrix and \"Weak\" for the symbolic form.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives S(\[Xi]) as a symbolic expression in the ladder operators vars.";
+"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering; Automatic, the default, is \"Normal\" for a matrix and \"Weak\" for the symbolic form.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives S(\[Xi]) as a symbolic expression in the ladder operators vars.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"r\", \"TI\"], \",\", StyleBox[\"\[Theta]\", \"TI\"]}], \"}\"}], \",\", \"\[Infinity]\", \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives S(\!\(\*StyleBox[\"r\", \"TI\"]\) \!\(\*SuperscriptBox[\"e\", RowBox[{\"i\", StyleBox[\"\[Theta]\", \"TI\"]}]]\)) in polar form.";
 
 Options[SqueezeOperator] = {"Ordering" -> Automatic};
 
@@ -126,31 +126,27 @@ SqueezeOperator[xi_, size : Except[\[Infinity]], opts : OptionsPattern[]] := Squ
 
 SqueezeOperator[xi_, order_?orderQ, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize,order, opts];
 
-SqueezeOperator[xi_, \[Infinity], vars : Except[_Rule | _RuleDelayed] : Automatic, OptionsPattern[]] :=
-    Block[{
-        ordering = Replace[OptionValue["Ordering"], Automatic -> "Weak"],
-        tau = Exp[I Arg[xi]] Tanh[Abs[xi]],
-        lv = symbolicMode[SqueezeOperator, vars],
-        a, adag
-    },
-        If[lv === $Failed, Return[$Failed, Block]];
-        {{adag}, {a}} = lv;
-        Replace[
-            Switch[ordering,
-                "Normal",
-                Exp[-tau/2 adag ** adag] ** Sech[Abs[xi]]^(adag ** a + 1/2) ** Exp[Conjugate[tau]/2 a ** a],
-
-                "Weak",
-                Exp[(Conjugate[xi] a ** a - xi adag ** adag)/2],
-
-                "Antinormal",
-                Exp[Conjugate[tau]/2 a ** a] ** Cosh[Abs[xi]]^(adag ** a + 1/2) ** Exp[-tau/2 adag ** adag],
-            _,
-                Message[SqueezeOperator::invalidorder, ordering];
-                Abort[]
-            ],
-            NonCommutativeMultiply[1 ..] -> 1
+SqueezeOperator[{r_, th_}, \[Infinity], vars : Except[_Rule | _RuleDelayed] : Automatic, OptionsPattern[]] :=
+    With[{ordering = Replace[OptionValue["Ordering"], Automatic -> "Weak"], lv = symbolicMode[SqueezeOperator, vars]},
+        If[ lv === $Failed, $Failed,
+            With[{adag = lv[[1, 1]], a = lv[[2, 1]]},
+                Replace[
+                    Switch[ordering,
+                        "Normal", Exp[-E^(I th) Tanh[r]/2 adag ** adag] ** Sech[r]^(adag ** a + 1/2) ** Exp[E^(-I th) Tanh[r]/2 a ** a],
+                        "Weak", Exp[r (E^(-I th) a ** a - E^(I th) adag ** adag)/2],
+                        "Antinormal", Exp[E^(-I th) Tanh[r]/2 a ** a] ** Cosh[r]^(adag ** a + 1/2) ** Exp[-E^(I th) Tanh[r]/2 adag ** adag],
+                        _, Message[SqueezeOperator::invalidorder, ordering]; Abort[]
+                    ],
+                    NonCommutativeMultiply[1 ..] -> 1
+                ]
+            ]
         ]
+    ]
+
+SqueezeOperator[xi_, \[Infinity], vars : Except[_Rule | _RuleDelayed] : Automatic, opts : OptionsPattern[]] :=
+    If[ Replace[OptionValue["Ordering"], Automatic -> "Weak"] === "Weak",
+        Replace[symbolicMode[SqueezeOperator, vars], {{{adag_}, {a_}} :> Exp[(Conjugate[xi] a ** a - xi adag ** adag)/2], _ -> $Failed}],
+        SqueezeOperator[{Abs[xi], Arg[xi]}, \[Infinity], vars, opts]
     ]
 
 SqueezeOperator[xi_, size_Integer ? Positive, order_?orderQ, OptionsPattern[]] :=

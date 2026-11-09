@@ -245,7 +245,7 @@ VerificationTest[
 (* Between coherent states the projector gives <alpha|0><0|beta>. *)
 VerificationTest[
     Simplify[BosonicMatrixElement[{\[Alpha], \[Beta]}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] -
-        Exp[-(Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]],
+        Exp[-(Conjugate[\[Alpha]] \[Alpha] + Conjugate[\[Beta]] \[Beta])/2]],
     0,
     TestID -> "BME-Vacuum-ProjectorCoherent"
 ]
@@ -254,9 +254,9 @@ VerificationTest[
    <0|0><0|beta> = <0|beta>, <0|0><0|0> = 1, and Exp[lambda ad a] fixes the vacuum. *)
 VerificationTest[
     Simplify[{
-        BosonicMatrixElement[{0, \[Beta]}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2],
+        BosonicMatrixElement[{0, \[Beta]}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] - Exp[-Conjugate[\[Beta]] \[Beta]/2],
         BosonicMatrixElement[{0, 0}, NormalOrdered[Exp[-adv ** av], $v], $v, "Basis" -> "Coherent"] - 1,
-        BosonicMatrixElement[{0, \[Beta]}, Exp[\[Lambda] adv ** av], $v, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
+        BosonicMatrixElement[{0, \[Beta]}, Exp[\[Lambda] adv ** av], $v, "Basis" -> "Coherent"] - Exp[-Conjugate[\[Beta]] \[Beta]/2]
     }],
     {0, 0, 0},
     TestID -> "BME-Vacuum-ProjectorCoherentZeroAmplitude"
@@ -267,9 +267,9 @@ VerificationTest[
    carries the power 0 for every operator it does not touch. *)
 VerificationTest[
     Simplify[{
-        BosonicMatrixElement[{0, \[Beta]}, av, $v, "Basis" -> "Coherent"] - \[Beta] Exp[-Abs[\[Beta]]^2/2],
-        BosonicMatrixElement[{\[Alpha], 0}, adv, $v, "Basis" -> "Coherent"] - Conjugate[\[Alpha]] Exp[-Abs[\[Alpha]]^2/2],
-        BosonicMatrixElement[{0, \[Beta]}, 1 + adv ** av, $v, "Basis" -> "Coherent"] - Exp[-Abs[\[Beta]]^2/2]
+        BosonicMatrixElement[{0, \[Beta]}, av, $v, "Basis" -> "Coherent"] - \[Beta] Exp[-Conjugate[\[Beta]] \[Beta]/2],
+        BosonicMatrixElement[{\[Alpha], 0}, adv, $v, "Basis" -> "Coherent"] - Conjugate[\[Alpha]] Exp[-Conjugate[\[Alpha]] \[Alpha]/2],
+        BosonicMatrixElement[{0, \[Beta]}, 1 + adv ** av, $v, "Basis" -> "Coherent"] - Exp[-Conjugate[\[Beta]] \[Beta]/2]
     }],
     {0, 0, 0},
     TestID -> "BME-Vacuum-CoherentZeroAmplitude"
@@ -282,7 +282,7 @@ VerificationTest[
         Simplify[
             BosonicMatrixElement[{{0, \[Alpha]}, {0, \[Beta]}}, 1 + b[[1, 1]] ** b[[2, 1]] + b[[1, 2]] ** b[[2, 2]], b,
                 "Basis" -> "Coherent"] -
-            (1 + Conjugate[\[Alpha]] \[Beta]) Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]]],
+            (1 + Conjugate[\[Alpha]] \[Beta]) Exp[Conjugate[\[Alpha]] \[Beta] - (Conjugate[\[Alpha]] \[Alpha] + Conjugate[\[Beta]] \[Beta])/2]]],
     0,
     TestID -> "BME-Vacuum-CoherentZeroAmplitudeMultimode"
 ]
@@ -364,8 +364,8 @@ VerificationTest[
     Simplify[
         BosonicMatrixElement[{{\[Alpha]1, \[Alpha]2}, {\[Beta]1, \[Beta]2}}, b1, $v2,
             "Basis" -> "Coherent"] -
-        \[Beta]1 Exp[Conjugate[\[Alpha]1] \[Beta]1 - (Abs[\[Alpha]1]^2 + Abs[\[Beta]1]^2)/2] *
-            Exp[Conjugate[\[Alpha]2] \[Beta]2 - (Abs[\[Alpha]2]^2 + Abs[\[Beta]2]^2)/2]
+        \[Beta]1 Exp[Conjugate[\[Alpha]1] \[Beta]1 - (Conjugate[\[Alpha]1] \[Alpha]1 + Conjugate[\[Beta]1] \[Beta]1)/2] *
+            Exp[Conjugate[\[Alpha]2] \[Beta]2 - (Conjugate[\[Alpha]2] \[Alpha]2 + Conjugate[\[Beta]2] \[Beta]2)/2]
     ],
     0,
     TestID -> "BME-Modes-CoherentFactorizes"
@@ -445,7 +445,7 @@ VerificationTest[
 (* A creator right of an annihilator wing moves across shifted, e^{c a} a^dagger = (a^dagger + c) e^{c a},
    and the element is linear over the resulting sum, in both bases. *)
 VerificationTest[
-    With[{v = {{bd}, {b}}, ov = Exp[Conjugate[al] be - (Abs[al]^2 + Abs[be]^2)/2]},
+    With[{v = {{bd}, {b}}, ov = Exp[Conjugate[al] be - (Conjugate[al] al + Conjugate[be] be)/2]},
         {
             Simplify[BosonicMatrixElement[{al, be}, Exp[c b] ** bd, v, "Basis" -> "Coherent"] - (Conjugate[al] + c) Exp[c be] ov],
             Simplify[BosonicMatrixElement[{al, be}, Exp[c b] + bd, v, "Basis" -> "Coherent"] - (Exp[c be] + Conjugate[al]) ov],
@@ -506,6 +506,21 @@ VerificationTest[
     },
     {0, Sech[r]},
     TestID -> "BME-VEV-Exponential"
+]
+
+(* A power of a sum above NonCommutativeExpand's "ExpandMaxExponent" (30) is still ordered:
+   <0|(b + b†)^(2j)|0> = (2j - 1)!!, the odd ones vanish. *)
+VerificationTest[
+    Table[BosonicVEV[GeneralizedPower[NonCommutativeMultiply, b + bd, n], {{bd}, {b}}], {n, 31, 34}],
+    {0, 31!!, 0, 33!!},
+    TestID -> "BME-VEV-PowerAboveExpandCap"
+]
+
+VerificationTest[
+    Expand[BosonicNormalOrder[GeneralizedPower[NonCommutativeMultiply, b + bd, 31], {{bd}, {b}}] -
+        BosonicNormalOrder[BosonicNormalOrder[GeneralizedPower[NonCommutativeMultiply, b + bd, 30], {{bd}, {b}}] ** (b + bd), {{bd}, {b}}]],
+    0,
+    TestID -> "BME-NormalOrder-PowerAboveExpandCap"
 ]
 
 EndTestSection[]

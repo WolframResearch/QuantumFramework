@@ -35,11 +35,25 @@ expandCoefficients[expr_, lv_] :=
         ]
     ]
 
+(* NonCommutativeExpand refuses a power of a sum above "ExpandMaxExponent"; such a power is
+   built one factor at a time, normal-ordering after each product.  Multiplying by the short
+   base keeps every step cheap, where squaring would multiply two long polynomials. *)
+stepPower[w_, k_, alg_] := Fold[NonCommutativeExpand[#1 ** w, alg] &, w, Range[k - 1]]
+
+expandLargePowers[expr_, lv_] :=
+    With[{cap = Lookup[Last @ First @ SystemOptions["NonCommutativeAlgebraOptions" -> "ExpandMaxExponent"], "ExpandMaxExponent"]},
+        expr /. GeneralizedPower[NonCommutativeMultiply, w : Except[Alternatives @@ lv["Generators"]], k_Integer /; k > cap] :>
+            stepPower[NonCommutativeExpand[expandLargePowers[w, lv], lv["Algebra"]], k, lv["Algebra"]]
+    ]
+
 ladderOrder[lv_, Automatic, _] :=
     expandCoefficients[
         NonCommutativeExpand[
-            # //. GeneralizedPower[NonCommutativeMultiply, w_NonCommutativeMultiply, k_Integer ? Positive] :>
-                NonCommutativeMultiply @@ Catenate[ConstantArray[List @@ w, k]],
+            expandLargePowers[
+                # //. GeneralizedPower[NonCommutativeMultiply, w_NonCommutativeMultiply, k_Integer ? Positive] :>
+                    NonCommutativeMultiply @@ Catenate[ConstantArray[List @@ w, k]],
+                lv
+            ],
             lv["Algebra"]
         ],
         lv
@@ -163,7 +177,7 @@ fockLadderElement[m_, n_, p_, q_] :=
     KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]]
 
 coherentOverlap[\[Alpha]_, \[Beta]_] :=
-    Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]
+    Exp[Conjugate[\[Alpha]] \[Beta] - (Conjugate[\[Alpha]] \[Alpha] + Conjugate[\[Beta]] \[Beta])/2]
 
 ladderSum[element_, {ms_, ns_}, expr_, lv_Association] :=
     Module[{x, y, k = Length[lv["Annihilators"]], vars, p, r, e},
@@ -297,7 +311,7 @@ normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
         mono = scalar KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]] (f /. j -> n - q) &;
         r = Which[
             coherent,
-                scalar (fu /. x -> Conjugate[m]) (fd /. x -> n) Exp[-(Abs[m]^2 + Abs[n]^2)/2] *
+                scalar (fu /. x -> Conjugate[m]) (fd /. x -> n) Exp[-(Conjugate[m] m + Conjugate[n] n)/2] *
                     (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n),
             fu === 1 && fd === 1, scalar (f /. j -> n) KroneckerDelta[m, n],
             u === 0 && w === 0,
