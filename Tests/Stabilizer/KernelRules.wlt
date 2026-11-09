@@ -289,4 +289,19 @@ Scan[Function[k, VerificationTest[
     True,
     TestID -> "KernelRules-InnerProductClosedForm-n" <> ToString[k]]], {2, 3}];
 
+(* The same states with the tableau stored as a SparseArray give the same values. *)
+krSparse[ps_] := PauliStabilizer[<|"Signs" -> ps["Signs"], "Tableau" -> SparseArray[Normal[ps["Tableau"]]]|>];
+SeedRandom[20261108];
+VerificationTest[
+    And @@ Table[With[{ps = krRandomState[3]}, With[{sp = krSparse[ps]},
+        Head[sp["Tableau"]] === SparseArray &&
+            AllTrue[StringJoin /@ Tuples[{"I", "X", "Y", "Z"}, 3], sp["Expectation", #] === ps["Expectation", #] &]]], 50],
+    True,
+    TestID -> "KernelRules-Expectation-SparseTableau"];
+VerificationTest[
+    And @@ Table[With[{a = krRandomState[3], b = krRandomState[3]},
+        krSparse[a]["InnerProduct", krSparse[b], Method -> "ClosedForm"] === a["InnerProduct", b, Method -> "ClosedForm"]], 100],
+    True,
+    TestID -> "KernelRules-InnerProductClosedForm-SparseTableau"];
+
 EndTestSection[];

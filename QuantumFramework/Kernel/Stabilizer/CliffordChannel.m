@@ -196,7 +196,8 @@ cc_CliffordChannel["Properties"] := {
 (* ============================================================================ *)
 
 stabilizerRowSumAGPhase[U_, lambda_, n_Integer ? Positive] := Module[{selected},
-    selected = Pick[U, lambda, 1];
+    (* Fold cannot step through a SparseArray, so the rows are made a list. *)
+    selected = Normal[Pick[Normal[U], Normal[lambda], 1]];
     If[Length[selected] <= 1,
         0,
         (* Fold: state = {accumPhase, accumRow}. At each step, add per-qubit AG  *)
