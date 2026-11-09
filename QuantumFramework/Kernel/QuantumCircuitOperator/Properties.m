@@ -3,6 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageImport["Wolfram`TensorNetworks`"]
 
 PackageScope[collectOrders]
+PackageScope[tensorNetworkBasis]
 
 
 
@@ -43,7 +44,14 @@ $QuantumCircuitPreventCache = {
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
 
-QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[FilterRules[Options[QuantumCircuitOperator], Except[$QuantumCircuitOperatorProperties]], key] := Lookup[data, key, None]
+(* The names of the circuit's options that are not also property names. Options[QuantumCircuitOperator]
+   joins the drawing and Graphics options, about 300 rules built anew on every call, so the names are
+   collected once, on first use, and every property that is not a stored key is tested against them.
+   SetOptions cannot change the names; this assumes Options[CircuitDraw] is not reassigned after load. *)
+circuitOptionNames[] := circuitOptionNames[] =
+    AssociationThread[Keys[FilterRules[Options[QuantumCircuitOperator], Except[$QuantumCircuitOperatorProperties]]], True]
+
+QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[circuitOptionNames[], key] := Lookup[data, key, None]
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], "Options"] := Normal @ KeyDrop[data, "Elements"]
 
@@ -227,15 +235,17 @@ QuantumCircuitOperatorProp[qco_, "InputOrderQuditMapping"] := Thread[# -> Range[
 
 QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["OutputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
+QuantumCircuitOperatorProp[qco_, "InputDimensions"] := With[{ops = qco["NormalOperators"]},
     (q |-> If[MissingQ[#], 2, ResourceFunction["LookupPart"][#["InputDimensions"], q /. #["InputOrderQuditMapping"], 2]] & @
-        SelectFirst[qco["NormalOperators"], op |-> MemberQ[op["InputOrder"], q]]) /@ qco["InputOrder"]
+        SelectFirst[ops, op |-> MemberQ[op["InputOrder"], q]]) /@ qco["InputOrder"]
+]
 
 QuantumCircuitOperatorProp[qco_, "InputDimension"] := Times @@ qco["InputDimensions"]
 
-QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
+QuantumCircuitOperatorProp[qco_, "OutputDimensions"] := With[{ops = Reverse @ qco["NormalOperators"]},
     (q |-> If[MissingQ[#], 2, ResourceFunction["LookupPart"][#["OutputDimensions"], q /. #["OutputOrderQuditMapping"], 2]] & @
-        SelectFirst[Reverse @ qco["NormalOperators"], op |-> MemberQ[op["OutputOrder"], q]]) /@ qco["OutputOrder"]
+        SelectFirst[ops, op |-> MemberQ[op["OutputOrder"], q]]) /@ qco["OutputOrder"]
+]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
 
@@ -287,7 +297,10 @@ QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{
     <|"ContractionIndices" -> indices, "FreeIndices" -> tensorNetworkIndexSort[Keys[Select[Counts[Catenate[indices]], # == 1 &]]], "QuditBases" -> quditBases, "Operators" -> ops|>
 ]
 
-QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info = Confirm @ qco["TensorNetworkInfo"]},
+QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ tensorNetworkBasis[qco, Confirm @ qco["TensorNetworkInfo"]]
+
+(* the basis of the network's open indices, read off the circuit's "TensorNetworkInfo" *)
+tensorNetworkBasis[qco_, info_] :=
     QuantumBasis[##,
             "Label" -> qco["Label"],
             "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[info["Operators"]["Picture"]],
@@ -299,7 +312,6 @@ QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info =
             KeyMap[Replace[{Superscript -> "Output", Subscript -> "Input"}], GroupBy[info["FreeIndices"], Head]]
         |>
     ]
-]
 
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Flatten"]["Operators"], _ ? QuantumMeasurementOperatorQ]
 

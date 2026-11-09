@@ -21,7 +21,7 @@ QuditBasis::invalidArgs = "QuditBasis constructor `1` did not match any rule"
 
 
 quditBasisQ[QuditBasis[representations : HoldPattern[Association[({_QuditName, _Integer ? Positive} -> _) ...]]]] :=
-    And @@ ResourceFunction["KeyGroupBy"][
+    And @@ keyGroupBy[
         Select[representations, tensorRank[#] > 0 &],
         Last,
         Apply[Equal] @* Map[Dimensions]
@@ -136,7 +136,7 @@ QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
 (* multiplication *)
 
 QuditBasis /: HoldPattern[Times[qb__QuditBasis ? QuditBasisQ]] /; Length[{qb}] > 1 := QuditBasis @ Association @ Values @ Merge[
-    ResourceFunction["KeyGroupBy"][#["Canonical"]["Representations"], Last] & /@ {qb},
+    keyGroupBy[#["Canonical"]["Representations"], Last] & /@ {qb},
     {QuantumTensorProduct[#[[All, 1, 1]]], #[[1, 1, -1]]} -> TensorProduct @@ #[[All, 2]] & /@ Tuples[Normal[#]] &
 ]
 

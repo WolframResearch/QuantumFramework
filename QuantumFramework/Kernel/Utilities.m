@@ -16,6 +16,7 @@ PackageScope["targetQ"]
 PackageScope["targetsQ"]
 PackageScope["measurementReprQ"]
 PackageScope["emptyTensorQ"]
+PackageScope["keyGroupBy"]
 
 PackageScope["primeFactors"]
 PackageScope["powerPrimeFactors"]
@@ -160,6 +161,12 @@ MatrixPartialTrace[matrix_, trace_, dimensions_] := ArrayReshape[
 
 
 emptyTensorQ[t_] := MatchQ[tensorDimensions[t], {___, 0}]
+
+(* Groups an association's entries by f of their keys and applies red to each group, an
+   association: the definition of the KeyGroupBy repository function. Calling that function
+   through ResourceFunction costs about 0.2 ms per call, and basis shapes are read through it
+   thousands of times in one circuit application. *)
+keyGroupBy[assoc_ ? AssociationQ, f_, red_ : Identity] := GroupBy[Normal[assoc], First /* f, Association /* red]
 
 matrixQ[m_] := MatrixQ[m] && ! emptyTensorQ[m]
 

@@ -341,7 +341,7 @@ QuantumMeasurementProp[qm_, prop : "Simplify" | "FullSimplify" | "Chop" | "Compl
 (* qmo properties *)
 
 QuantumMeasurementProp[qm_, prop_ ? propQ, args___] /;
-    MatchQ[prop, Alternatives @@ Intersection[qm["QuantumOperator"]["AllProperties"], qm["AllProperties"]]] := qm["QuantumOperator"][prop, args]
+    operatorPropertyQ[qm["QuantumOperator"], prop] := qm["QuantumOperator"][prop, args]
 
 
 (* equality *)
