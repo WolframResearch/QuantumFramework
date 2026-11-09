@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageExport["QuantumBasis"]
 
 PackageScope["quantumBasisQ"]
@@ -14,6 +16,10 @@ PackageScope["realDomainSymbols"]
 PackageScope["roleSymbolDomains"]
 PackageScope["roleDomainOption"]
 PackageScope["exactRealQ"]
+PackageScope["onRealSymbols"]
+PackageScope["conjugateOnDomains"]
+PackageScope["zeroOnDomains"]
+PackageScope["basisFactsQ"]
 
 
 
@@ -482,6 +488,135 @@ symbolDomainsFacts[record_, declared_List] := With[{
 
 domainFact[s_, Interval[{a_, b_}]] := a <= s <= b
 domainFact[s_, d_] := Element[s, d]
+
+
+(* computing on the facts *)
+
+(* Each real symbol of a basis with the closed interval it lies in, the whole real line for a symbol known
+   only to be real, and whether it is an integer. *)
+symbolRanges[qb_] := With[{record = qb["SymbolDomains"]},
+    AssociationMap[domainsRange[Lookup[record, Key[#], {Reals}]] &, qb["RealSymbols"]]
+]
+
+domainsRange[ds_List] := With[{bs = domainBounds /@ ds},
+    {Interval[{Max[Lookup[bs, "Lower"]], Min[Lookup[bs, "Upper"]]}], AnyTrue[Lookup[bs, "Integer"], TrueQ]}
+]
+
+(* f applied entry by entry; a sparse array keeps its pattern *)
+mapEntries[f_, a_SparseArray] := SparseArray[Thread[a["NonzeroPositions"] -> f /@ a["NonzeroValues"]], Dimensions[a], f[a["Background"]]]
+mapEntries[f_, a_List] := Map[f, a, {ArrayDepth[a]}]
+mapEntries[f_, a_] := f[a]
+
+(* a sparse array is atomic to FreeQ, so its values are searched instead *)
+entriesFreeQ[a_SparseArray, p_] := FreeQ[{a["NonzeroValues"], a["Background"]}, p]
+entriesFreeQ[a_, p_] := FreeQ[a, p]
+
+(* f applied to an array, a matrix or a scalar whose real symbols, those of qb, are first swapped for private
+   symbols that are their own conjugate and real part and have imaginary part 0. Conjugate, Re and Im of any
+   expression built from them with real operations (polynomials, Cos, Exp[I x]) then evaluate away while f
+   runs. A Conjugate or Abs still left on an expression in these symbols alone is settled by its sign
+   (signSettled), and the user's symbols are put back. The private symbols are removed on every exit, and
+   none reaches the result. *)
+(* whether a basis records any fact or parameter, read off its data without the property machinery, so that
+   objects with neither pay nothing for the facts *)
+basisFactsQ[QuantumBasis[data_Association]] := data["SymbolDomains"] =!= <||> || data["ParameterSpec"] =!= {}
+basisFactsQ[_] := True
+
+onRealSymbols[f_, a_, qb_] /; ! basisFactsQ[qb] := f[a]
+
+onRealSymbols[f_, a_, qb_] := With[{ranges = symbolRanges[qb]},
+    If[ ranges === <||> || entriesFreeQ[a, Alternatives @@ Keys[ranges]],
+        f[a],
+        onPrivateSymbols[f, a, Keys[ranges], Values[ranges][[All, 1]]]
+    ]
+]
+
+onPrivateSymbols[f_, a_, reals_List, intervals_List] := With[{copies = Table[Module[{r}, r], Length[reals]]},
+    WithCleanup[
+        Scan[realSymbol, copies];
+        mapEntries[
+            ReplaceAll[signSettled[#, AssociationThread[copies, intervals]], Thread[copies -> reals]] &,
+            f[mapEntries[ReplaceAll[Thread[reals -> copies]], a]]
+        ],
+        Remove @@ copies
+    ]
+]
+
+realSymbol[r_Symbol] := (r /: Conjugate[r] = r; r /: Re[r] = r; r /: Im[r] = 0;)
+
+(* Conjugate[g] is g, and Abs[g] is g or -g, for g in the private symbols alone whose sign is known. The sign
+   is read first off interval arithmetic, each symbol replaced by its interval: a result that is an Interval
+   means g is real on the whole domain, and its ends give the sign. What the intervals leave open goes to
+   Refine, under the same facts and a time limit, and its answer is kept only if it is no larger. *)
+signSettled[x_, _] /; FreeQ[x, _Conjugate | _Abs] := x
+
+signSettled[x_, intervals_] := With[{rules = Normal[intervals], symbols = Keys[intervals]},
+    Block[{$Assumptions = And @@ KeyValueMap[intervalFact, intervals]},
+        x /. {
+            Conjugate[g_] /; onlySymbolsQ[g, symbols] :> If[MatchQ[g /. rules, _Interval], g, refined[Conjugate[g]]],
+            Abs[g_] /; onlySymbolsQ[g, symbols] :> absBySign[g, g /. rules]
+        }
+    ]
+]
+
+absBySign[g_, Interval[{lo_, _}, ___] ? (Min[#] >= 0 &)] := g
+absBySign[g_, Interval[{_, _}, ___] ? (Max[#] <= 0 &)] := - g
+absBySign[g_, _] := refined[Abs[g]]
+
+intervalFact[s_, Interval[{lo_, hi_}]] := Element[s, Reals] && If[lo === - Infinity, True, lo <= s] && If[hi === Infinity, True, s <= hi]
+
+$signTimeConstraint = 0.2
+
+refined[e_] := With[{r = TimeConstrained[Refine[e], $signTimeConstraint, e]}, If[LeafCount[r] <= LeafCount[e], r, e]]
+
+(* no symbol in x but the given ones; numeric functions and constants are not symbols here *)
+onlySymbolsQ[x_, symbols_List] := FreeQ[x,
+    s_Symbol /; ! MemberQ[symbols, s] && ! MemberQ[{Rational, Complex, Integer, Real}, s] && ! MemberQ[Attributes[s], NumericFunction | Constant],
+    {0, Infinity},
+    Heads -> True
+]
+
+(* The conjugate of an array, matrix or scalar whose entries may hold the real symbols of qb. *)
+conjugateOnDomains[a_, qb_] := onRealSymbols[Replace[ArrayConjugate[#], ArrayConjugate[x_] :> Conjugate[x]] &, a, qb]
+
+(* Whether every entry of a list is zero for all values the facts of qb allow: True when each is proven zero,
+   False when one is nonzero at a point the facts allow, Undefined otherwise. Proven zero: after TrigToExp,
+   Together leaves numerator 0 (TrigToExp first, since Together alone takes Cos and Sin as unknowns). Nonzero:
+   the exact value at a fixed point inside the domains, real symbols inside their intervals (an integer for an
+   integer symbol), any other symbol at a complex point, is nonzero to 30 digits. *)
+zeroOnDomains[es_List, qb_] := With[{rest = DeleteCases[es, _ ? (provenZeroQ)]},
+    Which[
+        rest === {}, True,
+        AnyTrue[rest, nonzeroAtPointQ[#, symbolRanges[qb]] &], False,
+        True, Undefined
+    ]
+]
+
+$zeroTestTimeConstraint = 2
+
+provenZeroQ[e_] := e === 0 || TrueQ[TimeConstrained[Numerator[Together[TrigToExp[e]]] === 0, $zeroTestTimeConstraint, False]]
+
+nonzeroAtPointQ[e_, ranges_] := With[{
+    v = N[e /. samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
+},
+    NumberQ[v] && Abs[v] > 10 ^ -10
+]
+
+samplePoint[symbols_List, ranges_] := BlockRandom[
+    SeedRandom[1];
+    (# -> Replace[Lookup[ranges, Key[#], None], {
+        {i_Interval, int_} :> pointInside[i, int],
+        None :> RandomInteger[{1, 99}] / 100 + I RandomInteger[{1, 99}] / 100
+    }]) & /@ symbols
+]
+
+(* a point inside an interval, away from its ends; an integer inside it for an integer symbol *)
+pointInside[Interval[{lo_, hi_}], integer_] := With[{x = Which[
+    lo === - Infinity && hi === Infinity, RandomInteger[{-99, 99}] / 50 + 1 / 7,
+    hi === Infinity, lo + 1 / 3 + RandomInteger[{1, 99}] / 50,
+    lo === - Infinity, hi - 1 / 3 - RandomInteger[{1, 99}] / 50,
+    True, lo + (hi - lo) RandomInteger[{10, 90}] / 100
+]}, If[integer, Clip[Round[x], {Ceiling[lo], Floor[hi]}], x]]
 
 
 (* simplify *)

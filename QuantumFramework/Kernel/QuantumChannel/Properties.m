@@ -68,7 +68,10 @@ QuantumChannelProp[qc_, "Unitality"] := QuantumOperator @ QuantumPartialTrace[
     QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
 
 QuantumChannelProp[qc_, "UnitalQ"] := With[{m = Chop @ qc["Unitality"]["MatrixRepresentation"]},
-    If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m, SparseArray], Undefined]
+    If[ MatrixQ[m, NumericQ],
+        m == IdentityMatrix[Length @ m, SparseArray],
+        zeroOnDomains[Flatten @ Normal[m - IdentityMatrix[Length @ m]], qc["Basis"]]
+    ]
 ]
 
 QuantumChannelProp[qc_, "TracePreservingQ"] := qc["Adjoint"]["UnitalQ"]

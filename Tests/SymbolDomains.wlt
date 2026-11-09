@@ -358,12 +358,15 @@ VerificationTest[
 (* The recorded range of a role is the exact region where the object is physical. For a channel, trace
    preservation on |0> and |1>, reduced over the reals, gives the region in closed form; for a Werner state
    and a qubit Bloch vector with one symbolic component, positivity of the eigenvalues does. Each derived
-   region is equivalent to the recorded interval. *)
+   region is equivalent to the recorded interval. The region is derived from the object with its facts taken
+   away, since with them its trace and eigenvalues are computed as if the facts already held. *)
 VerificationTest[
     With[{
         recorded = Function[{obj, s}, With[{i = First[obj["Basis"]["SymbolDomains"][s]]}, i[[1, 1]] <= s <= i[[1, 2]]]],
-        tracePreserving = Function[{c, s}, Reduce[And @@ (ComplexExpand[Tr[c[QuantumState[#]]["DensityMatrix"]]] == 1 & /@ {"0", "1"}), s, Reals]],
-        positive = Function[{st, s}, Reduce[Min[Eigenvalues[Normal[st["DensityMatrix"]]]] >= 0, s, Reals]]
+        tracePreserving = Function[{c, s}, With[{bare = QuantumChannel[c, "SymbolDomains" -> {s -> {}}]},
+            Reduce[And @@ (ComplexExpand[Tr[bare[QuantumState[#]]["DensityMatrix"]]] == 1 & /@ {"0", "1"}), s, Reals]]],
+        positive = Function[{st, s}, With[{bare = QuantumState[st, "SymbolDomains" -> {s -> {}}]},
+            Reduce[Min[Eigenvalues[Normal[bare["DensityMatrix"]]]] >= 0, s, Reals]]]
     },
         Join[
             Reduce[Equivalent[tracePreserving[#1, #2], recorded[#1, #2]], #2, Reals] & @@@ {
@@ -429,6 +432,95 @@ VerificationTest[
         <|k -> {Integers}|>
     },
     TestID -> "SymbolDomains-ExactConstantsAndIntegers"
+]
+
+
+(* ========== computing on the facts ========== *)
+
+(* Conjugation takes the real symbols real: the dagger of RZ[theta] is RZ[-theta] entry by entry, the
+   product with RZ[theta] is the identity, and the same for U3. *)
+VerificationTest[
+    With[{rz = QuantumOperator["RZ"[\[Theta]]], u3 = QuantumOperator["U3"[\[Theta], \[Phi], \[Lambda]]]}, {
+        Normal[rz["Dagger"]["Matrix"]] === Normal[QuantumOperator["RZ"[- \[Theta]]]["Matrix"]],
+        Normal[(rz["Dagger"] @ rz)["Matrix"]],
+        FreeQ[Normal[u3["Dagger"]["Matrix"]], Conjugate],
+        Simplify[Normal[(u3["Dagger"] @ u3)["Matrix"]]]
+    }],
+    {True, IdentityMatrix[2], True, IdentityMatrix[2]},
+    TestID -> "SymbolDomains-DaggerOfRealAngles"
+]
+
+(* A symbol the user marks complex keeps its conjugate; so does the square root of a real symbol whose
+   sign is unknown, and of a symbol with no fact at all. *)
+VerificationTest[
+    {
+        FreeQ[Normal[QuantumOperator["RZ"[\[Theta]], "SymbolDomains" -> {\[Theta] -> Complexes}]["Dagger"]["Matrix"]], Conjugate],
+        FreeQ[Normal[QuantumState[{Sqrt[x], 1}, "Parameters" -> {x}]["DensityMatrix"]], Conjugate],
+        FreeQ[Normal[QuantumState[{Sqrt[q], 1}]["DensityMatrix"]], Conjugate]
+    },
+    {False, False, False},
+    TestID -> "SymbolDomains-ConjugateKeptWithoutFacts"
+]
+
+(* A square root of a probability is real on [0, 1], so a channel's output is free of Conjugate: bit flip
+   gives diag(1 - p, p), and amplitude damping the familiar populations and coherences. *)
+VerificationTest[
+    {
+        Normal[QuantumChannel["BitFlip"[p]][QuantumState["0"]]["DensityMatrix"]],
+        Expand @ Normal[QuantumChannel["AmplitudeDamping"[g]][QuantumState[{\[Alpha], \[Beta]}]]["DensityMatrix"]]
+    },
+    {
+        {{1 - p, 0}, {0, p}},
+        Expand @ {
+            {\[Alpha] Conjugate[\[Alpha]] + g \[Beta] Conjugate[\[Beta]], Sqrt[1 - g] \[Alpha] Conjugate[\[Beta]]},
+            {Sqrt[1 - g] \[Beta] Conjugate[\[Alpha]], (1 - g) \[Beta] Conjugate[\[Beta]]}
+        }
+    },
+    TestID -> "SymbolDomains-ChannelOutputs"
+]
+
+(* Symbolic unitarity and Hermiticity hold for every value the facts allow, decided exactly: a three-qubit
+   circuit of rotations and CNOTs is unitary for real angles; RZ is not Hermitian; a rotation with a complex
+   angle is not unitary; a symbolic Hermitian matrix with real parameters is Hermitian; amplitude damping
+   is trace preserving. Numeric operators answer as before. *)
+VerificationTest[
+    {
+        QuantumOperator[QuantumCircuitOperator[{
+            "RY"[Subscript[\[Theta], 1]] -> 1, "RY"[Subscript[\[Theta], 2]] -> 2, "RY"[Subscript[\[Theta], 3]] -> 3,
+            "CNOT" -> {1, 2}, "CNOT" -> {2, 3},
+            "RZ"[Subscript[\[Phi], 1]] -> 1, "RZ"[Subscript[\[Phi], 2]] -> 2, "RZ"[Subscript[\[Phi], 3]] -> 3
+        }]]["UnitaryQ"],
+        QuantumOperator["RZ"[\[Theta]]]["HermitianQ"],
+        QuantumOperator["RZ"[\[Theta]], "SymbolDomains" -> {\[Theta] -> Complexes}]["UnitaryQ"],
+        QuantumOperator[{{a, b - I c}, {b + I c, d}}, "Parameters" -> {a, b, c, d}]["HermitianQ"],
+        QuantumChannel["AmplitudeDamping"[g]]["TracePreservingQ"],
+        QuantumOperator["RZ"[0.3]]["UnitaryQ"],
+        QuantumOperator["Y"]["HermitianQ"]
+    },
+    {True, False, False, True, True, True, True},
+    TestID -> "SymbolDomains-SymbolicUnitaryHermitian"
+]
+
+(* The three answers of the zero test, each from its own stage: proven zero (TrigToExp then Together), nonzero
+   at a point the facts allow, and undecided when neither applies (Log[E^x] - x vanishes for real x, but no
+   rational form shows it). *)
+VerificationTest[
+    With[{qb = QuantumBasis["SymbolDomains" -> {x -> Reals}]}, {
+        zeroOnDomains[{Sin[x] ^ 2 + Cos[x] ^ 2 - 1, Cos[x / 2] ^ 2 - (1 + Cos[x]) / 2}, qb],
+        zeroOnDomains[{Sin[x] ^ 2 + Cos[x] ^ 2 - 1, x - Conjugate[y]}, qb],
+        zeroOnDomains[{Log[Exp[x]] - x}, qb]
+    }],
+    {True, False, Undefined},
+    TestID -> "SymbolDomains-ZeroTestStages"
+]
+
+(* The private symbols used during a computation never outlive it. *)
+VerificationTest[
+    QuantumOperator["U3"[\[Theta], \[Phi], \[Lambda]]]["Dagger"];
+    QuantumChannel["BitFlip"[p]][QuantumState["0"]]["DensityMatrix"];
+    Select[Names["Wolfram`QuantumFramework`*`r$*"], StringMatchQ[#, __ ~~ "r$" ~~ DigitCharacter ..] &],
+    {},
+    TestID -> "SymbolDomains-NoPrivateSymbolsLeft"
 ]
 
 EndTestSection[]

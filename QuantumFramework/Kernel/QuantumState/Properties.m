@@ -551,12 +551,17 @@ parameterNormSquared[qs_] := With[{v = qs["StateVector"]},
     ]
 ]
 
-QuantumStateProp[qs_, "Norm"] := Simplify[If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]], qs["ParameterAssumptions"]]
+QuantumStateProp[qs_, "Norm"] := With[{norm = If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]},
+    If[stateFactsQ[qs], Simplify[norm, qs["ParameterAssumptions"]], Simplify[norm]]
+]
 
 (* the declared parameters and the symbols real by their role, less those marked complex *)
 realSymbols[qs_] := qs["Basis"]["RealSymbols"]
 
-symbolicParametersQ[qs_] := realSymbols[qs] =!= {} && ! qs["NumericQ"]
+symbolicParametersQ[qs_] := stateFactsQ[qs] && realSymbols[qs] =!= {} && ! qs["NumericQ"]
+
+stateFactsQ[QuantumState[_, qb_]] := basisFactsQ[qb]
+stateFactsQ[_] := True
 
 (* Abs, Re or Im of a function of the declared parameters alone is a function of real
    variables, so ComplexExpand with every variable real resolves it; Abs, Re and Im of
@@ -628,7 +633,7 @@ QuantumStateProp[qs_, "Table"] := TableForm[
 (* density matrix *)
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Vector" :=
-    With[{state = qs["StateVector"]}, KroneckerProduct[state, Conjugate[state]]]
+    With[{state = qs["StateVector"]}, KroneckerProduct[state, conjugateOnDomains[state, qs["Basis"]]]]
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := computableState[qs]
 
@@ -1116,7 +1121,7 @@ QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs
 QuantumStateProp[qs_, "Discard", qudits : {_Integer...}] /; ContainsOnly[qudits, Range[qs["OutputQudits"]]] :=
     QuantumOperator["Discard", qudits, qs["OutputDimensions"][[qudits]]][qs]
 
-QuantumStateProp[qs_, prop : "Dual" | "Conjugate", args___] := QuantumState[ArrayConjugate[qs["State"]], qs["Basis"][prop, args]]
+QuantumStateProp[qs_, prop : "Dual" | "Conjugate", args___] := QuantumState[conjugateOnDomains[qs["State"], qs["Basis"]], qs["Basis"][prop, args]]
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := simplifyLabel @ QuantumState[qs["Conjugate"]["Transpose"], "Label" -> SuperDagger[qs["Label"]]]
 
