@@ -761,16 +761,17 @@ VerificationTest[
    orderless Times of operator halves, which machine-number substitution re-sorts; that was
    0.19 off the exact exponential.  Each result is realized as a truncated operator and
    compared with MatrixExp of the generator on the n_a, n_b <= 2 block.  The anti-normal
-   form sums over states above the block, so each mode keeps 25 levels. *)
+   form sums over states above the block, so each mode keeps 25 levels.  The reference is
+   built in machine numbers: exact 625 x 625 products took 28 s of the test's 31. *)
 VerificationTest[
     Module[{s = 25, pars = {r -> 0.3, \[Theta] -> 0.7}, am, bm, idx, gen, exact},
-        am = KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
-        bm = KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
         idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
         gen = r E^(-I \[Theta]) \[FormalA]**\[FormalB] -
             r E^(I \[Theta]) SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]];
-        exact = MatrixExp[(r E^(-I \[Theta]) am . bm -
-            r E^(I \[Theta]) ConjugateTranspose[am] . ConjugateTranspose[bm]) /. pars][[idx, idx]];
+        exact = MatrixExp[(r E^(-I \[Theta]) /. pars) am . bm -
+            (r E^(I \[Theta]) /. pars) ConjugateTranspose[am] . ConjugateTranspose[bm]][[idx, idx]];
         Max[Abs[Normal[ToBosonicOperator[#, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] - exact]] < 10^-12 & /@ {
             BosonicExpOrder[Exp[gen], $vAB, Assumptions -> r > 0] /. pars,
             BosonicExpOrder[Exp[gen], $vAB, Assumptions -> r > 0, "Ordering" -> "Antinormal"] /. pars,

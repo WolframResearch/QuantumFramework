@@ -150,7 +150,14 @@ fockIndexQ[x_] := ! ListQ[x] && (! NumericQ[x] || IntegerQ[x] && x >= 0)
 
 SetAttributes[ladderBranch, HoldAll]
 
-ladderBranch[up_, down_, d_, c_] := Which[! NumericQ[d], Piecewise[{{up, d >= 0 && c}, {down, d < 0 && c}}, 0], d >= 0, up, True, down]
+ladderBranch[up_, down_, {m_, n_}, d_, c_] := With[{a = {m, n} \[Element] NonNegativeIntegers},
+    Which[
+        NumericQ[d], If[d >= 0, up, down],
+        TrueQ[Refine[d >= 0, a]], Refine[Piecewise[{{up, c}}, 0], a],
+        TrueQ[Refine[d <= 0, a]], Refine[Piecewise[{{down, c}}, 0], a],
+        True, Refine[Piecewise[{{up, d >= 0 && c}, {down, d < 0 && c}}, 0], a]
+    ]
+]
 
 BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, (DisplacementOperator | SqueezeOperator)[_ ? PossibleZeroQ | {_ ? PossibleZeroQ, _}]] :=
     KroneckerDelta[m, n]
@@ -160,7 +167,7 @@ BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, DisplacementOperator[\[
         E^(-a2/2) ladderBranch[
             Sqrt[n!/m!] \[Alpha]^d LaguerreL[n, d, a2],
             Sqrt[m!/n!] (-Conjugate[\[Alpha]])^(-d) LaguerreL[m, -d, a2],
-            d, True
+            {m, n}, d, True
         ]
     ]
 
@@ -170,7 +177,7 @@ BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, SqueezeOperator[\[Xi]_]
             ladderBranch[
                 (-E^(I \[Phi]) Tanh[r]/2)^(d/2)/(d/2)! Sqrt[m!/n!] Sech[r]^(n + 1/2) Hypergeometric2F1[-n/2, (1 - n)/2, d/2 + 1, -Sinh[r]^2],
                 (E^(-I \[Phi]) Tanh[r]/2)^(-d/2)/(-d/2)! Sqrt[n!/m!] Sech[r]^(m + 1/2) Hypergeometric2F1[-m/2, (1 - m)/2, 1 - d/2, -Sinh[r]^2],
-                d, Mod[d, 2] == 0
+                {m, n}, d, Mod[d, 2] == 0
             ]
         ]
     ]

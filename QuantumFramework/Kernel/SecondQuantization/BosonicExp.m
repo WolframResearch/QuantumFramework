@@ -65,15 +65,11 @@ thm44ANRHS[L_, R_, lambda_, {cr_, an_}] :=
     ]
 
 
-(* e^(w N + p ad^2 + q a^2 + mu ad + nu a) through the su(1,1) matrix exp[{{w, 2 p}, {-2 q, -w}}]: its
-   corner D = Cos[l] - w Sinc[l], l = Sqrt[4 p q - w^2], gives e^(-w/2) D^(-1/2) e^(p S/D ad^2 + u ad)
-   e^(-Log[D] N) e^(q S/D a^2 + v a), S = Sinc[l], with u, v and the scalar from shifting the linear
-   terms away.  Every coefficient but the root is even and regular in l, so l = 0 is its Series limit.
-   The root D^(-1/2) winds with D in an oscillating evolution, so for w != 0 it is the separate scalar
-   e^r = e^(-i l/2) (e^(-i l) D)^(-1/2) with l = i w Sqrt[1 - 4 p q/w^2]: e^(-i l) D keeps a positive real
-   part for any Hermitian generator at real time and any real squeeze, so its principal root is the
-   continuous one.  Without squeeze terms D = e^-w, written exactly.  The antinormal
-   product is the normal one under a -> ad, ad -> -a, which maps (w, p, q, mu, nu) to (-w, q, p, -nu, mu). *)
+(* e^(w N + p ad^2 + q a^2 + mu ad + nu a) from the corner D = Cos[l] - w Sinc[l], l = Sqrt[4 p q - w^2], of
+   exp[{{w, 2 p}, {-2 q, -w}}]; every coefficient but the root is regular in l, so l = 0 is its Series limit.
+   The root D^(-1/2) winds in oscillating evolutions, so for w != 0 it is e^(-i l/2) (e^(-i l) D)^(-1/2) with
+   l = i w Sqrt[1 - 4 p q/w^2], whose principal root stays continuous for Hermitian generators at real time.
+   Antinormal order is the normal one under a -> ad, ad -> -a: (w, p, q, mu, nu) -> (-w, q, p, -nu, mu). *)
 quadraticExp[g_, {cr_, an_}, lv_, s_] :=
     Module[{x, y, l, coeffs, c, w, p, q, mu, nu, t, m, u, v, e, r},
         coeffs = Association @ CoefficientRules[Expand @ dequantize[#, Thread[{cr, an} -> {x, y}]], {x, y}] &;
@@ -98,6 +94,43 @@ quadraticExp[g_, {cr_, an_}, lv_, s_] :=
             Exp[If[w === 0, m (1/2 + s #1 ** #2), r + m s #1 ** #2]],
             Exp[q t GeneralizedPower[NonCommutativeMultiply, #2, 2] + v #2]
         ] & @@ If[s == 1, {cr, an}, {an, cr}])
+    ]
+
+ncPolynomial[poly_, vars_, ops_] := Total[#2 ncJoin @@ MapThread[ladderPower, {ops, #1}] & @@@ CoefficientRules[poly, vars]]
+
+splitModes[g_, lv_] :=
+    With[{parts = KeySort @ GroupBy[List @@ g, ladderModes[lv, #] &, Total]},
+        If[ AllTrue[Keys[parts], Length[#] < 2 &] && Count[Keys[parts], {_}] > 1,
+            Exp[Lookup[parts, Key[{}], 0]] ncJoin @@ Exp /@ Values @ KeySelect[parts, # =!= {} &],
+            $Failed
+        ]
+    ]
+
+(* e^(ad P ad/2 + ad W a + a Q a/2) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
+   e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
+   :e^(ad (e^W - 1) a):.  Antinormal order is the same under a -> ad, ad -> -a. *)
+multimodeQuadraticExp[g_, lv_, s_] :=
+    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, e, d},
+        {xs, ys} = {Array[x, n], Array[y, n]};
+        {cr, an} = If[s == 1, Identity, Reverse] @ ladderVars[lv][[All, ladderModes[lv, g]]];
+        op = ncPolynomial[Expand[# /. Thread[ys -> s ys]], Join[xs, ys], Join[cr, an]] &;
+        middle = If[ DiagonalMatrixQ[#],
+            Exp[op[Log[Diagonal[#]] . (xs ys)]],
+            If[s == 1, NormalOrdered, AntinormalOrdered][Exp[op[xs . (# - IdentityMatrix[n]) . ys]], ladderVars[lv]]
+        ] &;
+        poly = Expand @ dequantize[If[s == 1, BosonicNormalOrder, BosonicAntinormalOrder][g, ladderVars[lv]] /. $nonuls, Thread[Join[cr, an] -> Join[xs, s ys]]];
+        If[ n < 2 || ! PolynomialQ[poly, Join[xs, ys]] || ! SubsetQ[{0, 2}, Total /@ Keys @ CoefficientRules[poly, Join[xs, ys]]], Return[$Failed, Module]];
+        {w, p, q} = {D[poly, {xs}, {ys}], D[poly, {xs, 2}], D[poly, {ys, 2}]};
+        Exp[poly /. Thread[Join[xs, ys] -> 0]] If[ AllTrue[Flatten[{p, q}], PossibleZeroQ],
+            middle[MatrixExp[w]],
+            e = MatrixExp[ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}]];
+            d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
+            E^(-Tr[w] / 2) Det[e[[n + 1 ;;, n + 1 ;;]]]^(-1/2) ncJoin[
+                Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2]],
+                middle[Transpose[d]],
+                Exp[op[-ys . d . e[[n + 1 ;;, ;; n]] . ys / 2]]
+            ]
+        ]
     ]
 
 modeRulesNO[{cr_, an_}, vv_, lv_] := {
@@ -227,12 +260,16 @@ pairRulesAN[{cr1_, an1_}, {cr2_, an2_}] := {
 expRules[lv_, "Normal"] := expRules[lv, "Normal"] = Join[
     Flatten @ Transpose[modeRulesNO[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
     Flatten[pairRulesNO @@@ Permutations[ladderPairs[lv], {2}]],
+    {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
+     Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, 1]}, d /; d =!= $Failed]},
     {modeSwap[lv, ladderRank[lv]], modeMerge[lv]}
 ]
 
 expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
     Flatten @ Transpose[modeRulesAN[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
     Flatten[pairRulesAN @@@ Permutations[ladderPairs[lv], {2}]],
+    {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
+     Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, -1]}, d /; d =!= $Failed]},
     {modeSwap[lv, 4 - ladderRank[lv][#] &], modeMerge[lv]}
 ]
 
@@ -376,7 +413,7 @@ expApplyRules[expr_, assum_, rules_, lv_] :=
                         s NonCommutativeMultiply[l, m, r]) &,
                 canonicalizeGenerators[expr, lv]
             ],
-            ExcludedForms -> _GeneralizedPower
+            ExcludedForms -> _GeneralizedPower, Trig -> False
         ]
     ]
 

@@ -414,6 +414,19 @@ VerificationTest[
     TestID -> "BME-SymbolicIndexClosedForms"
 ]
 
+(* Symbolic Fock indices are nonnegative integers, so a branch whose sign of m - n is impossible is
+   dropped: <0|D|n> and <m|S|0> keep one branch, while a fully symbolic <m|S|n> keeps both. *)
+VerificationTest[
+    {
+        BosonicMatrixElement[{0, n}, DisplacementOperator[g]] - (-Conjugate[g])^n E^(-g Conjugate[g]/2)/Sqrt[n!],
+        Length[First[BosonicMatrixElement[{m, 0}, SqueezeOperator[{r, th}]]]],
+        Length[First[BosonicMatrixElement[{0, n}, SqueezeOperator[{r, th}]]]],
+        Length[First[BosonicMatrixElement[{m, n}, SqueezeOperator[{r, th}]]]]
+    },
+    {0, 1, 1, 2},
+    TestID -> "BME-SymbolicIndexNonNegative"
+]
+
 (* An exponential in one mode of several: the other mode contributes its overlap. *)
 VerificationTest[
     {BosonicMatrixElement[{{2, 1}, {0, 0}}, Exp[z bd1], $v2], BosonicMatrixElement[{{2, 0}, {0, 0}}, Exp[z bd1], $v2]},
