@@ -553,8 +553,8 @@ parameterNormSquared[qs_] := With[{v = qs["StateVector"]},
 
 QuantumStateProp[qs_, "Norm"] := Simplify[If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]], qs["ParameterAssumptions"]]
 
-(* the declared parameters and the symbols real by their role, the real domain of "ParameterAssumptions" *)
-realSymbols[qs_] := DeleteDuplicates @ Join[qs["Parameters"], qs["Basis"]["RealSymbols"]]
+(* the declared parameters and the symbols real by their role, less those marked complex *)
+realSymbols[qs_] := qs["Basis"]["RealSymbols"]
 
 symbolicParametersQ[qs_] := realSymbols[qs] =!= {} && ! qs["NumericQ"]
 
@@ -744,7 +744,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["Type"] === "Unknown"
 
 QuantumStateProp[qs_, "Computational"] := If[
     qs["Basis"]["ComputationalQ"],
-    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"]]],
+    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "SymbolDomains" -> qs["Basis"]["SymbolDomains"]]],
     QuantumState[qs,
         "Output" -> QuditBasis[qs["OutputDimensions"]],
         "Input" -> QuditBasis[qs["InputDimensions"]]["Dual"]

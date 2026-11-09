@@ -58,7 +58,7 @@ QuantumChannel[qc_ ? QuantumChannelQ, order : _ ? orderQ | Automatic] := qc["Reo
 
 QuantumChannel[qc_ ? QuantumChannelQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := qc["Reorder", order]
 
-QuantumChannel[qc_ ? QuantumChannelQ, args___] := QuantumChannel[QuantumOperator[qc["QuantumOperator"], args]]
+QuantumChannel[qc_ ? QuantumChannelQ, args___] := Enclose @ QuantumChannel[ConfirmBy[QuantumOperator[qc["QuantumOperator"], args], QuantumOperatorQ]]
 
 QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := QuantumChannel[QuantumOperator[qm["POVM"]]]
 

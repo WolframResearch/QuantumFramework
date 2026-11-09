@@ -561,7 +561,7 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
                 "Label" -> qo1["Label"] @* qo2["Label"],
                 "Picture" -> qo1["Picture"],
                 "ParameterSpec" -> MergeParameterSpecs[qo1, qo2],
-                "RealSymbols" -> MergeRealSymbols[qo1, qo2]
+                "SymbolDomains" -> MergeSymbolDomains[qo1, qo2]
             ]
         ],
         {resultOutOrder, resultInOrder}
@@ -852,8 +852,7 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
         QuantumState[
             addQuantumStates[ordered1["State"], ordered2["State"]],
             "Label" -> If[ordered1["Label"] === None || ordered2["Label"] === None, None, ordered1["Label"] + ordered2["Label"]],
-            "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2],
-            "RealSymbols" -> MergeRealSymbols[ordered1, ordered2]
+            "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
         ],
         ordered1["Order"]
     ]

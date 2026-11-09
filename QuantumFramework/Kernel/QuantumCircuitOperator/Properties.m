@@ -268,7 +268,7 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "Label" -> qco["Label"],
     "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[qco["FullOperators"]["Picture"]],
     "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["FullOperators"]["ParameterSpec"]], First],
-    "RealSymbols" -> MergeRealSymbols @@ qco["FullOperators"]
+    "SymbolDomains" -> MergeSymbolDomains @@ qco["FullOperators"]
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{
@@ -293,7 +293,7 @@ QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info =
             "Label" -> qco["Label"],
             "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[info["Operators"]["Picture"]],
             "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[info["Operators"]["ParameterSpec"]], First],
-            "RealSymbols" -> MergeRealSymbols @@ info["Operators"]
+            "SymbolDomains" -> MergeSymbolDomains @@ info["Operators"]
         ] & @@ Normal @ Map[
         QuantumTensorProduct[Lookup[info["QuditBases"], #]] &,
         <|

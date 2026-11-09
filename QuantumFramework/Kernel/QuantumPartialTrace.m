@@ -30,7 +30,7 @@ QuantumPartialTrace[qs_QuantumState, {}] := qs
 QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
     QuantumState[
         MatrixPartialTrace[qs["DensityMatrix"], qudits, qs["Dimensions"]],
-        QuantumBasis["Output" -> #1, "Input" -> #2] & @@ QuantumPartialTrace[qs["QuditBasis"], qudits][
+        QuantumBasis["Output" -> #1, "Input" -> #2, "SymbolDomains" -> qs["Basis"]["SymbolDomains"]] & @@ QuantumPartialTrace[qs["QuditBasis"], qudits][
             "Split", qs["OutputQudits"] - Count[qudits, q_ /; q <= qs["OutputQudits"]]
         ]
     ]

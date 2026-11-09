@@ -1,0 +1,434 @@
+BeginTestSection["SymbolDomains"]
+
+(* A basis records what is known about each symbol: "SymbolDomains" maps a symbol, plain or indexed,
+   to the domains it lies in. Roles fill it, the user may add to it, and a symbol the
+   user marks Complexes is never taken as real. *)
+
+(* ========== roles ========== *)
+
+(* A gate angle is real. An affine a theta + b with real a != 0 and b is real only for real theta, so
+   theta joins; a + b says nothing about a or b; a number adds nothing. *)
+VerificationTest[
+    {
+        QuantumOperator["RZ"[\[Theta]]]["Basis"]["SymbolDomains"],
+        QuantumOperator["RZ"[2 \[Theta] + 1]]["Basis"]["SymbolDomains"],
+        QuantumOperator["RZ"[\[Theta] / 2]]["Basis"]["SymbolDomains"],
+        QuantumOperator["RZ"[a + b]]["Basis"]["SymbolDomains"],
+        QuantumOperator["RZ"[0.3]]["Basis"]["SymbolDomains"],
+        QuantumOperator["U3"[t[1], Subscript[f, 2], l]]["Basis"]["SymbolDomains"]
+    },
+    {
+        <|\[Theta] -> {Reals}|>, <|\[Theta] -> {Reals}|>, <|\[Theta] -> {Reals}|>, <||>, <||>,
+        <|t[1] -> {Reals}, Subscript[f, 2] -> {Reals}, l -> {Reals}|>
+    },
+    TestID -> "SymbolDomains-GateAngles"
+]
+
+(* A channel probability lies in [0, 1]; for Depolarizing in [0, 4/3], where the Kraus weight 1 - 3 p / 4
+   stays nonnegative. *)
+VerificationTest[
+    {
+        QuantumChannel["BitFlip"[p]]["Basis"]["SymbolDomains"],
+        QuantumChannel["GeneralizedAmplitudeDamping"[g, p]]["ParameterAssumptions"],
+        QuantumChannel["Depolarizing"[q]]["ParameterAssumptions"],
+        QuantumChannel["ResetError"[p0, p1]]["ParameterAssumptions"],
+        QuantumChannel["BitFlip"[0.1]]["Basis"]["SymbolDomains"]
+    },
+    {
+        <|p -> {Interval[{0, 1}]}|>,
+        0 <= g <= 1 && 0 <= p <= 1,
+        0 <= q <= 4 / 3,
+        0 <= p0 <= 1 && 0 <= p1 <= 1,
+        <||>
+    },
+    TestID -> "SymbolDomains-ChannelProbabilities"
+]
+
+(* The Werner weight lies in [0, 1]; a Bloch vector is real. *)
+VerificationTest[
+    {
+        QuantumState["Werner"[p]]["ParameterAssumptions"],
+        QuantumState["BlochVector"[{x, y, z}]]["ParameterAssumptions"]
+    },
+    {0 <= p <= 1, Element[x | y | z, Reals]},
+    TestID -> "SymbolDomains-NamedStates"
+]
+
+(* ========== merging ========== *)
+
+(* Records join through circuits, tensor products and application; a symbol in two roles lies in both
+   domains, so the angle and the probability p make p in [0, 1]. *)
+VerificationTest[
+    {
+        QuantumCircuitOperator[{"RZ"[\[Theta]] -> 1, "BitFlip"[p] -> 1, "RX"[\[Theta]] -> 2}]["Basis"]["SymbolDomains"],
+        QuantumCircuitOperator[{"RZ"[p] -> 1, "BitFlip"[p] -> 1}]["Basis"]["SymbolDomains"],
+        QuantumTensorProduct[QuantumOperator["RZ"[a]], QuantumChannel["BitFlip"[p]]["QuantumOperator"]]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[p]][QuantumState["0"]]["Basis"]["SymbolDomains"]
+    },
+    {
+        <|\[Theta] -> {Reals}, p -> {Interval[{0, 1}]}|>,
+        <|p -> {Interval[{0, 1}]}|>,
+        <|a -> {Reals}, p -> {Interval[{0, 1}]}|>,
+        <|p -> {Interval[{0, 1}]}|>
+    },
+    TestID -> "SymbolDomains-Merge"
+]
+
+(* ========== the user's record ========== *)
+
+(* A user record joins the role record: rules or an association, a domain or a list of them; a domain
+   containing another one listed is dropped, and domains neither of which contains the other both stay. *)
+VerificationTest[
+    {
+        QuantumOperator["RZ"[t], "SymbolDomains" -> <|t -> NonNegativeReals|>]["Basis"]["SymbolDomains"],
+        QuantumState[{a, b}, "SymbolDomains" -> {a -> {PositiveReals, Interval[{0, 1}]}, b -> {Reals, NonNegativeIntegers}}]["Basis"]["SymbolDomains"]
+    },
+    {
+        <|t -> {NonNegativeReals}|>,
+        <|a -> {PositiveReals, Interval[{0, 1}]}, b -> {NonNegativeIntegers}|>
+    },
+    TestID -> "SymbolDomains-UserRecord"
+]
+
+(* Complexes overrides every role and the declaration: RZ[t] on |0> then keeps the norm of a complex
+   angle, E^(Im[t] / 2), which at t = I is Sqrt[E]. *)
+VerificationTest[
+    With[{rz = QuantumOperator["RZ"[t], "SymbolDomains" -> <|t -> Complexes|>]},
+        {
+            rz["Basis"]["SymbolDomains"], rz["ParameterAssumptions"], rz["Basis"]["RealSymbols"],
+            rz[QuantumState[{1, 0}]]["Norm"] /. t -> I,
+            QuantumState[{Cos[x], Sin[x]}, "Parameters" -> {x}, "SymbolDomains" -> <|x -> Complexes|>]["ParameterAssumptions"]
+        }
+    ],
+    {<|t -> {Complexes}|>, True, {}, Sqrt[E], True},
+    TestID -> "SymbolDomains-ComplexOverride"
+]
+
+(* Facts name symbols, plain or indexed, never patterns: a pattern key is refused. *)
+VerificationTest[
+    FailureQ /@ {
+        QuantumState[{a, b}, "SymbolDomains" -> <|Subscript[t, _] -> Reals|>],
+        QuantumState[{a, b}, "SymbolDomains" -> <|_ -> Reals|>],
+        QuantumState[{a, b}, "SymbolDomains" -> {Subscript[t, 1 | 2] -> Reals}],
+        QuantumState[{a, b}, "SymbolDomains" -> {Subscript[t, Except[0]] -> Reals}],
+        QuantumState[{a, b}, "SymbolDomains" -> {t[_] -> Reals}]
+    },
+    {True, True, True, True, True},
+    {QuantumBasis::domainspec, QuantumBasis::domainspec, QuantumBasis::domainspec, General::stop},
+    TestID -> "SymbolDomains-PatternRefused"
+]
+
+(* Substituting a parameter spends its record. *)
+VerificationTest[
+    QuantumOperator["RZ"[\[Theta]], "Parameters" -> {\[Theta]}][<|\[Theta] -> 0.3|>]["Basis"]["SymbolDomains"],
+    <||>,
+    TestID -> "SymbolDomains-SubstitutionSpends"
+]
+
+(* An unknown domain is refused with a message. *)
+VerificationTest[
+    FailureQ[QuantumState[{a, b}, "SymbolDomains" -> <|a -> Foo|>]],
+    True,
+    {QuantumBasis::domain},
+    TestID -> "SymbolDomains-UnknownDomain"
+]
+
+(* A domain named twice is kept once, and intervals meet in one interval. *)
+VerificationTest[
+    {
+        QuantumState[{a, b}, "SymbolDomains" -> {a -> Interval[{0, 1}], a -> Interval[{0, 1}]}]["Basis"]["SymbolDomains"],
+        QuantumState[{a, b}, "SymbolDomains" -> <|a -> {Reals, Interval[{0, 2}], NonNegativeReals, Interval[{1, 3}]}|>]["Basis"]["SymbolDomains"]
+    },
+    {<|a -> {Interval[{0, 1}]}|>, <|a -> {Interval[{1, 2}]}|>},
+    TestID -> "SymbolDomains-EqualAndMeet"
+]
+
+(* Domains with no common point give one message and no fact, so nothing is simplified under false facts;
+   the symbol keeps an empty list so that no later merge gives it a fact again. *)
+VerificationTest[
+    With[{s = QuantumState[{a, b}, "SymbolDomains" -> <|a -> {Interval[{0, 1}], Interval[{2, 3}]}|>]},
+        {s["Basis"]["SymbolDomains"], s["ParameterAssumptions"]}
+    ],
+    {<|a -> {}|>, True},
+    {QuantumBasis::domainempty},
+    TestID -> "SymbolDomains-Contradiction"
+]
+
+VerificationTest[
+    QuantumState[{a, b}, "SymbolDomains" -> <|a -> {Integers, Interval[{1/4, 3/4}]}|>]["Basis"]["SymbolDomains"],
+    <|a -> {}|>,
+    {QuantumBasis::domainempty},
+    TestID -> "SymbolDomains-NoIntegerInInterval"
+]
+
+(* A malformed specification is refused with one message, wherever it is given. *)
+VerificationTest[
+    FailureQ[QuantumOperator["RZ"[a], "SymbolDomains" -> <|a -> Foo|>]],
+    True,
+    {QuantumBasis::domain},
+    TestID -> "SymbolDomains-UnknownDomainOnGate"
+]
+
+VerificationTest[
+    FailureQ /@ {
+        QuantumState[{a, b}, "SymbolDomains" -> {"x" -> Reals}],
+        QuantumState[{a, b}, "SymbolDomains" -> {a + b -> PositiveReals}],
+        QuantumState[{a, b}, "SymbolDomains" -> {a :> Reals}]
+    },
+    {True, True, True},
+    {QuantumBasis::domainspec, QuantumBasis::domainspec, QuantumBasis::domainspec, General::stop},
+    TestID -> "SymbolDomains-MalformedSpec"
+]
+
+(* An empty list takes away every fact about a symbol, the role's included. *)
+VerificationTest[
+    With[{o = QuantumOperator["RZ"[a], "SymbolDomains" -> <|a -> {}|>]}, {o["Basis"]["SymbolDomains"], o["ParameterAssumptions"]}],
+    {<|a -> {}|>, True},
+    TestID -> "SymbolDomains-EmptyListNoFacts"
+]
+
+(* The record survives the operations that rebuild the basis. *)
+VerificationTest[
+    With[{s = QuantumState["BlochVector"[{x, y, 0}]]},
+        #["Basis"]["SymbolDomains"] & /@ {
+            s["Computational"],
+            QuantumPartialTrace[QuantumTensorProduct[s, s], {1}],
+            QuantumOperator["RZ"[a]]["Transpose"],
+            QuantumEvolve[QuantumOperator["Z"], QuantumState["BlochVector"[{x, 0, 0}]], t]
+        }
+    ],
+    {<|x -> {Reals}, y -> {Reals}|>, <|x -> {Reals}, y -> {Reals}|>, <|a -> {Reals}|>, <|x -> {Interval[{-1, 1}]}|>},
+    TestID -> "SymbolDomains-Carried"
+]
+
+(* Conflicting facts from two objects: the sum has none for the symbol, in either order, and a later
+   composition does not bring one back. *)
+VerificationTest[
+    With[{
+        s1 = QuantumState[{a, b}, "SymbolDomains" -> {a -> Interval[{0, 1}]}],
+        s2 = QuantumState[{a, b}, "SymbolDomains" -> {a -> Interval[{2, 3}]}],
+        o1 = QuantumOperator[{{a, 0}, {0, 1}}, "SymbolDomains" -> {a -> Interval[{0, 1}]}],
+        o2 = QuantumOperator[{{a, 0}, {0, 1}}, "SymbolDomains" -> {a -> Interval[{2, 3}]}]
+    },
+        #["Basis"]["SymbolDomains"] & /@ {s1 + s2, s2 + s1, o1[o2[o1]]}
+    ],
+    {<|a -> {}|>, <|a -> {}|>, <|a -> {}|>},
+    {QuantumBasis::domainempty, QuantumBasis::domainempty, QuantumBasis::domainempty, General::stop},
+    TestID -> "SymbolDomains-ConflictStays"
+]
+
+(* A symbol named twice in one specification gets both facts; Complexes still wins. *)
+VerificationTest[
+    QuantumState[{a, b}, "SymbolDomains" -> {a -> Complexes, a -> Reals, b -> Reals, b -> Interval[{0, 2}]}]["Basis"]["SymbolDomains"],
+    <|a -> {Complexes}, b -> {Interval[{0, 2}]}|>,
+    TestID -> "SymbolDomains-RepeatedKey"
+]
+
+(* Formal symbols are symbols too. *)
+VerificationTest[
+    QuantumOperator["RZ"[\[FormalT]]]["Basis"]["SymbolDomains"],
+    <|\[FormalT] -> {Reals}|>,
+    TestID -> "SymbolDomains-FormalSymbol"
+]
+
+(* A bad specification added to a channel fails as a whole. *)
+VerificationTest[
+    FailureQ @ QuantumChannel[QuantumChannel["BitFlip"[p]], "SymbolDomains" -> <|p -> Foo|>],
+    True,
+    {QuantumBasis::domain},
+    TestID -> "SymbolDomains-ChannelBadSpec"
+]
+
+(* The direct sum of states keeps the facts of each. *)
+VerificationTest[
+    QuantumState[QuantumState["BlochVector"[{x, 0, 0}]], QuantumState["0"]]["Basis"]["SymbolDomains"],
+    <|x -> {Interval[{-1, 1}]}|>,
+    TestID -> "SymbolDomains-DirectSum"
+]
+
+(* A sum or a difference of operators whose facts conflict reports the conflict once. *)
+VerificationTest[
+    With[{
+        o1 = QuantumOperator[{{a, 0}, {0, 1}}, "SymbolDomains" -> {a -> Interval[{0, 1}]}],
+        o2 = QuantumOperator[{{a, 0}, {0, 1}}, "SymbolDomains" -> {a -> Interval[{2, 3}]}]
+    },
+        (o1 + o2)["Basis"]["SymbolDomains"]
+    ],
+    <|a -> {}|>,
+    {QuantumBasis::domainempty},
+    TestID -> "SymbolDomains-SumMessageOnce"
+]
+
+VerificationTest[
+    With[{
+        o1 = QuantumOperator[{{a, 0}, {0, 1}}, "SymbolDomains" -> {a -> Interval[{0, 1}]}],
+        o2 = QuantumOperator[{{a, 0}, {0, 1}}, "SymbolDomains" -> {a -> Interval[{2, 3}]}]
+    },
+        (o1 - o2)["Basis"]["SymbolDomains"]
+    ],
+    <|a -> {}|>,
+    {QuantumBasis::domainempty},
+    TestID -> "SymbolDomains-DifferenceMessageOnce"
+]
+
+(* A change of basis does not give back the facts taken away from a symbol. *)
+VerificationTest[
+    QuantumState[
+        QuantumState[{a, 1}, "SymbolDomains" -> <|a -> {}|>],
+        QuantumBasis[2, "SymbolDomains" -> {a -> Reals, b -> Reals}]
+    ]["Basis"]["SymbolDomains"],
+    <|a -> {}, b -> {Reals}|>,
+    TestID -> "SymbolDomains-ChangeOfBasisKeepsCleared"
+]
+
+(* An empty list takes away every fact in each form of a specification. *)
+VerificationTest[
+    QuantumState[{a, b}, "SymbolDomains" -> #]["Basis"]["SymbolDomains"] & /@ {{a -> {}}, a -> {}, {a -> Reals, a -> {}, b -> Reals}},
+    {<|a -> {}|>, <|a -> {}|>, <|a -> {}, b -> {Reals}|>},
+    TestID -> "SymbolDomains-EmptyListAllForms"
+]
+
+(* Numeric slots give no facts. *)
+VerificationTest[
+    #["Basis"]["SymbolDomains"] & /@ {QuantumState["BlochVector"[{0.1, 0, 0.2}]], QuantumState["Werner"[0.3]], QuantumOperator["RX"[0.4]], QuantumChannel["BitFlip"[0.1]]},
+    {<||>, <||>, <||>, <||>},
+    TestID -> "SymbolDomains-NumericNoFacts"
+]
+
+(* A value nested deeper than a list of domains is not a specification. *)
+VerificationTest[
+    FailureQ /@ {
+        QuantumState[{a, b}, "SymbolDomains" -> {a -> {Reals, {}}}],
+        QuantumState[{a, b}, "SymbolDomains" -> {a -> {{Reals, {Integers}}}}],
+        QuantumState[{a, b}, "SymbolDomains" -> {a -> {{}}}]
+    },
+    {True, True, True},
+    {QuantumBasis::domainspec, QuantumBasis::domainspec, QuantumBasis::domainspec, General::stop},
+    TestID -> "SymbolDomains-NestedValueRejected"
+]
+
+(* An interval of one integer lies in the integers. *)
+VerificationTest[
+    QuantumState[{a, b}, "SymbolDomains" -> {a -> {Interval[{0, 0}], Integers}}]["Basis"]["SymbolDomains"],
+    <|a -> {Interval[{0, 0}]}|>,
+    TestID -> "SymbolDomains-IntegerPointInterval"
+]
+
+(* A change of basis joins the facts of both bases, so a conflict between them is found. *)
+VerificationTest[
+    QuantumState[
+        QuantumState[{a, 1}, "SymbolDomains" -> {a -> Interval[{0, 1}], b -> Interval[{0, 2}]}],
+        QuantumBasis[2, "SymbolDomains" -> {a -> Interval[{2, 3}], b -> Reals}]
+    ]["Basis"]["SymbolDomains"],
+    <|a -> {}, b -> {Interval[{0, 2}]}|>,
+    {QuantumBasis::domainempty},
+    TestID -> "SymbolDomains-ChangeOfBasisConflict"
+]
+
+(* t[k] and Subscript[t, k] are indexed symbols alike. *)
+VerificationTest[
+    {
+        QuantumOperator["RZ"[t[k]]]["Basis"]["SymbolDomains"],
+        QuantumOperator["RZ"[Subscript[t, k]]]["Basis"]["SymbolDomains"],
+        QuantumState[{a, b}, "SymbolDomains" -> {t[k] -> Reals}]["Basis"]["SymbolDomains"]
+    },
+    {<|t[k] -> {Reals}|>, <|Subscript[t, k] -> {Reals}|>, <|t[k] -> {Reals}|>},
+    TestID -> "SymbolDomains-IndexForms"
+]
+
+(* Spider phases and Euler angles are real; a probability slot holding a p + b puts p in the preimage. *)
+VerificationTest[
+    {
+        QuantumOperator["ZSpider"[t], {1} -> {1}]["Basis"]["SymbolDomains"],
+        QuantumOperator["WignerD"[1/2, {a, b, c}]]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[1 - p]]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[2 q]]["Basis"]["SymbolDomains"],
+        QuantumChannel["ResetError"[r, r]]["Basis"]["SymbolDomains"]
+    },
+    {
+        <|t -> {Reals}|>,
+        <|a -> {Reals}, b -> {Reals}, c -> {Reals}|>,
+        <|p -> {Interval[{0, 1}]}|>,
+        <|q -> {Interval[{0, 1/2}]}|>,
+        <|r -> {Interval[{0, 1/2}]}|>
+    },
+    TestID -> "SymbolDomains-MoreRoles"
+]
+
+(* The recorded range of a role is the exact region where the object is physical. For a channel, trace
+   preservation on |0> and |1>, reduced over the reals, gives the region in closed form; for a Werner state
+   and a qubit Bloch vector with one symbolic component, positivity of the eigenvalues does. Each derived
+   region is equivalent to the recorded interval. *)
+VerificationTest[
+    With[{
+        recorded = Function[{obj, s}, With[{i = First[obj["Basis"]["SymbolDomains"][s]]}, i[[1, 1]] <= s <= i[[1, 2]]]],
+        tracePreserving = Function[{c, s}, Reduce[And @@ (ComplexExpand[Tr[c[QuantumState[#]]["DensityMatrix"]]] == 1 & /@ {"0", "1"}), s, Reals]],
+        positive = Function[{st, s}, Reduce[Min[Eigenvalues[Normal[st["DensityMatrix"]]]] >= 0, s, Reals]]
+    },
+        Join[
+            Reduce[Equivalent[tracePreserving[#1, #2], recorded[#1, #2]], #2, Reals] & @@@ {
+                {QuantumChannel["BitFlip"[p]], p},
+                {QuantumChannel["AmplitudeDamping"[g]], g},
+                {QuantumChannel["PhaseDamping"[l]], l},
+                {QuantumChannel["Depolarizing"[q]], q},
+                {QuantumChannel["ResetError"[r, r]], r},
+                {QuantumChannel["BitFlip"[1 - p]], p}
+            },
+            Reduce[Equivalent[positive[#1, #2], recorded[#1, #2]], #2, Reals] & @@@ {
+                {QuantumState["Werner"[p]], p},
+                {QuantumState["Werner"[p, 3]], p},
+                {QuantumState["BlochVector"[{x, 1/2, 0}]], x}
+            }
+        ]
+    ],
+    ConstantArray[True, 9],
+    TestID -> "SymbolDomains-PhysicalRegion"
+]
+
+(* An inexact coefficient gives no interval, since Interval widens inexact bounds; a real slot still gives Reals. *)
+VerificationTest[
+    #["Basis"]["SymbolDomains"] & /@ {QuantumChannel["BitFlip"[0.5 p]], QuantumOperator["RZ"[0.5 t + 0.1]], QuantumState["BlochVector"[{x, 0.5, 0}]]},
+    {<||>, <|t -> {Reals}|>, <|x -> {Reals}|>},
+    TestID -> "SymbolDomains-InexactCoefficients"
+]
+
+(* Facts from several roles on several wires meet in one record: a two-qubit Werner state, a controlled
+   rotation, a channel on one wire and an evolution share symbols. *)
+VerificationTest[
+    With[{
+        rho = QuantumState["Werner"[p]],
+        cp = QuantumOperator["C"["RZ"[2 t + 1]], {1, 2}],
+        noise = QuantumChannel["BitFlip"[1 - p], {2}]
+    },
+        With[{out = noise[cp[rho]]},
+            {out["Basis"]["SymbolDomains"], out["ParameterAssumptions"],
+             QuantumEvolve[QuantumTensorProduct[QuantumOperator["Z"], QuantumOperator["I"]], out, s]["Basis"]["SymbolDomains"]}
+        ]
+    ],
+    {
+        <|p -> {Interval[{0, 1}]}, t -> {Reals}|>,
+        Element[t, Reals] && 0 <= p <= 1,
+        <|p -> {Interval[{0, 1}]}, t -> {Reals}|>
+    },
+    TestID -> "SymbolDomains-ManyRoles"
+]
+
+(* Exact irrational coefficients give intervals; an impossible Bloch vector gives no warning; a phase-shift
+   index is an integer. *)
+VerificationTest[
+    {
+        QuantumChannel["BitFlip"[Pi p]]["Basis"]["SymbolDomains"],
+        QuantumState["BlochVector"[{x, 1 / Sqrt[2], 0}]]["Basis"]["SymbolDomains"],
+        QuantumState["BlochVector"[{x, 1, 1}]]["Basis"]["SymbolDomains"],
+        QuantumOperator["PhaseShift"[k]]["Basis"]["SymbolDomains"]
+    },
+    {
+        <|p -> {Interval[{0, 1 / Pi}]}|>,
+        <|x -> {Interval[{- 1 / Sqrt[2], 1 / Sqrt[2]}]}|>,
+        <|x -> {Reals}|>,
+        <|k -> {Integers}|>
+    },
+    TestID -> "SymbolDomains-ExactConstantsAndIntegers"
+]
+
+EndTestSection[]

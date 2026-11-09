@@ -41,7 +41,7 @@ QuantumBasis[<|
             }
         ],
     "ParameterSpec" -> Values @ GroupBy[Join[qb1["ParameterSpec"], qb2["ParameterSpec"]], First, First @ TakeLargestBy[#, Last, 1] &],
-    "RealSymbols" -> MergeRealSymbols[qb1, qb2]
+    "SymbolDomains" -> MergeSymbolDomains[qb1, qb2]
 |>
 ]
 

@@ -8,7 +8,12 @@ PackageScope["$QuantumBasisDataKeys"]
 PackageScope["$QuantumBasisStructureProperties"]
 PackageScope["$QuantumBasisPictures"]
 PackageScope["MergeParameterSpecs"]
-PackageScope["MergeRealSymbols"]
+PackageScope["MergeSymbolDomains"]
+PackageScope["symbolDomainsFacts"]
+PackageScope["realDomainSymbols"]
+PackageScope["roleSymbolDomains"]
+PackageScope["roleDomainOption"]
+PackageScope["exactRealQ"]
 
 
 
@@ -39,13 +44,24 @@ QuantumBasis::dependentElements = "elements should be linearly independent";
 
 QuantumBasis::invalidSpec = "`` is not a valid basis specification";
 
+QuantumBasis::domain = "`` is not a symbol domain; a domain is one of Reals, NonNegativeReals, PositiveReals, Integers, NonNegativeIntegers, PositiveIntegers, Complexes, or a real Interval[{a, b}]"
+
+QuantumBasis::domainspec = "`` is not a symbol domain specification; give rules from a symbol or an indexed symbol to a domain or a list of domains; an empty list takes away every fact about the symbol"
+
+QuantumBasis::domainempty = "the domains `2` given for `1` have no point in common; no fact about `1` is kept"
+
 QuantumBasis::phaseSpacePicture = "a phase space basis is already a phase space representation and cannot be renamed to the picture ``";
 
 
 
-(* "RealSymbols": symbols known to be real by their role, such as the angle of a named gate;
-   with the declared parameters they make the real domain of "ParameterAssumptions" *)
-$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec", "RealSymbols"}
+(* "SymbolDomains": what is known about each symbol, by its role or from the user, as an association
+   from a symbol, plain (θ) or indexed (θ[1], Subscript[θ, 1]), to the list of domains it lies in, such as {Reals}
+   for the angle of a named gate or {Interval[{0, 1}]} for a probability; {Complexes} marks a symbol
+   the user wants taken as complex, whatever its role. With the declared parameters, which are real
+   unless marked complex, it makes "ParameterAssumptions". Each fact is about one symbol: a condition that
+   ties two symbols together, p0 + p1 <= 1 or a Bloch vector of length at most 1, is not recorded, so a
+   role records only what each of its symbols must satisfy on its own. *)
+$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec", "SymbolDomains"}
 
 (* the basis's data and the shape it gives, which states and operators read off their basis *)
 $QuantumBasisStructureProperties = Join[$QuantumBasisDataKeys, {
@@ -61,7 +77,7 @@ $QuantumBasisDefaults = {
     "Picture" -> "Schrodinger",
     "Label" -> None,
     "ParameterSpec" -> {},
-    "RealSymbols" -> {}
+    "SymbolDomains" -> <||>
 }
 
 
@@ -77,7 +93,7 @@ quantumBasisQ[QuantumBasis[data : HoldPattern[Association[(_String -> _) ...]]]]
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
 
     ConfirmAssert[ParameterSpecQ[data["ParameterSpec"]]];
-    ConfirmAssert[ListQ[data["RealSymbols"]] && DuplicateFreeQ[data["RealSymbols"]]];
+    ConfirmAssert[symbolDomainsQ[data["SymbolDomains"]]];
     True,
 
     False &
@@ -116,8 +132,20 @@ QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumB
 
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
-QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] :=
+QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] /; FilterRules[{rules}, "SymbolDomains"] === {} :=
     QuantumBasis @ KeyMap[Replace["Parameter" | "Parameters" -> "ParameterSpec"]][<|data, Reverse @ FilterRules[{rules}, Join[$QuantumBasisDataKeys, {"Parameter", "Parameters"}]]|>]
+
+(* every "SymbolDomains" given joins the basis's record rather than replacing it *)
+QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] := Enclose @ With[
+    {given = Values @ FilterRules[Flatten[{rules}], "SymbolDomains"]},
+    {bad = SelectFirst[given, ! symbolDomainsQ[#] && ! symbolDomainsSpecQ[#] &, None]},
+    If[bad =!= None, domainSpecMessage[bad]; Confirm[$Failed]];
+    QuantumBasis @ KeyMap[Replace["Parameter" | "Parameters" -> "ParameterSpec"]][<|
+        data,
+        Reverse @ FilterRules[{rules}, Join[DeleteCases[$QuantumBasisDataKeys, "SymbolDomains"], {"Parameter", "Parameters"}]],
+        "SymbolDomains" -> If[given === {}, data["SymbolDomains"], mergeSymbolDomains[Prepend[given, data["SymbolDomains"]]]]
+    |>]
+]
 
 QuantumBasis[data_Association, args__] := Enclose @ Fold[ConfirmBy[QuantumBasis[##], QuantumBasisQ] &, ConfirmBy[QuantumBasis[data], QuantumBasisQ], Reverse @ {args}]
 
@@ -166,6 +194,20 @@ defaultParameterSpec[ps_List] := Catenate[defaultParameterSpec /@ ps]
 
 defaultParameterSpec[p : Except[_List]] := defaultParameterSpec[{p}]
 
+
+QuantumBasis[data_Association] /; KeyExistsQ[data, "SymbolDomains"] && ! symbolDomainsQ[data["SymbolDomains"]] && ! symbolDomainsSpecQ[data["SymbolDomains"]] :=
+    (domainSpecMessage[data["SymbolDomains"]]; $Failed)
+
+(* a valid specification merges into a valid record, so this rule fires at most once *)
+QuantumBasis[data_Association] /; ! symbolDomainsQ[data["SymbolDomains"]] && symbolDomainsSpecQ[data["SymbolDomains"]] :=
+    With[{record = mergeSymbolDomains[{data["SymbolDomains"]}]},
+        If[symbolDomainsQ[record], QuantumBasis[<|data, "SymbolDomains" -> record|>], $Failed]
+    ]
+
+(* a well-formed record with an unknown domain names that domain; anything else names the whole specification *)
+domainSpecMessage[spec_] := With[{unknown = If[domainRulesQ[spec], SelectFirst[Flatten[Values @ Flatten[{Normal[spec]}]], ! symbolDomainQ[#] &, None], None]},
+    If[unknown =!= None, Message[QuantumBasis::domain, unknown], Message[QuantumBasis::domainspec, spec]]
+]
 
 QuantumBasis[data_Association] /; ! MatchQ[data["ParameterSpec"], {{_, _, _}...}] || ! DuplicateFreeQ[data["ParameterSpec"]] :=
     QuantumBasis[<|data, "ParameterSpec" -> Reverse @ DeleteDuplicatesBy[Reverse @ defaultParameterSpec[data["ParameterSpec"]], First]|>]
@@ -277,7 +319,169 @@ MergeParameterSpecs[objs___] := Enclose @ Block[{specs = Catenate[ConfirmBy[#["P
     KeyValueMap[Prepend[#2, #1] &, GroupBy[specs, First, {Min[#[[All, 2]]], Max[#[[All, 3]]]} & ]]
 ]
 
-MergeRealSymbols[objs___] := DeleteDuplicates @ Catenate[If[Head[#] === QuantumBasis, #, #["Basis"]]["RealSymbols"] & /@ {objs}]
+MergeSymbolDomains[objs___] := mergeSymbolDomains[If[Head[#] === QuantumBasis, #, #["Basis"]]["SymbolDomains"] & /@ {objs}]
+
+
+(* symbol domains *)
+
+(* A domain is a named set of numbers or a real interval. Each real one is read as its bounds, whether its
+   lower bound is open, and whether it holds integers only, so that inclusion is a comparison of bounds;
+   Complexes holds every other one. *)
+$symbolDomainNames = {Reals, NonNegativeReals, PositiveReals, Integers, NonNegativeIntegers, PositiveIntegers, Complexes}
+
+symbolDomainQ[d_] := MemberQ[$symbolDomainNames, d] || MatchQ[d, Interval[{a_ ? realNumberQ, b_ ? realNumberQ}] /; a <= b]
+
+realNumberQ[x_] := NumericQ[x] && Im[x] == 0
+
+(* exact, so Interval keeps it as written: rationals and constants such as Pi or 1/Sqrt[2] *)
+exactRealQ[x_] := realNumberQ[x] && Precision[x] === Infinity
+
+bounds[integer_, lower_, upper_, lowerOpen_] := <|"Integer" -> integer, "Lower" -> lower, "Upper" -> upper, "LowerOpen" -> lowerOpen|>
+
+domainBounds[Reals] = bounds[False, -Infinity, Infinity, False]
+domainBounds[NonNegativeReals] = bounds[False, 0, Infinity, False]
+domainBounds[PositiveReals] = bounds[False, 0, Infinity, True]
+domainBounds[Integers] = bounds[True, -Infinity, Infinity, False]
+domainBounds[NonNegativeIntegers] = bounds[True, 0, Infinity, False]
+domainBounds[PositiveIntegers] = bounds[True, 1, Infinity, False]
+(* an interval holding one integer point is an integer domain *)
+domainBounds[Interval[{a_, b_}]] := bounds[a == b && IntegerQ[a], a, b, False]
+
+(* d1 is a subset of d2 *)
+subdomainQ[_, Complexes] := True
+subdomainQ[Complexes, _] := False
+subdomainQ[d1_, d2_] := With[{b1 = domainBounds[d1], b2 = domainBounds[d2]},
+    (b1["Integer"] || ! b2["Integer"]) && b1["Upper"] <= b2["Upper"] &&
+        (b1["Lower"] > b2["Lower"] || b1["Lower"] == b2["Lower"] && (b1["LowerOpen"] || ! b2["LowerOpen"]))
+]
+
+(* The domains a symbol lies in, all of them holding at once. The intervals among them meet in one interval,
+   and a domain that contains another one in the list says nothing more and is dropped (two different domains
+   never contain each other). Complexes, the user's mark that the symbol is not to be taken as real, wins over
+   any other. The result is {} when the domains have no point in common. *)
+reduceDomains[{d_}] := {d}
+
+reduceDomains[ds_List] := Which[
+    MemberQ[ds, Complexes], {Complexes},
+    emptyDomainsQ[ds], {},
+    True, With[{u = DeleteDuplicates @ meetIntervals[ds]},
+        Select[u, d |-> NoneTrue[DeleteCases[u, d], subdomainQ[#, d] &]]
+    ]
+]
+
+meetIntervals[ds_List] := With[{is = Cases[ds, _Interval]},
+    If[Length[is] < 2, ds, Insert[DeleteCases[ds, _Interval], IntervalIntersection @@ is, First @ FirstPosition[ds, _Interval]]]
+]
+
+(* the domains meet nowhere: the largest lower bound passes the smallest upper bound, or the integers among
+   them leave no integer between the two *)
+emptyDomainsQ[ds_List] := With[
+    {bs = domainBounds /@ ds},
+    {lo = Max[Lookup[bs, "Lower"]], hi = Min[Lookup[bs, "Upper"]], int = AnyTrue[Lookup[bs, "Integer"], TrueQ]},
+    {open = AnyTrue[Select[bs, #["Lower"] == lo &], #["LowerOpen"] &]},
+    lo > hi || lo == hi && open ||
+        int && If[open && IntegerQ[lo], lo + 1, Ceiling[lo]] > Floor[hi]
+]
+
+(* A record maps each symbol to its reduced list of domains, or to {} for a symbol whose domains were found to
+   have no common point: that symbol has no fact, and no later merge gives it one. *)
+symbolDomainsQ[<||>] := True
+
+symbolDomainsQ[a_] := AssociationQ[a] && AllTrue[Keys[a], domainKeyQ] &&
+    AllTrue[Values[a], ListQ[#] && AllTrue[#, symbolDomainQ] && (Length[#] <= 1 || reduceDomains[#] === #) &]
+
+(* a record as the user may give it: one rule, a list of rules or an association, from a symbol or an
+   indexed symbol, each value one domain or a list of them; an empty list takes away every fact *)
+domainRulesQ[a_] := MatchQ[a, _Association | {___Rule} | _Rule] && AllTrue[Keys @ Flatten[{Normal[a]}], domainKeyQ]
+
+domainKeyQ[k_] := MatchQ[k, $domainSymbolPattern]
+
+symbolDomainsSpecQ[a_] := domainRulesQ[a] && AllTrue[Values @ Flatten[{Normal[a]}], symbolDomainQ[#] || ListQ[#] && AllTrue[#, symbolDomainQ] &]
+
+(* Records are merged symbol by symbol. A symbol whose domains have no point in common gets one message and
+   no fact at all, so nothing is ever simplified under false facts. *)
+mergeSymbolDomains[records_List] := With[{given = DeleteDuplicates @ DeleteCases[records, <||> | {}]},
+    Which[
+        given === {}, <||>,
+        Length[given] == 1 && symbolDomainsQ[First[given]], First[given],
+        True, mergeDomainRecords[given]
+    ]
+]
+
+mergeDomainRecords[records_List] := Association @ KeyValueMap[
+    Function[{s, dss}, s -> meetDomainLists[s, dss]],
+    Merge[recordDomainLists /@ records, Identity]
+]
+
+meetDomainLists[s_, dss_] := If[MemberQ[dss, {}], {},
+    With[{ds = Catenate[dss]}, {r = reduceDomains[ds]}, If[r === {}, Message[QuantumBasis::domainempty, s, ds]]; r]
+]
+
+(* one record as an association from each symbol to its list of domains; a symbol named twice gets both lists,
+   and an empty list among them, given to take away every fact, stays empty *)
+recordDomainLists[record_] := Merge[Flatten[{Normal[record]}],
+    If[MemberQ[#, {}], {}, Catenate[Flatten @* List /@ #]] &
+]
+
+(* The record a role gives: a slot that lies in domain, such as the angle of a gate (Reals) or the
+   probability of a channel (Interval[{0, 1}]), puts the symbol it holds in that domain. The symbol may
+   be plain or indexed, theta, theta[1] or Subscript[theta, 1]. A slot holding a theta + b, with real
+   numbers a != 0 and b, puts theta in the preimage of the domain: Reals for a real slot, and for a
+   probability slot holding 1 - p, p in [0, 1] again; an interval preimage is taken only for exact a and b,
+   since Interval widens inexact bounds. Any other expression, a + b say, says nothing about its symbols
+   and is skipped. A symbol in two slots lies in both domains. *)
+roleSymbolDomains[slots_List, domain_] := Association @ KeyValueMap[
+    #1 -> meetDomainLists[#1, List /@ #2] &,
+    Merge[slotDomain[#, domain] & /@ slots, Identity]
+]
+
+(* the "SymbolDomains" option for that record, or nothing when the slots hold no symbol, so a numeric gate
+   or state is built exactly as without facts *)
+roleDomainOption[slots_List, _] /; AllTrue[slots, NumericQ] := Sequence @@ {}
+
+roleDomainOption[slots_List, domain_] := With[{r = roleSymbolDomains[slots, domain]},
+    If[r === <||>, Sequence @@ {}, "SymbolDomains" -> r]
+]
+
+$domainSymbolPattern = _Symbol ? domainSymbolQ | (_Symbol ? domainSymbolQ)[__ ? AtomQ] | Subscript[_Symbol ? domainSymbolQ, __ ? AtomQ]
+
+domainSymbolQ[s_Symbol] := ! NumericQ[s] &&
+    (Context[s] =!= "System`" || StringStartsQ[ToString[s, InputForm, CharacterEncoding -> "PrintableASCII"], "\\[Formal"])
+
+slotDomain[x_, domain : Reals | _Interval] := Replace[x, {
+    v : $domainSymbolPattern :> v -> domain,
+    (a_. (v : $domainSymbolPattern)) + b_. /; realNumberQ[a] && a != 0 && realNumberQ[b] :> preimage[v, domain, a, b],
+    a_ (v : $domainSymbolPattern) /; realNumberQ[a] && a != 0 :> preimage[v, domain, a, 0],
+    _ -> Nothing
+}]
+
+slotDomain[x_, domain_] := Replace[x, {v : $domainSymbolPattern :> v -> domain, _ -> Nothing}]
+
+(* the values of theta for which a theta + b lies in the domain *)
+preimage[v_, Reals, _, _] := v -> Reals
+preimage[v_, Interval[{lo_, hi_}], a_ ? exactRealQ, b_ ? exactRealQ] := v -> Interval[{(lo - b) / a, (hi - b) / a}]
+preimage[_, _Interval, _, _] := Nothing
+
+(* the symbols, among the given ones and the keys of a record, taken as real; a symbol
+   marked Complexes, or whose domains had no common point, is not *)
+realDomainSymbols[record_, declared_List] := DeleteDuplicates @ Join[
+    Select[declared, ! MatchQ[Lookup[record, Key[#], None], {Complexes} | {}] &],
+    Keys @ Select[record, ! MatchQ[#, {Complexes} | {}] &]
+]
+
+(* the facts a record states, for Refine or Simplify: every symbol that is only real in one Element, then the
+   stronger facts *)
+symbolDomainsFacts[record_, declared_List] := With[{
+    reals = Select[realDomainSymbols[record, declared], MatchQ[Lookup[record, Key[#], {Reals}], {Reals}] &]
+},
+    And @@ Prepend[
+        Catenate @ KeyValueMap[Function[{s, ds}, domainFact[s, #] & /@ ds], Select[record, ! MatchQ[#, {Reals} | {Complexes}] &]],
+        Element[reals, Reals]
+    ]
+]
+
+domainFact[s_, Interval[{a_, b_}]] := a <= s <= b
+domainFact[s_, d_] := Element[s, d]
 
 
 (* simplify *)
@@ -312,13 +516,13 @@ substituteRepresentations[qb_, rules_] :=
         input = substituteRepresentations[qb["Input"], rules],
         label = data["Label"] /. rules,
         spec = DeleteCases[data["ParameterSpec"], {Alternatives @@ Keys[rules], __}],
-        reals = DeleteCases[data["RealSymbols"], Alternatives @@ Keys[rules]]
+        domains = KeyDrop[data["SymbolDomains"], Keys[rules]]
     },
         If[ output === qb["Output"]["Representations"] &&
                 input === qb["Input"]["Representations"] &&
                 label === data["Label"],
 
-            QuantumBasis[<|data, "ParameterSpec" -> spec, "RealSymbols" -> reals|>],
+            QuantumBasis[<|data, "ParameterSpec" -> spec, "SymbolDomains" -> domains|>],
 
             QuantumBasis[
                 "Output" -> output,
@@ -326,7 +530,7 @@ substituteRepresentations[qb_, rules_] :=
                 "Label" -> label,
                 "Picture" -> data["Picture"],
                 "ParameterSpec" -> spec,
-                "RealSymbols" -> reals
+                "SymbolDomains" -> domains
             ]
         ]
     ]

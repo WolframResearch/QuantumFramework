@@ -171,6 +171,17 @@ doubledReducedMatrix[qb_] := If[ qb["InputDimension"] === 1,
     KroneckerProduct[qb["Output"]["ReducedMatrix"], Transpose[MatrixInverse[qb["Input"]["ReducedMatrix"]]]]
 ]
 
+(* The facts about the symbols do not depend on the basis, so a change of basis joins the facts of the old
+   basis with those of the new one, as any merge does: a symbol named by both lies in both sets of domains,
+   and one whose domains meet nowhere, or whose facts were taken away, keeps none. *)
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"]["SymbolDomains"] =!= <||> := With[{
+    domains = MergeSymbolDomains[qs["Basis"], newBasis]
+},
+    QuantumState[qs, QuantumBasis[newBasis, "SymbolDomains" -> domains]] /; ! sameSymbolDomainsQ[domains, newBasis["SymbolDomains"]]
+]
+
+sameSymbolDomainsQ[r1_, r2_] := KeySort[Sort /@ r1] === KeySort[Sort /@ r2]
+
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["SortedQ"] := QuantumState[qs, newBasis["Sort"]]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis || qs["ComputationalQ"] && newBasis["ComputationalQ"] := QuantumState[qs["State"], newBasis]
@@ -255,15 +266,18 @@ QuantumState /: Tr[qs_QuantumState] := Tr @ qs["DensityMatrix"]
 
 (* addition *)
 
+(* qs2 in the basis of qs1 already carries the facts of both *)
 addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumStateQ] /; qs1["Dimension"] == qs2["Dimension"] :=
-    QuantumState[
-        If[ qs1["StateType"] === qs2["StateType"] === "Vector",
-            qs1["StateVector"] + QuantumState[qs2, qs1["Basis"]]["StateVector"],
-            qs1["DensityMatrix"] + QuantumState[qs2, qs1["Basis"]]["DensityMatrix"]
-        ],
-        qs1["Basis"],
-        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
+    With[{q2 = QuantumState[qs2, qs1["Basis"]]},
+        QuantumState[
+            If[ qs1["StateType"] === qs2["StateType"] === "Vector",
+                qs1["StateVector"] + q2["StateVector"],
+                qs1["DensityMatrix"] + q2["DensityMatrix"]
+            ],
+            qs1["Basis"],
+            "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
+            "SymbolDomains" -> q2["Basis"]["SymbolDomains"]
+        ]
     ]
 
 QuantumState /: HoldPattern[Plus[states__QuantumState]] /; Length[{states}] > 1 :=
@@ -285,7 +299,7 @@ multiplyQuantumStates[qs1_QuantumState, qs2_QuantumState] /; qs1["Dimension"] ==
         ],
         qs1["Basis"],
         "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
+        "SymbolDomains" -> MergeSymbolDomains[qs1, qs2]
     ]
 
 QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :=
@@ -329,8 +343,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
     ],
     Plus @@ (#["Basis"] & /@ {qs}),
     "Label" -> CirclePlus @@ (#["Label"] & /@ {qs}),
-    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
+    "ParameterSpec" -> MergeParameterSpecs[qs],
+    "SymbolDomains" -> MergeSymbolDomains[qs]
 ]
 
 
@@ -369,7 +383,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
                     "Label" -> qs1["Label"] @* qs2["Label"],
                     "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
                     "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
+        "SymbolDomains" -> MergeSymbolDomains[qs1, qs2]
                 ]
             ],
         qs1["VectorQ"] && qs1["Picture"] === "Schrodinger" && qs2["Picture"] === "Schrodinger",
@@ -403,7 +417,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
                 "Output" -> outBasis, "Input" -> inBasis,
                 "Label" -> qs1["Label"] @* qs2["Label"],
                 "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
+        "SymbolDomains" -> MergeSymbolDomains[qs1, qs2]
             ];
             If[ resBasis["ComputationalQ"],
                 QuantumState[state, resBasis],
@@ -429,7 +443,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
                     "Label" -> qs1["Label"] @* qs2["Label"],
                     "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
                     "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-        "RealSymbols" -> MergeRealSymbols[qs1, qs2]
+        "SymbolDomains" -> MergeSymbolDomains[qs1, qs2]
                 ]
             },
                 QuantumState[s, b]

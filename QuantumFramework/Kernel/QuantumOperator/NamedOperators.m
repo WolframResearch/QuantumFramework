@@ -190,44 +190,38 @@ angleParameterQ[_] := False
 
 rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
 
-(* A gate angle is real by its role: the symbols in the angle slots of a named gate join the
-   basis's "RealSymbols". Indexed and subscripted symbols, theta[1] or Subscript[theta, 1],
-   count whole. *)
-angleRealSymbols[angles_List] := DeleteDuplicates @ Catenate @ Last @ Reap[
-    angles /. v : (_Symbol ? angleSymbolQ | (_Symbol ? angleSymbolQ)[__Integer] | Subscript[_Symbol ? angleSymbolQ, __]) :> (Sow[v]; v)
-]
-
-angleSymbolQ[s_Symbol] := ! NumericQ[s] && (Context[s] =!= "System`" || StringStartsQ[SymbolName[s], "Formal"])
+(* A gate angle is real by its role: the symbol in an angle slot of a named gate joins the
+   basis's "SymbolDomains" as real (roleDomainOption). *)
 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : 2 : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
-    singleQuditGate[rotationMatrix[1, angle, dimension], qudit, Subscript["R", "X"][angle], opts, "RealSymbols" -> angleRealSymbols[{angle}]]
+    singleQuditGate[rotationMatrix[1, angle, dimension], qudit, Subscript["R", "X"][angle], opts, roleDomainOption[{angle}, Reals]]
 
 QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : 2 : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
-    singleQuditGate[rotationMatrix[2, angle, dimension], qudit, Subscript["R", "Y"][angle], opts, "RealSymbols" -> angleRealSymbols[{angle}]]
+    singleQuditGate[rotationMatrix[2, angle, dimension], qudit, Subscript["R", "Y"][angle], opts, roleDomainOption[{angle}, Reals]]
 
 QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : 2 : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
-    singleQuditGate[rotationMatrix[3, angle, dimension], qudit, Subscript["R", "Z"][angle], opts, "RealSymbols" -> angleRealSymbols[{angle}]]
+    singleQuditGate[rotationMatrix[3, angle, dimension], qudit, Subscript["R", "Z"][angle], opts, roleDomainOption[{angle}, Reals]]
 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
-        QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[1], "Label" -> Subscript["R", "X"][angle], "RealSymbols" -> angleRealSymbols[{angle}]],
-        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]], "Label" -> Subscript["R", "X"][angle], "RealSymbols" -> angleRealSymbols[{angle}]]
+        QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[1], "Label" -> Subscript["R", "X"][angle], roleDomainOption[{angle}, Reals]],
+        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]], "Label" -> Subscript["R", "X"][angle], roleDomainOption[{angle}, Reals]]
     ],
     opts
 ]
 
 QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
-        QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[2], "Label" -> Subscript["R", "Y"][angle], "RealSymbols" -> angleRealSymbols[{angle}]],
-        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]], "Label" -> Subscript["R", "Y"][angle], "RealSymbols" -> angleRealSymbols[{angle}]]
+        QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[2], "Label" -> Subscript["R", "Y"][angle], roleDomainOption[{angle}, Reals]],
+        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]], "Label" -> Subscript["R", "Y"][angle], roleDomainOption[{angle}, Reals]]
     ],
     opts
 ]
 
 QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
-        QuantumOperator[rotationMatrix[3, angle, 2], "Label" -> Subscript["R", "Z"][angle], "RealSymbols" -> angleRealSymbols[{angle}]],
-        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]], "Label" -> Subscript["R", "Z"][angle], "RealSymbols" -> angleRealSymbols[{angle}]]
+        QuantumOperator[rotationMatrix[3, angle, 2], "Label" -> Subscript["R", "Z"][angle], roleDomainOption[{angle}, Reals]],
+        FullSimplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]], "Label" -> Subscript["R", "Z"][angle], roleDomainOption[{angle}, Reals]]
     ],
     opts
 ]
@@ -239,7 +233,7 @@ QuantumOperator["R"[angle_, args__], opts___] := Enclose @ Block[{ops = ConfirmB
         Exp[- I angle / 2 op],
         opts,
         "Label" -> Subscript["R", op["Label"]][angle],
-        "RealSymbols" -> angleRealSymbols[{angle}]
+        roleDomainOption[{angle}, Reals]
     ]
 ]
 
@@ -247,7 +241,7 @@ QuantumOperator[("U" | "U3")[theta_ : 0, phi_ : Pi, lambda_ : Pi], opts___] := Q
     QuantumOperator[
         {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I * (phi + lambda)] Cos[theta / 2]}},
          "Label" -> "U"[theta, phi, lambda],
-         "RealSymbols" -> angleRealSymbols[{theta, phi, lambda}]
+         roleDomainOption[{theta, phi, lambda}, Reals]
     ],
     opts
 ]
@@ -256,7 +250,7 @@ QuantumOperator["U2"[phi_ : 0, lambda_ : Pi], opts___] := QuantumOperator[
     QuantumOperator[
         1 / Sqrt[2] {{1, - Exp[I lambda]}, {Exp[I phi], Exp[I * (phi + lambda)]}},
         "Label" -> "U2"[phi, lambda],
-        "RealSymbols" -> angleRealSymbols[{phi, lambda}]
+        roleDomainOption[{phi, lambda}, Reals]
     ],
     opts
 ]
@@ -290,25 +284,26 @@ $singleQuditGateNames = {
 }
 
 QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
-    singleQuditGate[SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}, {dimension, dimension}], qudit, "P"[angle], opts, "RealSymbols" -> angleRealSymbols[{angle}]]
+    singleQuditGate[SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}, {dimension, dimension}], qudit, "P"[angle], opts, roleDomainOption[{angle}, Reals]]
 
 QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[
         SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}],
         dimension,
         "Label" -> "P"[angle],
-        "RealSymbols" -> angleRealSymbols[{angle}]
+        roleDomainOption[{angle}, Reals]
     ],
     opts
 ]
 
 
 QuantumOperator["PhaseShift"[k : _Integer | _Symbol : 1], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
-    singleQuditGate[SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I Sign[k] 2 Pi / 2 ^ Abs[k]]}, {2, 2}], qudit, "PhaseShift"[k], opts]
+    singleQuditGate[SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I Sign[k] 2 Pi / 2 ^ Abs[k]]}, {2, 2}], qudit, "PhaseShift"[k], opts, roleDomainOption[{k}, Integers]]
 
 QuantumOperator["PhaseShift"[k : _Integer | _Symbol : 1], opts___] := QuantumOperator[
     QuantumOperator["Phase"[Sign[k] 2 Pi / 2 ^ Abs[k]], "Label" -> "PhaseShift"[k]],
-    opts
+    opts,
+    roleDomainOption[{k}, Integers]
 ]
 
 
@@ -317,7 +312,7 @@ QuantumOperator["GlobalPhase"[angle_ : Pi, dimension : _Integer ? Positive : 1],
         ReplacePart[identityMatrix[dimension], {i_, i_} -> Exp[I angle]],
         dimension,
         "Label" -> "GlobalPhase"[angle],
-        "RealSymbols" -> angleRealSymbols[{angle}]
+        roleDomainOption[{angle}, Reals]
     ],
     opts
 ]
@@ -523,7 +518,7 @@ controlledOperator[matrix_, order_, op_, controls1_, controls0_, label_, opts : 
         {Join[ConstantArray[2, controls1 + controls0], op["OutputDimensions"]], Join[ConstantArray[2, controls1 + controls0], op["InputDimensions"]]},
         label,
         opts,
-        "RealSymbols" -> op["Basis"]["RealSymbols"]
+        "SymbolDomains" -> op["Basis"]["SymbolDomains"]
     ]
 
 controlledOperator[matrix_, order_, op_, controls1_, controls0_, label_, opts___] := QuantumOperator[
@@ -835,7 +830,8 @@ QuantumOperator["Spider"[basis_ ? QuantumBasisQ, phase_ : 0], opts___] := Enclos
             basis
         ],
         opts,
-        "Label" -> "Spider"[phase]
+        "Label" -> "Spider"[phase],
+        roleDomainOption[Flatten[{phase}], Reals]
     ]
 ]
 
@@ -854,7 +850,8 @@ QuantumOperator["SimpleSpider"[basis_ ? QuantumBasisQ, phase_ : 0], opts___] := 
             basis
         ],
         opts,
-        "Label" -> "Spider"[phase]
+        "Label" -> "Spider"[phase],
+        roleDomainOption[Flatten[{phase}], Reals]
     ]
 ]
 
@@ -967,9 +964,9 @@ jDown[j_] := Table[Sqrt[(j + m1) (j - m1 + 1)] KroneckerDelta[m1 - 1, m2], {m2, 
 
 jQ[j_] := j >= 0 && IntegerQ[2 j]
 
-QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, {a_, b_, c_}], opts___] := QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
+QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, {a_, b_, c_}], opts___] := QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c], roleDomainOption[{a, b, c}, Reals]]
 
-QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, b_ : 0], opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
+QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, b_ : 0], opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b], roleDomainOption[{b}, Reals]]
 
 (* Each Cartesian component is stored in its own eigenbasis ("JX"[j] etc., elements
    ordered by ascending m), where its matrix is the diagonal of eigenvalues; the
