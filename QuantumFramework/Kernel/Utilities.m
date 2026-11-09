@@ -1737,8 +1737,12 @@ symbolicParameters[x_] := {x}
 
 (* expr simplified with the symbols reals real and every other symbol complex. ComplexExpand takes the others as
    complex through one pattern, and writes them through Conjugate rather than Re and Im, so they stay whole; the
-   simplifier, Simplify unless another is given, then works under the reals' reality. *)
+   simplifier, Simplify unless another is given, then works under the reals' reality. With no symbol but the
+   reals, ComplexExpand alone takes every variable real, and its result simplifies faster. *)
 simplifyOnReals[expr_, reals_List, simplify_ : Simplify] := simplify[
-    ComplexExpand[expr, {Except[Alternatives @@ reals]}, TargetFunctions -> {Conjugate}],
+    If[ SubsetQ[reals, symbolicParameters[expr]],
+        ComplexExpand[expr],
+        ComplexExpand[expr, {Except[Alternatives @@ reals]}, TargetFunctions -> {Conjugate}]
+    ],
     Element[reals, Reals]
 ]

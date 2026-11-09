@@ -102,9 +102,11 @@ Options[quantumCircuitApply] := {Method -> Automatic}
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"][[Ordering[qco["InputOrder"]]]] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
+        (* one Simplify of the final state: the same short form as simplifying after every gate in most
+           cases, at a fraction of the cost *)
         "Schrodinger" :> Block[{n = 1, m = qco["Gates"]},
             Progress`EvaluateWithProgress[
-                Fold[(n++; FullSimplify @ #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, qco["NormalOperators"]],
+                Simplify @ Fold[(n++; #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, qco["NormalOperators"]],
                 <|"Text" -> "Folding gates", "Progress" :> n / m, "Percentage" :> n / m, "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
             ]
         ],

@@ -315,7 +315,7 @@ QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[F
 
 QuantumStateProp[qs_, "Weights"] := Which[
     qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
-    refineOnParameters[qs, Abs[qs["StateVector"]] ^ 2],
+    amplitudeWeights[qs, qs["StateVector"]],
     qs["PhysicalQ"] || ! qs["NumericQ"],
     refineOnParameters[qs, Abs @ Diagonal @ qs["DensityMatrix"]],
     True,
@@ -323,6 +323,29 @@ QuantumStateProp[qs_, "Weights"] := Which[
        PhysicalQ, which roundoff left by the repair can fail again *)
     Abs @ Diagonal @ qs["Physical"]["DensityMatrix"]
 ]
+
+(* |v_i|^2 as v_i Conjugate[v_i] when v_i is a product whose conjugate holds no complex symbol: the
+   real symbols leave the conjugate, so the phases cancel in the product as it is formed. A sum, or an
+   amplitude with a complex symbol, keeps |v_i|^2 and its rewriting on the real symbols *)
+amplitudeWeights[qs_ ? symbolicParametersQ, v_SparseArray] := With[{pos = v["NonzeroPositions"]},
+    SparseArray[
+        Thread[pos -> MapThread[amplitudeWeight[qs], {v["NonzeroValues"], Extract[conjugateOnDomains[v, qs["Basis"]], pos]}]],
+        Dimensions[v]
+    ]
+]
+
+amplitudeWeights[qs_ ? symbolicParametersQ, v_] :=
+    MapThread[amplitudeWeight[qs], {Normal[v], Normal[conjugateOnDomains[v, qs["Basis"]]]}]
+
+amplitudeWeight[_][x_, cx_] /; FreeQ[cx, _Conjugate] && ! MatchQ[x, _Plus] && FreeQ[factorList[x], _Plus] := x cx
+
+factorList[x_Times] := Replace[List @@ x, Power[b_, _] :> b, {1}]
+factorList[Power[b_, _]] := {b}
+factorList[x_] := {x}
+
+amplitudeWeight[qs_][x_, _] := First @ refineOnParameters[qs, {Abs[x] ^ 2}]
+
+amplitudeWeights[_, v_] := Abs[v] ^ 2
 
 (* |amplitude|^2 / <v|v>, or the diagonal over the trace, with the normalization taken on the
    declared parameters' real domain *)
@@ -547,13 +570,21 @@ QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify", args___] :=
 QuantumStateProp[qs_ ? symbolicParametersQ, "Norm"] /; qs["StateType"] === "Vector" :=
     Simplify[Sqrt @ parameterNormSquared[qs], qs["ParameterAssumptions"]]
 
-(* <v|v> on the real domain: conjugation flips each explicit I and conjugates only the complex
-   symbols, the cross terms cancel, and each z Conjugate[z] is |z|^2. Where a Conjugate is left
-   over the sum's reality is not visible, and the sum of the weights |v_i|^2 stands instead *)
-parameterNormSquared[qs_] := With[{v = qs["StateVector"]},
-    Replace[
-        simplifyOnReals[v . Conjugate[v], realSymbols[qs]] //. z_ Conjugate[z_] :> Abs[z] ^ 2,
-        n_ /; ! FreeQ[n, _Conjugate] :> Total[qs["Weights"]]
+(* <v|v> on the real domain: the real symbols leave the conjugate, so each phase cancels against its
+   conjugate as the products v_i Conjugate[v_i] form. The sum is collected by the complex symbols and their
+   conjugates, and each coefficient, a function of the real symbols alone, is simplified on their domain:
+   for a unitary circuit acting on amplitudes z_i the coefficients reduce to 0 and 1, and each
+   z Conjugate[z] is |z|^2. Where a Conjugate is left over the sum's reality is not visible, and the sum
+   of the weights |v_i|^2 stands instead *)
+parameterNormSquared[qs_] := With[{v = Normal @ qs["StateVector"], assumptions = qs["ParameterAssumptions"]},
+    With[{n2 = Total[v Normal[conjugateOnDomains[v, qs["Basis"]]]]}, {zs = DeleteDuplicates @ Cases[n2, Conjugate[z_] :> z, {0, Infinity}]},
+        Replace[
+            If[ zs === {},
+                Simplify[n2, assumptions],
+                Collect[Expand[n2], Join[zs, Conjugate /@ zs], Simplify[#, assumptions] &]
+            ] //. z_ Conjugate[z_] :> Abs[z] ^ 2,
+            n_ /; ! FreeQ[n, _Conjugate] :> Total[qs["Weights"]]
+        ]
     ]
 ]
 
@@ -728,9 +759,9 @@ QuantumStateProp[qs_, "Type"] := Which[
     ArrayAllZeroQ[computableState[qs]],
     (* TrueQ[qs["Purity"] == Indeterminate], *)
     "Degenerate",
-    qs["VectorQ"] || PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]] && TrueQ[qs["Purity"] == 1],
+    qs["VectorQ"] || numericSemidefiniteQ[qs] && TrueQ[qs["Purity"] == 1],
     "Pure",
-    PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]],
+    numericSemidefiniteQ[qs],
     "Mixed",
     symbolicDensityMatrixQ[qs] && TrueQ[qs["PhysicalQ"]],
     If[zeroOnDomains[{Tr[# . #] - Tr[#] ^ 2 & @ Normal[qs["DensityMatrix"]]}, qs["Basis"]] === True, "Pure", "Mixed"],
@@ -741,6 +772,10 @@ QuantumStateProp[qs_, "Type"] := Which[
     True,
     "Unknown"
 ]
+
+(* a matrix with a symbol in it is never a numeric density matrix, and the numeric test can take tens of
+   milliseconds to reject one *)
+numericSemidefiniteQ[qs_] := qs["NumericQ"] && PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "PureStateQ"] := qs["Type"] === "Pure"
 

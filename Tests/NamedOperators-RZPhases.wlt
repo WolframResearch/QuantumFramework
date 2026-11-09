@@ -1,11 +1,10 @@
 (* R_Z(theta) = diag(e^(-i theta/2), e^(i theta/2)). Its phases are passed through
-   FullSimplify except for an inexact angle or, with no $Assumptions, a single parameter
+   Simplify except for an inexact angle or, with no $Assumptions, a single parameter
    (theta, theta[1], Subscript[theta, 1]) times an integer or a rational, where
-   FullSimplify returns them unchanged. So a new symbolic R_Z costs no more than a general 2x2 operator, and every
-   angle keeps the matrix it had.
+   Simplify returns them unchanged. So a new symbolic R_Z costs no more than a general 2x2 operator.
 
    References are independent of the route under test: the phases passed through
-   FullSimplify, which is the stored form for every angle, and MatrixExp of
+   Simplify, which is the stored form for every angle, and MatrixExp of
    -i theta/2 sigma_z.
 
    Regimes covered:
@@ -31,7 +30,7 @@
 
 rzMatrix[args___] := Normal[QuantumOperator["RZ"[args], {2}]["Matrix"]]
 
-simplifiedForm[angle_] := DiagonalMatrix[FullSimplify[{Exp[- I angle / 2], Exp[I angle / 2]}]]
+simplifiedForm[angle_] := DiagonalMatrix[Simplify[{Exp[- I angle / 2], Exp[I angle / 2]}]]
 
 zeroQ[m_] := AllTrue[Flatten[FullSimplify[m]], # === 0 &]
 
@@ -90,8 +89,8 @@ VerificationTest[
 ]
 
 (* A distinct symbolic R_Z is one diagonal 2x2 matrix placed on one wire, so it costs less
-   than a general 2x2 operator built through the generic constructor. With its phases
-   passed through FullSimplify it cost about twice as much. *)
+   than a general 2x2 operator built through the generic constructor: Simplify skips
+   its phases. *)
 VerificationTest[
     With[{k = 300},
         With[
