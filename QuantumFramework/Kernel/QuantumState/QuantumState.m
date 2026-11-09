@@ -327,7 +327,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
     ],
     Plus @@ (#["Basis"] & /@ {qs}),
     "Label" -> CirclePlus @@ (#["Label"] & /@ {qs}),
-    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+    "ParameterSpec" -> MergeParameterSpecs[qs]
 ]
 
 

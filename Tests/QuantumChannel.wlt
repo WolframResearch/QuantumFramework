@@ -298,4 +298,19 @@ VerificationTest[
     TestID -> "Channel-failed-single-Kraus-operator"
 ]
 
+(* Re-wrapping a channel with an argument its operator rejects returns the Failure itself,
+   not a channel built around it. *)
+VerificationTest[
+    FailureQ @ QuantumChannel[QuantumChannel["BitFlip"[p]], "Picture" -> "Foo"],
+    True,
+    {QuantumBasis::picture, QuantumBasis::picture},
+    TestID -> "Channel-rewrap-bad-option-fails"
+]
+
+VerificationTest[
+    QuantumChannel[QuantumChannel["BitFlip"[p]], "Label" -> "BF"]["Label"],
+    "BF",
+    TestID -> "Channel-rewrap-valid-option"
+]
+
 EndTestSection[]
