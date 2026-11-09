@@ -181,7 +181,13 @@ QuantumStateProp[qs_, "MatrixQ" | "MatrixStateQ"] := qs["StateType"] === "Matrix
 
 QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "UnknownType"
 
+(* A symbolic density matrix with no declared parameters is physical when it is positive semidefinite for every
+   value its symbols' facts allow: True, False, or Undefined when neither is proven. *)
+QuantumStateProp[qs_, "PhysicalQ"] /; symbolicDensityMatrixQ[qs] := positiveSemidefiniteOnDomains[qs["DensityMatrix"], qs["Basis"]]
+
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
+
+symbolicDensityMatrixQ[qs_] := qs["StateType"] === "Matrix" && qs["InputDimension"] == 1 && qs["ParameterArity"] == 0 && ! qs["NumericQ"]
 
 (* Reading a lazy container costs a materialization, and the property cascade
    asks for the same one over and over: "Type" alone is consulted by
@@ -726,6 +732,8 @@ QuantumStateProp[qs_, "Type"] := Which[
     "Pure",
     PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]],
     "Mixed",
+    symbolicDensityMatrixQ[qs] && TrueQ[qs["PhysicalQ"]],
+    If[zeroOnDomains[{Tr[# . #] - Tr[#] ^ 2 & @ Normal[qs["DensityMatrix"]]}, qs["Basis"]] === True, "Pure", "Mixed"],
     qs["ParameterArity"] > 0,
     "Parametric",
     qs["MatrixQ"] && qs["OutputDimension"] == qs["InputDimension"],

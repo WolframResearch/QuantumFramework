@@ -514,6 +514,25 @@ VerificationTest[
     TestID -> "SymbolDomains-ZeroTestStages"
 ]
 
+(* A symbolic density matrix is physical when it is positive semidefinite for every value the facts allow.
+   Channel outputs, Werner states for d = 2 and 3, a Bloch vector with one symbolic component, and an
+   amplitude-damped state with complex amplitudes all are; diag(p, 1 - p) is physical for p in [0, 1] and not
+   for p in [0, 2]; a pure state written as a density matrix is classified pure. *)
+VerificationTest[
+    {
+        QuantumChannel["BitFlip"[p]][QuantumState["0"]]["PhysicalQ"],
+        QuantumState["Werner"[p]]["PhysicalQ"],
+        QuantumState["Werner"[p, 3]]["PhysicalQ"],
+        QuantumState["BlochVector"[{x, 1 / 2, 0}]]["PhysicalQ"],
+        QuantumChannel["AmplitudeDamping"[g]][QuantumState[{\[Alpha], \[Beta]}]]["MixedStateQ"],
+        QuantumState[{{p, 0}, {0, 1 - p}}, "SymbolDomains" -> {p -> Interval[{0, 1}]}]["Type"],
+        QuantumState[{{p, 0}, {0, 1 - p}}, "SymbolDomains" -> {p -> Interval[{0, 2}]}]["PhysicalQ"],
+        QuantumState[QuantumState[{Cos[t], Sin[t]}, "SymbolDomains" -> {t -> Reals}]["DensityMatrix"], "SymbolDomains" -> {t -> Reals}]["Type"]
+    },
+    {True, True, True, True, True, "Mixed", False, "Pure"},
+    TestID -> "SymbolDomains-SymbolicPhysicalStates"
+]
+
 (* The private symbols used during a computation never outlive it. *)
 VerificationTest[
     QuantumOperator["U3"[\[Theta], \[Phi], \[Lambda]]]["Dagger"];

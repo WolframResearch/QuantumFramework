@@ -20,6 +20,8 @@ PackageScope["onRealSymbols"]
 PackageScope["conjugateOnDomains"]
 PackageScope["zeroOnDomains"]
 PackageScope["basisFactsQ"]
+PackageScope["nonnegativeOnDomains"]
+PackageScope["positiveSemidefiniteOnDomains"]
 
 
 
@@ -535,12 +537,20 @@ onPrivateSymbols[f_, a_, reals_List, intervals_List] := With[{copies = Table[Mod
     WithCleanup[
         Scan[realSymbol, copies];
         mapEntries[
-            ReplaceAll[signSettled[#, AssociationThread[copies, intervals]], Thread[copies -> reals]] &,
+            ReplaceAll[signSettled[conjugateDistributed[#], AssociationThread[copies, intervals]], Thread[copies -> reals]] &,
             f[mapEntries[ReplaceAll[Thread[reals -> copies]], a]]
         ],
         Remove @@ copies
     ]
 ]
+
+(* Conjugate taken through sums, products and integer powers, which the kernel leaves whole when a term holds
+   a symbol with no fact, so the private symbols inside can evaluate it away *)
+conjugateDistributed[x_] /; FreeQ[x, Conjugate[_Plus | _Times | Power[_, _Integer]]] := x
+conjugateDistributed[x_] := x //. {
+    Conjugate[y : _Plus | _Times] :> Conjugate /@ y,
+    Conjugate[Power[y_, n_Integer]] :> Conjugate[y] ^ n
+}
 
 realSymbol[r_Symbol] := (r /: Conjugate[r] = r; r /: Re[r] = r; r /: Im[r] = 0;)
 
@@ -582,8 +592,8 @@ conjugateOnDomains[a_, qb_] := onRealSymbols[Replace[ArrayConjugate[#], ArrayCon
 (* Whether every entry of a list is zero for all values the facts of qb allow: True when each is proven zero,
    False when one is nonzero at a point the facts allow, Undefined otherwise. Proven zero: after TrigToExp,
    Together leaves numerator 0 (TrigToExp first, since Together alone takes Cos and Sin as unknowns). Nonzero:
-   the exact value at a fixed point inside the domains, real symbols inside their intervals (an integer for an
-   integer symbol), any other symbol at a complex point, is nonzero to 30 digits. *)
+   the value at a fixed point inside the domains, real symbols inside their intervals (an integer for an integer
+   symbol), any other symbol at a complex point, each given to 30 digits, is larger than 10^-10. *)
 zeroOnDomains[es_List, qb_] := With[{rest = DeleteCases[es, _ ? (provenZeroQ)]},
     Which[
         rest === {}, True,
@@ -597,7 +607,7 @@ $zeroTestTimeConstraint = 2
 provenZeroQ[e_] := e === 0 || TrueQ[TimeConstrained[Numerator[Together[TrigToExp[e]]] === 0, $zeroTestTimeConstraint, False]]
 
 nonzeroAtPointQ[e_, ranges_] := With[{
-    v = N[e /. samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
+    v = e /. N[samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
 },
     NumberQ[v] && Abs[v] > 10 ^ -10
 ]
@@ -618,6 +628,63 @@ pointInside[Interval[{lo_, hi_}], integer_] := With[{x = Which[
     True, lo + (hi - lo) RandomInteger[{10, 90}] / 100
 ]}, If[integer, Clip[Round[x], {Ceiling[lo], Floor[hi]}], x]]
 
+
+(* Whether every expression of a list is nonnegative for all values the facts of qb allow: True when each is
+   proven so, False when one is negative at a point the facts allow, Undefined otherwise. A proof comes from
+   interval arithmetic, or else from Simplify under the facts, with each symbol that has no fact split into its
+   real and imaginary parts, within a time limit. *)
+nonnegativeOnDomains[es_List, qb_] := With[{ranges = symbolRanges[qb]},
+    With[{rest = Select[es, ! provenNonnegativeQ[#, ranges, qb] &]},
+        Which[
+            rest === {}, True,
+            AnyTrue[rest, negativeAtPointQ[#, ranges] &], False,
+            True, Undefined
+        ]
+    ]
+]
+
+$signProofTimeConstraint = 2
+
+provenNonnegativeQ[e_, ranges_, qb_] := With[{x = e /. KeyValueMap[#1 -> First[#2] &, ranges]},
+    TrueQ[NumericQ[x] && x >= 0] || MatchQ[x, _Interval] && TrueQ[Min[x] >= 0] ||
+        TrueQ @ TimeConstrained[
+            Simplify[ComplexExpand[e, Complement[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], Keys[ranges]]] >= 0, qb["ParameterAssumptions"]],
+            $signProofTimeConstraint,
+            False
+        ]
+]
+
+negativeAtPointQ[e_, ranges_] := With[{
+    v = e /. N[samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
+},
+    NumberQ[v] && (Re[v] < - 10 ^ -10 || Abs[Im[v]] > 10 ^ -10)
+]
+
+(* Whether a square matrix is positive semidefinite for all values the facts of qb allow, as True, False or
+   Undefined. It must be Hermitian first; then its principal minors must be nonnegative (Sylvester's criterion
+   in its form for semidefinite matrices, which needs every principal minor, not only the leading ones). That
+   is 2^d - 1 determinants, so it is used up to d = 4; a diagonal matrix needs only its diagonal, and a larger
+   one its eigenvalues, when they come within a time limit. *)
+positiveSemidefiniteOnDomains[m_, qb_] := With[{
+    hermitian = zeroOnDomains[nonzeroEntries @ onRealSymbols[# - ConjugateTranspose[#] &, m, qb], qb]
+},
+    If[ hermitian =!= True,
+        hermitian,
+        Replace[semidefiniteConditions[m], {
+            cs_List :> nonnegativeOnDomains[cs, qb],
+            _ -> Undefined
+        }]
+    ]
+]
+
+nonzeroEntries[m_SparseArray] := m["NonzeroValues"]
+nonzeroEntries[m_] := Flatten[Normal[m]]
+
+semidefiniteConditions[m_] := With[{d = Length[m]}, Which[
+    AllTrue[SparseArray[m]["NonzeroPositions"], Apply[Equal]], Normal @ Diagonal[m],
+    d <= 4, Det[Normal[m][[#, #]]] & /@ Subsets[Range[d], {1, d}],
+    True, TimeConstrained[Eigenvalues[Normal[m]], $signProofTimeConstraint, $Failed]
+]]
 
 (* simplify *)
 
