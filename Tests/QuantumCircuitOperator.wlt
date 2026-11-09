@@ -906,3 +906,53 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - circuits that close into a single number"]
+
+(* One QAOA layer for MaxCut on the complete graph K_n, closed into the bra-ket
+   <psi| H_C |psi>, so the contraction leaves no open index. *)
+closedQAOA[n_, gm_, th_] := Block[{graph = CompleteGraph[n], hcost, layer},
+    hcost = QuantumOperator[Total[With[{id = QuantumOperator[StringJoin[ConstantArray["I", n]]] / 2},
+        (id - QuantumOperator["ZZ" / 2, #] &) /@ (List @@@ EdgeList[graph])]]];
+    layer = QuantumCircuitOperator[{
+        QuantumCircuitOperator[{StringJoin[ConstantArray["0", n]], "H" -> Range[n]}],
+        QuantumCircuitOperator[("R"[gm, "ZZ"] -> # &) /@ (List @@@ EdgeList[graph])],
+        QuantumCircuitOperator[{"RX"[th] -> Range[n]}]
+    }];
+    {layer /* hcost /* layer["Dagger"], layer, hcost}
+]
+
+(* The closed circuit returns a one-amplitude state equal to <psi| H_C |psi> taken from
+   the open circuit's state vector, for symbolic and exact numeric angles. Every angle is
+   real, so ComplexExpand removes the conjugates exactly before the zero test. *)
+VerificationTest[
+    Table[
+        With[{c = closedQAOA[2, gm, th]},
+            With[{scalar = c[[1]][], psi = Normal[c[[2]][]["StateVector"]], h = Normal[c[[3]]["Matrix"]]},
+                {scalar["Dimension"], Simplify[ComplexExpand[scalar["Scalar"] - Conjugate[psi] . h . psi]] === 0}
+            ]
+        ],
+        {gm, {\[FormalG], Pi / 5}}, {th, {\[FormalT], Pi / 7}}
+    ],
+    ConstantArray[{1, True}, {2, 2}],
+    TestID -> "Closed-circuit-scalar-equals-expectation"
+]
+
+(* A closed qutrit circuit <0| X |psi> picks out the last amplitude of psi. *)
+VerificationTest[
+    QuantumCircuitOperator[{QuantumState[{\[FormalA], \[FormalB], \[FormalC]}, 3], QuantumOperator["X"[3]], QuantumState[{1, 0, 0}, 3]["Dagger"]}][]["Scalar"],
+    \[FormalC],
+    TestID -> "Closed-qutrit-circuit-scalar"
+]
+
+(* The symbolic three-qubit landscape is one formula of a few thousand leaves; wrapping it
+   as a state must not inspect that formula for array structure. Generous limit: the
+   contraction itself takes well under a second. *)
+VerificationTest[
+    TimeConstrained[closedQAOA[3, \[FormalG], \[FormalT]][[1]][]["Dimension"], 20, $Aborted],
+    1,
+    TestID -> "Closed-symbolic-circuit-scalar-is-fast"
+]
+
+EndTestSection[]

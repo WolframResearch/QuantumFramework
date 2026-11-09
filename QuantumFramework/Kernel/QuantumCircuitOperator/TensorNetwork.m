@@ -250,9 +250,15 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ TensorNetworkContract[net, OptionValue["Path"], FilterRules[{opts}, Options[TensorNetworkContract]]];
+    (* A network with no open indices contracts to a single number. It is wrapped as a
+       one-element vector directly: asking for the array dimensions of a large symbolic
+       formula walks the whole expression, which takes seconds on a closed parametrized circuit. *)
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
-            ArrayVector[res],
+            If[ basis["OutputDimensions"] === {} && basis["InputDimensions"] === {} && ! MatchQ[res, _List | _SparseArray],
+                {res},
+                ArrayVector[res]
+            ],
             If[computationalQ, QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]], basis]
         ]
     ];
