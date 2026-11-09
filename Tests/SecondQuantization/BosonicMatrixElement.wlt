@@ -508,4 +508,19 @@ VerificationTest[
     TestID -> "BME-VEV-Exponential"
 ]
 
+(* A power of a sum above NonCommutativeExpand's "ExpandMaxExponent" (30) is still ordered:
+   <0|(b + b†)^(2j)|0> = (2j - 1)!!, the odd ones vanish. *)
+VerificationTest[
+    Table[BosonicVEV[GeneralizedPower[NonCommutativeMultiply, b + bd, n], {{bd}, {b}}], {n, 31, 34}],
+    {0, 31!!, 0, 33!!},
+    TestID -> "BME-VEV-PowerAboveExpandCap"
+]
+
+VerificationTest[
+    Expand[BosonicNormalOrder[GeneralizedPower[NonCommutativeMultiply, b + bd, 31], {{bd}, {b}}] -
+        BosonicNormalOrder[BosonicNormalOrder[GeneralizedPower[NonCommutativeMultiply, b + bd, 30], {{bd}, {b}}] ** (b + bd), {{bd}, {b}}]],
+    0,
+    TestID -> "BME-NormalOrder-PowerAboveExpandCap"
+]
+
 EndTestSection[]

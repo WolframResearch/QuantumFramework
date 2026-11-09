@@ -19,7 +19,7 @@ Legend: ✅ works · 🟡 partly works · ⬜ needs development (idea number) ·
 |---|---|---|---|
 | 1 | one rule for `Exp` of any quadratic (2N×2N matrix, Gauss factors) | 🟡 single mode done (~~`Exp[x b**b + y bd**bd + w bd**b]` returned unchanged~~), quadratic plus linear: `quadraticExp` reads the normal-ordered exponent, disentangles through the su(1,1) matrix and shifts the linear terms away (closed-form u, v and scalar, regular in λ = √(4pq − w²), so the parabolic λ = 0 case such as e^{t x²} is its `Series` limit); antinormal is the normal formula under a → a†, a† → −a. Replaces the pure-squeeze rule with the same output. `adFamilyRules` braids any single-mode generator of degree ≤ 2 (one affine rule replacing the linear and squeeze cases). Checked by exact series of symbols and of Fock elements. Multimode ⬜ | 10 |
 | 2 | coherent elements of ordered products, ⟨α\|e^{P(a†)} f(N) e^{Q(a)}\|β⟩ | ✅ done 2026-11-04, committed `62a54595` (`normalProductElement` with a coherent flag; checked symbolically against D(g)\|β⟩ = e^{(gβ̄−ḡβ)/2}\|β+g⟩ and numerically against 60-level matrices for D, normal and antinormal products, squeeze, wing–f(N)–wing) | 9 |
-| 3 | s-ordered (Weyl) symbol, `NormalOrdered[expr, vars]["Symbol", s]` | ⬜ — no such property | 5 |
+| 3 | s-ordered (Weyl) symbol, `NormalOrdered[expr, vars]["Symbol", s]` | 🟡 prototype outside QF (Mads's choice), `s-ordered-symbol.wls`: e^{−(1−s)/2 Σ∂_{A_i}∂_{B_i}} on the normal symbol, exact on polynomial × Gaussian terms (a linear term j added to the exponent, differentiated and set to 0, plus the Gaussian heat formula), any number of modes. Checked: D(γ) for all s, s = ±1 against normal and antinormal order, C-053, Weyl symbols of \|n⟩⟨n\| for n ≤ 4, C-016 (quadratic H agrees with the Poisson bracket, quartic does not). Returns `$Failed` when `BosonicExpOrder` leaves a mixed exponential unordered. Not in QF: a property cannot attach to polynomials, since `NormalOrdered` of a polynomial evaluates away | 5 |
 | 4 | several modes in the exponential branch of `BosonicMatrixElement` | ✅ functions of the N_k alone (Fock basis: ⟨m\|f(N₁, …)\|n⟩ = f(n) δ_{mn}, substituting each cr_k ** an_k by n_k). Wings ✅ (~~`⟨1,1\|Exp[z bd1**bd2]\|0,0⟩` unevaluated~~): `multimodeProductElement` turns creators, annihilators and N_k into commuting x, y, k, reads F(x) f(k) G(y), and sums the multivariate Taylor coefficient of F G over 0 ≤ k ≤ min(m, n); integer indices, Fock basis. Coherent basis with several modes and symbolic multimode indices not covered | 4 |
 | 5 | f(N) beside bare ladder operators | ✅ Fock/coherent part committed `f76ab7da` (`"Creators"`/`"Annihilators"` tags in `normalFactor`; ⟨m\|a†^p f(N) a^q\|n⟩ in closed form, zero for n < q; checked against 50-level matrices, also between wings and in the coherent basis). Shift rule committed `1d307d37` (`shiftRules` in `BosonicExpSimplify`: a^q f(N) = f(N+q) a^q, f(N) a†^p = a†^p f(N+p), functions of N merge with `Together`, a balanced word beside f(N) becomes a polynomial in N; a† f(N) a left alone for the vacuum). Checked: a f(N) = f(N+1) a against 40-level matrices, ⟨1\|b ** f(N)\|2⟩ = √(2/3), E E† = E² E†² = 1, f-deformed A A† = (N+1) g(N+1)², Holstein–Primakoff S₊S₋ = (2j−N)(N+1). Not covered: another mode between the ladder word and f(N) | 4 |
 | 6 | su(1,1)/su(2) with free label k | ⬜ recipe only — `NonCommutativeAlgebra` with the commutation relations already works in plain WL; his note builds on `BosonicRelations`, which was removed | 3 |
@@ -113,6 +113,8 @@ From the "QF problems found (exact layer)" section of `Operator-Exponentials-QF-
 | ✅ `BosonicExpSimplify` with a mixed quadratic + linear generator | works | gives b − 2x b† − y |
 | ✅ `BosonicExpOrder` of e^{c n + linear}, general quadratic + linear | ~~open~~ fixed by Idea 1 (single mode) | e^{wN + μa† + νa} matches e^{μν(eʷ−1−w)/w²} e^{μ(eʷ−1)/w a†} e^{wN} e^{ν(eʷ−1)/w a} on Fock elements (probe) |
 | ⬜ two-mode general complex-symmetric squeeze in `BosonicExpSimplify` | open | Idea 1 (multimode) |
+| ⬜ linear exponential over several modes, e^{γa₁† − γ̄a₁ + ηa₂† − η̄a₂} | open (found 2026-11-08) | `BosonicExpOrder` returns it unchanged and `BosonicVEV` stays unevaluated; the product D₁ ** D₂ is ordered. Idea 1 (multimode, affine) |
+| ✅ power of a sum above 30, (a + a†)³¹ | fixed 2026-11-08, uncommitted | `NonCommutativeExpand` refuses exponents above its `"ExpandMaxExponent"` (30), so `BosonicNormalOrder` came back unevaluated and `BosonicVEV` errored with private symbols in the output. `ladderOrder` (BosonicAlgebra.m) now builds such powers one factor at a time, normal-ordering after each product (exponent 60 in about 0.5 s, (a₁ + a₁† + a₂ + a₂†)³² in about 14 s); ⟨0\|(a + a†)ⁿ\|0⟩ = (n−1)!! for n = 28 to 34, ⟨1\|(xa + ya†)³³\|0⟩ = 33!! x¹⁶y¹⁷, nested and two-mode powers. Two tests in BosonicMatrixElement.wlt |
 | ✅ `BosonicVEV` of a product of exponentials | fixed | ~~`BosonicVEV` itself still unevaluated~~; ~~a second `BosonicVEV` definition routes non-polynomials~~ `BosonicVEV` is now one definition: `BosonicMatrixElement` between vacuum Fock states, any number of modes, passing `Assumptions` (`Method` dropped) |
 | ⬜ ⟨m\|D(α)\|m⟩, ⟨2m\|S(ξ)\|0⟩ with symbolic m | open | not small: closed forms need a `Piecewise` on the sign of m − n |
 | ➖ Kerr e^{λ n²} in `BosonicExpOrder` | out of reach | not Gaussian; no finite disentangling |
@@ -123,6 +125,83 @@ From the "QF problems found (exact layer)" section of `Operator-Exponentials-QF-
 ## ➖ Out of scope (his class d, ~~68~~ ~~67~~ 66 rows)
 
 P-017 and G-027 moved to ✅ (2026-11-05): their distributions come out of `FourierTransform` of coherent elements, or weakly from `Integrate` with `DiracDelta`. The class-d parts of P-020 (ρ from χ_W) and P-030 (measure, k = 3/4) are ✅ in their rows. Tried and left out: C-014 (needs Weyl symbols, Idea 3), C-097 (disk symbol calculus with free label, Idea 6). The rest unchanged from his note: scalar or matrix identities plain WL already does, infinite-mode and continuum statements, distributions, inequalities, impossibility and existence statements, spectral classifications and cited theorems, half-line differential operators, position-space kernels, untranscribed definitions, phase-space integrals, approximations. See the last section of `Minimal-Bosonic-Design.md` for the row lists.
+
+## Coverage by component (2026-11-08)
+
+Each in-scope row (his class a, b and c, plus P-017 and G-027 moved from class d) checked on paper against five components:
+
+- **Ordering**: polynomials in the ladder operators brought to normal order by `NonCommutativeExpand` over the declared algebra; this includes su(1,1) with a free label k (commutation relations, the Casimir set to k(k−1), the lowest-weight module as a left ideal) and N declared as a generator with N = a†a.
+- **Exponential rule**: Idea 1 written on K₊, K₀, K₋ (2N×2N matrix, affine with linear terms). It both disentangles e^{G} and conjugates linear operators by e^{G}, since conjugation uses the same matrix; conjugation of a sum or a scalar multiple is Idea 7.
+- **Shift rule**: Idea 5's a^q f(N) = f(N+q) a^q, also for f an exponential (moving e^{βa} past e^{cN}).
+- **Elements**: reading Fock elements (Taylor coefficients, n in place of N) and coherent elements (β for a, ᾱ for a†, times the overlap) from the ordered form; Ideas 2 and 4 and the Fock part of Idea 5.
+- **s-ordered symbol**: Idea 3, the only component with no code yet.
+
+Only C-019 fits none: it is a position-space wavefunction. This is a paper check; it has not been run.
+
+| Row | Ordering | Exponential rule | Shift rule | Elements | s-ordered symbol |
+|---|---|---|---|---|---|
+| P-014 / P2-050 | | ✓ | | | |
+| P-006 | | ✓ | | | |
+| C-004 | | ✓ | | | |
+| C-061 | | ✓ | | | |
+| G-001 | ✓ | | | | |
+| C-046 | ✓ | | | | |
+| G-068 | | ✓ | | | |
+| G-071 | ✓ | ✓ | | | |
+| G-095 | ✓ | | | ✓ | |
+| G-037 | ✓ | | | | |
+| G-046 | ✓ | ✓ | | | |
+| C-024 | ✓ | | | | |
+| C-018 | | ✓ | | | |
+| P2-010 / G-022 | | ✓ | | | |
+| P2-012 | ✓ | | | | |
+| P2-042 | ✓ | | | | |
+| B-075 | | | | ✓ | |
+| G-025 | | | | ✓ | |
+| P2-034 | ✓ | | | | |
+| P2-048 | | | | ✓ | |
+| B-097 | ✓ | | | | |
+| C-001 | ✓ | | | | |
+| C-057 | ✓ | | | | |
+| G-094 | ✓ | | | | |
+| X-004 / P-025 / C-041 | | ✓ | | | |
+| P-024 / C-038 | ✓ | | | ✓ | |
+| P-026 / C-042 | | ✓ | | ✓ (symbolic j open) | |
+| C-012 | | | | ✓ | |
+| B-053 | | ✓ | | | |
+| X-003 / G-072 | | ✓ | | ✓ | |
+| C-015 | | ✓ | | | ✓ |
+| X-006 / P-036 / B-048 | | ✓ | | ✓ | |
+| P2-024 | | ✓ | | | |
+| C-019 | | | | | |
+| C-029 | | ✓ | | ✓ | |
+| C-032 | | ✓ | | ✓ | |
+| C-050 | | ✓ | | | |
+| C-022 | | ✓ | | ✓ | |
+| C-054 | | ✓ | | ✓ | |
+| C-030 | | ✓ | | | ✓ |
+| C-053 | | ✓ | | | ✓ |
+| B-026 | | | | ✓ | |
+| B-027 | | | | ✓ | |
+| P-020 / G-029 | | | | ✓ | |
+| G-027 | | | | ✓ | |
+| C-031 | | | ✓ | ✓ | |
+| G-024 | | | | ✓ | |
+| P-017 | | | | ✓ | |
+| B-020 | | | | ✓ | |
+| C-016 | ✓ | | | | ✓ |
+| C-049 | | | | ✓ | ✓ |
+| X-007 / B-107 | | ✓ (general M) | | ✓ | |
+| B-106 | | | | ✓ | |
+| G-040 | | | | ✓ | |
+| G-012 | | | ✓ | ✓ | |
+| G-038 | ✓ | | ✓ | | |
+| G-041 | ✓ | | ✓ | | |
+| P-030 / C-047 | ✓ | | | | |
+| P-028 / C-045 | ✓ | | | | |
+| P2-013 | | ✓ | | | |
+
+For P-028, P-030 and P2-013 no bosonic rule is used: conjugation by e^{ζK₊} ends after three terms, the coherent-state norms come from the left ideal, and the exponential rule needs only the 2×2 group matrix, not k. The claim that the rule written on K₊, K₀, K₋ reproduces the bosonic results is the weakest premise here; it is checked by the exact differential operators a = ∂_z, a† = z, N = z∂_z, K₊ = z, K₀ = z∂_z + k, K₋ = z∂_z² + 2k∂_z acting on z^m.
 
 ## Log
 
@@ -145,3 +224,6 @@ P-017 and G-027 moved to ✅ (2026-11-05): their distributions come out of `Four
 - 2026-11-06: Idea 1 affine step: quadratic plus linear in one mode, ordering and braid; the e^{c n + linear} gap is fixed. `BosonicExpBraid-MixedFamilyIsInert` removed (number + linear now braids; covered by `BosonicExpBraid-QuadraticPastLadder`). 287 SecondQuantization tests pass. Probe now 69 checks, all pass.
 - 2026-11-06: C-029, C-032, C-050 ✅ via Idea 1, no further kernel change except that a number-plus-linear exponent (no squeeze terms) is now written with e^{wN} exactly, so C-032 holds for all real t. C-019 left ⬜: a position-space statement, and QF has no exact position representation. Probe now 72 checks, all pass.
 - 2026-11-06: C-022 and C-054 ✅ via Ideas 1 and 2, no kernel change: coherent elements of the ordered quadratic propagator against the closed Gaussian and the Herman–Kluk integral (closed-form 2-D Gaussian), oscillating and squeezing. Probe now 74 checks, all pass.
+- 2026-11-08: "Coverage by component" section added (Mads): every in-scope row placed against ordering, exponential rule, shift rule, elements and s-ordered symbol; only C-019 fits none. Paper check, not run.
+- 2026-11-08: exponential rule written on K₊, K₀, K₋ checked (`exponential-rule-check.wls`, `exponential-rule-vs-qf.wls`): with K₋ = d/dz, K₀ = z d/dz + k, K₊ = z² d/dz + 2kz, the product e^{pK₊}e^{qK₀}e^{rK₋} read from the 2×2 matrix solves ∂ₜu = Gu exactly for symbolic k, coefficients and f; at k = 1/4 it equals QF's ordered quadratic exponential (Fock m, n ≤ 3, three points). Its one flaw is the scalar g₂₂^{−2k} on the principal branch: past the time g₂₂ crosses the negative real axis it is off by e^{4πik} for every k (−1 at k = 1/4, the known sign bug), so the fix belongs in the rule, not in its bosonic use.
+- 2026-11-08: power-above-30 fix in `ladderOrder` (uncommitted), passed /wl-verify in two rounds (round 1 replaced repeated squaring, too slow, by one factor at a time); all SecondQuantization tests pass with 2 new; probe unchanged (the 3 open checks still open). Idea 3 prototype kept outside QF in `s-ordered-symbol.wls`.

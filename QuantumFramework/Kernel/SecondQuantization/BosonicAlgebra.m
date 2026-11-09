@@ -35,11 +35,25 @@ expandCoefficients[expr_, lv_] :=
         ]
     ]
 
+(* NonCommutativeExpand refuses a power of a sum above "ExpandMaxExponent"; such a power is
+   built one factor at a time, normal-ordering after each product.  Multiplying by the short
+   base keeps every step cheap, where squaring would multiply two long polynomials. *)
+stepPower[w_, k_, alg_] := Fold[NonCommutativeExpand[#1 ** w, alg] &, w, Range[k - 1]]
+
+expandLargePowers[expr_, lv_] :=
+    With[{cap = Lookup[Last @ First @ SystemOptions["NonCommutativeAlgebraOptions" -> "ExpandMaxExponent"], "ExpandMaxExponent"]},
+        expr /. GeneralizedPower[NonCommutativeMultiply, w : Except[Alternatives @@ lv["Generators"]], k_Integer /; k > cap] :>
+            stepPower[NonCommutativeExpand[expandLargePowers[w, lv], lv["Algebra"]], k, lv["Algebra"]]
+    ]
+
 ladderOrder[lv_, Automatic, _] :=
     expandCoefficients[
         NonCommutativeExpand[
-            # //. GeneralizedPower[NonCommutativeMultiply, w_NonCommutativeMultiply, k_Integer ? Positive] :>
-                NonCommutativeMultiply @@ Catenate[ConstantArray[List @@ w, k]],
+            expandLargePowers[
+                # //. GeneralizedPower[NonCommutativeMultiply, w_NonCommutativeMultiply, k_Integer ? Positive] :>
+                    NonCommutativeMultiply @@ Catenate[ConstantArray[List @@ w, k]],
+                lv
+            ],
             lv["Algebra"]
         ],
         lv
