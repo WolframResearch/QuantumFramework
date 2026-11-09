@@ -36,13 +36,13 @@ chk["P2-010", With[{r = expo[BosonicExpSimplify[Exp[be bd - bec b] ** Exp[al bd 
     Simplify[r - ((al + be) bd - (alc + bec) b + (bec al - be alc)/2)] === 0 || Simplify[r - ((al + be) bd - (alc + bec) b + (be alc - bec al)/2)] === 0]];
 chk["P2-012", And[zeroQ[(q ** q + p ** p)/4 - (nn + 1/2)/2, v], zeroQ[(q ** p + p ** q)/4 - I (bd ** bd - b ** b)/4, v]]];
 chk["P2-042", BosonicNormalOrder[b ** (ep bd + epc b) - (ep bd + epc b) ** b, v] === ep];
-chk["B-075", And[Simplify[BosonicMatrixElement[{al, be}, Exp[c Log[xi] nn], v, "Basis" -> "Coherent"] - Exp[xi^c Conjugate[al] be - (Abs[al]^2 + Abs[be]^2)/2]] === 0,
+chk["B-075", And[Simplify[BosonicMatrixElement[{al, be}, Exp[c Log[xi] nn], v, "Basis" -> "Coherent"] - Exp[xi^c Conjugate[al] be - (Conjugate[al] al + Conjugate[be] be)/2]] === 0,
     Simplify[BosonicMatrixElement[{n, n}, (c nn - z)^-1, v] - 1/(c n - z)] === 0]];
 chk["G-025", Simplify[BosonicMatrixElement[{be, al}, bd, v, "Basis" -> "Coherent"] - Conjugate[be] BosonicMatrixElement[{be, al}, 1, v, "Basis" -> "Coherent"]] === 0];
 chk["P2-034", With[{L = Function[X, gam (nu + 1) (bd ** X ** b - (nn ** X + X ** nn)/2) + gam nu (b ** X ** bd - (b ** bd ** X + X ** b ** bd)/2)]},
     And[zeroQ[L[b] + gam b/2, v], zeroQ[L[nn] - (gam nu - gam nn), v]]]];
 chk["P2-048", Simplify[Sum[BosonicMatrixElement[{k, k}, Exp[-s (2 nn + 1)], v], {k, 0, Infinity}] - 1/(2 Sinh[s])] === 0];
-chk["C-012", Simplify[BosonicMatrixElement[{al, be}, Exp[Log[w] nn], v, "Basis" -> "Coherent"] - Exp[w Conjugate[al] be - (Abs[al]^2 + Abs[be]^2)/2]] === 0];
+chk["C-012", Simplify[BosonicMatrixElement[{al, be}, Exp[Log[w] nn], v, "Basis" -> "Coherent"] - Exp[w Conjugate[al] be - (Conjugate[al] al + Conjugate[be] be)/2]] === 0];
 chk["B-097", Simplify[BosonicNormalOrder[(E^(-I om t2) b) ** (E^(I om t1) bd), v] - E^(-I om (t2 - t1)) (nn + 1)] === 0];
 chk["C-001", BosonicNormalOrder[p ** q - q ** p, v] === -I];
 chk["C-057", BosonicNormalOrder[(fc1 b1 + fc2 b2 + fc3 b3) ** (g1 bd1 + g2 bd2 + g3 bd3) - (g1 bd1 + g2 bd2 + g3 bd3) ** (fc1 b1 + fc2 b2 + fc3 b3), v3] === fc1 g1 + fc2 g2 + fc3 g3];
@@ -59,7 +59,7 @@ chk["G-012 E+E", And[Table[BosonicMatrixElement[{k, k}, bd ** ((nn + 1)^-1) ** b
     BosonicMatrixElement[{1, 0}, bd ** ((nn + 1)^-1) ** b, v] === 0]];
 chk["B-020 |1><1|", And[Table[BosonicMatrixElement[{i, k}, bd ** NormalOrdered[Exp[-nn], v] ** b, v], {i, 0, 2}, {k, 0, 2}] === {{0, 0, 0}, {0, 1, 0}, {0, 0, 0}},
     Simplify[BosonicMatrixElement[{al, be}, bd ** NormalOrdered[Exp[-nn], v] ** b, v, "Basis" -> "Coherent"] -
-        Conjugate[al] be Exp[-(Abs[al]^2 + Abs[be]^2)/2]] === 0]];
+        Conjugate[al] be Exp[-(Conjugate[al] al + Conjugate[be] be)/2]] === 0]];
 chk["shorthand {b}", (BosonicNormalOrder[b ** SuperDagger[b], {b}] /. SuperDagger[b] -> bd) === BosonicNormalOrder[b ** bd, v]];
 chk["Idea5 shift", And[BosonicExpSimplify[b ** (nn + 1)^(-1/2), v] === (nn + 2)^(-1/2) ** b,
     BosonicExpSimplify[(nn + 1)^(-1/2) ** bd, v] === bd ** (nn + 2)^(-1/2),
@@ -149,7 +149,10 @@ chk["C-029 vacuum phase", Module[{al, be, ga, t, u, v0, F},
     v0 = BosonicMatrixElement[{0, 0}, BosonicExpOrder[Exp[-I t (al q ** q + be p ** p + ga (q ** p + p ** q))/2], v], v];
     F = MatrixExp[t {{ga, be}, {-al, -ga}}];
     u = (F[[1, 1]] + F[[2, 2]] - I (F[[2, 1]] - F[[1, 2]]))/2;
-    And @@ (Simplify[TrigToExp[v0^-2 - u], t > 0 && #] === 0 & /@ {al be - ga^2 > 0, al be - ga^2 < 0})]];
+    And @@ (Simplify[TrigToExp[v0^-2 - u], t > 0 && #] === 0 & /@ Flatten[Outer[And, {al be - ga^2 > 0, al be - ga^2 < 0}, {al + be > 0, al + be < 0}]])]];
+chk["root continuous", Module[{t, v0},
+    v0 = BosonicMatrixElement[{0, 0}, BosonicExpOrder[Exp[-I t (nn + (1/5 + I/10) bd ** bd + (1/5 - I/10) b ** b)], v], v];
+    Simplify[Limit[v0, t -> Pi Sqrt[5]/2, Direction -> "FromBelow"] - Limit[v0, t -> Pi Sqrt[5]/2, Direction -> "FromAbove"]] === 0]];
 chk["C-032 driven osc", Module[{f, t, u},
     u = BosonicExpOrder[Exp[-I t (nn + 1/2 + f q)], v];
     Simplify[TrigToExp[Table[BosonicMatrixElement[{m, n}, u, v] - BosonicMatrixElement[{m, n},
@@ -167,7 +170,7 @@ chk["C-050 Riccati", Module[{l, lb, mu, t, u, wing, om, rr, x},
     qf = (BosonicMatrixElement[{aw, aw2}, BosonicExpOrder[Exp[-I t (al q ** q + be p ** p)/2], v], v, "Basis" -> "Coherent"] /. Abs[r_]^2 :> r Conjugate[r]) /.
         {Conjugate[aw] -> al2b[{z1, z2}], Conjugate[aw2] -> al2b[{w1, w2}]} /. {aw -> al2[{z1, z2}], aw2 -> al2[{w1, w2}]};
     same[o_] := And @@ (Simplify[TrigToExp[D[Log[qf], {labs}] - D[Log[o], {labs}]], Element[labs, Reals] && t > 0 && #] === {0, 0, 0, 0} &&
-        Simplify[TrigToExp[(qf/o /. Thread[labs -> 0])^2], t > 0 && #] === 1 & /@ {al > 0 && be > 0, al > 0 && be < 0}) && Limit[qf/o /. Thread[labs -> 0], t -> 0] === 1;
+        Simplify[TrigToExp[(qf/o /. Thread[labs -> 0])^2], t > 0 && #] === 1 & /@ {al > 0 && be > 0, al < 0 && be < 0, al > 0 && be < 0 && al + be > 0, al > 0 && be < 0 && al + be < 0}) && Limit[qf/o /. Thread[labs -> 0], t -> 0] === 1;
     y = fa + fd + I (fb - fc); w = (fa - fd + I (fb + fc))/y;
     {x, xi} = {z1, z2} - F . {w1, w2};
     hk = Module[{zq, zp, ex, mm, bb},

@@ -68,29 +68,35 @@ thm44ANRHS[L_, R_, lambda_, {cr_, an_}] :=
 (* e^(w N + p ad^2 + q a^2 + mu ad + nu a) through the su(1,1) matrix exp[{{w, 2 p}, {-2 q, -w}}]: its
    corner D = Cos[l] - w Sinc[l], l = Sqrt[4 p q - w^2], gives e^(-w/2) D^(-1/2) e^(p S/D ad^2 + u ad)
    e^(-Log[D] N) e^(q S/D a^2 + v a), S = Sinc[l], with u, v and the scalar from shifting the linear
-   terms away.  Every coefficient is even and regular in l, so l = 0 is its Series limit.  Without squeeze
-   terms D = e^-w, written exactly so that no root takes a principal branch.  The antinormal
+   terms away.  Every coefficient but the root is even and regular in l, so l = 0 is its Series limit.
+   The root D^(-1/2) winds with D in an oscillating evolution, so for w != 0 it is the separate scalar
+   e^r = e^(-i l/2) (e^(-i l) D)^(-1/2) with l = i w Sqrt[1 - 4 p q/w^2]: e^(-i l) D keeps a positive real
+   part for any Hermitian generator at real time and any real squeeze, so its principal root is the
+   continuous one.  Without squeeze terms D = e^-w, written exactly.  The antinormal
    product is the normal one under a -> ad, ad -> -a, which maps (w, p, q, mu, nu) to (-w, q, p, -nu, mu). *)
 quadraticExp[g_, {cr_, an_}, lv_, s_] :=
-    Module[{x, y, l, coeffs, c, w, p, q, mu, nu, t, m, u, v, e},
+    Module[{x, y, l, coeffs, c, w, p, q, mu, nu, t, m, u, v, e, r},
         coeffs = Association @ CoefficientRules[Expand @ dequantize[#, Thread[{cr, an} -> {x, y}]], {x, y}] &;
         c = coeffs[g];
         If[ ! SubsetQ[{{0, 0}, {1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, Keys[c]] || ! FreeQ[Values[c], Alternatives @@ lv["Generators"]], Return[$Failed, Module]];
         c = coeffs[BosonicNormalOrder[g, {{cr}, {an}}] /. $nonuls];
         If[ AnyTrue[{{{1, 1}}, {{2, 0}, {1, 0}}, {{0, 2}, {0, 1}}, {{1, 0}, {0, 1}}}, SubsetQ[Append[#, {0, 0}], Keys[c]] &], Return[$Failed, Module]];
         {w, p, q, mu, nu} = {s, 1, 1, s, 1} Lookup[c, Key /@ If[s == 1, Identity, Map[Reverse]] @ {{1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, 0];
-        {t, m, u, v, e} = Which[
-            p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2},
-            PossibleZeroQ[4 p q - w^2], Normal @ Series[#, {l, 0, 0}],
-            True, # /. l -> Sqrt[4 p q - w^2] /. $nonuls
+        {t, m, u, v, e, r} = Which[
+            p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2, w/2},
+            PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[#, {l, 0, 0}], l, 0],
+            True, ReplacePart[# /. l -> Sqrt[4 p q - w^2], 6 -> (#[[6]] /. l -> If[w === 0, Sqrt[4 p q], I w Sqrt[1 - 4 p q/w^2]])] /. $nonuls
         ] & @ Join[
             {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
             {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
              nu Sinc[l] - (w nu - 2 q mu) (1 - Cos[l])/l^2,
              ((q mu^2 + p nu^2) (-2 w - (l^2 - 2 w) Cos[l] + l (1 + w) Sin[l]) + mu nu (l^2 + 2 w^2 + (l^2 (w - 1) - 2 w^2) Cos[l] - l w (1 + w) Sin[l]))/l^4
-            } / (Cos[l] - w Sinc[l])];
+            } / (Cos[l] - w Sinc[l]),
+            {(-I l - Log[E^(-I l) (Cos[l] - w Sinc[l])])/2}];
         Exp[Lookup[c, Key[{0, 0}], 0] - s w/2 + e] (ncJoin[
-            Exp[p t GeneralizedPower[NonCommutativeMultiply, #1, 2] + s u #1], Exp[m (1/2 + s #1 ** #2)], Exp[q t GeneralizedPower[NonCommutativeMultiply, #2, 2] + v #2]
+            Exp[p t GeneralizedPower[NonCommutativeMultiply, #1, 2] + s u #1],
+            Exp[If[w === 0, m (1/2 + s #1 ** #2), r + m s #1 ** #2]],
+            Exp[q t GeneralizedPower[NonCommutativeMultiply, #2, 2] + v #2]
         ] & @@ If[s == 1, {cr, an}, {an, cr}])
     ]
 
@@ -380,7 +386,9 @@ BosonicExpOrder::usage =
 
 BosonicExpOrder::ordering = "`1` is not a valid setting for \"Ordering\"; use \"Normal\" or \"Antinormal\"."
 
-BosonicExpOrder::assum = "`1` reads as assumptions rather than ladder operators; give the ladder operators second and the assumptions as Assumptions -> `1`."
+BosonicExpOrder::time = "Ordering stopped after the TimeConstraint of `1` seconds; the input is returned unordered."
+
+BosonicExpOrder::assum ="`1` reads as assumptions rather than ladder operators; give the ladder operators second and the assumptions as Assumptions -> `1`."
 
 Options[BosonicExpOrder] = {
     "Ordering" -> "Normal",
@@ -400,7 +408,8 @@ BosonicExpOrder[expr_, vars_, opts : OptionsPattern[]] :=
             $Failed,
             Replace[OptionValue["Ordering"], {
                 ord : "Normal" | "Antinormal" :>
-                    TimeConstrained[expApplyRules[expr, OptionValue[Assumptions], expRules[lv, ord], lv], OptionValue[TimeConstraint], expr],
+                    TimeConstrained[expApplyRules[expr, OptionValue[Assumptions], expRules[lv, ord], lv], OptionValue[TimeConstraint],
+                        Message[BosonicExpOrder::time, OptionValue[TimeConstraint]]; expr],
                 other_ :> (Message[BosonicExpOrder::ordering, other]; $Failed)
             }]
         ]

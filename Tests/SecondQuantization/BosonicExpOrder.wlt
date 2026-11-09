@@ -433,6 +433,22 @@ VerificationTest[
     TestID -> "SqueezeOperatorConvention2"
 ]
 
+(* The polar form S(r e^{i th}) carries no Arg or Abs: its normal form is written in r and th, and
+   BosonicExpOrder of its weak form gives the same product. *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        {
+            SqueezeOperator[{r, th}, Infinity, {a}, "Ordering" -> "Normal"],
+            Simplify[BosonicExpOrder[SqueezeOperator[{r, th}, Infinity, {a}], $vA, Assumptions -> r > 0 && th \[Element] Reals] -
+                SqueezeOperator[{r, th}, Infinity, {a}, "Ordering" -> "Normal"], r > 0 && th \[Element] Reals]
+        }
+    ],
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        {Exp[-E^(I th) Tanh[r]/2 ad ** ad] ** Sech[r]^(ad ** a + 1/2) ** Exp[E^(-I th) Tanh[r]/2 a ** a], 0}
+    ],
+    TestID -> "SqueezeOperatorPolar"
+]
+
 (* Any single-mode exponent of degree two, e^{t(q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a)}, disentangles
    in either order: the general one, the parabolic (a + a^dagger)^2 + mu a^dagger + nu a where 4pq = w^2 and
    the coefficients are the l -> 0 limits, and a number term beside linear ones. An ordered product's
@@ -443,7 +459,7 @@ VerificationTest[
     Module[{p, q, w, mu, nu, t, x, y, sym, fac},
         With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
             sym[e_] := e /. GeneralizedPower[NonCommutativeMultiply, o_, k_] :> o^k /. NonCommutativeMultiply -> Times /. {ad -> x, a -> y};
-            fac[n_, mid_][f_] := With[{e = Expand[Replace[f, {Power[E, z_] :> z, Power[b_, z_] :> z Log[b]}]]},
+            fac[n_, mid_][f_] := With[{e = Expand[Replace[f, {Times[c__, Power[b_, z_ /; ! FreeQ[z, n]]] :> Log[Times[c]] + z Log[b], Power[b_, z_] :> z Log[b]}]]},
                 Exp[sym[e - Coefficient[e, n] n] + mid[Coefficient[e, n]] x y]];
             Table[
                 Simplify[Normal[Series[BosonicExpOrder[Exp[t h], $vA, "Ordering" -> o[[1]]] /. c_. NonCommutativeMultiply[f__] :> c Times @@ (fac[o[[2]], o[[3]]] /@ {f}), {t, 0, 3}]] -
@@ -455,6 +471,21 @@ VerificationTest[
     ],
     ConstantArray[0, {3, 2}],
     TestID -> "DisentanglingQuadraticPlusLinear"
+]
+
+(* The root D^(-1/2) stays continuous where D crosses the negative real axis: for e^{-itH} with
+   H = N + c a^dagger^2 + conj(c) a^2, c = 1/5 + i/10, D winds once per period 2 Pi/Omega, Omega = 2/Sqrt[5],
+   and the vacuum element has one limit from both sides of the first crossing t = Pi Sqrt[5]/2. *)
+VerificationTest[
+    Module[{t},
+        With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+            With[{v0 = BosonicMatrixElement[{0, 0}, BosonicExpOrder[Exp[-I t (ad ** a + (1/5 + I/10) ad ** ad + (1/5 - I/10) a ** a)], $vA], $vA]},
+                Simplify[Limit[v0, t -> Pi Sqrt[5]/2, Direction -> "FromBelow"] - Limit[v0, t -> Pi Sqrt[5]/2, Direction -> "FromAbove"]]
+            ]
+        ]
+    ],
+    0,
+    TestID -> "DisentanglingRootContinuousInTime"
 ]
 
 EndTestSection[]

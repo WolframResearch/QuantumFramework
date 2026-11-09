@@ -177,7 +177,7 @@ fockLadderElement[m_, n_, p_, q_] :=
     KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]]
 
 coherentOverlap[\[Alpha]_, \[Beta]_] :=
-    Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]
+    Exp[Conjugate[\[Alpha]] \[Beta] - (Conjugate[\[Alpha]] \[Alpha] + Conjugate[\[Beta]] \[Beta])/2]
 
 ladderSum[element_, {ms_, ns_}, expr_, lv_Association] :=
     Module[{x, y, k = Length[lv["Annihilators"]], vars, p, r, e},
@@ -311,7 +311,7 @@ normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
         mono = scalar KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]] (f /. j -> n - q) &;
         r = Which[
             coherent,
-                scalar (fu /. x -> Conjugate[m]) (fd /. x -> n) Exp[-(Abs[m]^2 + Abs[n]^2)/2] *
+                scalar (fu /. x -> Conjugate[m]) (fd /. x -> n) Exp[-(Conjugate[m] m + Conjugate[n] n)/2] *
                     (Sum[f t^j/j!, {j, 0, Infinity}] /. t -> Conjugate[m] n),
             fu === 1 && fd === 1, scalar (f /. j -> n) KroneckerDelta[m, n],
             u === 0 && w === 0,
