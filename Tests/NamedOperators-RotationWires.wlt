@@ -73,15 +73,15 @@ Scan[
     Tuples[{Keys[$pauli], {3, 4}}]
 ];
 
-(* a qudit rotation is stored as Simplify returns the operator exponential
-   exp(-i theta/2 sigma_k), and is the same object whether it is built on {2}, placed on {2}
+(* a qudit rotation is stored as the operator exponential exp(-i theta/2 sigma_k) returns it,
+   not simplified when built, and is the same object whether it is built on {2}, placed on {2}
    after being built without a wire, or given as name -> 2 in a circuit. *)
 Scan[
     Function[{gd},
         VerificationTest[
             With[{
                 op = gd[[1]][\[Theta], gd[[2]]],
-                exp = Simplify[QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]]
+                exp = QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]
             },
                 With[{qo = QuantumOperator[op, {2}]},
                     {

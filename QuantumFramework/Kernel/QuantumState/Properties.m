@@ -340,15 +340,35 @@ amplitudeWeights[qs_ ? symbolicParametersQ, v_SparseArray] :=
 
 amplitudeWeights[qs_ ? symbolicParametersQ, v_] := valueWeights[qs, Normal[v]]
 
-(* An amplitude holding a symbol with no fact keeps |x|^2: neither its conjugate nor the facts can settle it,
-   so it is neither conjugated nor refined. The others are weighed with their conjugates, taken on the facts
-   in one call. *)
+(* An amplitude holding a symbol with no fact is weighed factor by factor (absSquared), with no Refine: a
+   symbol with no fact keeps |z|^2, and the factors of the real symbols are settled exactly. The others are
+   weighed with their conjugates, taken on the facts in one call. *)
 valueWeights[qs_, xs_List] := With[{reals = realSymbols[qs]}, {real = SubsetQ[reals, questionSymbols[#]] & /@ xs}, {ys = Pick[xs, real]},
-    If[ ys === {},
-        Abs[xs] ^ 2,
-        ReplacePart[Abs[xs] ^ 2, Thread[Position[real, True] -> MapThread[amplitudeWeight[qs], {ys, conjugateOnDomains[ys, qs["Basis"]]}]]]
+    With[{free = absSquared[qs] /@ xs},
+        If[ ys === {},
+            free,
+            ReplacePart[free, Thread[Position[real, True] -> MapThread[amplitudeWeight[qs], {ys, conjugateOnDomains[ys, qs["Basis"]]}]]]
+        ]
     ]
 ]
+
+(* |x|^2 factor by factor: of a product, the product; of an integer power, the power; of e^y, e^(y + Conjugate[y]) with
+   the conjugate taken on the facts, so a phase e^(-I theta / 2) with theta real gives 1; of a factor real by
+   its structure, its square; anything else, a sum or a symbol with no fact, keeps |x|^2. *)
+absSquared[qs_][x_Times] := Times @@ (absSquared[qs] /@ List @@ x)
+absSquared[qs_][Power[b_, n_Integer]] := absSquared[qs][b] ^ n
+absSquared[qs_][Power[E, y_]] := Exp[2 ComplexExpand[Re[y], nonRealSymbols[qs, y]]]
+absSquared[qs_][x_] /; realExpressionQ[qs][x] := x ^ 2
+absSquared[qs_][x_] := Abs[x] ^ 2
+
+nonRealSymbols[qs_, x_] := Complement[questionSymbols[x], realSymbols[qs]]
+
+(* An exponent holding a conjugate, i z - i Conjugate[z], written through real and imaginary parts, -2 Im[z],
+   the real form the norm of a phase takes *)
+realExponents[qs_][x_] := x /. Power[E, y_] /; ! FreeQ[y, _Conjugate] :> Exp[ComplexExpand[y, nonRealSymbols[qs, y]]]
+
+realExpressionQ[qs_][x_] := SubsetQ[realSymbols[qs], questionSymbols[x]] && FreeQ[x, _Complex | Power[_, Except[_Integer]] | _Abs | _Conjugate] ||
+    NumericQ[x] && Im[x] == 0
 
 amplitudeWeight[_][x_, cx_] /; FreeQ[cx, _Conjugate] && ! MatchQ[x, _Plus] && FreeQ[factorList[x], _Plus] := x cx
 
@@ -594,7 +614,7 @@ QuantumStateProp[qs_, "Norm"] /; symbolicParametersQ[qs] && qs["StateType"] === 
    z Conjugate[z] is |z|^2. Where a Conjugate is left over the sum's reality is not visible, and the sum
    of the weights |v_i|^2 stands instead *)
 parameterNormSquared[qs_] := With[{v = Normal @ qs["StateVector"], assumptions = qs["ParameterAssumptions"]},
-    With[{n2 = Total[v Normal[conjugateOnDomains[v, qs["Basis"]]]]}, {zs = DeleteDuplicates @ Cases[n2, Conjugate[z_] :> z, {0, Infinity}]},
+    With[{n2 = realExponents[qs][Total[v Normal[conjugateOnDomains[v, qs["Basis"]]]]]}, {zs = DeleteDuplicates @ Cases[n2, Conjugate[z_] :> z, {0, Infinity}]},
         Replace[
             If[ zs === {},
                 coefficientOnFacts[n2, assumptions],
@@ -737,11 +757,11 @@ QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["Norma
 
 QuantumStateProp[qs_, "MatrixDimensions"] := Replace[{qs["Dimension"], qs["Dimension"]}, {0, 0} -> {1, 0}]
 
-QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[refineOnFacts[qs["DensityMatrix"], qs["Basis"]]]
 
-QuantumStateProp[qs_, "Eigenvectors", opts___] := eigenvectors[qs["DensityMatrix"], opts]
+QuantumStateProp[qs_, "Eigenvectors", opts___] := eigenvectors[refineOnFacts[qs["DensityMatrix"], qs["Basis"]], opts]
 
-QuantumStateProp[qs_, "Eigensystem", opts___] := eigensystem[qs["DensityMatrix"], opts]
+QuantumStateProp[qs_, "Eigensystem", opts___] := eigensystem[refineOnFacts[qs["DensityMatrix"], qs["Basis"]], opts]
 
 QuantumStateProp[qs_, "Eigenstates", opts___] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors", opts]
 

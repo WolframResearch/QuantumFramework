@@ -833,4 +833,14 @@ VerificationTest[
     TestID -> "SymbolDomains-ParametersStayReal"
 ]
 
+(* An eigensystem is solved on the matrix refined on its facts: {{1, Sqrt[p^2] - p}, {0, 1}} with p in [0, 1] is
+   the identity, with two independent eigenvectors, not a Jordan block with a zero vector. *)
+VerificationTest[
+    With[{v = QuantumOperator[{{1, Sqrt[p ^ 2] - p}, {0, 1}}, "SymbolDomains" -> {p -> Interval[{0, 1}]}]["Eigenvectors"]},
+        {MemberQ[v, {0, 0}], MatrixRank[v]}
+    ],
+    {False, 2},
+    TestID -> "SymbolDomains-EigenvectorsOnFacts"
+]
+
 EndTestSection[]

@@ -564,11 +564,13 @@ QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
 symbolicEntries[m_SparseArray] := m["NonzeroValues"]
 symbolicEntries[m_] := Flatten[Normal[m]]
 
-QuantumOperatorProp[qo_, "Eigenvalues", opts___] /; qo["SquareQ"] := eigenvalues[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+(* The matrix is refined on its facts first: an entry the facts make zero, Sqrt[p^2] - p for p >= 0, is then
+   zero for the eigensolver too, which would otherwise read a multiple of the identity as a Jordan block. *)
+QuantumOperatorProp[qo_, "Eigenvalues", opts___] /; qo["SquareQ"] := eigenvalues[refineOnFacts[qo["MatrixRepresentation"], qo["Basis"]], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvectors[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvectors[refineOnFacts[qo["MatrixRepresentation"], qo["Basis"]], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[refineOnFacts[qo["MatrixRepresentation"], qo["Basis"]], opts, "Sort" -> False, "Normalize" -> True]
 
 QuantumOperator::noeigenbasis = "the eigenvectors of the operator span only `1` of its `2` dimensions at the precision of its eigenvectors, so it has no eigenbasis";
 

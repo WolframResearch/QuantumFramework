@@ -167,26 +167,12 @@ QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumO
 
 (* exp(-i angle/2 sigma_k) for a qubit: cos(angle/2) - i sin(angle/2) sigma_k, since
    sigma_k^2 = 1. A qudit rotation is the operator exponential of the generalized Pauli
-   operator passed through Simplify, built by the rules without a wire below and then
-   placed on its wire, so it is stored as Simplify returns it. *)
+   operator, built by the rules without a wire below and then placed on its wire. No
+   rotation is simplified when built: for a qudit it costs more than it saves, and a
+   property that needs a short form cleans it on the facts. *)
 rotationMatrix[3, angle_, 2] := DiagonalMatrix[zRotationPhases[angle]]
 
-(* Simplify of the phases e^(-+i angle/2) is skipped for an inexact number, and, with no
-   $Assumptions, for a single parameter (theta, theta[1], Subscript[theta, 1]) times an
-   integer or a rational, where it returns the phases as they are; any other angle, a sum,
-   a function of parameters or a numeric function of an integer such as ArcCos[2] among
-   them, keeps it. *)
-zRotationPhases[angle_] := With[{phases = {Exp[- I angle / 2], Exp[I angle / 2]}},
-    If[ InexactNumberQ[angle] || $Assumptions === True && MatchQ[angle, _ ? angleParameterQ | (_Integer | _Rational) _ ? angleParameterQ],
-        phases,
-        Simplify[phases]
-    ]
-]
-
-angleParameterQ[s_Symbol] := ! NumericQ[s]
-angleParameterQ[e : (_Symbol ? angleParameterQ)[__Integer]] := ! NumericQ[e]
-angleParameterQ[Subscript[_Symbol ? angleParameterQ, __Integer]] := True
-angleParameterQ[_] := False
+zRotationPhases[angle_] := {Exp[- I angle / 2], Exp[I angle / 2]}
 
 rotationMatrix[k_, angle_, 2] := Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[k]
 
@@ -205,7 +191,7 @@ QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : 2 : 2], qudit 
 QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
         QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[1], "Label" -> Subscript["R", "X"][angle], roleDomainOption[{angle}, Reals]],
-        Simplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]], "Label" -> Subscript["R", "X"][angle], roleDomainOption[{angle}, Reals]]
+        QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]], "Label" -> Subscript["R", "X"][angle], roleDomainOption[{angle}, Reals]]
     ],
     opts
 ]
@@ -213,7 +199,7 @@ QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Pos
 QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
         QuantumOperator[Cos[angle / 2] IdentityMatrix[2] - I Sin[angle / 2] PauliMatrix[2], "Label" -> Subscript["R", "Y"][angle], roleDomainOption[{angle}, Reals]],
-        Simplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]], "Label" -> Subscript["R", "Y"][angle], roleDomainOption[{angle}, Reals]]
+        QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]], "Label" -> Subscript["R", "Y"][angle], roleDomainOption[{angle}, Reals]]
     ],
     opts
 ]
@@ -221,7 +207,7 @@ QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Pos
 QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     If[ dimension == 2,
         QuantumOperator[rotationMatrix[3, angle, 2], "Label" -> Subscript["R", "Z"][angle], roleDomainOption[{angle}, Reals]],
-        Simplify @ QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]], "Label" -> Subscript["R", "Z"][angle], roleDomainOption[{angle}, Reals]]
+        QuantumOperator[Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]], "Label" -> Subscript["R", "Z"][angle], roleDomainOption[{angle}, Reals]]
     ],
     opts
 ]

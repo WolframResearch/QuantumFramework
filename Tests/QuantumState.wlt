@@ -1987,12 +1987,14 @@ VerificationTest[
     TestID -> "DeclaredReal-Undeclared-Exponent-RealNorm"
 ]
 
-(* A real θ < 0 takes Sqrt[θ] off the real line; the norm still holds there. *)
+(* Sqrt[θ] of a declared parameter with no domain needs the sign of θ: θ >= 0 is taken, with one message, and
+   kept as a fact, so the norm is Sqrt[θ + |α|^2]. *)
 VerificationTest[
-    With[{n = QuantumState[{Sqrt[\[Theta]], \[Alpha]}, "Parameters" -> {\[Theta]}]["Norm"]},
-        {n, n /. {\[Theta] -> -2, \[Alpha] -> 1 + I}}
+    With[{s = QuantumState[{Sqrt[\[Theta]], \[Alpha]}, "Parameters" -> {\[Theta]}]},
+        {s["Norm"], s["Basis"]["SymbolDomains"]}
     ],
-    {Sqrt[Abs[\[Alpha]] ^ 2 + Abs[\[Theta]]], 2},
+    {Sqrt[\[Theta] + Abs[\[Alpha]] ^ 2], <|\[Theta] -> {Interval[{0, Infinity}]}|>},
+    {QuantumState::assumed},
     TestID -> "DeclaredReal-NegativeParameter-Sqrt"
 ]
 
@@ -2079,7 +2081,7 @@ VerificationTest[
 (* Only the declared symbols are real: a formal symbol beside them stays complex. *)
 VerificationTest[
     Normal @ QuantumState[{\[FormalR] Cos[\[Theta]], Sin[\[Theta]]}, "Parameters" -> {\[Theta]}]["Weights"],
-    {Abs[\[FormalR] Cos[\[Theta]]] ^ 2, Sin[\[Theta]] ^ 2},
+    {Abs[\[FormalR]] ^ 2 Cos[\[Theta]] ^ 2, Sin[\[Theta]] ^ 2},
     TestID -> "DeclaredReal-FormalSymbol-StaysComplex"
 ]
 
