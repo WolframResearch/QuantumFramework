@@ -2796,4 +2796,21 @@ VerificationTest[
     TestID -> "Measure-PauliString-UndeterminedOutcome"
 ]
 
+(* Strings of a random 120-qubit state give back the same generators, with       *)
+(* destabilizers that complete them to a symplectic basis: the full tableau T     *)
+(* satisfies T J T^T = J mod 2, rows ordered destabilizers then stabilizers.      *)
+VerificationTest[
+    Block[{n = 120, gens, ps, m},
+        SeedRandom[7];
+        gens = PauliStabilizer["Random", n]["Generators"];
+        ps = PauliStabilizer[gens];
+        m = Normal[ps["Matrix"]];
+        {ps["Generators"] === gens,
+         Mod[Join[m[[All, n + 1 ;;]], m[[All, ;; n]], 2] . Transpose[m], 2] ===
+            ArrayFlatten[{{0, IdentityMatrix[n]}, {IdentityMatrix[n], 0}}]}
+    ],
+    {True, True},
+    TestID -> "Ctor-StringList-Destabilizers-Symplectic-Large"
+]
+
 EndTestSection[]
