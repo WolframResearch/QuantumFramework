@@ -449,6 +449,20 @@ VerificationTest[
     TestID -> "SqueezeOperatorPolar"
 ]
 
+(* The polar form also builds the truncated matrix: equal to the one from r e^{i th} in every ordering, and
+   with symbolic r and th written in them alone, its normal-order entries the closed forms of BosonicMatrixElement. *)
+VerificationTest[
+    {
+        Normal[SqueezeOperator[{1/2, Pi/3}, 4, "Ordering" -> #]["Matrix"]] == Normal[SqueezeOperator[E^(I Pi/3)/2, 4, "Ordering" -> #]["Matrix"]] & /@
+            {"Normal", "Weak", "Antinormal"},
+        FreeQ[Normal[SqueezeOperator[{r, th}, 4, "Ordering" -> #]["Matrix"]], Abs | Arg | Conjugate] & /@ {"Normal", "Weak", "Antinormal"},
+        Simplify[Normal[SqueezeOperator[{r, th}, 4]["Matrix"]][[{1, 2, 3}, {1, 2, 1}]] -
+            Outer[BosonicMatrixElement[{#1, #2}, SqueezeOperator[{r, th}]] &, {0, 1, 2}, {0, 1, 0}], r > 0 && th \[Element] Reals]
+    },
+    {{True, True, True}, {True, True, True}, ConstantArray[0, {3, 3}]},
+    TestID -> "SqueezeOperatorPolarTruncated"
+]
+
 (* Any single-mode exponent of degree two, e^{t(q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a)}, disentangles
    in either order: the general one, the parabolic (a + a^dagger)^2 + mu a^dagger + nu a where 4pq = w^2 and
    the coefficients are the l -> 0 limits, and a number term beside linear ones. An ordered product's
@@ -486,6 +500,18 @@ VerificationTest[
     ],
     0,
     TestID -> "DisentanglingRootContinuousInTime"
+]
+
+(* With a symbolic frequency om the winding phase cannot be chosen, so the root stays principal and the
+   vacuum element is regular at om = 0, where it is the pure squeezer's Sech[2 t/3]^(1/2). *)
+VerificationTest[
+    With[{b = \[FormalA], bd = SuperDagger[\[FormalA]]},
+        With[{g = BosonicMatrixElement[{0, 0}, BosonicExpOrder[Exp[-I t (om bd ** b + 1/3 bd ** bd + 1/3 b ** b)], $vA], $vA]},
+            FullSimplify[{g /. om -> 0, Limit[g, om -> 0]} - Sqrt[Sech[2 t/3]], t \[Element] Reals]
+        ]
+    ],
+    {0, 0},
+    TestID -> "DisentanglingRootRegularAtZeroFrequency"
 ]
 
 EndTestSection[]

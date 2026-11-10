@@ -114,7 +114,7 @@ DisplacementOperator[\[Alpha]_, size_Integer ? Positive, order_?orderQ, OptionsP
 
 
 SqueezeOperator::usage =
-"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering; Automatic, the default, is \"Normal\" for a matrix and \"Weak\" for the symbolic form.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives S(\[Xi]) as a symbolic expression in the ladder operators vars.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"r\", \"TI\"], \",\", StyleBox[\"\[Theta]\", \"TI\"]}], \"}\"}], \",\", \"\[Infinity]\", \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives S(\!\(\*StyleBox[\"r\", \"TI\"]\) \!\(\*SuperscriptBox[\"e\", RowBox[{\"i\", StyleBox[\"\[Theta]\", \"TI\"]}]]\)) in polar form.";
+"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering; Automatic, the default, is \"Normal\" for a matrix and \"Weak\" for the symbolic form.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives S(\[Xi]) as a symbolic expression in the ladder operators vars.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"r\", \"TI\"], \",\", StyleBox[\"\[Theta]\", \"TI\"]}], \"}\"}], \",\", \"\[Ellipsis]\"}], \"]\"}]\) gives S(\!\(\*StyleBox[\"r\", \"TI\"]\) \!\(\*SuperscriptBox[\"e\", RowBox[{\"i\", StyleBox[\"\[Theta]\", \"TI\"]}]]\)) in polar form.";
 
 Options[SqueezeOperator] = {"Ordering" -> Automatic};
 
@@ -150,27 +150,31 @@ SqueezeOperator[xi_, \[Infinity], vars : Except[_Rule | _RuleDelayed] : Automati
     ]
 
 SqueezeOperator[xi_, size_Integer ? Positive, order_?orderQ, OptionsPattern[]] :=
-    Module[{tau, nu, a = AnnihilationOperator[size,order], ordering},
+    Module[{r, th, x, xb, tau, taub, nu, a = AnnihilationOperator[size,order], ordering},
 
         ordering = Replace[OptionValue["Ordering"], Automatic -> "Normal"];
 
-        tau = Exp[I Arg[xi]] Tanh[Abs[xi]];
+        {r, th} = Replace[xi, {p : {_, _} :> p, _ :> {Abs[xi], Arg[xi]}}];
 
-        nu = Log[Cosh[Abs[xi]]];
+        {x, xb} = Replace[xi, {{_, _} :> r {E^(I th), E^(-I th)}, _ :> {xi, Conjugate[xi]}}];
+
+        {tau, taub} = Tanh[r] {E^(I th), E^(-I th)};
+
+        nu = Log[Cosh[r]];
 
 
         QuantumOperator[
             Switch[ordering,
                 "Normal",
                     MatrixExp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ MatrixExp[-
-                        nu ((a["Dagger"]) @ a + 1/2 )] @ MatrixExp[Conjugate[tau] / 2 (a
+                        nu ((a["Dagger"]) @ a + 1/2 )] @ MatrixExp[taub / 2 (a
                         @ a)]
                 ,
                 "Weak",
-                    MatrixExp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
+                    MatrixExp[1/2 (xb (a @ a) - x (a["Dagger"] @ a["Dagger"]))]
                 ,
                 "Antinormal",
-                    MatrixExp[1/2 Conjugate[tau] (a @ a)] @ MatrixExp[nu ((a["Dagger"
+                    MatrixExp[1/2 taub (a @ a)] @ MatrixExp[nu ((a["Dagger"
                         ]) @ a + 1/2 )] @ MatrixExp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
                         ]))]
                 ,
@@ -186,11 +190,11 @@ SqueezeOperator[xi_, size_Integer ? Positive, order_?orderQ, OptionsPattern[]] :
 
 
 
-BeamsplitterMatrix[\[Theta]_,\[Phi]_,cutoff_]:= Block[{sqrt,ct,st,stconj,Z},
+BeamsplitterMatrix[th_,ph_,cutoff_]:= Block[{sqrt,ct,st,stconj,Z},
 	sqrt=Sqrt[Range[0,cutoff-1]];
-	ct=Cos[\[Theta]];
-	st=Sin[\[Theta]] Exp[I \[Phi]];
-    stconj = -Exp[-I \[Phi]] Sin[\[Theta]];
+	ct=Cos[th];
+	st=Sin[th] Exp[I ph];
+    stconj = -Exp[-I ph] Sin[th];
 	Z=ConstantArray[0,{cutoff,cutoff,cutoff,cutoff}];
 	Z[[1,1,1,1]]=1;
 	Do[
@@ -219,30 +223,30 @@ Options[BeamSplitterOperator] = {Method -> "MatrixExp"};
 BeamSplitterOperator::badmethod = 
   "Method `1` not recognized. Supported methods: \"MatrixExp\", \"Recurrence\".";
 
-BeamSplitterOperator[{\[Theta]_, \[Phi]_}, opts:OptionsPattern[]] :=
-  BeamSplitterOperator[{\[Theta], \[Phi]}, $FockSize, {1, 2}, opts]
+BeamSplitterOperator[{th_, ph_}, opts:OptionsPattern[]] :=
+  BeamSplitterOperator[{th, ph}, $FockSize, {1, 2}, opts]
 
-BeamSplitterOperator[{\[Theta]_, \[Phi]_}, order_?orderQ, opts:OptionsPattern[]] :=
-  BeamSplitterOperator[{\[Theta], \[Phi]}, $FockSize, order, opts]
-  
-BeamSplitterOperator[{\[Theta]_, \[Phi]_}, size_Integer, opts:OptionsPattern[]] :=
-  BeamSplitterOperator[{\[Theta], \[Phi]}, size, {1,2}, opts]
+BeamSplitterOperator[{th_, ph_}, order_?orderQ, opts:OptionsPattern[]] :=
+  BeamSplitterOperator[{th, ph}, $FockSize, order, opts]
 
-BeamSplitterOperator[{\[Theta]_, \[CurlyPhi]_},size_Integer, order_?orderQ, OptionsPattern[]] :=
+BeamSplitterOperator[{th_, ph_}, size_Integer, opts:OptionsPattern[]] :=
+  BeamSplitterOperator[{th, ph}, size, {1,2}, opts]
+
+BeamSplitterOperator[{th_, ph_},size_Integer, order_?orderQ, OptionsPattern[]] :=
  Module[{method = OptionValue[Method], op1, op2},
   Switch[method,
    "MatrixExp",
     {op1, op2} = AnnihilationOperator[size, {#}] & /@ order;
     QuantumOperator[
      MatrixExp[
-      \[Theta] (Exp[I \[CurlyPhi]] op1 @ SuperDagger[op2] -
-         Exp[-I \[CurlyPhi]] SuperDagger[op1] @ op2)
+      th (Exp[I ph] op1 @ SuperDagger[op2] -
+         Exp[-I ph] SuperDagger[op1] @ op2)
      ],
-     "Label" -> OverHat["BS"][\[Theta], \[CurlyPhi]]
+     "Label" -> OverHat["BS"][th, ph]
     ],
    "Recurrence",
-    QuantumOperator[BeamsplitterMatrix[\[Theta], \[CurlyPhi], size], order, {size, size},
-     "Label" -> OverHat["BS"][\[Theta], \[CurlyPhi]]],
+    QuantumOperator[BeamsplitterMatrix[th, ph, size], order, {size, size},
+     "Label" -> OverHat["BS"][th, ph]],
    _,
     Message[BeamSplitterOperator::badmethod, method]; $Failed
   ]

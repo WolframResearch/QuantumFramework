@@ -67,11 +67,10 @@ thm44ANRHS[L_, R_, lambda_, {cr_, an_}] :=
 
 (* e^(w N + p ad^2 + q a^2 + mu ad + nu a) from the corner D = Cos[l] - w Sinc[l], l = Sqrt[4 p q - w^2], of
    exp[{{w, 2 p}, {-2 q, -w}}]; every coefficient but the root is regular in l, so l = 0 is its Series limit.
-   The root D^(-1/2) winds in oscillating evolutions, so for w != 0 it is e^(-i l/2) (e^(-i l) D)^(-1/2) with
-   l = i w Sqrt[1 - 4 p q/w^2], whose principal root stays continuous for Hermitian generators at real time.
+   The root D^(-1/2) winds in oscillating evolutions, so it is e^(-f/2) (e^(-f) D)^(-1/2) with the phase f of rootPhase.
    Antinormal order is the normal one under a -> ad, ad -> -a: (w, p, q, mu, nu) -> (-w, q, p, -nu, mu). *)
 quadraticExp[g_, {cr_, an_}, lv_, s_] :=
-    Module[{x, y, l, coeffs, c, w, p, q, mu, nu, t, m, u, v, e, r},
+    Module[{x, y, l, f, coeffs, c, w, p, q, mu, nu, t, m, u, v, e, r},
         coeffs = Association @ CoefficientRules[Expand @ dequantize[#, Thread[{cr, an} -> {x, y}]], {x, y}] &;
         c = coeffs[g];
         If[ ! SubsetQ[{{0, 0}, {1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, Keys[c]] || ! FreeQ[Values[c], Alternatives @@ lv["Generators"]], Return[$Failed, Module]];
@@ -80,15 +79,15 @@ quadraticExp[g_, {cr_, an_}, lv_, s_] :=
         {w, p, q, mu, nu} = {s, 1, 1, s, 1} Lookup[c, Key /@ If[s == 1, Identity, Map[Reverse]] @ {{1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, 0];
         {t, m, u, v, e, r} = Which[
             p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2, w/2},
-            PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[#, {l, 0, 0}], l, 0],
-            True, ReplacePart[# /. l -> Sqrt[4 p q - w^2], 6 -> (#[[6]] /. l -> If[w === 0, Sqrt[4 p q], I w Sqrt[1 - 4 p q/w^2]])] /. $nonuls
+            PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[# /. f -> 0, {l, 0, 0}], l, 0],
+            True, # /. {l -> Sqrt[4 p q - w^2], f -> rootPhase[{{w, 2 p}, {-2 q, -w}}]} /. $nonuls
         ] & @ Join[
             {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
             {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
              nu Sinc[l] - (w nu - 2 q mu) (1 - Cos[l])/l^2,
              ((q mu^2 + p nu^2) (-2 w - (l^2 - 2 w) Cos[l] + l (1 + w) Sin[l]) + mu nu (l^2 + 2 w^2 + (l^2 (w - 1) - 2 w^2) Cos[l] - l w (1 + w) Sin[l]))/l^4
             } / (Cos[l] - w Sinc[l]),
-            {(-I l - Log[E^(-I l) (Cos[l] - w Sinc[l])])/2}];
+            {(-f - Log[E^-f (Cos[l] - w Sinc[l])])/2}];
         Exp[Lookup[c, Key[{0, 0}], 0] - s w/2 + e] (ncJoin[
             Exp[p t GeneralizedPower[NonCommutativeMultiply, #1, 2] + s u #1],
             Exp[If[w === 0, m (1/2 + s #1 ** #2), r + m s #1 ** #2]],
@@ -108,15 +107,25 @@ splitModes[g_, lv_] :=
 
 (* Det[D] = Sum c_S e^(tau lambda_S) over n-subsets S of the eigenvalues of x = tau x0 (Cauchy-Binet).  If the largest |c_S|
    outweighs the rest and the others only rotate, pulling tau lambda_S out of the root keeps its principal branch continuous. *)
-rootPhase[x_, n_] :=
-    Module[{tau = SelectFirst[Flatten[x], ! PossibleZeroQ[#] &], lam, v, c},
-        If[ ! MatrixQ[x / tau, NumericQ], Return[0, Module]];
-        {lam, v} = {#1, N[Transpose[#2]]} & @@ Eigensystem[x / tau];
-        If[ MatrixRank[v] < 2 n, Return[0, Module]];
-        c = ReverseSortBy[Values @ GroupBy[Subsets[Range[2 n], {n}], Round[N[Total[lam[[#]]]], 10^-8] &,
-            {Total[lam[[First[#]]]], Abs @ Total[Det[v[[n + 1 ;;, #]]] Det[Inverse[v][[#, n + 1 ;;]]] & /@ #]} &], Last];
-        If[ 2 c[[1, 2]] > Total[c[[All, 2]]] && AllTrue[c[[All, 1]] - c[[1, 1]], PossibleZeroQ @ Chop @ ComplexExpand @ Re[tau #] &], tau c[[1, 1]], 0]
+rootPhase[x_] := rootPhase[x, SelectFirst[Flatten[x], ! PossibleZeroQ[#] &]]
+
+rootPhase[x_, tau_] /; MatrixQ[x / tau, NumericQ] :=
+    Module[{n = Length[x] / 2, lam, v, terms, best},
+        {lam, v} = MapAt[N @* Transpose, Eigensystem[x / tau], 2];
+        (
+            terms = {#[[1, 1]], Abs @ Total[#[[All, 2]]]} & /@ GatherBy[
+                With[{vi = Inverse[v]}, {Total[lam[[#]]], Det[v[[n + 1 ;;, #]]] Det[vi[[#, n + 1 ;;]]]} & /@ Subsets[Range[2 n], {n}]],
+                Round[N @ First[#], 10^-8] &
+            ];
+            best = First @ MaximalBy[terms, Last];
+            If[ 2 Last[best] > Total[terms[[All, 2]]] && AllTrue[terms[[All, 1]] - First[best], PossibleZeroQ @ Chop @ ComplexExpand @ Re[tau #] &],
+                tau First[best],
+                0
+            ]
+        ) /; MatrixRank[v] == 2 n
     ]
+
+rootPhase[__] := 0
 
 (* e^(ad P ad/2 + ad W a + a Q a/2) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
    e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
@@ -138,7 +147,7 @@ multimodeQuadraticExp[g_, lv_, s_] :=
             m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
             e = MatrixExp[m];
             d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
-            l = rootPhase[m, n];
+            l = rootPhase[m];
             E^(-(Tr[w] + l) / 2) (E^-l Det[e[[n + 1 ;;, n + 1 ;;]]])^(-1/2) ncJoin[
                 Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2]],
                 middle[Transpose[d]],
