@@ -2732,4 +2732,68 @@ VerificationTest[
     TestID -> "Tier11-CircuitConstructor-RandomClifford5-MatchesDense"
 ]
 
+
+(* ============================================================================ *)
+(* String constructor: the strings must fix exactly one state                   *)
+(* ============================================================================ *)
+
+(* The eight checks of the 2x2 toric code have rank 6 on 8 qubits: they fix a   *)
+(* 4-dimensional code space, which no tableau represents.                       *)
+VerificationTest[
+    PauliStabilizer[{"XXXIIIXI", "XXIXIIIX", "IIXIXXXI", "IIIXXXIX", "ZIZZZIII", "IZZZIZII", "ZIIIZIZZ", "IZIIIZZZ"}],
+    $Failed,
+    {PauliStabilizer::rank},
+    TestID -> "Ctor-StringList-RankDeficient-ToricCode"
+]
+
+VerificationTest[
+    PauliStabilizer[{"XX", "XX"}],
+    $Failed,
+    {PauliStabilizer::rank},
+    TestID -> "Ctor-StringList-RankDeficient-Repeated"
+]
+
+VerificationTest[
+    PauliStabilizer[{"XI", "ZI"}],
+    $Failed,
+    {PauliStabilizer::noncomm},
+    TestID -> "Ctor-StringList-Anticommuting"
+]
+
+(* XX ZZ = -YY, so YY contradicts the other two and -YY repeats them.          *)
+VerificationTest[
+    PauliStabilizer[{"XX", "ZZ", "YY"}],
+    $Failed,
+    {PauliStabilizer::inconsistent},
+    TestID -> "Ctor-StringList-Redundant-Inconsistent"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[{"XX", "ZZ", "-YY"}]},
+        {ps["Stabilizers"], Chop[N[Abs[Conjugate[Normal[ps["State"]["StateVector"]]] . Normal[$psBellLit["State"]["StateVector"]]]]]}
+    ],
+    {{"XX", "ZZ"}, 1.},
+    TestID -> "Ctor-StringList-Redundant-Consistent"
+]
+
+VerificationTest[
+    PauliStabilizer[{"XX", "ZZ", "XX"}]["Stabilizers"],
+    {"XX", "ZZ"},
+    TestID -> "Ctor-StringList-Redundant-Duplicate"
+]
+
+(* A tableau built directly from rank-deficient rows still reaches measurement:  *)
+(* a logical operator commutes with every row but has no determined outcome, so  *)
+(* measuring it fails instead of returning the expectation 0 as an outcome 1/2.  *)
+VerificationTest[
+    Block[{rows, bits},
+        rows = {"XXXIIIXI", "XXIXIIIX", "IIXIXXXI", "IIIXXXIX", "ZIZZZIII", "IZZZIZII", "ZIIIZIZZ", "IZIIIZZZ"};
+        bits = Map[Join[Boole[MemberQ[{"X", "Y"}, #]] & /@ Characters[#], Boole[MemberQ[{"Z", "Y"}, #]] & /@ Characters[#]] &, rows];
+        PauliStabilizer[ConstantArray[1, 8], {Transpose[bits[[All, ;; 8]]], Transpose[bits[[All, 9 ;;]]]}]["M", "XIIIXIII"]
+    ],
+    $Failed,
+    {PauliStabilizer::undetermined},
+    TestID -> "Measure-PauliString-UndeterminedOutcome"
+]
+
 EndTestSection[]

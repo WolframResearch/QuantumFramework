@@ -1300,10 +1300,10 @@ VerificationTest[
     True,
     TestID -> "S21-Stim-Random-Tableau-Roundtrip"
 ];
-(* xz encoding agrees with simulator's tableau encoding -- the first
-   stabilizer of an under-determined PauliStabilizer matches the input. *)
+(* xz encoding agrees with simulator's tableau encoding: the first stabilizer
+   of a PauliStabilizer built from XYZI and three commuting partners is XYZI. *)
 VerificationTest[
-    Module[{ps = PauliStabilizer[{"XYZI"}]},
+    Module[{ps = PauliStabilizer[{"XYZI", "IIIX", "IIZI", "IYII"}]},
         ps["Stabilizers"][[1]]
     ],
     "XYZI",

@@ -1411,11 +1411,12 @@ VerificationTest[
     TestID -> "Audit-A3-Dagger-Involutive-Register3"
 ]
 
-(* Singular-matrix path: a degenerate stabilizer list (linearly dependent      *)
-(* generators) has no invertible symplectic tableau; the destabilizer half     *)
-(* falls back to X<->Z padding and Dagger warns and returns $Failed.           *)
+(* Singular-matrix path: a tableau built from linearly dependent rows (XX, XX) *)
+(* has no invertible symplectic matrix; the destabilizer half falls back to    *)
+(* X<->Z padding and Dagger warns and returns $Failed. The string constructor  *)
+(* refuses such rows, so the tableau is given directly.                        *)
 VerificationTest[
-    PauliStabilizer[{"XX", "XX"}]["Dagger"],
+    PauliStabilizer[{1, 1}, {{{1, 1}, {1, 1}}, {{0, 0}, {0, 0}}}]["Dagger"],
     $Failed,
     {PauliStabilizer::singular},
     TestID -> "Audit-A3-Dagger-Singular-Matrix-EmitsMessage"

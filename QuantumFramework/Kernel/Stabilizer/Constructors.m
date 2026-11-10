@@ -287,7 +287,56 @@ PauliStabilizer[signs : {(-1 | 1) ...}, tableau_ ? PauliTableauQ] := With[
 
 $PauliString = Repeated["-" | "+", {0, 1}] ~~ ("I" | "X" | "Y" | "Z") ...
 
+(* Each Pauli string as a 2n-bit row {x_1..x_n, z_1..z_n}, signs dropped; a      *)
+(* shorter string is padded with I on the right, as the tableau builder does.     *)
+psStringBits[signedPauliStrings_List] := With[{bodies = StringDelete[signedPauliStrings, StartOfString ~~ ("-" | "+")]},
+    With[{pairs = Replace[Characters[StringPadRight[bodies, Max[StringLength[bodies]], "I"]], {"I" -> {0, 0}, "X" -> {1, 0}, "Y" -> {1, 1}, "Z" -> {0, 1}}, {2}]},
+        Join[pairs[[All, All, 1]], pairs[[All, All, 2]], 2]
+    ]
+]
+
+(* A list of signed Pauli strings is a stabilizer state only when the strings    *)
+(* commute and have F2 rank n: the rank, not the count, fixes the state. Fewer   *)
+(* independent strings fix a 2^(n - rank)-dimensional space of states, which no  *)
+(* tableau represents, so the constructor refuses them. More strings than n with *)
+(* rank n are reduced to n independent ones, each dropped string checked against *)
+(* the sign the kept ones give it.                                               *)
 PauliStabilizer[signedPauliStrings : {__String}] /; AllTrue[signedPauliStrings, StringMatchQ[$PauliString]] :=
+    With[{bits = psStringBits[signedPauliStrings]},
+    With[{n = Length[First[bits]] / 2, m = Length[bits]},
+    With[{bad = FirstPosition[Mod[bits[[All, ;; n]] . Transpose[bits[[All, n + 1 ;;]]] + bits[[All, n + 1 ;;]] . Transpose[bits[[All, ;; n]]], 2], 1, Missing["None"], {2}],
+          rank = MatrixRank[bits, Modulus -> 2]},
+        Which[
+            ! MissingQ[bad],
+                Message[PauliStabilizer::noncomm, signedPauliStrings[[bad[[1]]]], signedPauliStrings[[bad[[2]]]]]; $Failed,
+            rank < n,
+                Message[PauliStabilizer::rank, m, n, rank, 2 ^ (n - rank)]; $Failed,
+            m == n,
+                psFromSignedStrings[signedPauliStrings],
+            True,
+                psFromIndependentStrings[signedPauliStrings, agPickIndependent[bits, n], n]
+        ]
+    ]]]
+
+(* A signed string as "-" or "" followed by its letters padded with I to n.       *)
+psNormalizeSignedString[s_String, n_Integer] :=
+    If[StringStartsQ[s, "-"], "-", ""] <> StringPadRight[StringDelete[s, StartOfString ~~ ("-" | "+")], n, "I"]
+
+(* The kept strings are independent, so every dropped string is +-1 times their   *)
+(* product; it is consistent exactly when the kept tableau gives it expectation 1. *)
+psFromIndependentStrings[signedPauliStrings_, keep_, n_] := With[{
+    ps = psFromSignedStrings[signedPauliStrings[[keep]]],
+    dropped = psNormalizeSignedString[#, n] & /@ Delete[signedPauliStrings, List /@ keep]
+},
+    With[{wrong = SelectFirst[dropped, stabilizerExpectation[ps, #] === -1 &]},
+        If[ MissingQ[wrong],
+            ps,
+            Message[PauliStabilizer::inconsistent, wrong]; $Failed
+        ]
+    ]
+]
+
+psFromSignedStrings[signedPauliStrings_] :=
     PauliStabilizer @@
         MapAt[Transpose[PadRight[#, Automatic, {0, 0}], {3, 2, 1}] &, 2] @ Thread @ Replace[
             Characters[signedPauliStrings], {sign : "-" | "+" : 1, paulis___} :> {

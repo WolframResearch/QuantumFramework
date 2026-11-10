@@ -98,6 +98,7 @@ VerificationTest[Module[{base, symbolic, inverse, variables = Array[ivBit, 4]},
             ivSame[inverse /. rules, concrete["Dagger"]] && ivLaws[concrete]]]], Tuples[{0, 1}, 4]]],
     True, TestID -> "Inverse-SymbolicPhaseSubstitution-All16Assignments"];
 
-Scan[Function[alias, VerificationTest[PauliStabilizer[{"XX", "XX"}][alias], $Failed,
+(* Rows XX, XX given as a tableau: the string constructor refuses dependent rows. *)
+Scan[Function[alias, VerificationTest[PauliStabilizer[{1, 1}, {{{1, 1}, {1, 1}}, {{0, 0}, {0, 0}}}][alias], $Failed,
     {PauliStabilizer::singular}, TestID -> "Inverse-SingularInput-" <> alias]], {"Dagger", "Inverse"}];
 EndTestSection[];

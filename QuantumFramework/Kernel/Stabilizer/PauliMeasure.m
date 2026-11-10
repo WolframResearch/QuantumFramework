@@ -61,7 +61,7 @@ packedMeasurePauliString[ps_PauliStabilizer, pauliString_String] := Enclose @ Bl
         If[ MissingQ[firstStab],
             (* DETERMINISTIC: P (or -P) commutes with all stabilizers; outcome     *)
             (* from the closed-form i-factor tracking, state unchanged.            *)
-            <|(1 - stabilizerExpectation[ps, pauliString]) / 2 -> ps|>,
+            pauliDeterministicOutcome[ps, pauliString],
             (* NON-DETERMINISTIC: clear every other anticommuting row into the     *)
             (* pivot stabilizer p -- destabilizers included (AarGot04 \[Section]3),*)
             (* or the symplectic pairing breaks and later deterministic outcomes   *)
@@ -86,6 +86,18 @@ packedMeasurePauliString[ps_PauliStabilizer, pauliString_String] := Enclose @ Bl
                 ]
             ]
         ]
+    ]
+]
+
+
+(* Outcome of a Pauli P that commutes with every stabilizer row. For n independent *)
+(* rows P is then +-1 times a product of rows and <P> = +-1. An expectation of 0   *)
+(* means P lies outside the group the rows generate, which happens only when the   *)
+(* rows have rank below n; the tableau then fixes no outcome for P.                *)
+pauliDeterministicOutcome[ps_, pauliString_String] := With[{e = stabilizerExpectation[ps, pauliString]},
+    If[ e === 0,
+        Message[PauliStabilizer::undetermined, pauliString]; $Failed,
+        <|(1 - e) / 2 -> ps|>
     ]
 ]
 
@@ -115,7 +127,7 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
            Abelian closure. The expectation <P> = +-1 is recovered by the AG
            closed-form i-factor tracking (stabilizerExpectation, O(n^2)) rather
            than materializing the 2^n state vector. The outcome bit is (1-<P>)/2. *)
-        <|(1 - stabilizerExpectation[ps, pauliString]) / 2 -> ps|>,
+        pauliDeterministicOutcome[ps, pauliString],
         (* NON-DETERMINISTIC: at least one stabilizer anticommutes with P.       *)
         (* AG §3 generalized to a Pauli string: rowsum EVERY other anticommuting *)
         (* row -- destabilizers included -- into the pivot stabilizer p, so all  *)
