@@ -146,10 +146,8 @@ ToBosonicOperator[expr_, vars_, size : _Integer?Positive : $FockSize] :=
         If[ lv === $Failed,
             $Failed,
             With[{ops = Table[AnnihilationOperator[size, {k}], {k, Length[lv["Annihilators"]]}], g = Alternatives @@ lv["Generators"]},
-                expr /. {
-                    GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n],
-                    Power[base_, x_] /; FreeQ[base, g] && ! FreeQ[x, g] :> MatrixExp[Log[base] x]
-                } /. Join[
+                expr /. GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n] /.
+                    Power[base_, x_] /; FreeQ[base, g] && ! FreeQ[x, g] :> MatrixExp[Log[base] x] /. Join[
                     {NonCommutativeMultiply -> boseCompose},
                     Thread[lv["Creators"] -> (#["Dagger"] & /@ ops)],
                     Thread[lv["Annihilators"] -> ops]
@@ -161,6 +159,8 @@ ToBosonicOperator[expr_, vars_, size : _Integer?Positive : $FockSize] :=
 boseCompose[] := 1
 
 boseCompose[l___, c_, r___] /; FreeQ[c, _QuantumOperator | _boseCompose] := c boseCompose[l, r]
+
+boseCompose[l___, HoldPattern[Times[x__]], r___] /; ! FreeQ[{x}, _QuantumOperator] := boseCompose[l, x, r]
 
 boseCompose[ops__QuantumOperator] := Fold[#1 @ #2 &, {ops}]
 

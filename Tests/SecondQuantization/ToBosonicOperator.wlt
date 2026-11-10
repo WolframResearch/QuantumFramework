@@ -185,4 +185,26 @@ VerificationTest[
     TestID -> "ToBosonicOperator-GeneralScalarBasePower"
 ]
 
+(* A squared operator in an exponent, as the squeeze orderings return it: the GeneralizedPower inside
+   the exponent is realized before the exponential, or MatrixExp is left holding it. *)
+VerificationTest[
+    With[{a = Normal[AnnihilationOperator[5]["Matrix"]]},
+        Simplify[Normal[ToBosonicOperator[Exp[z GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]], $v, 5]["Matrix"]] -
+            MatrixExp[z Transpose[a] . Transpose[a]]]
+    ],
+    ConstantArray[0, {5, 5}],
+    TestID -> "ToBosonicOperator-SquareInSymbolicExponent"
+]
+
+(* Ordered outputs can carry a commutative product of operator powers inside **, here c^N d^N; with
+   symbolic c and d QF does not multiply the two operators, so the product is composed instead. *)
+VerificationTest[
+    With[{a = Normal[AnnihilationOperator[4]["Matrix"]], n = SuperDagger[\[FormalA]] ** \[FormalA]},
+        Simplify[Normal[ToBosonicOperator[Exp[SuperDagger[\[FormalA]]] ** (c^n d^n), $v, 4]["Matrix"]] -
+            MatrixExp[Transpose[a]] . DiagonalMatrix[(c d)^Range[0, 3]]]
+    ],
+    ConstantArray[0, {4, 4}],
+    TestID -> "ToBosonicOperator-CommutingProductOfOperatorPowers"
+]
+
 EndTestSection[]

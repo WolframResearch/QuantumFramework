@@ -843,6 +843,43 @@ VerificationTest[
     TestID -> "TwoModeInterleavedProductNormalOrders"
 ]
 
+(* The scalar of e^(-i t H), H = Na + 2 Nb + (ad bd + a b)/2, against its su(1,1) closed form: the vacuum
+   amplitude in normal order, and in antinormal order the same with -3/2 for 3/2 in front of Sin, from
+   a -> ad, ad -> -a.  Det[D] circles the origin with frequency 2 Sqrt[2], so the principal root alone flips
+   sign on t in [1.11, 3.33], [5.55, 7.77], [9.99, 12.2]: t = 2, 6, 10 sit inside, t = 1, 4 outside. *)
+VerificationTest[
+    Module[{h},
+        h = SuperDagger[\[FormalA]]**\[FormalA] + 2 SuperDagger[\[FormalB]]**\[FormalB] +
+            (SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]] + \[FormalA]**\[FormalB])/2;
+        Max[Abs[N[#1 /. (NormalOrdered | AntinormalOrdered)[_, _] -> 1 /. NonCommutativeMultiply -> Times /.
+            Thread[Flatten[$vAB] -> 0] /. t -> {1, 2, 4, 6, 10}, 30] -
+            N[E^(3 I t/2)/(Cos[Sqrt[2] t] + #2 3 I/(2 Sqrt[2]) Sin[Sqrt[2] t]) /. t -> {1, 2, 4, 6, 10}, 30]]] < 10^-25 & @@@ {
+            {BosonicExpOrder[Exp[-I t h], $vAB], 1},
+            {BosonicExpOrder[Exp[-I t h], $vAB, "Ordering" -> "Antinormal"], -1}
+        }
+    ],
+    {True, True},
+    TestID -> "TwoModeRootContinuousInTime"
+]
+
+(* A beam splitter on top of the squeezer, ordered at machine times: each vacuum amplitude matches the
+   truncated evolution, where the principal root alone gave the opposite sign at t = 2, 6.5, 11. *)
+VerificationTest[
+    Module[{s = 20, h, am, bm, vals, vecs},
+        h = SuperDagger[\[FormalA]]**\[FormalA] + 2 SuperDagger[\[FormalB]]**\[FormalB] +
+            (1/2 + I/5) SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]] + (1/2 - I/5) \[FormalA]**\[FormalB] +
+            (SuperDagger[\[FormalA]]**\[FormalB] + SuperDagger[\[FormalB]]**\[FormalA])/3;
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        {vals, vecs} = Eigensystem[h /. NonCommutativeMultiply -> Dot /.
+            {SuperDagger[\[FormalA]] -> ConjugateTranspose[am], SuperDagger[\[FormalB]] -> ConjugateTranspose[bm], \[FormalA] -> am, \[FormalB] -> bm}];
+        Max @ Table[Abs[(BosonicExpOrder[Exp[-I t h], $vAB] /. NormalOrdered[_, _] -> 1 /. NonCommutativeMultiply -> Times /.
+            Thread[Flatten[$vAB] -> 0]) - Abs[vecs[[All, 1]]]^2 . Exp[-I t vals]], {t, {1., 2., 6.5, 11.}}] < 10^-6
+    ],
+    True,
+    TestID -> "TwoModeRootContinuousAtMachineTime"
+]
+
 EndTestSection[]
 
 

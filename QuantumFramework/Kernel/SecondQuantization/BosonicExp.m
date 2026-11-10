@@ -106,11 +106,23 @@ splitModes[g_, lv_] :=
         ]
     ]
 
+(* Det[D] = Sum c_S e^(tau lambda_S) over n-subsets S of the eigenvalues of x = tau x0 (Cauchy-Binet).  If the largest |c_S|
+   outweighs the rest and the others only rotate, pulling tau lambda_S out of the root keeps its principal branch continuous. *)
+rootPhase[x_, n_] :=
+    Module[{tau = SelectFirst[Flatten[x], ! PossibleZeroQ[#] &], lam, v, c},
+        If[ ! MatrixQ[x / tau, NumericQ], Return[0, Module]];
+        {lam, v} = {#1, N[Transpose[#2]]} & @@ Eigensystem[x / tau];
+        If[ MatrixRank[v] < 2 n, Return[0, Module]];
+        c = ReverseSortBy[Values @ GroupBy[Subsets[Range[2 n], {n}], Round[N[Total[lam[[#]]]], 10^-8] &,
+            {Total[lam[[First[#]]]], Abs @ Total[Det[v[[n + 1 ;;, #]]] Det[Inverse[v][[#, n + 1 ;;]]] & /@ #]} &], Last];
+        If[ 2 c[[1, 2]] > Total[c[[All, 2]]] && AllTrue[c[[All, 1]] - c[[1, 1]], PossibleZeroQ @ Chop @ ComplexExpand @ Re[tau #] &], tau c[[1, 1]], 0]
+    ]
+
 (* e^(ad P ad/2 + ad W a + a Q a/2) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
    e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
    :e^(ad (e^W - 1) a):.  Antinormal order is the same under a -> ad, ad -> -a. *)
 multimodeQuadraticExp[g_, lv_, s_] :=
-    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, e, d},
+    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, m, e, d, l},
         {xs, ys} = {Array[x, n], Array[y, n]};
         {cr, an} = If[s == 1, Identity, Reverse] @ ladderVars[lv][[All, ladderModes[lv, g]]];
         op = ncPolynomial[Expand[# /. Thread[ys -> s ys]], Join[xs, ys], Join[cr, an]] &;
@@ -123,9 +135,11 @@ multimodeQuadraticExp[g_, lv_, s_] :=
         {w, p, q} = {D[poly, {xs}, {ys}], D[poly, {xs, 2}], D[poly, {ys, 2}]};
         Exp[poly /. Thread[Join[xs, ys] -> 0]] If[ AllTrue[Flatten[{p, q}], PossibleZeroQ],
             middle[MatrixExp[w]],
-            e = MatrixExp[ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}]];
+            m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
+            e = MatrixExp[m];
             d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
-            E^(-Tr[w] / 2) Det[e[[n + 1 ;;, n + 1 ;;]]]^(-1/2) ncJoin[
+            l = rootPhase[m, n];
+            E^(-(Tr[w] + l) / 2) (E^-l Det[e[[n + 1 ;;, n + 1 ;;]]])^(-1/2) ncJoin[
                 Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2]],
                 middle[Transpose[d]],
                 Exp[op[-ys . d . e[[n + 1 ;;, ;; n]] . ys / 2]]
