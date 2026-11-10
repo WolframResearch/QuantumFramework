@@ -7,6 +7,12 @@ PackageExport["QuantumState"]
 PackageScope["quantumStateQ"]
 PackageScope["QuantumStateQ"]
 PackageScope["addQuantumStates"]
+PackageScope["valueOutsideFacts"]
+PackageScope["domainFailure"]
+PackageScope["$checkValues"]
+PackageScope["basisRecord"]
+PackageScope["basisDeclared"]
+PackageScope["valuesAgainst"]
 
 
 QuantumState::invalidName = "`1` is not a recognized QuantumState constructor"
@@ -489,10 +495,107 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
    eigenvalues that the values make vanish, or where they fall outside every case of
    a Piecewise closed form, as in that of 0^op. *)
 (qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
-    Enclose @ With[{state = Confirm[substituteAmplitudes[qs["State"], Normal[rules]]]},
-        ConfirmAssert[! newlyValuelessQ[qs["State"], state], "The values leave an amplitude without a value."];
-        QuantumState[state, qs["Basis"][rules]]
+    Replace[valueOutsideFacts[qs, rules], {
+        bad_List :> domainFailure[QuantumState, bad],
+        None :> Enclose @ With[{state = Confirm[substituteAmplitudes[qs["State"], Normal[rules]]]},
+            ConfirmAssert[! newlyValuelessQ[qs["State"], state], "The values leave an amplitude without a value."];
+            QuantumState[state, qs["Basis"][rules]]
+        ]
+    }]
+
+(* A value is checked against the facts its symbol carries before it is put in: a symbol QF takes as real (a
+   declared parameter, a gate angle, a symbol declared Reals) refuses a value with an imaginary part, and a
+   range, an integer or a positive domain refuses a value outside it. Every step taken before the substitution
+   may have used the fact (Conjugate[t] -> t, |e^(I t)|^2 -> 1), so a value that breaks it would give answers
+   that are silently wrong. Only numbers are checked: a symbolic value is taken as given. Rounding is allowed:
+   an imaginary part, or a step outside a range, below 10^-10 of the value's size passes. The result is the
+   first violation, {symbol, value, domain}, or None. *)
+$checkValues = True
+
+valueOutsideFacts[_, _, ___] /; ! TrueQ[$checkValues] := None
+
+(* exempt lists symbols whose real requirement is waived (declared Complexes elsewhere in a circuit); their ranges
+   are still checked. Values that are not numbers cost nothing: nothing is read from the basis for them. *)
+valueOutsideFacts[x_, rules_, exempt_ : {}] := With[{record = basisRecord[x]},
+    If[ record === <||> && AllTrue[Values[rules], ! NumericQ[#] || Im[#] == 0 &],
+        None,
+        valuesAgainst[record, basisDeclared[x], rules, exempt]
     ]
+]
+
+(* the check itself, on a record and a list of declared parameters. Real numbers given to symbols with no range,
+   the common case, return at once *)
+valuesAgainst[record_, declared_, rules_, exempt_] := With[{numeric = Select[Normal[rules], NumericQ @* Last]},
+    Which[
+        numeric === {}, None,
+        record === <||> && AllTrue[numeric, Im[Last[#]] == 0 &], None,
+        True, FirstCase[
+            numeric,
+            (s_ -> v_) :> With[{domains = Join[
+                If[realSymbolQ[record, declared, s] && ! MemberQ[exempt, s], {Reals}, {}],
+                DeleteCases[Lookup[record, Key[s], {}], Reals | Complexes]
+            ]},
+                With[{bad = SelectFirst[domains, ! valueInDomainQ[v, #] &, None]}, {s, v, bad} /; bad =!= None]
+            ],
+            None
+        ]
+    ]
+]
+
+(* real as realDomainSymbols counts it: declared or recorded, and not recorded as Complexes only *)
+realSymbolQ[record_, declared_, s_] := With[{d = Lookup[record, Key[s], None]},
+    If[ d === None, MemberQ[declared, s], ! MatchQ[d, {Complexes} | {}]]
+]
+
+(* the record and the declared parameters, read from the data of the basis of a state, operator, channel or
+   measurement operator, without property calls *)
+basisOf[qb_QuantumBasis] := qb
+basisOf[QuantumState[_, qb_QuantumBasis]] := qb
+basisOf[(QuantumOperator | QuantumChannel | QuantumMeasurementOperator)[x : _QuantumState | _QuantumOperator, ___]] := basisOf[x]
+basisOf[x_] := x["Basis"]
+
+basisRecord[x_] := symbolDomainsOf[basisOf[x]]
+basisDeclared[x_] := declaredOf[basisOf[x]]
+declaredOf[QuantumBasis[data_Association]] := Replace[Lookup[data, "ParameterSpec", {}], spec : {__List} :> spec[[All, 1]]]
+declaredOf[qb_] := qb["Parameters"]
+
+$domainTolerance = 10 ^ -10
+
+nearlyRealQ[v_] := Im[v] == 0 || Precision[v] =!= Infinity && Abs[Im[v]] <= $domainTolerance Max[1, Abs[v]]
+
+valueInDomainQ[v_, Reals] := nearlyRealQ[v]
+valueInDomainQ[v_, Integers] := nearlyRealQ[v] && If[Precision[v] === Infinity, IntegerQ[v], Abs[Re[v] - Round[Re[v]]] <= $domainTolerance Max[1, Abs[v]]]
+valueInDomainQ[v_, Interval[{lo_, hi_}]] := nearlyRealQ[v] && With[{x = Re[v], tol = If[Precision[v] === Infinity, 0, $domainTolerance Max[1, Abs[v]]]},
+    (lo === - Infinity || x >= lo - tol) && (hi === Infinity || x <= hi + tol)
+]
+valueInDomainQ[v_, d_Interval] := AnyTrue[List @@ d, valueInDomainQ[v, Interval[#]] &]
+valueInDomainQ[v_, NonNegativeReals] := valueInDomainQ[v, Interval[{0, Infinity}]]
+valueInDomainQ[v_, PositiveReals] := valueInDomainQ[v, Interval[{0, Infinity}]] && ! (Precision[v] === Infinity && v == 0)
+valueInDomainQ[v_, NonPositiveReals] := valueInDomainQ[v, Interval[{- Infinity, 0}]]
+valueInDomainQ[v_, NegativeReals] := valueInDomainQ[v, Interval[{- Infinity, 0}]] && ! (Precision[v] === Infinity && v == 0)
+valueInDomainQ[v_, NonNegativeIntegers] := valueInDomainQ[v, Integers] && valueInDomainQ[v, Interval[{0, Infinity}]]
+valueInDomainQ[v_, PositiveIntegers] := valueInDomainQ[v, Integers] && valueInDomainQ[v, Interval[{1, Infinity}]]
+valueInDomainQ[v_, NonPositiveIntegers] := valueInDomainQ[v, Integers] && valueInDomainQ[v, Interval[{- Infinity, 0}]]
+valueInDomainQ[v_, NegativeIntegers] := valueInDomainQ[v, Integers] && valueInDomainQ[v, Interval[{- Infinity, -1}]]
+valueInDomainQ[v_, Rationals] := nearlyRealQ[v] && (Precision[v] =!= Infinity || Element[v, Rationals] =!= False)
+valueInDomainQ[_, _] := True
+
+(* the message is issued under the head of the object the values were given to, as the other QF messages are,
+   and the same Failure is returned *)
+domainFailure[head_, {s_, v_, d_}] := (
+    Message[MessageName[head, "domain"], s, v, domainText[d]];
+    Failure["DomainValue", <|"MessageTemplate" :> MessageName[head, "domain"], "MessageParameters" -> {s, v, domainText[d]}|>]
+)
+
+domainText[Reals] := "is real here (a declared parameter or a gate angle is taken as real)"
+domainText[Integers] := "is an integer here"
+domainText[d_Interval] := "lies in " <> ToString[d, InputForm] <> " here"
+domainText[d_] := "lies in " <> ToString[d] <> " here"
+
+Scan[
+    (MessageName[#, "domain"] = "the value `2` cannot be given to `1`, which `3`; to allow it, give `1` a wider domain with \"SymbolDomains\" when the object is built, Complexes for complex values.") &,
+    {QuantumState, QuantumOperator, QuantumChannel, QuantumMeasurementOperator, QuantumCircuitOperator}
+]
 
 (* True when an amplitude that had a value before the substitution has none after it,
    read amplitude by amplitude. Before and after it, an amplitude that has not chosen a

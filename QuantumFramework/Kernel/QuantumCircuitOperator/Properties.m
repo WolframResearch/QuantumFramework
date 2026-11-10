@@ -34,7 +34,7 @@ $QuantumCircuitPreventCache = {
 }
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
-    result = verdictScope[QuantumCircuitOperator, prop, QuantumCircuitOperatorProp[qds, prop, args]]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumCircuitOperator, prop, QuantumCircuitOperatorProp[qds, prop, args]], QuantumCircuitOperatorProp[qds, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumCircuitOperatorProp[qds, prop, args]] && ! MemberQ[$QuantumCircuitPreventCache, propName[prop]],
         cacheProperty[QuantumCircuitOperatorProp[qds, prop, args], result],

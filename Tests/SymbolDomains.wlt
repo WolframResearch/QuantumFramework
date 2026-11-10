@@ -843,4 +843,191 @@ VerificationTest[
     TestID -> "SymbolDomains-EigenvectorsOnFacts"
 ]
 
+(* ========== facts kept with an object ========== *)
+
+(* A named gate built in a circuit on qubits, with real arguments, is marked unitary as it is built. Every gate
+   so marked is unitary: its matrix, at real values of the angles, passes the numeric test. *)
+VerificationTest[
+    With[{ops = First[QuantumCircuitOperator[{#}]["Operators"]] & /@ {
+            "Identity", "I", "Fourier", "InverseFourier", "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "Shift", "ShiftPhase", "H",
+            "Hadamard", "NOT", "SWAP", "RootSWAP", "CSWAP", "Fredkin", "C0SWAP", "CX", "CY", "CZ", "CH", "CT", "CS", "CNOT",
+            "C0NOT", "S", "T", "V", "SX", "Toffoli", "RootNOT", "FlipSign", "Permutation"[{2, 1}], "RX"[t], "RY"[t], "RZ"[t],
+            "XRotation"[t], "YRotation"[t], "ZRotation"[t], "P"[t], "Phase"[t], "U"[t, f, l], "U1"[t], "U2"[f, l],
+            "U3"[t, f, l], "GlobalPhase"[t], "CPHASE"[t], "Deutsch"[t]
+        }},
+        {
+            AllTrue[Select[ops, Wolfram`QuantumFramework`PackageScope`knownUnitaryQ],
+                UnitaryMatrixQ[N[Normal[#["Matrix"]] /. {t -> 7 / 10, f -> - 3 / 10, l -> 11 / 10}], Tolerance -> 10 ^ -10] &],
+            Count[ops, _ ? Wolfram`QuantumFramework`PackageScope`knownUnitaryQ] >= 40
+        }
+    ],
+    {True, True},
+    TestID -> "SymbolDomains-UnitaryGatesMarked"
+]
+
+(* No mark where unitarity is not certain from the construction: a rotation on a qutrit, a matrix given the
+   label "H", an angle declared complex, a gate on a qutrit, a two-qubit gate given one wire. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`knownUnitaryQ /@ {
+        First[QuantumCircuitOperator[{"RX"[t, 3] -> 1}]["Operators"]],
+        First[QuantumCircuitOperator[{QuantumOperator[{{1, 0}, {0, 2}}, "Label" -> "H"] -> 1}]["Operators"]],
+        First[QuantumCircuitOperator[{QuantumOperator["RY"[z], "SymbolDomains" -> {z -> Complexes}] -> 1}]["Operators"]],
+        First[QuantumCircuitOperator[{"X"[3] -> 1}]["Operators"]],
+        First[QuantumCircuitOperator[{"SX" -> {2}}]["Operators"]],
+        First[QuantumCircuitOperator[{"FlipSign"[{1, 0}] -> {2}}]["Operators"]],
+        First[QuantumCircuitOperator[{"CNOT" -> 2}]["Operators"]],
+        First[QuantumCircuitOperator[{"SWAP" -> 2}]["Operators"]],
+        First[QuantumCircuitOperator[{(QuantumOperator["CNOT"] // (#["UnitaryQ"]; #) &) -> {2}}]["Operators"]]
+    },
+    {False, False, False, False, False, False, False, False, False},
+    TestID -> "SymbolDomains-UnitaryMarkGuards"
+]
+
+(* A circuit of unitary gates keeps the norm of the state it acts on: the probabilities divide by
+   |a|^2 + |b|^2 + |c|^2 + |d|^2 and agree with the plain computation at a point. A circuit with a gate that is
+   not unitary keeps nothing, and its probabilities agree as well. *)
+VerificationTest[
+    With[{in = QuantumState[{a, b, c, d}], pt = {a -> 1 / 3 + I / 5, b -> - 2 / 7, c -> I / 2, d -> 3 / 5 - I / 9, t -> 7 / 10},
+        u = QuantumCircuitOperator[{"H" -> 1, "RY"[t] -> 2, "CNOT" -> {1, 2}}],
+        nu = QuantumCircuitOperator[{"H" -> 1, QuantumOperator[{{1, 0}, {0, 2}}] -> 2}]},
+        With[{plain = Abs[#] ^ 2 / Total[Abs[#] ^ 2] & @ (Normal[#[in, Method -> "Schrodinger"]["StateVector"]] /. pt) &},
+            {
+                Wolfram`QuantumFramework`PackageScope`objectFact[u[in], "NormSource"] === in,
+                Wolfram`QuantumFramework`PackageScope`objectFact[nu[in], "NormSource"],
+                u[in]["Norm"],
+                Simplify[(u[in]["ProbabilitiesList"] /. pt) - plain[u]],
+                Simplify[(nu[in]["ProbabilitiesList"] /. pt) - plain[nu]]
+            }
+        ]
+    ],
+    {True, Null, Sqrt[Abs[a] ^ 2 + Abs[b] ^ 2 + Abs[c] ^ 2 + Abs[d] ^ 2], {0, 0, 0, 0}, {0, 0, 0, 0}},
+    TestID -> "SymbolDomains-UnitaryCircuitKeepsNorm"
+]
+
+(* A yes/no answer is kept with the object: asked again with the property cache off, it gives the same answer and
+   the same message. *)
+VerificationTest[
+    Block[{Wolfram`QuantumFramework`PackageScope`$QuantumFrameworkPropCache = False},
+        With[{op = QuantumOperator[\[CapitalGamma] PauliMatrix[3] + \[Kappa] PauliMatrix[1]]},
+            {op["HermitianQ"], First[Wolfram`QuantumFramework`PackageScope`objectFact[op, "HermitianQ"]], op["HermitianQ"]}
+        ]
+    ],
+    {False, False, False},
+    {QuantumOperator::undeclared, QuantumOperator::undeclared},
+    TestID -> "SymbolDomains-StoredVerdictMessage"
+]
+
+(* An entry that is a polynomial in symbols with no fact and their conjugates is decided by expanding it:
+   x - Conjugate[x] is not zero for every complex x, and (y + Conjugate[y])^2 - y^2 - 2 y Conjugate[y] - Conjugate[y]^2
+   is. The Hermitian checks built on it give the answers the general test gives. *)
+VerificationTest[
+    {
+        Wolfram`QuantumFramework`QuantumBasis`PackagePrivate`freePolynomialZero[x - Conjugate[x], {}],
+        Wolfram`QuantumFramework`QuantumBasis`PackagePrivate`freePolynomialZero[(y + Conjugate[y]) ^ 2 - y ^ 2 - 2 y Conjugate[y] - Conjugate[y] ^ 2, {}],
+        QuantumOperator[{{x, y}, {Conjugate[y], w}}]["HermitianQ"], QuantumOperator[{{0, y}, {Conjugate[y], 0}}]["HermitianQ"]
+    },
+    {False, True, False, True},
+    {QuantumOperator::undeclared},
+    TestID -> "SymbolDomains-PolynomialEntriesDecided"
+]
+
+(* Expanding decides only what it can see: a zero entry whose coefficient is an exact constant that does not
+   expand to 0, Cos[1]^2 + Sin[1]^2 or Log[2] + Log[3] - Log[6], is not called nonzero. *)
+VerificationTest[
+    {
+        Wolfram`QuantumFramework`QuantumBasis`PackagePrivate`freePolynomialZero[x - Conjugate[x], {}],
+        Wolfram`QuantumFramework`QuantumBasis`PackagePrivate`freePolynomialZero[(x + 1) ^ 2 - x ^ 2 - 2 x - 1, {}],
+        Wolfram`QuantumFramework`QuantumBasis`PackagePrivate`freePolynomialZero[(Cos[1] ^ 2 + Sin[1] ^ 2 - 1) y, {}],
+        QuantumOperator[{{0, (Cos[1] ^ 2 + Sin[1] ^ 2) y}, {Conjugate[y], 0}}]["HermitianQ"],
+        QuantumOperator[{{0, (Log[2] + Log[3]) y}, {Log[6] Conjugate[y], 0}}]["HermitianQ"] =!= False
+    },
+    {False, True, None, True, True},
+    {QuantumOperator::undecided},
+    TestID -> "SymbolDomains-PolynomialConstantCoefficients"
+]
+
+(* A list where a gate's angle goes builds a matrix that is not unitary, and it is not taken as unitary; nor are
+   the norm and probabilities of a state it acts on read from the input. *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{"RX"[{1, 2}] -> 1, "RY"[t] -> 1}], in = QuantumState[{a, b}]},
+        {
+            Wolfram`QuantumFramework`PackageScope`knownUnitaryQ[First[qc["Operators"]]],
+            Chop[N[Total[qc[in]["ProbabilitiesList"] /. {a -> 1, b -> 0, t -> 0}]] - 1] == 0
+        }
+    ],
+    {False, True},
+    TestID -> "SymbolDomains-ListAngleNotUnitary"
+]
+
+(* A symbol the state declares complex stays complex after a gate takes it as an angle: the norm is not carried, and
+   the probabilities sum to 1. *)
+VerificationTest[
+    With[{out = QuantumCircuitOperator[{"RY"[s] -> 1, "RY"[t] -> 1}][QuantumState[{s, 1}, "SymbolDomains" -> {s -> Complexes}]]},
+        {
+            Wolfram`QuantumFramework`PackageScope`objectFact[out, "NormSource"],
+            Chop[N[Total[out["ProbabilitiesList"] /. {s -> 1 / 2 + I, t -> 0}]] - 1]
+        }
+    ],
+    {Null, 0},
+    TestID -> "SymbolDomains-ComplexStateSymbolNotCarried"
+]
+
+(* ========== values checked against the facts ========== *)
+
+(* A declared parameter is real, so an imaginary value is refused, with a message under the head of the object it
+   was given to and a Failure. A real value, a symbolic value and a value whose imaginary part is rounding error
+   pass, and a parameter declared complex takes the imaginary value. *)
+VerificationTest[
+    With[{qs = QuantumState[{Cos[t], Sin[t]}, "Parameters" -> {t}], qc = QuantumState[{Cos[t], Sin[t]}, "Parameters" -> {t}, "SymbolDomains" -> {t -> Complexes}]},
+        {FailureQ[qs[I]], Head /@ {qs[1 / 2], qs[s], qs[0.3 + 10. ^ -14 I], qc[I]}}
+    ],
+    {True, {QuantumState, QuantumState, QuantumState, QuantumState}},
+    {QuantumState::domain},
+    TestID -> "SymbolDomains-RealParameterRefusesImaginaryValue"
+]
+
+(* A range is checked too: a channel probability outside [0, 1] is refused, one inside, or outside only by
+   rounding, is taken. *)
+VerificationTest[
+    With[{ch = QuantumChannel["BitFlip"[p], "Parameters" -> {p}]}, {FailureQ[ch[2]], Head /@ {ch[1 / 2], ch[1.0000000000001]}}],
+    {True, {QuantumChannel, QuantumChannel}},
+    {QuantumChannel::domain},
+    TestID -> "SymbolDomains-RangeRefusesOutsideValue"
+]
+
+(* The message names the object the values were given to: an operator, or a circuit whose gate takes the value. *)
+VerificationTest[
+    {
+        FailureQ[QuantumOperator["RY"[t], "Parameters" -> {t}][I]],
+        FailureQ[QuantumCircuitOperator[{"RY"[t] -> 1}, "Parameters" -> {t}][I]]
+    },
+    {True, True},
+    {QuantumOperator::domain, QuantumCircuitOperator::domain},
+    TestID -> "SymbolDomains-DomainMessageHead"
+]
+
+(* Named ranges are checked: -1 for a positive parameter and 3/2 for a nonnegative integer are refused, 2 and 3
+   are taken. *)
+VerificationTest[
+    With[{pos = QuantumState[{Cos[x], Sin[x]}, "Parameters" -> {x}, "SymbolDomains" -> {x -> PositiveReals}],
+        int = QuantumState[{Cos[x], Sin[x]}, "Parameters" -> {x}, "SymbolDomains" -> {x -> NonNegativeIntegers}]},
+        FailureQ /@ {pos[-1], pos[2], int[3 / 2], int[3]}
+    ],
+    {True, False, True, False},
+    {QuantumState::domain, QuantumState::domain},
+    TestID -> "SymbolDomains-NamedRangesChecked"
+]
+
+(* A circuit inside a circuit is checked too, and a gate declaring p Complexes waives only the real requirement:
+   a bit-flip probability of 3 is still refused. *)
+VerificationTest[
+    With[{inner = QuantumCircuitOperator[{"RY"[t] -> 1}, "Parameters" -> {t}],
+        mixed = QuantumCircuitOperator[{QuantumChannel["BitFlip"[p], "Parameters" -> {p}], QuantumOperator["RZ"[p], {1}, "SymbolDomains" -> {p -> Complexes}]}, "Parameters" -> {p}]},
+        FailureQ /@ {QuantumCircuitOperator[{inner}, "Parameters" -> {t}][<|t -> I|>], QuantumCircuitOperator[{inner}, "Parameters" -> {t}][<|t -> 1|>], mixed[<|p -> 3|>], mixed[<|p -> 1 / 2|>]}
+    ],
+    {True, False, True, False},
+    {QuantumCircuitOperator::domain, QuantumCircuitOperator::domain},
+    TestID -> "SymbolDomains-NestedCircuitAndExemptionChecked"
+]
+
 EndTestSection[]

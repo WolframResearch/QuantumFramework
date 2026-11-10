@@ -117,7 +117,7 @@ QuantumState::undefprop = "property `` is undefined for this state"
 QuantumState::failprop = "property `` failed with ``"
 
 (qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[Unevaluated[qs]] := With[{
-    result = verdictScope[QuantumState, prop, QuantumStateProp[qs, prop, args]]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumState, prop, QuantumStateProp[qs, prop, args]], QuantumStateProp[qs, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumStateProp[qs, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Basis", "State"}, prop] &&
@@ -183,8 +183,8 @@ QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "Unkn
 
 (* A symbolic density matrix is physical when it is positive semidefinite for every value its symbols' facts
    allow: True, False, or Indeterminate with a message (yesNo). *)
-QuantumStateProp[qs_, "PhysicalQ"] /; symbolicDensityStateQ[qs] :=
-    yesNo[QuantumState, "PhysicalQ", positiveSemidefiniteVerdict, qs["DensityMatrix"], qs["Basis"]]
+QuantumStateProp[qs_, "PhysicalQ"] /; symbolicDensityStateQ[qs] := storedVerdict[qs, "PhysicalQ",
+    yesNo[QuantumState, "PhysicalQ", positiveSemidefiniteVerdict, qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
@@ -387,13 +387,16 @@ amplitudeWeight[qs_][x_, _] := First @ refineOnParameters[qs, {Abs[x] ^ 2}]
 amplitudeWeights[_, v_] := Abs[v] ^ 2
 
 (* |amplitude|^2 / <v|v>, or the diagonal over the trace, with the normalization taken on the
-   declared parameters' real domain *)
+   declared parameters' real domain. A norm that is a sum of numbers times squares, such as
+   Abs[z1]^2 + Abs[z2]^2, is already in its shortest form and is not simplified again. *)
 QuantumStateProp[qs_, "Weight"] /; symbolicParametersQ[qs] :=
     With[{w = qs["Weights"]}, w / Which[
         qs["StateType"] =!= "Vector", qs["Norm"],
         FreeQ[Normal[w], Abs | Conjugate | Re | Im], coefficientOnFacts[Total[Normal[w]], qs["ParameterAssumptions"]],
-        True, With[{n2 = parameterNormSquared[qs]}, If[LeafCount[n2] <= 4 Length[w] + 8, n2, Simplify[n2, qs["ParameterAssumptions"]]]]
+        True, With[{n2 = parameterNormSquared[qs]}, If[sumOfSquaresQ[n2], n2, Simplify[n2, qs["ParameterAssumptions"]]]]
     ]]
+
+sumOfSquaresQ[n_] := AllTrue[If[Head[n] === Plus, List @@ n, {n}], NumericQ[#] || MatchQ[#, Power[_, 2] | Times[_ ? NumericQ, Power[_, 2]]] &]
 
 QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
 
@@ -618,7 +621,10 @@ QuantumStateProp[qs_, "Norm"] /; symbolicParametersQ[qs] && qs["StateType"] === 
    conjugates, and each coefficient, a function of the real symbols alone, is simplified on their domain:
    for a unitary circuit acting on amplitudes z_i the coefficients reduce to 0 and 1, and each
    z Conjugate[z] is |z|^2. Where a Conjugate is left over the sum's reality is not visible, and the sum
-   of the weights |v_i|^2 stands instead *)
+   of the weights |v_i|^2 stands instead. A state made by a circuit of unitary gates has the norm of the state
+   the circuit was applied to, and reads it there (keepNorm). *)
+parameterNormSquared[qs_] /; MatchQ[objectFact[qs, "NormSource"], _QuantumState] := parameterNormSquared[objectFact[qs, "NormSource"]]
+
 parameterNormSquared[qs_] := With[{v = Normal @ qs["StateVector"], assumptions = qs["ParameterAssumptions"]},
     With[{n2 = realExponents[qs][Total[v Normal[conjugateOnDomains[v, qs["Basis"]]]]]}, {zs = DeleteDuplicates @ Cases[n2, Conjugate[z_] :> z, {0, Infinity}]},
         Replace[

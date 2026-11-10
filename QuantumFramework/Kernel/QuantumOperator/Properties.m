@@ -138,7 +138,7 @@ QuantumOperatorProp[QuantumOperator[state_, _], prop_String] /; MemberQ[$Quantum
    again, until $RecursionLimit. A name operators do not define is declined, for the
    circuit to answer. *)
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
-    result = verdictScope[QuantumOperator, prop, QuantumOperatorProp[qo, prop, args]]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumOperator, prop, QuantumOperatorProp[qo, prop, args]], QuantumOperatorProp[qo, prop, args]]
     },
     Which[
         FailureQ[Unevaluated @ result],
@@ -543,23 +543,30 @@ QuantumOperatorProp[qo_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qo["InputQu
 
 (* A symbolic matrix is Hermitian or unitary when it is so for every value its symbols' facts allow:
    M - M^dagger, or M^dagger M - 1, is formed from M and M^dagger refined under the facts and tested entry by entry
-   (zeroVerdict), giving True, False, or Indeterminate with a message (yesNo). *)
-QuantumOperatorProp[qo_, "HermitianQ"] /; ! qo["State"]["NumericQ"] && qo["OutputDimension"] == qo["InputDimension"] :=
-    yesNo[QuantumOperator, "HermitianQ", hermitianVerdict, qo["Matrix"], qo["Basis"]]
-
-hermitianVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]}, zeroVerdict[symbolicEntries[m - conjugateTransposeOnDomains[m, qb]], qb]]
-
-unitaryVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]}, zeroVerdict[
-    symbolicEntries[conjugateTransposeOnDomains[m, qb] . m - IdentityMatrix[Length[m], SparseArray]],
-    qb
+   (zeroVerdict), giving True, False, or Indeterminate with a message (yesNo). A numeric or non-square matrix
+   is tested directly. Either answer is kept with the operator (storedVerdict), and an operator built as a
+   unitary gate already holds its "UnitaryQ". *)
+QuantumOperatorProp[qo_, "HermitianQ"] := storedVerdict[qo, "HermitianQ", With[{m = qo["Matrix"]},
+    If[ qo["State"]["NumericQ"] || ! SquareMatrixQ[m],
+        HermitianMatrixQ[m],
+        yesNo[QuantumOperator, "HermitianQ", hermitianVerdict, m, qo["Basis"]]
+    ]
 ]]
 
-QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
+QuantumOperatorProp[qo_, "UnitaryQ"] := knownUnitaryQ[qo] || storedVerdict[qo, "UnitaryQ", With[{m = qo["Matrix"]},
+    If[ qo["State"]["NumericQ"] || ! SquareMatrixQ[m],
+        UnitaryMatrixQ[N[m]],
+        yesNo[QuantumOperator, "UnitaryQ", unitaryVerdict, m, qo["Basis"]]
+    ]
+]]
 
-QuantumOperatorProp[qo_, "UnitaryQ"] /; ! qo["State"]["NumericQ"] && qo["OutputDimension"] == qo["InputDimension"] :=
-    yesNo[QuantumOperator, "UnitaryQ", unitaryVerdict, qo["Matrix"], qo["Basis"]]
+hermitianVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]},
+    With[{es = symbolicEntries[m - conjugateTransposeOnDomains[m, qb]]}, noteLeftover[es]; zeroVerdict[es, qb]]
+]
 
-QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
+unitaryVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]},
+    With[{es = symbolicEntries[conjugateTransposeOnDomains[m, qb] . m - IdentityMatrix[Length[m], SparseArray]]}, noteLeftover[es]; zeroVerdict[es, qb]]
+]
 
 symbolicEntries[m_SparseArray] := m["NonzeroValues"]
 symbolicEntries[m_] := Flatten[Normal[m]]
@@ -775,8 +782,9 @@ QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]
 ]
 
 
-QuantumOperatorProp[qo_, prop : "Dagger" | "ConjugateTranspose" | "Inverse"] := simplifyLabel @ QuantumOperator[
-    qo["State"][prop], {qo["InputOrder"], qo["OutputOrder"]}]
+(* the dagger and the inverse of an operator known to be unitary are unitary *)
+QuantumOperatorProp[qo_, prop : "Dagger" | "ConjugateTranspose" | "Inverse"] := keepUnitary[qo, simplifyLabel @ QuantumOperator[
+    qo["State"][prop], {qo["InputOrder"], qo["OutputOrder"]}]]
 
 QuantumOperatorProp[qo_, prop : "Conjugate" | "Dual"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 

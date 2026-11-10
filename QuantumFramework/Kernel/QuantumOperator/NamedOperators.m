@@ -70,7 +70,17 @@ FromOperatorShorthand[f_Symbol[
 FromOperatorShorthand[{}] := QuantumOperator["I"]
 
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
-FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ -> order_ ? autoOrderQ] := Head[op][op, order]
+FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ -> order_ ? autoOrderQ] := keepUnitaryOn[op, order, Head[op][op, order]]
+
+(* moving an operator to other wires keeps it unitary only when it is given as many wires as it acts on; a two-qubit
+   gate given one wire, "CNOT" -> 2 say, is built as some other matrix *)
+keepUnitaryOn[op_, order_, new_] := If[sameWireCountQ[op, order], keepUnitary[op, new], new]
+
+sameWireCountQ[_, Automatic] := True
+sameWireCountQ[op_, order_ ? orderQ] := Length[order] === Length[op["InputOrder"]] === Length[op["OutputOrder"]]
+sameWireCountQ[op_, {out : _ ? orderQ | Automatic, in : _ ? orderQ | Automatic}] :=
+    (out === Automatic || Length[out] === Length[op["OutputOrder"]]) && (in === Automatic || Length[in] === Length[op["InputOrder"]])
+sameWireCountQ[__] := False
 
 FromOperatorShorthand[qm_ ? QuantumMeasurementQ] := qm["QuantumOperator"]
 FromOperatorShorthand[qm_ ? QuantumMeasurementQ -> order_ ? autoOrderQ] := QuantumMeasurementOperator[qm["QuantumOperator"], order]
@@ -91,13 +101,14 @@ FromOperatorShorthand[target_Integer ? Positive -> {arg_, opts___} | arg_] := Qu
 
 FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
 
-FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
+(* a gate named in a circuit is marked unitary as it is built when its name and arguments make it so (markBuiltUnitary) *)
+FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumOperatorNames, name] := markBuiltUnitary[arg, Automatic, QuantumOperator[arg]]
 
 FromOperatorShorthand[arg : namePattern -> order : _ ? orderQ] /;
-    MemberQ[$QuantumOperatorNames, name] && ! (MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..]) := QuantumOperator[arg, order]
+    MemberQ[$QuantumOperatorNames, name] && ! (MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..]) := markBuiltUnitary[arg, order, QuantumOperator[arg, order]]
 (* a single-qudit gate on wire n is built there, as on {n}; any other operator on wire n is
    built on its own wires and its first wire moved to n (the general rule below) *)
-FromOperatorShorthand[arg : namePattern -> qudit_Integer ? Positive] /; MemberQ[$singleQuditGateNames, name] := QuantumOperator[arg, {qudit}]
+FromOperatorShorthand[arg : namePattern -> qudit_Integer ? Positive] /; MemberQ[$singleQuditGateNames, name] := markBuiltUnitary[arg, {qudit}, QuantumOperator[arg, {qudit}]]
 (* "Lueders"[op] -> order measures op, placed on order, as one observable; the next rule
    would measure each qudit of order on its own *)
 FromOperatorShorthand["Lueders"[op_] -> order : _Integer | _ ? orderQ] :=
@@ -106,7 +117,7 @@ FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] /; Mem
     With[{ops = QuantumMeasurementOperator[arg, {#}] & /@ Flatten[{order}]}, QuantumMeasurementOperator[Fold[#2[#1] &, ops], "Label" -> First[ops]["Label"]]]
 FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] /; MemberQ[$QuantumChannelNames, name] :=
     With[{ops = QuantumChannel[arg, {#}] & /@ Flatten[{order}]}, QuantumChannel[Fold[#2[#1] &, ops], "Label" -> First[ops]["Label"]]]
-FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] := With[{op = FromOperatorShorthand[Unevaluated[arg]]}, Head[op][op, Flatten[{order}]]]
+FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] := With[{op = FromOperatorShorthand[Unevaluated[arg]]}, keepUnitaryOn[op, Flatten[{order}], Head[op][op, Flatten[{order}]]]]
 
 FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[FromOperatorShorthand[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]

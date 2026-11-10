@@ -923,7 +923,10 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
     qo[AssociationThread[Take[qo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qo["Parameters"]] :=
-    Enclose[QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]], innermostFailure]
+    Replace[valueOutsideFacts[qo, rules], {
+        bad_List :> domainFailure[QuantumOperator, bad],
+        None :> Enclose[QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]], innermostFailure]
+    }]
 
 
 (* *)

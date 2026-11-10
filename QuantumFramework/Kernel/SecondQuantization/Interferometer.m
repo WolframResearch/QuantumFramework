@@ -1194,11 +1194,14 @@ elementOperator["S"[xi_] -> {p_}, d_] := SqueezeOperator[xi, d, {p}]
 fockComponents[qs_, d_, m_] := {IntegerDigits[#[[1, 1]] - 1, d, m], #[[2]]} & /@
     Most @ ArrayRules[SparseArray[qs["Computational"]["StateVector"]]]
 
-photonSectorState[w_, components_, d_, m_, parameters_] := With[{
+photonSectorState[w_, components_, d_, m_, facts___] := With[{
     amplitudes = KeySelect[Merge[#2 photonAmplitudes[w, #1] & @@@ components, Total], Max[#] < d &]
 },
-    QuantumState[SparseArray[KeyValueMap[FromDigits[#1, d] + 1 -> #2 &, amplitudes], d ^ m], ConstantArray[d, m], "ParameterSpec" -> parameters]
+    QuantumState[SparseArray[KeyValueMap[FromDigits[#1, d] + 1 -> #2 &, amplitudes], d ^ m], ConstantArray[d, m], facts]
 ]
+
+(* the parameters of the input state and the domains declared for its symbols, both kept by the output state *)
+stateFacts[qs_] := Sequence["ParameterSpec" -> qs["ParameterSpec"], "SymbolDomains" -> Normal[qs["Basis"]["SymbolDomains"]]]
 
 (* A state vector goes through the permanents; a density matrix, or any state when
    there are squeezers, through the Fock-space circuit. Either way the result keeps the
@@ -1215,7 +1218,7 @@ photonSectorState[w_, components_, d_, m_, parameters_] := With[{
             If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
             If[lossyQ[qi], lossState[qi, qs, d, m], If[ components === None,
                 circuitState[qi, qs, d, m],
-                photonSectorState[qi["Unitary"], components, d, m, qs["ParameterSpec"]]
+                photonSectorState[qi["Unitary"], components, d, m, stateFacts[qs]]
             ]]
         ],
         $Failed &
@@ -1361,7 +1364,7 @@ lossStateStep[qs_, "Loss"[eta_] -> {p_}, d_, m_] := With[{
         IdentityMatrix[d ^ (m - p), SparseArray]] & /@ lossKraus[eta, d]
 },
     QuantumState[refineArray[Total[# . rho . ConjugateTranspose[#] & /@ operators], 0 <= eta <= 1],
-        ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]
+        ConstantArray[d, m], stateFacts[qs]]
 ]
 
 lossStateStep[qs_, element_, d_, _] := elementOperator[element, d][qs]
@@ -1369,12 +1372,12 @@ lossStateStep[qs_, element_, d_, _] := elementOperator[element, d][qs]
 (* a symbolic state from the Fock-space circuit is refined on the physical domain, as a lossy state is *)
 circuitState[qi_, qs_, d_, m_] := With[{state = qi["CircuitOperator", d][qs]},
     If[ArrayQ[state["Computational"]["State"], _, NumericQ], state,
-        QuantumState[refineArray[state["Computational"]["State"], opticalDomain[qi["Elements"]]], ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]]
+        QuantumState[refineArray[state["Computational"]["State"], opticalDomain[qi["Elements"]]], ConstantArray[d, m], stateFacts[qs]]]
 ]
 
 lossState[qi_, qs_, d_, m_] := With[{state = Fold[lossStateStep[#1, #2, d, m] &, qs, qi["Elements"]]},
     QuantumState[refineArray[state["Computational"]["DensityMatrix"], opticalDomain[qi["Elements"]]],
-        ConstantArray[d, m], "ParameterSpec" -> qs["ParameterSpec"]]
+        ConstantArray[d, m], stateFacts[qs]]
 ]
 
 (* Refine leaves the entries of a SparseArray untouched, so refine its rules *)

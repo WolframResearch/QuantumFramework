@@ -31,7 +31,7 @@ QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` 
 
 
 (qho_QuantumHamiltonianOperator[prop_ ? propQ, args___]) /; QuantumHamiltonianOperatorQ[qho] := With[{
-    result = verdictScope[QuantumHamiltonianOperator, prop, QuantumHamiltonianOperatorProp[qho, prop, args]]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumHamiltonianOperator, prop, QuantumHamiltonianOperatorProp[qho, prop, args]], QuantumHamiltonianOperatorProp[qho, prop, args]]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumHamiltonianOperatorProp[qho, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Basis", "QuantumOperator"}, prop] &&

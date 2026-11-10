@@ -1894,9 +1894,11 @@ VerificationTest[
     TestID -> "QI-loss-target-mode-and-entangled-spectator-coherences"
 ]
 
+(* the amplitudes take complex values, so they are declared complex: a declared parameter is otherwise real and
+   refuses an imaginary value *)
 VerificationTest[
     Module[{a, b},
-        With[{input = QuantumState[{a, b}, 2, "Parameters" -> {a, b}], qi = QuantumInterferometer[{"Loss"[1/2]}]},
+        With[{input = QuantumState[{a, b}, 2, "Parameters" -> {a, b}, "SymbolDomains" -> {a -> Complexes, b -> Complexes}], qi = QuantumInterferometer[{"Loss"[1/2]}]},
             With[{out = qi[input]},
                 out["ParameterSpec"] === input["ParameterSpec"] &&
                     FullSimplify[Normal[out[<|a -> 1/Sqrt[2], b -> I/Sqrt[2]|>]["DensityMatrix"]] -

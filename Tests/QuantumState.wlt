@@ -1966,14 +1966,19 @@ VerificationTest[
     TestID -> "DeclaredReal-ParameterAssumptions"
 ]
 
-(* Giving a parameter a value spends it, so no real assumption is left on that value:
-   c -> 2 I Log[2] makes RZ = diag(2, 1/2), not unitary, and the norm follows the textbook matrices. *)
+(* A declared parameter is real, so the imaginary value c -> 2 I Log[2] is refused. Declared Complexes on its gate,
+   c takes the value: RZ = diag(2, 1/2), not unitary, and the norm follows the textbook matrices. *)
 VerificationTest[
-    With[{qs = declaredRealCircuit[declaredRealInput][<|c -> 2 I Log[2]|>],
+    With[{qs = QuantumCircuitOperator[{"RX"[a] -> 1, "RY"[b] -> 2, "CNOT", QuantumOperator["RZ"[c], {2}, "SymbolDomains" -> {c -> Complexes}]}, "Parameters" -> {a, b, c}][declaredRealInput][<|c -> 2 I Log[2]|>],
         point = {a -> Pi / 2, b -> Pi / 3, \[Alpha] -> 1 + 2 I, \[Beta] -> -3 + I / 2}},
-        {qs["Parameters"], RootReduce[(qs["Norm"] /. point) - Norm[textbookCircuitMatrix[{a, b, 2 I Log[2]}] . {\[Alpha], 0, 0, \[Beta]} /. point]]}
+        {
+            FailureQ[declaredRealCircuit[<|c -> 2 I Log[2]|>]],
+            qs["Parameters"],
+            RootReduce[(qs["Norm"] /. point) - Norm[textbookCircuitMatrix[{a, b, 2 I Log[2]}] . {\[Alpha], 0, 0, \[Beta]} /. point]]
+        }
     ],
-    {{a, b}, 0},
+    {True, {a, b}, 0},
+    {QuantumCircuitOperator::domain},
     TestID -> "DeclaredReal-Substituted-Parameter-Is-Spent"
 ]
 

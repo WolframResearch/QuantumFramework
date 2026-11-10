@@ -34,6 +34,7 @@ PackageScope["simplifyOnFacts"]
 PackageScope["yesNo"]
 PackageScope["$verdictMessages"]
 PackageScope["verdictScope"]
+PackageScope["$yesNoProperties"]
 PackageScope["symbolDomainsOf"]
 PackageScope["withRecord"]
 PackageScope["questionSymbols"]
@@ -42,6 +43,13 @@ PackageScope["assumedSignRecord"]
 PackageScope["reportVerdict"]
 PackageScope["undecided"]
 PackageScope["nonzeroEntries"]
+PackageScope["noteLeftover"]
+PackageScope["objectFact"]
+PackageScope["setObjectFact"]
+PackageScope["storedVerdict"]
+PackageScope["knownUnitaryQ"]
+PackageScope["keepUnitary"]
+PackageScope["markBuiltUnitary"]
 
 
 
@@ -743,21 +751,30 @@ structuralConjugate[a_, qb_] /; ! basisFactsQ[qb] := $Failed
 structuralConjugate[a_SparseArray, qb_] := With[{vs = structuralConjugate[a["NonzeroValues"], qb]},
     If[vs === $Failed, $Failed, SparseArray[Thread[a["NonzeroPositions"] -> vs], Dimensions[a], Conjugate[a["Background"]]]]
 ]
+(* The symbols are matched against the few the expression holds, collected once, as in questionSymbols. *)
 structuralConjugate[a_, qb_] := With[{reals = qb["RealSymbols"]},
-    If[ reals =!= {} && conjugateByStructureQ[a],
-        a /. {r : Alternatives @@ reals :> r, Complex[x_, y_] :> Complex[x, - y], z : $domainSymbolPattern :> Conjugate[z]},
-        $Failed
+    If[ reals === {},
+        $Failed,
+        With[{c = Alternatives @@ Select[DeleteDuplicates @ Cases[a, _Symbol, {-1}, Heads -> True], domainSymbolQ]},
+            With[{symbol = c[__ ? AtomQ] | Subscript[c, __ ? AtomQ] | c},
+                If[ conjugateByStructureQ[symbol][a],
+                    a /. {r : Alternatives @@ reals :> r, Complex[x_, y_] :> Complex[x, - y], z : symbol :> Conjugate[z]},
+                    $Failed
+                ]
+            ]
+        ]
     ]
 ]
 
-conjugateByStructureQ[x_] := Which[
+conjugateByStructureQ[symbol_][x_] := Which[
     NumericQ[x], FreeQ[x, _Complex] || MatchQ[x, Complex[_Rational | _Integer, _Rational | _Integer]],
-    MatchQ[x, $domainSymbolPattern], True,
-    MatchQ[x, _List | _Plus | _Times], AllTrue[List @@ x, conjugateByStructureQ],
-    MatchQ[x, Power[_, _Integer]], conjugateByStructureQ[First[x]],
-    MatchQ[x, Power[E, _]], conjugateByStructureQ[Last[x]],
-    MatchQ[x, (Sin | Cos | Tan | Cot | Sec | Csc | Sinh | Cosh | Tanh)[_]], conjugateByStructureQ[First[x]],
-    True, False
+    MatchQ[x, symbol], True,
+    True, Switch[Head[x],
+        List | Plus | Times, AllTrue[List @@ x, conjugateByStructureQ[symbol]],
+        Power, Which[IntegerQ[Last[x]], conjugateByStructureQ[symbol][First[x]], First[x] === E, conjugateByStructureQ[symbol][Last[x]], True, False],
+        Sin | Cos | Tan | Cot | Sec | Csc | Sinh | Cosh | Tanh, Length[x] === 1 && conjugateByStructureQ[symbol][First[x]],
+        _, False
+    ]
 ]
 
 (* real by its structure: built as above from the real symbols of qb and real numbers only *)
@@ -794,7 +811,14 @@ linkedFacts[qb_, symbols_List] := symbolDomainsFacts[KeyTake[qb["SymbolDomains"]
 
 (* the symbols of an expression, each taken whole: Subscript[theta, 1] and theta[1] are symbols, and the theta
    inside them is not listed again *)
-questionSymbols[e_] := DeleteDuplicates @ Catenate @ Last @ Reap[e /. s : $domainSymbolPattern :> With[{x = Sow[s]}, x /; True]]
+questionSymbols[e_] := With[{candidates = Select[DeleteDuplicates @ Cases[e, _Symbol, {-1}, Heads -> True], domainSymbolQ]},
+    If[ candidates === {},
+        {},
+        With[{c = Alternatives @@ candidates},
+            DeleteDuplicates @ Catenate @ Last @ Reap[e /. s : (c[__ ? AtomQ] | Subscript[c, __ ? AtomQ] | c) :> With[{x = Sow[s]}, x /; True]]
+        ]
+    ]
+]
 
 (* Reduce and Simplify read the facts given to them and nothing the user set outside: $Assumptions is replaced,
    and Reduce gets every option it has. *)
@@ -910,22 +934,50 @@ endPoints[symbols_, ranges_] := With[{
 (* Whether every entry of a list is zero for all values the facts of qb allow. Each entry is first tried by the
    proof alone; of those left, one that is nonzero at one allowed point refutes it at once, and each other is
    tested in full: refined on the facts, proven, or tried at more points, the ends of the ranges among them. *)
-zeroVerdict[es_List, qb_] := With[{rest = Select[DeleteCases[es, 0], ! TrueQ[exponentialZeroTest[#]] &]},
-    Which[
-        rest === {}, True,
-        AnyTrue[rest, nonzeroSomewhereQ[#, qb, 1] &], False,
-        True, With[{tests = zeroTest[#, qb] & /@ rest},
-            Which[
-                AllTrue[tests, # === "zero" &], True,
-                MemberQ[tests, "nonzero"], False,
-                MemberQ[tests, "time"], undecided["time"],
-                True, undecided["tests"]
+zeroVerdict[es_List, qb_] := With[{nonzero = DeleteCases[es, 0], known = Join[Keys[qb["SymbolDomains"]], qb["Parameters"]]},
+    (* the first entry found nonzero by expanding settles it *)
+    With[{exact = Catch[Map[With[{r = freePolynomialZero[#, known]}, If[r === False, Throw[False, "nonzero"], r]] &, nonzero], "nonzero"]},
+        If[ exact === False,
+            False,
+            With[{rest = Select[Pick[nonzero, exact, None], ! TrueQ[exponentialZeroTest[#]] &]},
+                Which[
+                    rest === {}, True,
+                    AnyTrue[rest, nonzeroSomewhereQ[#, qb, 1] &], False,
+                    True, With[{tests = zeroTest[#, qb] & /@ rest},
+                        Which[
+                            AllTrue[tests, # === "zero" &], True,
+                            MemberQ[tests, "nonzero"], False,
+                            MemberQ[tests, "time"], undecided["time"],
+                            True, undecided["tests"]
+                        ]
+                    ]
+                ]
             ]
         ]
     ]
 ]
 
 zeroOnDomains[es_List, qb_] := answer[zeroVerdict[es, qb]]
+
+(* A polynomial in symbols with no fact and in their conjugates is zero for every complex value exactly when it
+   expands to 0: s and Conjugate[s] are independent coordinates of the plane, as x + I y and x - I y are. So
+   expanding decides it, True or False; anything else gives None and goes to the other tests. *)
+freePolynomialZero[e_, known_] := With[{symbols = questionSymbols[e]},
+    If[ symbols =!= {} && Intersection[symbols, known] === {} && PolynomialQ[e, Join[symbols, Conjugate /@ symbols]],
+        With[{x = Expand[e]},
+            Which[
+                x === 0, True,
+                AnyTrue[Last /@ CoefficientRules[x, Join[symbols, Conjugate /@ symbols]], plainNonzeroNumberQ], False,
+                True, None
+            ]
+        ],
+        None
+    ]
+]
+
+(* a coefficient known to be nonzero as it stands: a nonzero Gaussian rational or an approximate number. An exact
+   constant such as Cos[1]^2 + Sin[1]^2 - 1, which expanding does not reduce, is left to the other tests. *)
+plainNonzeroNumberQ[c_] := MatchQ[c, _Integer | _Rational | _Real | Complex[_Integer | _Rational | _Real, _Integer | _Rational | _Real]] && c != 0
 
 nonzeroSomewhereQ[e_, qb_, count_] := AnyTrue[First @ questionPoints[e, qb, count], nonzeroAtQ[e, #] &]
 
@@ -1237,23 +1289,38 @@ yesNo[head_, prop_, check_, m_, qb_] := With[{entries = nonzeroEntries[m]},
     With[{bad = SelectFirst[entries, ! FreeQ[#, _NonCommutativeMultiply | _MatrixSymbol | _ArraySymbol | _QuantumState | _QuantumOperator | _QuantumChannel] &, None]},
         If[ bad =!= None,
             reportVerdict[head, prop, undecided["notnumber", bad]],
-            With[{v = check[m, qb]},
-                If[ v === False && $verdictMessages,
-                    undeclaredHint[head, prop, check, m, qb, entries]
-                ];
-                reportVerdict[head, prop, v]
+            Block[{$verdictLeftover = {}},
+                With[{v = check[m, qb]},
+                    If[ v === False && $verdictMessages,
+                        undeclaredHint[head, prop, check, m, qb, entries, $verdictLeftover]
+                    ];
+                    reportVerdict[head, prop, v]
+                ]
             ]
         ]
     ]
 ]
 
-undeclaredHint[head_, prop_, check_, m_, qb_, entries_] := With[{
-    free = Complement[DeleteDuplicates @ Cases[entries, $domainSymbolPattern, {0, Infinity}], Keys[qb["SymbolDomains"]], qb["Parameters"]]
+(* The entries a check found not identically zero, M - M^dagger or M^dagger M - 1, kept while yesNo runs so the
+   hint below can read them instead of running the check again. A check that keeps none leaves {}. *)
+$verdictLeftover = None
+
+noteLeftover[es_] := If[ $verdictLeftover === {}, $verdictLeftover = es]
+
+undeclaredHint[head_, prop_, check_, m_, qb_, entries_, leftover_] := With[{
+    free = Complement[questionSymbols[entries], Keys[qb["SymbolDomains"]], qb["Parameters"]]
 },
-    If[ free =!= {} && check[m, QuantumBasis[qb, "SymbolDomains" -> Thread[free -> Reals]]] === True,
+    If[ free =!= {} && trueWhenRealQ[free, leftover, check, m, qb],
         verdictMessage[head, "undeclared", prop, free]
     ]
 ]
+
+(* Whether the check passes with the free symbols real. With them real, Conjugate[s] is s, so when the entries the
+   check left nonzero all expand to 0 after that replacement, it passes; otherwise the check runs again with the
+   symbols declared real. *)
+trueWhenRealQ[free_, leftover_, check_, m_, qb_] :=
+    ListQ[leftover] && leftover =!= {} && AllTrue[Expand[leftover /. Thread[(Conjugate /@ free) -> free]], # === 0 &] ||
+    check[m, QuantumBasis[qb, "SymbolDomains" -> Thread[free -> Reals]]] === True
 
 reportVerdict[_, _, v : True | False] := v
 reportVerdict[head_, prop_, undecided[reason_, args___]] := (
@@ -1266,13 +1333,15 @@ reportVerdict[head_, prop_, undecided[reason_, args___]] := (
 (* The outermost yes/no property call on a QF object owns the messages of every check run for it: inside its
    scope a message is recorded, not issued, and when the call returns each distinct message is issued once,
    under the head of the object the user asked. Outside any scope a message is issued at once. Other
-   properties open no scope, since every check they run is silent and a scope on every property call costs
-   time. *)
+   properties open no scope, since every check they run is silent. The property dispatchers call verdictScope
+   only for the names in $yesNoProperties: a call that passed the head symbol on every property would make the
+   kernel try that head's arithmetic rules each time. *)
+$yesNoProperties = "HermitianQ" | "UnitaryQ" | "PhysicalQ" | "UnitalQ" | "TracePreservingQ"
+
 $verdictScope = None
 $verdictLog = {}
 
 SetAttributes[verdictScope, HoldRest]
-verdictScope[_, Except["HermitianQ" | "UnitaryQ" | "PhysicalQ" | "UnitalQ" | "TracePreservingQ"], expr_] := expr
 verdictScope[_, _, expr_] /; $verdictScope =!= None := expr
 verdictScope[head_, _, expr_] := Block[{$verdictScope = head, $verdictLog = {}},
     With[{result = expr},
@@ -1281,10 +1350,86 @@ verdictScope[head_, _, expr_] := Block[{$verdictScope = head, $verdictLog = {}},
     ]
 ]
 
-verdictMessage[head_, tag_, args___] := If[ $verdictScope === None,
-    Message[MessageName[head, tag], args],
-    $verdictLog = Append[$verdictLog, {tag, args}]
+verdictMessage[head_, tag_, args___] := (
+    If[ ListQ[$verdictCapture], $verdictCapture = Append[$verdictCapture, {head, tag, args}]];
+    If[ $verdictScope === None,
+        Message[MessageName[head, tag], args],
+        $verdictLog = Append[$verdictLog, {tag, args}]
+    ]
+)
+
+
+(* Facts proven about one object are kept with that object, for as long as it exists: a yes/no answer with the
+   messages it gave, or that an operator is unitary because of how it was built. They are keyed on the object
+   itself, and nothing else changes them. Equal objects built separately may be one and the same expression and then
+   share them, which is sound because each fact depends only on the expression. *)
+$objectFacts = Language`NewExpressionStore["QuantumFrameworkObjectFacts"]
+
+objectFact[obj_, key_] := $objectFacts["get"[obj, key]]
+
+setObjectFact[obj_, key_, value_] := ($objectFacts["put"[obj, key, value]]; obj)
+
+(* A yes/no property is decided once per object: True or False is kept with its messages, which are issued again
+   when it is asked again. Indeterminate is not kept, since a longer time limit may decide it. *)
+$verdictCapture = None
+
+SetAttributes[storedVerdict, HoldRest]
+storedVerdict[obj_, prop_, expr_] := Replace[objectFact[obj, prop], {
+    {v_, log_} :> (If[ $verdictMessages, Scan[Apply[verdictMessage], log]]; v),
+    _ :> With[{r = Block[{$verdictCapture = {}}, {expr, $verdictCapture}]},
+        If[ ListQ[$verdictCapture], $verdictCapture = Join[$verdictCapture, Last[r]]];
+        If[ BooleanQ[First[r]] && $verdictMessages, setObjectFact[obj, prop, r]];
+        First[r]
+    ]
+}]
+
+(* Whether an operator is unitary because of how it was built. Building only records where the operator came from,
+   which costs one store: the named gate it was built as ("BuiltFrom"), or the operator it was moved, daggered or
+   inverted from ("UnitaryFrom"). The check runs when the answer is needed, and its True is kept. *)
+knownUnitaryQ[obj_] := Which[
+    MatchQ[objectFact[obj, "UnitaryQ"], {True, _}], True,
+    objectFact[obj, "BuiltFrom"] =!= Null, builtUnitaryQ[obj, objectFact[obj, "BuiltFrom"]],
+    objectFact[obj, "UnitaryFrom"] =!= Null, keptUnitaryQ[obj, objectFact[obj, "UnitaryFrom"]],
+    True, False
 ]
+
+keptUnitaryQ[obj_, old_] := knownUnitaryQ[old] && (setObjectFact[obj, "UnitaryQ", {True, {}}]; True)
+
+(* new is built from old by an operation that keeps unitarity: moving to other wires, the dagger, the inverse *)
+keepUnitary[old_, new_] := Which[
+    objectFact[old, "UnitaryQ"] === Null && objectFact[old, "BuiltFrom"] === Null && objectFact[old, "UnitaryFrom"] === Null, new,
+    (* the same expression, H and its dagger say: decide now, since a link from an object to itself would loop *)
+    new === old, If[ knownUnitaryQ[old], setObjectFact[new, "UnitaryQ", {True, {}}], new],
+    True, setObjectFact[new, "UnitaryFrom", old]
+]
+
+(* A named gate unitary for every real value of its arguments, built on qubits with every argument real on its
+   facts, is unitary as built, and its "UnitaryQ" is read, not computed. Each name below is checked against its
+   matrix by the tests. A gate on qudits, or with an argument not proven real, is checked like any operator. *)
+$unitaryGateNames = {
+    "Identity", "I", "Fourier", "InverseFourier", "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "Shift", "ShiftPhase",
+    "H", "Hadamard", "NOT", "SWAP", "RootSWAP", "CSWAP", "Fredkin", "C0SWAP", "CX", "CY", "CZ", "CH", "CT", "CS",
+    "CNOT", "C0NOT", "S", "T", "V", "SX", "Toffoli", "RootNOT", "FlipSign", "Permutation",
+    "RX", "RY", "RZ", "XRotation", "YRotation", "ZRotation", "P", "Phase", "U", "U1", "U2", "U3", "GlobalPhase",
+    "CPHASE", "Deutsch"
+}
+
+markBuiltUnitary[spec : ((name_String)[___] | name_String), order_, op_QuantumOperator] /; MemberQ[$unitaryGateNames, name] :=
+    setObjectFact[op, "BuiltFrom", {spec, order}]
+
+markBuiltUnitary[_, _, op_] := op
+
+(* each argument is one real number or real expression; a list stands only as the permutation of "Permutation" or
+   "FlipSign", so a list where an angle goes, "RX"[{1, 2}] say, is not a unitary gate *)
+(* a gate given fewer or more wires than it acts on, "SX" -> {2} say, is built as some other matrix, so the wires given
+   must be as many as the operator's input wires *)
+builtUnitaryQ[op_, {(name_String)[args___] | name_String, order_}] :=
+    (order === Automatic || Length[Flatten[{order}]] === Length[op["InputOrder"]]) &&
+    AllTrue[Join[op["OutputDimensions"], op["InputDimensions"]], # === 2 &] &&
+        AllTrue[{args}, If[ListQ[#], MemberQ[{"Permutation", "FlipSign"}, name] && VectorQ[#, IntegerQ], realGateArgumentQ[op["Basis"]][#]] &] &&
+        (setObjectFact[op, "UnitaryQ", {True, {}}]; True)
+
+realGateArgumentQ[qb_][a_] := realNumberQ[a] || rationalRealQ[{a}, qb["RealSymbols"]]
 
 Scan[
     Function[head,
