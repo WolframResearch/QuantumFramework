@@ -197,7 +197,7 @@ doubledReducedMatrix[qb_] := If[ qb["InputDimension"] === 1,
 (* The facts about the symbols do not depend on the basis, so a change of basis joins the facts of the old
    basis with those of the new one, as any merge does: a symbol named by both lies in both sets of domains,
    and one whose domains meet nowhere, or whose facts were taken away, keeps none. *)
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; symbolDomainsOf[qs] =!= <||> := With[{
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; symbolDomainsOf[qs] =!= <||> && symbolDomainsOf[qs] =!= symbolDomainsOf[newBasis] := With[{
     domains = MergeSymbolDomains[qs["Basis"], newBasis]
 },
     QuantumState[qs, QuantumBasis[newBasis, "SymbolDomains" -> domains]] /; ! sameSymbolDomainsQ[domains, symbolDomainsOf[newBasis]]

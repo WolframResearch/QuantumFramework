@@ -392,7 +392,7 @@ QuantumStateProp[qs_, "Weight"] /; symbolicParametersQ[qs] :=
     With[{w = qs["Weights"]}, w / Which[
         qs["StateType"] =!= "Vector", qs["Norm"],
         FreeQ[Normal[w], Abs | Conjugate | Re | Im], coefficientOnFacts[Total[Normal[w]], qs["ParameterAssumptions"]],
-        True, Simplify[parameterNormSquared[qs], qs["ParameterAssumptions"]]
+        True, With[{n2 = parameterNormSquared[qs]}, If[LeafCount[n2] <= 4 Length[w] + 8, n2, Simplify[n2, qs["ParameterAssumptions"]]]]
     ]]
 
 QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
