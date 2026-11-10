@@ -80,7 +80,7 @@ quadraticExp[g_, {cr_, an_}, lv_, s_] :=
         {t, m, u, v, e, r} = Which[
             p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2, w/2},
             PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[# /. f -> 0, {l, 0, 0}], l, 0],
-            True, # /. {l -> Sqrt[4 p q - w^2], f -> rootPhase[{{w, 2 p}, {-2 q, -w}}, 1]} /. $nonuls
+            True, # /. {l -> Sqrt[4 p q - w^2], f -> rootPhase[{{w, 2 p}, {-2 q, -w}}]} /. $nonuls
         ] & @ Join[
             {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
             {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
@@ -107,15 +107,25 @@ splitModes[g_, lv_] :=
 
 (* Det[D] = Sum c_S e^(tau lambda_S) over n-subsets S of the eigenvalues of x = tau x0 (Cauchy-Binet).  If the largest |c_S|
    outweighs the rest and the others only rotate, pulling tau lambda_S out of the root keeps its principal branch continuous. *)
-rootPhase[x_, n_] :=
-    Module[{tau = SelectFirst[Flatten[x], ! PossibleZeroQ[#] &], lam, v, c},
-        If[ ! MatrixQ[x / tau, NumericQ], Return[0, Module]];
-        {lam, v} = {#1, N[Transpose[#2]]} & @@ Eigensystem[x / tau];
-        If[ MatrixRank[v] < 2 n, Return[0, Module]];
-        c = ReverseSortBy[Values @ GroupBy[Subsets[Range[2 n], {n}], Round[N[Total[lam[[#]]]], 10^-8] &,
-            {Total[lam[[First[#]]]], Abs @ Total[Det[v[[n + 1 ;;, #]]] Det[Inverse[v][[#, n + 1 ;;]]] & /@ #]} &], Last];
-        If[ 2 c[[1, 2]] > Total[c[[All, 2]]] && AllTrue[c[[All, 1]] - c[[1, 1]], PossibleZeroQ @ Chop @ ComplexExpand @ Re[tau #] &], tau c[[1, 1]], 0]
+rootPhase[x_] := rootPhase[x, SelectFirst[Flatten[x], ! PossibleZeroQ[#] &]]
+
+rootPhase[x_, tau_] /; MatrixQ[x / tau, NumericQ] :=
+    Module[{n = Length[x] / 2, lam, v, terms, best},
+        {lam, v} = MapAt[N @* Transpose, Eigensystem[x / tau], 2];
+        (
+            terms = {#[[1, 1]], Abs @ Total[#[[All, 2]]]} & /@ GatherBy[
+                With[{vi = Inverse[v]}, {Total[lam[[#]]], Det[v[[n + 1 ;;, #]]] Det[vi[[#, n + 1 ;;]]]} & /@ Subsets[Range[2 n], {n}]],
+                Round[N @ First[#], 10^-8] &
+            ];
+            best = First @ MaximalBy[terms, Last];
+            If[ 2 Last[best] > Total[terms[[All, 2]]] && AllTrue[terms[[All, 1]] - First[best], PossibleZeroQ @ Chop @ ComplexExpand @ Re[tau #] &],
+                tau First[best],
+                0
+            ]
+        ) /; MatrixRank[v] == 2 n
     ]
+
+rootPhase[__] := 0
 
 (* e^(ad P ad/2 + ad W a + a Q a/2) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
    e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
@@ -137,7 +147,7 @@ multimodeQuadraticExp[g_, lv_, s_] :=
             m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
             e = MatrixExp[m];
             d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
-            l = rootPhase[m, n];
+            l = rootPhase[m];
             E^(-(Tr[w] + l) / 2) (E^-l Det[e[[n + 1 ;;, n + 1 ;;]]])^(-1/2) ncJoin[
                 Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2]],
                 middle[Transpose[d]],

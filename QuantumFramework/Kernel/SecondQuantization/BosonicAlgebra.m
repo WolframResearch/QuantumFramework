@@ -292,32 +292,23 @@ normalFactor[fac_, pair_, k_, x_] :=
         ]
     ]
 
-(* scalar Exp[P[ad]] ad^p f[n] a^q Exp[Q[a]], any factor absent.  Factors of a kind commute,
-   so the up side is x^p Exp[P] and the down side x^q Exp[Q]; between Fock states the middle
-   sum runs only to Min[m, n].  Without exponentials the element is read in closed form, and
-   it vanishes for n < q before f[n - q] is evaluated, so a^dagger f[N] a keeps the vacuum
-   even when f[n - 1] is singular at n = 0.  Between coherent states both sides are numbers
-   and the middle is summed in t before the amplitudes go in, so a zero amplitude meets no 0^j.
-   The factors must arrive in normal order: an antinormal product would otherwise be silently
-   reordered and keep its own scalar, wrong by the exponential of the commutator. *)
+(* scalar Exp[P[ad]] ad^p f[n] a^q Exp[Q[a]], any factor absent: the up side is x^p Exp[P], the down side x^q Exp[Q],
+   and the middle sum runs to Min[m, n].  The closed form vanishes for n < q before f[n - q] is evaluated, so
+   a^dagger f[N] a keeps the vacuum when f[n - 1] is singular at n = 0; coherent elements sum the middle before the
+   amplitudes go in, so a zero amplitude meets no 0^j.  Factors must arrive in normal order: an antinormal product
+   would be silently reordered, wrong by the exponential of the commutator. *)
 normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
-    Module[{x, t, terms, scalar, tagged, u, w, p, q, fu, fd, f, mono, r},
-        terms = If[Head[expr] === Times, List @@ expr, {expr}];
-        scalar = Times @@ Select[terms, FreeQ[#, Alternatives @@ pair] &];
-        tagged = Replace[Times @@ Select[terms, ! FreeQ[#, Alternatives @@ pair] &],
-            {q_NonCommutativeMultiply :> List @@ q, q_ :> {q}}];
-        tagged = normalFactor[#, pair, j, x] & /@ tagged;
-        If[MemberQ[tagged, $Failed], Return[$Failed, Module]];
-        If[ ! OrderedQ[First /@ tagged /. {"Up" | "Creators" -> 1, "Diagonal" -> 2, "Down" | "Annihilators" -> 3}],
+    Module[{x, t, scalar, tagged, kinds, u, w, p, q, fu, fd, f, mono, r},
+        {scalar, tagged} = Times @@@ Lookup[GroupBy[Replace[expr, {e_Times :> List @@ e, e_ :> {e}}], FreeQ[Alternatives @@ pair]], {True, False}, {}];
+        tagged = normalFactor[#, pair, j, x] & /@ Replace[tagged, {e_NonCommutativeMultiply :> List @@ e, e_ :> {e}}];
+        If[ MemberQ[tagged, $Failed] || ! OrderedQ[Keys[tagged] /. {"Up" | "Creators" -> 1, "Diagonal" -> 2, "Down" | "Annihilators" -> 3}],
             Return[$Failed, Module]
         ];
-        u = Total[Cases[tagged, ("Up" -> c_) :> c]];
-        w = Total[Cases[tagged, ("Down" -> c_) :> c]];
-        p = Total[Cases[tagged, ("Creators" -> c_) :> c]];
-        q = Total[Cases[tagged, ("Annihilators" -> c_) :> c]];
+        kinds = Merge[tagged, Identity];
+        {u, w, p, q} = Total /@ Lookup[kinds, {"Up", "Down", "Creators", "Annihilators"}, {}];
         fu = x^p Exp[u];
         fd = x^q Exp[w];
-        f = Times @@ Cases[tagged, ("Diagonal" -> g_) :> g];
+        f = Times @@ Lookup[kinds, "Diagonal", {}];
         mono = scalar KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]] (f /. j -> n - q) &;
         r = Which[
             coherent,
