@@ -127,11 +127,25 @@ rootPhase[x_, tau_] /; MatrixQ[x / tau, NumericQ] :=
 
 rootPhase[__] := 0
 
-(* e^(ad P ad/2 + ad W a + a Q a/2) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
+affineShift[x_, ell_, n_] /; AllTrue[ell, PossibleZeroQ] := {ConstantArray[0, n], ConstantArray[0, n], 0}
+
+affineShift[x_, ell_, n_] :=
+    Module[{ss = DiagonalMatrix[Join[ConstantArray[1, n], ConstantArray[-1, n]]], jj, m, aug},
+        jj = ArrayFlatten[{{0, -IdentityMatrix[n]}, {IdentityMatrix[n], 0}}];
+        m = ss . Transpose[x] . ss;
+        aug = MatrixExp[ArrayFlatten[{
+            {m, jj, ConstantArray[0, {2 n, 1}]},
+            {ConstantArray[0, {2 n, 2 n}], -Transpose[m], Transpose[{ell}]},
+            {ConstantArray[0, {1, 2 n}], ConstantArray[0, {1, 2 n}], {{0}}}}]];
+        Simplify @ Append[TakeDrop[aug[[2 n + 1 ;; 4 n, -1]], n], (aug[[2 n + 1 ;; 4 n, 2 n + 1 ;; 4 n]] . ell) . aug[[;; 2 n, -1]] / 2]
+    ]
+
+(* e^(ad P ad/2 + ad W a + a Q a/2 + mu ad + nu a) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
    e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
-   :e^(ad (e^W - 1) a):.  Antinormal order is the same under a -> ad, ad -> -a. *)
+   :e^(ad (e^W - 1) a):; linear terms come in through affineShift and braid to the wings.
+   Antinormal order is the same under a -> ad, ad -> -a. *)
 multimodeQuadraticExp[g_, lv_, s_] :=
-    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, m, e, d, l},
+    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, lam, rho, kap, m, k, e, d, yy, l},
         {xs, ys} = {Array[x, n], Array[y, n]};
         {cr, an} = If[s == 1, Identity, Reverse] @ ladderVars[lv][[All, ladderModes[lv, g]]];
         op = ncPolynomial[Expand[# /. Thread[ys -> s ys]], Join[xs, ys], Join[cr, an]] &;
@@ -140,18 +154,21 @@ multimodeQuadraticExp[g_, lv_, s_] :=
             If[s == 1, NormalOrdered, AntinormalOrdered][Exp[op[xs . (# - IdentityMatrix[n]) . ys]], ladderVars[lv]]
         ] &;
         poly = Expand @ dequantize[If[s == 1, BosonicNormalOrder, BosonicAntinormalOrder][g, ladderVars[lv]] /. $nonuls, Thread[Join[cr, an] -> Join[xs, s ys]]];
-        If[ n < 2 || ! PolynomialQ[poly, Join[xs, ys]] || ! SubsetQ[{0, 2}, Total /@ Keys @ CoefficientRules[poly, Join[xs, ys]]], Return[$Failed, Module]];
+        If[ n < 2 || ! PolynomialQ[poly, Join[xs, ys]] || ! SubsetQ[{0, 1, 2}, Total /@ Keys @ CoefficientRules[poly, Join[xs, ys]]], Return[$Failed, Module]];
         {w, p, q} = {D[poly, {xs}, {ys}], D[poly, {xs, 2}], D[poly, {ys, 2}]};
-        Exp[poly /. Thread[Join[xs, ys] -> 0]] If[ AllTrue[Flatten[{p, q}], PossibleZeroQ],
-            middle[MatrixExp[w]],
-            m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
+        m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
+        {lam, rho, kap} = affineShift[m, Flatten[{D[poly, {xs}], D[poly, {ys}]} /. Thread[Join[xs, ys] -> 0]], n];
+        Exp[(poly /. Thread[Join[xs, ys] -> 0]) + kap + lam . rho / 2] If[ AllTrue[Flatten[{p, q}], PossibleZeroQ],
+            k = MatrixExp[w];
+            ncJoin[Exp[op[Simplify[k . lam] . xs]], middle[k], Exp[op[rho . ys]]],
             e = MatrixExp[m];
             d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
+            yy = -d . e[[n + 1 ;;, ;; n]];
             l = rootPhase[m];
-            E^(-(Tr[w] + l) / 2) (E^-l Det[e[[n + 1 ;;, n + 1 ;;]]])^(-1/2) ncJoin[
-                Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2]],
+            E^(Simplify[lam . yy . lam] / 2 - (Tr[w] + l) / 2) (E^-l Det[e[[n + 1 ;;, n + 1 ;;]]])^(-1/2) ncJoin[
+                Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2 + Simplify[Transpose[d] . lam] . xs]],
                 middle[Transpose[d]],
-                Exp[op[-ys . d . e[[n + 1 ;;, ;; n]] . ys / 2]]
+                Exp[op[ys . yy . ys / 2 + Simplify[yy . lam + rho] . ys]]
             ]
         ]
     ]
@@ -427,16 +444,19 @@ AntinormalOrdered[expr_, vars_] :=
     ]
 
 
-expApplyRules[expr_, assum_, rules_, lv_] :=
+expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
     Assuming[assum,
-        Simplify[
-            FixedPoint[
-                (# /. Prepend[rules, n : (_NormalOrdered | _AntinormalOrdered) :> n]) //.
-                    (NonCommutativeMultiply[l___, Times[s_, m_NonCommutativeMultiply], r___] /; FreeQ[s, Alternatives @@ lv["Generators"]] :>
-                        s NonCommutativeMultiply[l, m, r]) &,
-                canonicalizeGenerators[expr, lv]
+        Replace[
+            TimeConstrained[
+                FixedPoint[
+                    (# /. Prepend[rules, n : (_NormalOrdered | _AntinormalOrdered) :> n]) //.
+                        (NonCommutativeMultiply[l___, Times[s_, m_NonCommutativeMultiply], r___] /; FreeQ[s, Alternatives @@ lv["Generators"]] :>
+                            s NonCommutativeMultiply[l, m, r]) &,
+                    canonicalizeGenerators[expr, lv]
+                ],
+                tc
             ],
-            ExcludedForms -> _GeneralizedPower, Trig -> False
+            r : Except[$Aborted] :> TimeConstrained[Simplify[r, ExcludedForms -> _GeneralizedPower, Trig -> False], tc, r]
         ]
     ]
 
@@ -468,8 +488,8 @@ BosonicExpOrder[expr_, vars_, opts : OptionsPattern[]] :=
             $Failed,
             Replace[OptionValue["Ordering"], {
                 ord : "Normal" | "Antinormal" :>
-                    TimeConstrained[expApplyRules[expr, OptionValue[Assumptions], expRules[lv, ord], lv], OptionValue[TimeConstraint],
-                        Message[BosonicExpOrder::time, OptionValue[TimeConstraint]]; expr],
+                    Replace[expApplyRules[expr, OptionValue[Assumptions], expRules[lv, ord], lv, OptionValue[TimeConstraint]],
+                        $Aborted :> (Message[BosonicExpOrder::time, OptionValue[TimeConstraint]]; expr)],
                 other_ :> (Message[BosonicExpOrder::ordering, other]; $Failed)
             }]
         ]

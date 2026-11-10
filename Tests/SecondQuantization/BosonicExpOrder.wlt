@@ -906,6 +906,43 @@ VerificationTest[
     TestID -> "TwoModeRootContinuousAtMachineTime"
 ]
 
+(* Coupled two-mode generators with linear terms through the multimode rule, hopping in normal order and
+   squeezing plus a constant in antinormal order: the symbol of the ordered form (a^dagger -> x, a -> y, the
+   number middle merged before it is read) equals the series of e^(t G) to t^2. *)
+VerificationTest[
+    Module[{ad = SuperDagger[\[FormalA]], bd = SuperDagger[\[FormalB]], a = \[FormalA], b = \[FormalB], deq, sym, series},
+        deq = # //. {ad -> x1, bd -> x2, a -> y1, b -> y2, GeneralizedPower[NonCommutativeMultiply, u_, k_] :> u^k, NonCommutativeMultiply -> Times} &;
+        sym[o_, ord_] := With[{nums = If[ord === "Normal", {ad ** a, bd ** b}, {a ** ad, b ** bd}]},
+            deq[(o /. {(NormalOrdered | AntinormalOrdered)[f_, _] :> deq[f],
+                    Power[base_, e_] /; ! FreeQ[e, Alternatives @@ nums] && FreeQ[Expand[e] /. Thread[nums -> 0], a | b] :> Inactive[Exp][Log[base] e]}) //.
+                Inactive[Exp][u_] Inactive[Exp][w_] :> Inactive[Exp][u + w] /.
+                Inactive[Exp][e_] :> With[{c = Coefficient[Expand[e], #] & /@ nums},
+                    Exp[If[ord === "Normal", E^c - 1, 1 - E^-c] . {x1 y1, x2 y2} + (Expand[e] /. Thread[nums -> 0])]]]];
+        series[g_, ord_] := 1 + Sum[t^j/j! deq[If[ord === "Normal", BosonicNormalOrder, BosonicAntinormalOrder][NonCommutativeMultiply @@ ConstantArray[g, j], $vAB]], {j, 2}];
+        Simplify[Normal[Series[sym[BosonicExpOrder[Exp[t #1], $vAB, "Ordering" -> #2], #2] - series[#1, #2], {t, 0, 2}]]] & @@@ {
+            {ad ** a/3 + (ad ** b + bd ** a)/7 + bd ** b/2 + ad/5 + b/6, "Normal"},
+            {ad ** bd/2 + a ** b/7 + ad/4 + b/9 + 3/7, "Antinormal"}}
+    ],
+    {0, 0},
+    TestID -> "TwoModeCoupledQuadraticAndLinearSeries"
+]
+
+(* A displaced two-mode squeezer, e^(r (a^dagger b^dagger - a b) + g a^dagger - conj(g) a), ordered with linear
+   terms on a coupled pair, realized on 16 levels per mode against MatrixExp of the generator on n_a, n_b <= 2. *)
+VerificationTest[
+    Module[{s = 16, am, bm, idx, gen},
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
+        gen = 0.3 (ConjugateTranspose[am] . ConjugateTranspose[bm] - am . bm) + (0.2 + 0.1 I) ConjugateTranspose[am] - (0.2 - 0.1 I) am;
+        Max[Abs[Normal[ToBosonicOperator[
+            BosonicExpOrder[Exp[r (SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]] - \[FormalA]**\[FormalB]) + g SuperDagger[\[FormalA]] - Conjugate[g] \[FormalA]],
+                $vAB, Assumptions -> r > 0] /. {r -> 0.3, g -> 0.2 + 0.1 I}, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] - MatrixExp[gen][[idx, idx]]]] < 10^-10
+    ],
+    True,
+    TestID -> "TwoModeDisplacedSqueezerMatchesMatrixExp"
+]
+
 EndTestSection[]
 
 
