@@ -1077,14 +1077,30 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := simplifyLabel @ Quantu
    roundoff, integration error or noise left slightly non-Hermitian then gives a
    state that does not depend on which eigensolver roundoff selects. "Physical"
    takes the Hermitian part before it divides by the trace. An exact or symbolic
-   matrix is taken as it is. *)
+   matrix is taken as it is.
+
+   "Physical" returns the density matrix nearest to the state in the
+   Hilbert-Schmidt norm, nearestDensityMatrix: the eigenvalues are projected onto
+   the probability simplex, so the smallest are set to 0 and the others all
+   shifted by one common amount. A spectrum that is not numeric cannot be
+   ordered, so its negative eigenvalues are set to 0 and the rest rescaled. Only a
+   machine-precision result has its entries below 10^-10 set to 0; at higher
+   precision such an entry is part of the nearest state.
+   "EigenPrune" is a different operation: it keeps the n eigenvalues of largest
+   magnitude, whatever their sign, and by default ("Normalize" -> True)
+   rescales them to trace 1, a rank-n truncation rather than a nearest state. *)
 machineHermitianPart[m_] := If[MatrixQ[m, NumericQ] && Precision[m] === MachinePrecision, (m + ConjugateTranspose[m]) / 2, m]
 
 QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 	Block[{d, u},
 		{d, u} = eigensystem[normalizeMatrix[machineHermitianPart[qs["DensityMatrix"]]], Chop -> True, "Normalize" -> True];
-		d = Normalize[Max[#, 0] & /@ Re[d], Total];
-		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
+		QuantumState[
+			If[ VectorQ[Re[d], NumericQ],
+				nearestDensityMatrix[{d, u}],
+				Transpose[u] . DiagonalMatrix[Normalize[Max[#, 0] & /@ Re[d], Total]] . Conjugate[u]
+			] // If[Precision[d] === MachinePrecision, Chop, Identity],
+			qs["Basis"]
+		]
     ]
 ]
 

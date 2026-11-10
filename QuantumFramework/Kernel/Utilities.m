@@ -22,6 +22,8 @@ PackageScope["primeFactors"]
 PackageScope["powerPrimeFactors"]
 
 PackageScope["normalizeMatrix"]
+PackageScope["nearestDensityMatrix"]
+PackageScope["simplexProjection"]
 PackageScope["tensorToVector"]
 PackageScope["toTensor"]
 PackageScope["tensorDimensions"]
@@ -144,6 +146,28 @@ identityMatrix[n_] := IdentityMatrix[n, SparseArray]
 
 
 normalizeMatrix[matrix_] := With[{tr = Tr[matrix]}, If[NumericQ[tr] && tr == 0, matrix, matrix / tr]]
+
+
+(* The density matrix nearest in the Hilbert-Schmidt norm to a Hermitian matrix of trace 1 with eigensystem {mu, v},
+   the eigenvectors v as rows: the eigenvectors are kept and the eigenvalues mu are replaced by their Euclidean
+   projection onto the probability simplex (Smolin, Gambetta and Smith, PRL 108, 070502 (2012),
+   doi:10.1103/PhysRevLett.108.070502). That sets the smallest eigenvalues to
+   0 and lowers all the others by one common amount; clipping the negative eigenvalues and rescaling scales the others
+   instead, which gives a state farther away. The eigenvectors are orthonormalized first: for a degenerate eigenvalue
+   at arbitrary precision Eigensystem returns eigenvectors orthonormal only to well below the precision it reports,
+   and the product would carry that error into the state. *)
+nearestDensityMatrix[{mu_, v_}] := With[{w = Orthogonalize[v]}, Transpose[w] . DiagonalMatrix[simplexProjection[Re[mu]]] . Conjugate[w]]
+
+(* The Euclidean projection of a real vector mu onto the probability simplex: with s the entries sorted down and k the
+   last position where s_k exceeds (Total[s[[;; k]]] - 1) / k, every entry is lowered by that amount at k and cut at
+   0. The sort compares values, Sort[mu, Greater]: ReverseSort puts exact numbers such as Sqrt[2] / 2 in canonical
+   order, not numeric order. For mu summing to 1 the shift is minus the total of the entries past k divided by k, the
+   accumulator of Smolin, Gambetta and Smith's steps 2 to 4. *)
+simplexProjection[mu_] := With[{s = Sort[mu, Greater]},
+    With[{k = Last @ Pick[Range[Length[s]], Thread[s - (Accumulate[s] - 1) / Range[Length[s]] > 0]]},
+        Ramp[mu - (Total[s[[;; k]]] - 1) / k]
+    ]
+]
 
 
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]
