@@ -502,13 +502,13 @@ VerificationTest[
 ]
 
 (* The three answers of the zero test, each from its own stage: proven zero (TrigToExp then Together), nonzero
-   at a point the facts allow, and undecided when neither applies (Log[E^x] - x vanishes for real x, but no
-   rational form shows it). *)
+   at a point the facts allow, and undecided when neither applies (Gamma[x + 1] - x Gamma[x] vanishes, but no
+   rational form shows it and no point refutes it). *)
 VerificationTest[
     With[{qb = QuantumBasis["SymbolDomains" -> {x -> Reals}]}, {
         zeroOnDomains[{Sin[x] ^ 2 + Cos[x] ^ 2 - 1, Cos[x / 2] ^ 2 - (1 + Cos[x]) / 2}, qb],
         zeroOnDomains[{Sin[x] ^ 2 + Cos[x] ^ 2 - 1, x - Conjugate[y]}, qb],
-        zeroOnDomains[{Log[Exp[x]] - x}, qb]
+        zeroOnDomains[{Gamma[x + 1] - x Gamma[x]}, qb]
     }],
     {True, False, Indeterminate},
     TestID -> "SymbolDomains-ZeroTestStages"
@@ -632,6 +632,117 @@ VerificationTest[
     {MemberQ[Keys[QuantumBasis[]["Options"]], "SymbolDomains"], MemberQ[Keys[QuantumOperator["RZ"[t]]["Basis"]["Options"]], "SymbolDomains"]},
     {False, True},
     TestID -> "SymbolDomains-OptionsHideEmpty"
+]
+
+(* ========== zero tests and signs ========== *)
+
+(* Whether an expression is zero for every value the facts allow. The facts settle Sqrt, Abs and Log of the
+   real symbols first; a product or a positive power is zero when a factor or the base is; trig of real angles
+   is reduced with Cos^2 + Sin^2 = 1; an exact value at an allowed point refutes, however small; a bounded
+   integer symbol is checked at every value it can take. *)
+VerificationTest[
+    With[{P = QuantumBasis["SymbolDomains" -> {p -> Interval[{0, 1}]}], T = QuantumBasis["SymbolDomains" -> {t -> Reals}]}, {
+        zeroOnDomains[{Sqrt[(1 - p) ^ 2] - (1 - p)}, P],
+        zeroOnDomains[{Abs[Exp[I t]] - 1, Log[Exp[t]] - t}, T],
+        zeroOnDomains[{Sin[t / 2] ^ 2 - (1 - Cos[t]) / 2, Cos[3 t] - 4 Cos[t] ^ 3 + 3 Cos[t]}, T],
+        zeroOnDomains[{(Cos[t] ^ 2 + Sin[t] ^ 2 - 1) ^ (1 / 3) Gamma[t]}, T],
+        zeroOnDomains[{10 ^ -12 (p - 1 / 3)}, P],
+        zeroOnDomains[{Sqrt[p ^ 2] - p}, QuantumBasis["SymbolDomains" -> {p -> Reals}]],
+        zeroOnDomains[{Cos[2 Pi k] - 1}, QuantumBasis["SymbolDomains" -> {k -> {Integers, Interval[{0, 10}]}}]],
+        zeroOnDomains[{(-1) ^ k - 1}, QuantumBasis["SymbolDomains" -> {k -> {Integers, Interval[{0, 5}]}}]]
+    }],
+    {True, True, True, True, False, False, True, False},
+    TestID -> "SymbolDomains-ZeroOnFacts"
+]
+
+(* Whether an expression is nonzero for every value the facts allow, the question asked of a denominator: only
+   a proof says yes; a zero at an allowed point, an end of a range or an integer value, says no; otherwise it
+   is undecided. *)
+VerificationTest[
+    With[{P = QuantumBasis["SymbolDomains" -> {p -> Interval[{0, 1}], q -> Interval[{0, 1}]}], R = QuantumBasis["SymbolDomains" -> {p -> Reals, t -> Reals}]}, {
+        nonzeroOnDomains[{1 + p ^ 2, p ^ 2 - p + 1, Exp[I t]}, R],
+        nonzeroOnDomains[{2 - p, p q + 1}, P],
+        nonzeroOnDomains[{1 - p}, P],
+        nonzeroOnDomains[{(-1) ^ k + 1}, QuantumBasis["SymbolDomains" -> {k -> {Integers, Interval[{0, 5}]}}]],
+        nonzeroOnDomains[{Cos[t]}, R]
+    }],
+    {True, True, False, False, Indeterminate},
+    TestID -> "SymbolDomains-NonzeroEverywhere"
+]
+
+(* The sign of an expression over the values the facts allow: positive, nonnegative, negative, nonpositive,
+   zero, or varying, with two allowed points where it has opposite signs. *)
+VerificationTest[
+    With[{P = QuantumBasis["SymbolDomains" -> {p -> Interval[{0, 1}]}], R = QuantumBasis["SymbolDomains" -> {p -> Reals, t -> Reals}]}, {
+        signOnDomains[p (1 - p), P],
+        signOnDomains[p ^ 2 - 2 p + 2, R],
+        signOnDomains[Exp[t], R],
+        signOnDomains[Abs[z], QuantumBasis[]],
+        signOnDomains[(p - 1 / 3) ^ 2 (p - 2), P],
+        signOnDomains[Sin[t] ^ 2 + Cos[t] ^ 2 - 1, R],
+        Replace[signOnDomains[p - 1 / 2, P], {"Varies", a_, b_} :> Sign[(p - 1 / 2) /. a] Sign[(p - 1 / 2) /. b]],
+        Replace[signOnDomains[Cos[t], R], {"Varies", a_, b_} :> Sign[Cos[t] /. a] Sign[Cos[t] /. b]],
+        Replace[signOnDomains[x y, QuantumBasis["SymbolDomains" -> {x -> Interval[{-1, 1}], y -> Interval[{-1, 1}]}]], {"Varies", a_, b_} :> Sign[x y /. a] Sign[x y /. b]]
+    }],
+    {"Nonnegative", "Positive", "Positive", "Nonnegative", "Nonpositive", "Zero", -1, -1, -1},
+    TestID -> "SymbolDomains-SignAnswer"
+]
+
+(* A global $Assumptions set by the user does not enter the answers: diag(p, 2 - p) with p in [0, 3] is
+   physical only where p <= 2, whatever the user assumes outside. *)
+VerificationTest[
+    Block[{$Assumptions = p <= 2},
+        QuantumState[DiagonalMatrix[{p, 2 - p}], "SymbolDomains" -> {p -> Interval[{0, 3}]}]["PhysicalQ"]
+    ],
+    Indeterminate,
+    {QuantumState::undecidedregion},
+    TestID -> "SymbolDomains-IgnoresUserAssumptions"
+]
+
+(* The weight of an amplitude that is a sum is its product with its conjugate taken on the facts:
+   (Sqrt[p] + I Sqrt[1 - p]) / Sqrt[2] has weight 1/2 for p in [0, 1]. *)
+VerificationTest[
+    Normal @ QuantumState[{(Sqrt[p] + I Sqrt[1 - p]) / Sqrt[2], a}, "SymbolDomains" -> {p -> Interval[{0, 1}]}]["Weights"],
+    {1 / 2, Abs[a] ^ 2},
+    TestID -> "SymbolDomains-WeightOfSumOnFacts"
+]
+
+(* A cleanup step whose result brings in Indeterminate or an infinity the input did not hold is refused. *)
+VerificationTest[
+    {keptStage[x, Indeterminate], keptStage[1 / x, ComplexInfinity], keptStage[Indeterminate + x, Indeterminate], keptStage[Abs[p], p]},
+    {x, 1 / x, Indeterminate, p},
+    TestID -> "SymbolDomains-StageRefusesIndeterminate"
+]
+
+(* ========== messages ========== *)
+
+(* The object the user asked owns the messages of every check run for it: a circuit's or a measurement
+   operator's undecided or undeclared message carries its own head, not that of the operator inside. A check
+   already answered and cached gives no message again, so each test uses an operator not checked before. *)
+VerificationTest[
+    QuantumCircuitOperator[{QuantumOperator[$rabi], QuantumOperator[$rabi, {2}]}]["UnitaryQ"],
+    False,
+    {QuantumCircuitOperator::undeclared},
+    TestID -> "SymbolDomains-MessageUnderCircuit"
+]
+
+VerificationTest[
+    QuantumMeasurementOperator[QuantumOperator[u PauliMatrix[3] + w PauliMatrix[1]]]["HermitianQ"],
+    False,
+    {QuantumMeasurementOperator::undeclared},
+    TestID -> "SymbolDomains-MessageUnderMeasurementOperator"
+]
+
+(* Within one operation the same message is issued once, however many nested checks raise it. *)
+VerificationTest[
+    verdictScope[QuantumState, {
+        reportVerdict[QuantumState, "PhysicalQ", undecided["tests"]],
+        reportVerdict[QuantumOperator, "PhysicalQ", undecided["tests"]],
+        reportVerdict[QuantumState, "PhysicalQ", undecided["time"]]
+    }],
+    {Indeterminate, Indeterminate, Indeterminate},
+    {QuantumState::undecided, QuantumState::undecidedtime},
+    TestID -> "SymbolDomains-MessagesOncePerOperation"
 ]
 
 EndTestSection[]

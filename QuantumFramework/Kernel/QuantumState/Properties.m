@@ -117,7 +117,7 @@ QuantumState::undefprop = "property `` is undefined for this state"
 QuantumState::failprop = "property `` failed with ``"
 
 (qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[Unevaluated[qs]] := With[{
-    result = QuantumStateProp[qs, prop, args]
+    result = verdictScope[QuantumState, QuantumStateProp[qs, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumStateProp[qs, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Basis", "State"}, prop] &&
@@ -192,10 +192,9 @@ symbolicDensityStateQ[qs_] := qs["StateType"] === "Matrix" && qs["InputDimension
 
 symbolicDensityMatrixQ[qs_] := symbolicDensityStateQ[qs] && qs["ParameterArity"] == 0
 
-(* Tr[rho^2] = Tr[rho]^2, tested with the real symbols taken real: True, False or Indeterminate *)
-symbolicPureQ[qs_] := zeroOnDomains[
-    {onRealSymbols[Tr[# . #] - Tr[#] ^ 2 &, Normal[qs["DensityMatrix"]], qs["Basis"]]},
-    qs["Basis"]
+(* Tr[rho^2] = Tr[rho]^2, tested on the entries refined under the facts: True, False or Indeterminate *)
+symbolicPureQ[qs_] := With[{r = refineOnFacts[Normal[qs["DensityMatrix"]], qs["Basis"]]},
+    zeroOnDomains[{Tr[r . r] - Tr[r] ^ 2}, qs["Basis"]]
 ]
 
 (* Reading a lazy container costs a materialization, and the property cascade
@@ -609,13 +608,32 @@ symbolicParametersQ[qs_] := stateFactsQ[qs] && realSymbols[qs] =!= {} && ! qs["N
 stateFactsQ[QuantumState[_, qb_]] := basisFactsQ[qb]
 stateFactsQ[_] := True
 
-(* Abs, Re or Im of a function of the declared parameters alone is a function of real
-   variables, so ComplexExpand with every variable real resolves it; Abs, Re and Im of
-   anything holding another symbol are left as they are *)
+(* Abs, Re or Im of a function of the real symbols alone, settled on the facts: Refine first; when that leaves
+   them, |x|^2 = x Conjugate[x], Re[x] = (x + Conjugate[x])/2 and Im[x] = (x - Conjugate[x])/(2 I), with the
+   conjugate taken on the facts, then simplified under them, the result kept only when no Abs, Re, Im, Arg or Conjugate is left. Abs, Re and
+   Im of anything holding another symbol are left as they are. *)
 refineOnParameters[qs_ ? symbolicParametersQ, a_] :=
-    With[{reals = realSymbols[qs]}, {onlyParametersQ = parameterOnlyQ[reals]},
-        Map[# /. f : (Abs | Re | Im)[_ ? onlyParametersQ] ^ _. :> simplifyOnReals[f, reals] &, a]
+    With[{qb = qs["Basis"]}, {onlyParametersQ = parameterOnlyQ[realSymbols[qs]]},
+        Map[# /. f : (Abs | Re | Im)[_ ? onlyParametersQ] ^ _. :> valueOnFacts[f, qb] &, a]
     ]
+
+valueOnFacts[f_, qb_] := With[{r = refineOnFacts[f, qb]},
+    If[ FreeQ[r, $complexHeads],
+        r,
+        With[{x = keptStage[f, simplifyOnFacts[throughConjugate[f, qb], qb["ParameterAssumptions"], 1]]},
+            If[FreeQ[x, $complexHeads], x, r]
+        ]
+    ]
+]
+
+$complexHeads = Abs | Re | Im | Arg | Conjugate
+
+throughConjugate[Power[Abs[x_], n_ ? EvenQ], qb_] := (x conjugateOnDomains[x, qb]) ^ (n / 2)
+throughConjugate[Power[Abs[x_], n_], qb_] := (x conjugateOnDomains[x, qb]) ^ (n / 2)
+throughConjugate[Abs[x_], qb_] := Sqrt[x conjugateOnDomains[x, qb]]
+throughConjugate[Power[f : (Re | Im)[_], n_], qb_] := throughConjugate[f, qb] ^ n
+throughConjugate[Re[x_], qb_] := (x + conjugateOnDomains[x, qb]) / 2
+throughConjugate[Im[x_], qb_] := (x - conjugateOnDomains[x, qb]) / (2 I)
 
 refineOnParameters[_, a_] := a
 

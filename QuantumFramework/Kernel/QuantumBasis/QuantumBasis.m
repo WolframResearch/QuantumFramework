@@ -17,7 +17,8 @@ PackageScope["roleSymbolDomains"]
 PackageScope["roleDomainOption"]
 PackageScope["allDomainsRecord"]
 PackageScope["exactRealQ"]
-PackageScope["onRealSymbols"]
+PackageScope["refineOnFacts"]
+PackageScope["conjugateTransposeOnDomains"]
 PackageScope["conjugateOnDomains"]
 PackageScope["mapEntries"]
 PackageScope["zeroOnDomains"]
@@ -26,8 +27,15 @@ PackageScope["nonnegativeOnDomains"]
 PackageScope["positiveSemidefiniteOnDomains"]
 PackageScope["positiveSemidefiniteVerdict"]
 PackageScope["zeroVerdict"]
+PackageScope["nonzeroOnDomains"]
+PackageScope["signOnDomains"]
+PackageScope["keptStage"]
+PackageScope["simplifyOnFacts"]
 PackageScope["yesNo"]
 PackageScope["$verdictMessages"]
+PackageScope["verdictScope"]
+PackageScope["reportVerdict"]
+PackageScope["undecided"]
 PackageScope["nonzeroEntries"]
 
 
@@ -564,81 +572,51 @@ mapEntries[f_, a_] := f[a]
 entriesFreeQ[a_SparseArray, p_] := FreeQ[{a["NonzeroValues"], a["Background"]}, p]
 entriesFreeQ[a_, p_] := FreeQ[a, p]
 
-(* f applied to an array, a matrix or a scalar whose real symbols, those of qb, are first swapped for private
-   symbols that are their own conjugate and real part and have imaginary part 0. Conjugate, Re and Im of any
-   expression built from them with real operations (polynomials, Cos, Exp[I x]) then evaluate away while f
-   runs. A Conjugate or Abs still left on an expression in these symbols alone is settled by its sign
-   (signSettled), and the user's symbols are put back. The private symbols are removed on every exit, and
-   none reaches the result. *)
 (* whether a basis records any fact or parameter, read off its data without the property machinery, so that
    objects with neither pay nothing for the facts *)
 basisFactsQ[QuantumBasis[data_Association]] := data["SymbolDomains"] =!= <||> || data["ParameterSpec"] =!= {}
 basisFactsQ[_] := True
 
-onRealSymbols[f_, a_, qb_] /; ! basisFactsQ[qb] := f[a]
+(* The entries of an array, a matrix or a scalar refined under the facts of qb: one Refine over all of them,
+   inside a block holding the basis's fact expression, which is the same for every operation on the object,
+   so the facts are prepared once and reused. Refine settles Conjugate, Abs, Re, Im and Sqrt of the real
+   symbols and of functions of them, factor by factor, and on a time limit keeps every part it settled and
+   leaves the rest as it was. It runs on amplitudes and entries as they are formed, never on a finished
+   result, whose size can be many times theirs. An object with no facts, or entries free of its real symbols,
+   is returned as it is. *)
+$refineTimeConstraint = 5
 
-onRealSymbols[f_, a_, qb_] := With[{ranges = symbolRanges[qb]},
-    If[ ranges === <||> || entriesFreeQ[a, Alternatives @@ Keys[ranges]],
-        f[a],
-        onPrivateSymbols[f, a, Keys[ranges], Values[ranges][[All, 1]]]
+refineOnFacts[a_, qb_] /; ! basisFactsQ[qb] := a
+
+refineOnFacts[a_, qb_] := With[{reals = qb["RealSymbols"]},
+    If[ reals === {} || entriesFreeQ[a, Alternatives @@ reals],
+        a,
+        Block[{$Assumptions = qb["ParameterAssumptions"]}, mapValues[keptValues[#, Refine[#, TimeConstraint -> $refineTimeConstraint]] &, a]]
     ]
 ]
 
-onPrivateSymbols[f_, a_, reals_List, intervals_List] := With[{copies = Table[Module[{r}, r], Length[reals]]},
-    WithCleanup[
-        Scan[realSymbol, copies];
-        mapEntries[
-            ReplaceAll[signSettled[conjugateDistributed[#], AssociationThread[copies, intervals]], Thread[copies -> reals]] &,
-            f[mapEntries[ReplaceAll[Thread[reals -> copies]], a]]
-        ],
-        Remove @@ copies
-    ]
-]
+keptValues[old_List, new_List] /; Length[old] === Length[new] := MapThread[keptStage, {old, new}]
+keptValues[old_, new_] := keptStage[old, new]
 
-(* Conjugate taken through sums, products and integer powers, which the kernel leaves whole when a term holds
-   a symbol with no fact, so the private symbols inside can evaluate it away *)
+(* f applied once to all the values of an array; a sparse array keeps its pattern *)
+mapValues[f_, a_SparseArray] := SparseArray[Thread[a["NonzeroPositions"] -> f[a["NonzeroValues"]]], Dimensions[a], a["Background"]]
+mapValues[f_, a_] := f[a]
+
+(* The conjugate, and the conjugate transpose, of an array, matrix or scalar whose entries may hold the real
+   symbols of qb. Conjugate is first taken through sums, products and integer powers, which the kernel leaves
+   whole when a term holds a symbol with no fact, so that Refine sees each factor on its own. *)
+conjugateOnDomains[a_, qb_] := refineOnFacts[conjugatedEntries[Replace[ArrayConjugate[a], ArrayConjugate[x_] :> Conjugate[x]], qb], qb]
+
+conjugateTransposeOnDomains[m_, qb_] := refineOnFacts[conjugatedEntries[ConjugateTranspose[m], qb], qb]
+
+conjugatedEntries[a_, qb_] /; ! basisFactsQ[qb] := a
+conjugatedEntries[a_, _] := mapValues[conjugateDistributed, a]
+
 conjugateDistributed[x_] /; FreeQ[x, Conjugate[_Plus | _Times | Power[_, _Integer]]] := x
 conjugateDistributed[x_] := x //. {
     Conjugate[y : _Plus | _Times] :> Conjugate /@ y,
     Conjugate[Power[y_, n_Integer]] :> Conjugate[y] ^ n
 }
-
-realSymbol[r_Symbol] := (r /: Conjugate[r] = r; r /: Re[r] = r; r /: Im[r] = 0;)
-
-(* Conjugate[g] is g, and Abs[g] is g or -g, for g in the private symbols alone whose sign is known. The sign
-   is read first off interval arithmetic, each symbol replaced by its interval: a result that is an Interval
-   means g is real on the whole domain, and its ends give the sign. What the intervals leave open goes to
-   Refine, under the same facts and a time limit, and its answer is kept only if it is no larger. *)
-signSettled[x_, _] /; FreeQ[x, _Conjugate | _Abs] := x
-
-signSettled[x_, intervals_] := With[{rules = Normal[intervals], symbols = Keys[intervals]},
-    Block[{$Assumptions = And @@ KeyValueMap[intervalFact, intervals]},
-        x /. {
-            Conjugate[g_] /; onlySymbolsQ[g, symbols] :> If[MatchQ[g /. rules, _Interval], g, refined[Conjugate[g]]],
-            Abs[g_] /; onlySymbolsQ[g, symbols] :> absBySign[g, g /. rules]
-        }
-    ]
-]
-
-absBySign[g_, Interval[{lo_, _}, ___] ? (Min[#] >= 0 &)] := g
-absBySign[g_, Interval[{_, _}, ___] ? (Max[#] <= 0 &)] := - g
-absBySign[g_, _] := refined[Abs[g]]
-
-intervalFact[s_, Interval[{lo_, hi_}]] := Element[s, Reals] && If[lo === - Infinity, True, lo <= s] && If[hi === Infinity, True, s <= hi]
-
-$signTimeConstraint = 0.2
-
-refined[e_] := With[{r = TimeConstrained[Refine[e], $signTimeConstraint, e]}, If[LeafCount[r] <= LeafCount[e], r, e]]
-
-(* no symbol in x but the given ones; numeric functions and constants are not symbols here *)
-onlySymbolsQ[x_, symbols_List] := FreeQ[x,
-    s_Symbol /; ! MemberQ[symbols, s] && ! MemberQ[{Rational, Complex, Integer, Real}, s] && ! MemberQ[Attributes[s], NumericFunction | Constant],
-    {0, Infinity},
-    Heads -> True
-]
-
-(* The conjugate of an array, matrix or scalar whose entries may hold the real symbols of qb. *)
-conjugateOnDomains[a_, qb_] := onRealSymbols[Replace[ArrayConjugate[#], ArrayConjugate[x_] :> Conjugate[x]] &, a, qb]
 
 (* A yes/no question about every value the facts of qb allow is answered True, False, or undecided[reason, ...]
    with the reason it is not decided: "time" (a test ran out of time), "tests" (no test applies), "fails" (it
@@ -647,66 +625,367 @@ conjugateOnDomains[a_, qb_] := onRealSymbols[Replace[ArrayConjugate[#], ArrayCon
 answer[v : True | False] := v
 answer[_undecided] := Indeterminate
 
-(* Whether every entry of a list is zero for all values the facts of qb allow. Proven zero: after TrigToExp,
-   Together leaves numerator 0 (TrigToExp first, since Together alone takes Cos and Sin as unknowns), within a
-   time limit. Not zero: the value at a fixed point inside the domains, real symbols inside their intervals (an
-   integer for an integer symbol), any other symbol at a complex point, each given to 30 digits, is larger than
-   10^-10. An expression that is not identically zero vanishes only on a lower-dimensional set, so the
-   property fails for generic values and the answer is False. *)
-zeroVerdict[es_List, qb_] := With[{tests = {#, provenZeroTest[#]} & /@ es},
-    With[{rest = Select[tests, #[[2]] =!= True &]},
-        Which[
-            rest === {}, True,
-            AnyTrue[rest[[All, 1]], nonzeroAtPointQ[#, symbolRanges[qb]] &], False,
-            MemberQ[rest[[All, 2]], $Aborted], undecided["time"],
-            True, undecided["tests"]
+(* The facts of qb about the given symbols only, for a question that holds no other symbol. *)
+linkedFacts[qb_, symbols_List] := symbolDomainsFacts[KeyTake[qb["SymbolDomains"], symbols], Intersection[qb["Parameters"], symbols]]
+
+questionSymbols[e_] := DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}]
+
+(* Reduce and Simplify read the facts given to them and nothing the user set outside: $Assumptions is replaced,
+   and Reduce gets every option it has. *)
+$reduceOptions = {Backsubstitution -> False, Cubics -> False, GeneratedParameters -> C, Method -> Automatic, Modulus -> 0, Quartics -> False, WorkingPrecision -> Infinity}
+
+reduceOnFacts[claim_, symbols_, facts_] := Block[{$Assumptions = True},
+    TimeConstrained[Reduce[claim && facts, symbols, Reals, Sequence @@ $reduceOptions], $regionTimeConstraint, $Aborted]
+]
+
+simplifyOnFacts[e_, facts_, limit_] := Block[{$Assumptions = facts}, Simplify[e, TimeConstraint -> {limit, 2 limit}]]
+
+(* An expression Reduce decides without "cannot solve" messages: sums, products and rational powers of the
+   symbols and of numbers. *)
+algebraicQ[symbols_][x_] := FreeQ[x, Alternatives @@ symbols] && NumericQ[x] || MemberQ[symbols, x] ||
+    MatchQ[x, _Plus | _Times] && AllTrue[List @@ x, algebraicQ[symbols]] ||
+    MatchQ[x, Power[_, _Integer | _Rational]] && algebraicQ[symbols][First[x]]
+
+(* A cleanup step's result is kept only if it brings in no Indeterminate or infinity its input did not hold. *)
+keptStage[old_, new_] := If[FreeQ[old, Indeterminate | _DirectedInfinity] && ! FreeQ[new, Indeterminate | _DirectedInfinity], old, new]
+
+
+(* points where a question is asked *)
+
+(* Values at a point are computed with the point's non-integer coordinates given to 40 digits, the error tracked
+   by the kernel, never exactly: an exact point can make the kernel try to decide the sign of a quantity that is
+   exactly zero or one, which it cannot. A value is nonzero when it is not zero within its error. *)
+$pointPrecision = 40
+
+numericPoint[point_, precision_] := Replace[point, (s_ -> v_) /; ! IntegerQ[v] :> s -> SetPrecision[v, precision], {1}]
+
+exactNonzeroQ[c_] := With[{n = SetPrecision[c, $pointPrecision]}, NumberQ[n] && n != 0]
+
+(* The sign of a value: 1, 0, -1, "complex", or $Failed when it is not a finite number. *)
+numberSign[n_] := Which[! NumberQ[n], $Failed, n == 0, 0, Im[n] != 0, "complex", Re[n] > 0, 1, True, -1]
+
+(* The parts of e that must not vanish at a point for e to be defined there and smooth around it: bases of
+   negative and non-integer powers, arguments of Log, Abs, Sign, Arg and the step functions. *)
+criticalParts[e_] := DeleteDuplicates @ Join[
+    Cases[e, Power[b_, n_] /; ! (IntegerQ[n] && n > 0) :> b, {0, Infinity}],
+    Cases[e, (Log | Abs | Sign | Arg | UnitStep | Ramp | RealAbs | Unitize | Clip)[b_, ___] :> b, {0, Infinity}]
+]
+
+(* e at a point, its coordinates given to the precision named, or $Failed where it is not defined *)
+valueAt[e_, point_, precision_ : $pointPrecision] := With[{p = numericPoint[point, precision]}, With[{v = e /. p},
+    If[ NumberQ[v] && AllTrue[criticalParts[e] /. p, exactNonzeroQ], v, $Failed]
+]]
+
+(* Exact points inside the facts of qb for the symbols of e, drawn from a seed made of the question, so the same
+   question always gets the same points: a real symbol at a point of each of five equal parts of its range (of
+   [-3, 3] when it has no bound, so an angle covers a period), an integer symbol rounded inside its range, a
+   symbol with no fact at a complex rational; then each finite end of a range, the others staying inside, and
+   both corners. A bounded integer symbol with few values is taken at every value, and when every symbol is
+   such, the points are complete: {points, complete}. *)
+$enumerationLimit = 100
+
+questionPoints[e_, qb_, count_] := With[{symbols = questionSymbols[e], ranges = symbolRanges[qb]},
+    With[{counts = integerCount[Lookup[ranges, Key[#], None]] & /@ symbols},
+        If[ symbols =!= {} && AllTrue[counts, IntegerQ] && Times @@ counts <= $enumerationLimit,
+            {Thread[symbols -> #] & /@ Tuples[integerValues[ranges[#]] & /@ symbols], True},
+            {allowedPoints[symbols, ranges, linkedFacts[qb, symbols], Hash[{e, ranges}], count], False}
+        ]
+    ]
+]
+
+integerCount[{Interval[{lo_, hi_}], True}] /; lo > - Infinity && hi < Infinity := Max[0, Floor[hi] - Ceiling[lo] + 1]
+integerCount[_] := None
+
+integerValues[{Interval[{lo_, hi_}], True}] := Range[Ceiling[lo], Floor[hi]]
+
+allowedPoints[{}, __] := {{}}
+
+allowedPoints[symbols_, ranges_, facts_, seed_, count_] := Select[
+    BlockRandom[
+        SeedRandom[seed];
+        DeleteDuplicates @ Join[
+            Thread[symbols -> #] & /@ Transpose[symbolPoints[#, Lookup[ranges, Key[#], None], count] & /@ symbols],
+            If[count > 1, endPoints[symbols, ranges], {}]
+        ]
+    ],
+    TrueQ[facts /. #] &
+]
+
+symbolPoints[_, None, count_] := Table[(RandomInteger[{-99, 99}] + I RandomInteger[{-99, 99}]) / 50 + 1 / 7, count]
+
+symbolPoints[_, {Interval[{lo_, hi_}], integer_}, count_] := With[{
+    a = If[lo === - Infinity, If[hi === Infinity, -3, hi - 6], lo],
+    b = If[hi === Infinity, If[lo === - Infinity, 3, lo + 6], hi]
+},
+    RandomSample @ Table[
+        With[{x = a + (b - a) (k + RandomInteger[{10, 90}] / 100) / count}, If[integer, Clip[Round[x], {Ceiling[lo], Floor[hi]}], x]],
+        {k, 0, count - 1}
+    ]
+]
+
+(* each finite end of each symbol's range with the other symbols at their first point, then all lower and all
+   upper ends *)
+endPoints[symbols_, ranges_] := With[{
+    inner = First /@ (symbolPoints[#, Lookup[ranges, Key[#], None], 1] & /@ symbols),
+    ends = Replace[Lookup[ranges, Key[#], None], {{Interval[{lo_, hi_}], _} :> {lo, hi}, None -> {- Infinity, Infinity}}] & /@ symbols
+},
+    Thread[symbols -> #] & /@ Select[
+        Join[
+            Catenate @ MapIndexed[Function[{e, i}, ReplacePart[inner, i -> #] & /@ e], ends],
+            {ends[[All, 1]], ends[[All, 2]]}
+        ],
+        FreeQ[#, _DirectedInfinity] &
+    ]
+]
+
+
+(* is it zero for every allowed value *)
+
+(* Whether every entry of a list is zero for all values the facts of qb allow. Each entry is first tried by the
+   proof alone; of those left, one that is nonzero at one allowed point refutes it at once, and each other is
+   tested in full: refined on the facts, proven, or tried at more points, the ends of the ranges among them. *)
+zeroVerdict[es_List, qb_] := With[{rest = Select[DeleteCases[es, 0], ! TrueQ[exponentialZeroTest[#]] &]},
+    Which[
+        rest === {}, True,
+        AnyTrue[rest, nonzeroSomewhereQ[#, qb, 1] &], False,
+        True, With[{tests = zeroTest[#, qb] & /@ rest},
+            Which[
+                AllTrue[tests, # === "zero" &], True,
+                MemberQ[tests, "nonzero"], False,
+                MemberQ[tests, "time"], undecided["time"],
+                True, undecided["tests"]
+            ]
         ]
     ]
 ]
 
 zeroOnDomains[es_List, qb_] := answer[zeroVerdict[es, qb]]
 
+nonzeroSomewhereQ[e_, qb_, count_] := AnyTrue[First @ questionPoints[e, qb, count], nonzeroAtQ[e, #] &]
+
+nonzeroAtQ[e_, point_] := With[{v = valueAt[e, point]}, v =!= $Failed && exactNonzeroQ[v]]
+
+(* the sign at a point; a value that reads zero is a zero only when it reads zero again at 80 digits *)
+pointSign[e_, point_] := With[{sign = numberSign[valueAt[e, point]]},
+    If[sign === 0 && numberSign[valueAt[e, point, 2 $pointPrecision]] =!= 0, $Failed, sign]
+]
+
+(* "zero" when proven zero for every allowed value, "nonzero" when nonzero at an allowed point, else "time" or
+   "unknown". The facts settle Sqrt, Abs, Log and Conjugate
+   of the real symbols first. A bounded integer symbol with few values is checked at every value. *)
+zeroTest[e_, qb_] := With[{r = refineOnFacts[e, qb]},
+    With[{proof = provenZeroTest[r]},
+        If[ proof === True,
+            "zero",
+            With[{points = questionPoints[e, qb, 5]},
+                Which[
+                    AnyTrue[First[points], nonzeroAtQ[e, #] &], "nonzero",
+                    Last[points], "zero",
+                    proof === $Aborted, "time",
+                    True, "unknown"
+                ]
+            ]
+        ]
+    ]
+]
+
 $zeroTestTimeConstraint = 2
 
-provenZeroTest[e_] := If[e === 0, True, TimeConstrained[Numerator[Together[TrigToExp[e]]] === 0, $zeroTestTimeConstraint, $Aborted]]
+(* True when e is proven zero, $Aborted on the time limit, else False. A product is zero when a factor is, a
+   positive power when its base is; otherwise trig of linear angles is written in c = Cos and s = Sin of base
+   angles and reduced with s^2 = 1 - c^2, and failing that the exponential form is put over one denominator. *)
+provenZeroTest[0] := True
+provenZeroTest[e_Times] := With[{tests = provenZeroTest /@ List @@ e}, If[MemberQ[tests, True], True, wholeZeroTest[e]]]
+provenZeroTest[Power[b_, n_ ? Positive]] := provenZeroTest[b]
+provenZeroTest[e_ ? NumericQ] := ! exactNonzeroQ[e] && wholeZeroTest[e]
+provenZeroTest[e_] := wholeZeroTest[e]
+
+wholeZeroTest[e_] := Replace[exponentialZeroTest[e], False :> TimeConstrained[trigZeroQ[e], $zeroTestTimeConstraint, $Aborted]]
+
+exponentialZeroTest[0] := True
+exponentialZeroTest[e_] := TimeConstrained[Numerator[Together[TrigToExp[e]]] === 0, $zeroTestTimeConstraint, $Aborted]
 
 provenZeroQ[e_] := TrueQ[provenZeroTest[e]]
 
-nonzeroAtPointQ[e_, ranges_] := With[{
-    v = e /. N[samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
-},
-    NumberQ[v] && Abs[v] > 10 ^ -10
-]
+$trigHeads = Sin | Cos | Tan | Cot | Sec | Csc
 
-samplePoint[symbols_List, ranges_] := BlockRandom[
-    SeedRandom[1];
-    (# -> Replace[Lookup[ranges, Key[#], None], {
-        {i_Interval, int_} :> pointInside[i, int],
-        None :> RandomInteger[{1, 99}] / 100 + I RandomInteger[{1, 99}] / 100
-    }]) & /@ symbols
-]
-
-(* a point inside an interval, away from its ends; an integer inside it for an integer symbol *)
-pointInside[Interval[{lo_, hi_}], integer_] := With[{x = Which[
-    lo === - Infinity && hi === Infinity, RandomInteger[{-99, 99}] / 50 + 1 / 7,
-    hi === Infinity, lo + 1 / 3 + RandomInteger[{1, 99}] / 50,
-    lo === - Infinity, hi - 1 / 3 - RandomInteger[{1, 99}] / 50,
-    True, lo + (hi - lo) RandomInteger[{10, 90}] / 100
-]}, If[integer, Clip[Round[x], {Ceiling[lo], Floor[hi]}], x]]
-
-
-(* Whether every expression of a list is nonnegative for all values the facts of qb allow. A proof comes from
-   interval arithmetic, or else from Simplify under the facts, with each symbol that has no fact split into its
-   real and imaginary parts, within a time limit. A negative value at an allowed point means it fails there; the
-   values where it holds are then sought with Reduce over the real symbols, within a time limit: none gives
-   False, a region gives undecided["region", r]. *)
-nonnegativeVerdict[es_List, qb_] := With[{ranges = symbolRanges[qb]},
-    With[{rest = Select[es, ! provenNonnegativeQ[#, ranges, qb] &]},
-        Which[
-            rest === {}, True,
-            AnyTrue[rest, negativeAtPointQ[#, ranges] &], whereNonnegative[es, ranges, qb],
-            True, undecided["tests"]
+trigZeroQ[e_] /; FreeQ[e, $trigHeads | Power[E, _Complex _. | _Complex]] := False
+trigZeroQ[e0_] := Module[{c, s},
+    With[{e = e0 /. {
+        Power[E, x_] /; linearAngleQ[x / I] :> Cos[x / I] + I Sin[x / I],
+        Tan[x_] :> Sin[x] / Cos[x], Cot[x_] :> Cos[x] / Sin[x], Sec[x_] :> 1 / Cos[x], Csc[x_] :> 1 / Sin[x]
+    }},
+        With[{angles = DeleteDuplicates @ Cases[e, (Sin | Cos)[a_] :> a, {0, Infinity}]},
+            With[{symbols = questionSymbols[angles]},
+                AllTrue[angles, linearAngleQ] && symbols =!= {} && With[{
+                    scale = Thread[symbols -> Map[(LCM @@ Denominator[Coefficient[angles, #]]) # &, symbols]]
+                },
+                    With[{x = TrigExpand[e /. scale] /. {Cos[v_] /; MemberQ[symbols, v] :> c[v], Sin[v_] /; MemberQ[symbols, v] :> s[v]}},
+                        Expand[Expand[Numerator[Together[x]]] /. s[v_] ^ n_Integer /; n >= 2 :> s[v] ^ Mod[n, 2] (1 - c[v] ^ 2) ^ Quotient[n, 2]] === 0
+                    ]
+                ]
+            ]
         ]
+    ]
+]
+
+(* a sum of rational multiples of symbols and a numeric constant *)
+linearAngleQ[a_] := With[{symbols = questionSymbols[a]},
+    If[ symbols === {},
+        NumericQ[a],
+        PolynomialQ[a, symbols] && AllTrue[CoefficientRules[a, symbols],
+            With[{degree = Total[First[#]]}, degree === 0 && NumericQ[Last[#]] || degree === 1 && MatchQ[Last[#], _Integer | _Rational]] &
+        ]
+    ]
+]
+
+
+(* is it nonzero for every allowed value *)
+
+(* Whether every entry of a list is nonzero for all values the facts of qb allow, the question asked of a
+   denominator. Only a proof says True: a nonzero number, an exponential, a product or a power of nonzero
+   parts, a strict sign, or no real root of a one-symbol algebraic expression. A zero at an allowed point says
+   False. *)
+nonzeroVerdict[es_List, qb_] := With[{tests = nonzeroTest[#, qb] & /@ es},
+    Which[
+        AllTrue[tests, TrueQ], True,
+        MemberQ[tests, False], False,
+        MemberQ[tests, undecided["time"]], undecided["time"],
+        True, undecided["tests"]
+    ]
+]
+
+nonzeroOnDomains[es_List, qb_] := answer[nonzeroVerdict[es, qb]]
+
+nonzeroTest[e_, qb_] := With[{r = refineOnFacts[e, qb]}, Which[
+    structurallyNonzeroQ[r], True,
+    zeroSomewhereQ[e, qb], False,
+    MatchQ[signTest[r, qb], "Positive" | "Negative"], True,
+    oneSymbolAlgebraicQ[r], Replace[reduceOnFacts[r == 0, questionSymbols[r], linkedFacts[qb, questionSymbols[r]]], {False -> True, $Aborted -> undecided["time"], _ -> undecided["tests"]}],
+    True, undecided["tests"]
+]]
+
+structurallyNonzeroQ[e_ ? NumericQ] := exactNonzeroQ[e]
+structurallyNonzeroQ[Power[E, _]] := True
+structurallyNonzeroQ[e_Times] := AllTrue[List @@ e, structurallyNonzeroQ]
+structurallyNonzeroQ[Power[b_, _ ? NumericQ]] := structurallyNonzeroQ[b]
+structurallyNonzeroQ[_] := False
+
+zeroSomewhereQ[e_, qb_] := AnyTrue[First @ questionPoints[e, qb, 5], pointSign[e, #] === 0 &]
+
+oneSymbolAlgebraicQ[e_] := With[{symbols = questionSymbols[e]}, Length[symbols] === 1 && algebraicQ[symbols][e]]
+
+
+(* the sign over the allowed values *)
+
+(* The sign of a real expression over the values the facts of qb allow: "Positive", "Nonnegative",
+   "Negative", "Nonpositive", "Zero", {"Varies", point, point} with two allowed points of opposite sign,
+   {"NotReal", point} with an allowed point where it is not real, or undecided. The values at the sample points
+   decide which direction to prove; a proof comes from interval arithmetic on the ranges, from Reduce for an
+   algebraic expression in one symbol, or from Simplify under the facts. *)
+signTest[e_, qb_, strict_ : True] := With[{ranges = symbolRanges[qb]},
+    Replace[intervalSign[e, ranges, strict], None :> With[{r = refineOnFacts[e, qb]},
+        Replace[If[r === e, None, intervalSign[r, ranges, strict]], None :> sampledSign[e, r, qb]]
+    ]]
+]
+
+(* the sign read off interval arithmetic on the ranges, when it settles it; a weak sign only when no strict one
+   is asked for. A rational expression is also tried factored, so that a symbol repeated across a sum, as in
+   3 p - 2 p^2 = p (3 - 2 p), is counted once per factor. *)
+intervalSign[r_, ranges_, strict_] := Replace[
+    intervalSignOf[r, ranges, strict],
+    None :> If[ rationalQ[r, Keys[ranges]],
+        With[{f = Factor[r]}, If[f === r, None, intervalSignOf[f, ranges, strict]]],
+        None
+    ]
+]
+
+rationalQ[r_, symbols_] := With[{x = Together[r]}, PolynomialQ[Numerator[x], symbols] && PolynomialQ[Denominator[x], symbols] && ! FreeQ[r, Alternatives @@ symbols]]
+
+intervalSignOf[r_, ranges_, strict_] := With[{v = intervalValue[r, ranges]}, With[{lo = Min[v], hi = Max[v]},
+    Which[
+        ! MatchQ[v, _Interval], None,
+        lo == hi == 0, "Zero",
+        lo > 0, "Positive",
+        hi < 0, "Negative",
+        ! strict && lo >= 0, "Nonnegative",
+        ! strict && hi <= 0, "Nonpositive",
+        True, None
+    ]
+]]
+
+sampledSign[e_, r_, qb_] := With[{pointsComplete = questionPoints[e, qb, 5]},
+    With[{signs = DeleteCases[{pointSign[e, #], #} & /@ First[pointsComplete], {$Failed, _}]},
+        With[{seen = DeleteDuplicates[signs[[All, 1]]]},
+            Which[
+                MemberQ[seen, 1] && MemberQ[seen, -1], {"Varies", SelectFirst[signs, First[#] === 1 &][[2]], SelectFirst[signs, First[#] === -1 &][[2]]},
+                MemberQ[seen, "complex"], {"NotReal", SelectFirst[signs, First[#] === "complex" &][[2]]},
+                Last[pointsComplete] && seen =!= {}, signClass[seen],
+                seen === {0}, If[zeroTest[e, qb] === "zero", "Zero", undecided["tests"]],
+                seen === {}, undecided["tests"],
+                MemberQ[seen, 1], provenSign[r, qb, 1, ! MemberQ[seen, 0]],
+                True, provenSign[r, qb, -1, ! MemberQ[seen, 0]]
+            ]
+        ]
+    ]
+]
+
+signOnDomains[e_, qb_] := Replace[signTest[e, qb], _undecided -> Indeterminate]
+
+signClass[{0}] := "Zero"
+signClass[seen_] := Which[
+    SubsetQ[{1}, seen], "Positive", SubsetQ[{-1}, seen], "Negative",
+    SubsetQ[{0, 1}, seen], "Nonnegative", True, "Nonpositive"
+]
+
+(* the strict sign when strict is True and it is proven, else the weak sign when proven, else undecided *)
+provenSign[r_, qb_, direction_, strict_] := Which[
+    strict && signProof[r, qb, direction, True] === True, If[direction > 0, "Positive", "Negative"],
+    With[{weak = signProof[r, qb, direction, False]}, weak === True], If[direction > 0, "Nonnegative", "Nonpositive"],
+    True, undecided["tests"]
+]
+
+$signProofTimeConstraint = 2
+
+signProof[r_, qb_, direction_, strict_] := With[{x = direction r, symbols = questionSymbols[r]},
+    With[{facts = linkedFacts[qb, symbols]},
+        Or[
+            intervalSignQ[x, symbolRanges[qb], strict],
+            oneSymbolAlgebraicQ[x] && reduceOnFacts[If[strict, x <= 0, x < 0], symbols, facts] === False,
+            TrueQ @ simplifyOnFacts[
+                If[strict, # > 0, # >= 0] & @ ComplexExpand[x, Complement[symbols, Keys[symbolRanges[qb]]]],
+                facts,
+                $signProofTimeConstraint
+            ]
+        ]
+    ]
+]
+
+(* x on the ranges by interval arithmetic, as an interval; Abs of a part holding a symbol with no range is at
+   least 0 *)
+intervalValue[x_, ranges_] := Replace[
+    (x /. (Abs[y_] /; ! SubsetQ[Keys[ranges], questionSymbols[y]] :> Interval[{0, Infinity}])) /. KeyValueMap[#1 -> First[#2] &, ranges],
+    v_ /; NumericQ[v] && realNumberQ[v] :> Interval[{v, v}]
+]
+
+intervalSignQ[x_, ranges_, strict_] := With[{v = intervalValue[x, ranges]},
+    MatchQ[v, _Interval] && TrueQ[If[strict, Min[v] > 0, Min[v] >= 0]]
+]
+
+
+(* is it nonnegative for every allowed value *)
+
+(* Whether every expression of a list is nonnegative for all values the facts of qb allow. An expression
+   negative everywhere gives False; one that is negative or not real somewhere sends the question to Reduce for
+   the values where all hold, within a time limit and only for algebraic expressions: none gives False, a region
+   gives undecided["region", r]. *)
+nonnegativeVerdict[es_List, qb_] := With[{signs = signTest[#, qb, False] & /@ es},
+    Which[
+        AllTrue[signs, MatchQ["Positive" | "Nonnegative" | "Zero"]], True,
+        MemberQ[signs, "Negative"], False,
+        MemberQ[signs, "Nonpositive" | {"Varies" | "NotReal", ___}], whereNonnegative[es, qb],
+        MemberQ[signs, undecided["time"]], undecided["time"],
+        True, undecided["tests"]
     ]
 ]
 
@@ -714,43 +993,27 @@ nonnegativeOnDomains[es_List, qb_] := answer[nonnegativeVerdict[es, qb]]
 
 $regionTimeConstraint = 1
 
-whereNonnegative[es_List, ranges_, qb_] := With[{symbols = DeleteDuplicates @ Cases[es, $domainSymbolPattern, {0, Infinity}]},
-    If[ ! SubsetQ[Keys[ranges], symbols],
+whereNonnegative[es_List, qb_] := With[{symbols = questionSymbols[es]},
+    If[ ! SubsetQ[qb["RealSymbols"], symbols] || ! AllTrue[es, algebraicQ[symbols]],
         undecided["fails"],
-        With[{r = TimeConstrained[Reduce[And @@ Thread[es >= 0] && qb["ParameterAssumptions"], symbols, Reals], $regionTimeConstraint, $Failed]},
+        With[{r = reduceOnFacts[And @@ Thread[es >= 0], symbols, linkedFacts[qb, symbols]]},
             Which[
                 r === False, False,
-                r === $Failed || ! FreeQ[r, Reduce], undecided["fails"],
+                r === $Aborted || ! FreeQ[r, Reduce], undecided["fails"],
                 True, undecided["region", r]
             ]
         ]
     ]
 ]
 
-$signProofTimeConstraint = 2
-
-provenNonnegativeQ[e_, ranges_, qb_] := With[{x = e /. KeyValueMap[#1 -> First[#2] &, ranges]},
-    TrueQ[NumericQ[x] && x >= 0] || MatchQ[x, _Interval] && TrueQ[Min[x] >= 0] ||
-        TrueQ @ TimeConstrained[
-            Simplify[ComplexExpand[e, Complement[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], Keys[ranges]]] >= 0, qb["ParameterAssumptions"]],
-            $signProofTimeConstraint,
-            False
-        ]
-]
-
-negativeAtPointQ[e_, ranges_] := With[{
-    v = e /. N[samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
-},
-    NumberQ[v] && (Re[v] < - 10 ^ -10 || Abs[Im[v]] > 10 ^ -10)
-]
 
 (* Whether a square matrix is positive semidefinite for all values the facts of qb allow. It must be Hermitian
    first; then its principal minors must be nonnegative (Sylvester's criterion in its form for semidefinite
    matrices, which needs every principal minor, not only the leading ones). That is 2^d - 1 determinants, so it
    is used up to d = 4; a diagonal matrix needs only its diagonal, and a larger one its eigenvalues, when they
    come within a time limit. *)
-positiveSemidefiniteVerdict[m_, qb_] := With[{
-    hermitian = zeroVerdict[nonzeroEntries @ onRealSymbols[# - ConjugateTranspose[#] &, m, qb], qb]
+positiveSemidefiniteVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]}, {
+    hermitian = zeroVerdict[nonzeroEntries[m - conjugateTransposeOnDomains[m, qb]], qb]
 },
     If[ hermitian =!= True,
         hermitian,
@@ -788,19 +1051,37 @@ undeclaredHint[head_, prop_, check_, m_, qb_, entries_] := With[{
     free = Complement[DeleteDuplicates @ Cases[entries, $domainSymbolPattern, {0, Infinity}], Keys[qb["SymbolDomains"]], qb["Parameters"]]
 },
     If[ free =!= {} && check[m, QuantumBasis[qb, "SymbolDomains" -> Thread[free -> Reals]]] === True,
-        Message[MessageName[head, "undeclared"], prop, free]
+        verdictMessage[head, "undeclared", prop, free]
     ]
 ]
 
 reportVerdict[_, _, v : True | False] := v
 reportVerdict[head_, prop_, undecided[reason_, args___]] := (
     If[ $verdictMessages,
-        With[{tag = Replace[reason, {"tests" -> "undecided", "time" -> "undecidedtime", "fails" -> "undecidedfails", "region" -> "undecidedregion"}]},
-            Message[MessageName[head, tag], prop, args]
-        ]
+        verdictMessage[head, Replace[reason, {"tests" -> "undecided", "time" -> "undecidedtime", "fails" -> "undecidedfails", "region" -> "undecidedregion"}], prop, args]
     ];
     Indeterminate
 )
+
+(* The outermost property call on a QF object owns the messages of every check run for it: inside its scope a
+   message is recorded, not issued, and when the call returns each distinct message is issued once, under the
+   head of the object the user asked. Outside any scope a message is issued at once. *)
+$verdictScope = None
+$verdictLog = {}
+
+SetAttributes[verdictScope, HoldRest]
+verdictScope[_, expr_] /; $verdictScope =!= None := expr
+verdictScope[head_, expr_] := Block[{$verdictScope = head, $verdictLog = {}},
+    With[{result = expr},
+        Scan[Apply[Message[MessageName[head, #1], ##2] &], DeleteDuplicates[$verdictLog]];
+        result
+    ]
+]
+
+verdictMessage[head_, tag_, args___] := If[ $verdictScope === None,
+    Message[MessageName[head, tag], args],
+    $verdictLog = Append[$verdictLog, {tag, args}]
+]
 
 Scan[
     Function[head,
@@ -811,7 +1092,7 @@ Scan[
         MessageName[head, "notnumber"] = "`1` cannot be decided: the entry `2` is not a number; the answer is Indeterminate.";
         MessageName[head, "undeclared"] = "`1` is False because `2` may be complex; it is True when they are real, which \"SymbolDomains\" -> Reals declares."
     ],
-    {QuantumState, QuantumOperator, QuantumChannel}
+    {QuantumState, QuantumOperator, QuantumChannel, QuantumCircuitOperator, QuantumMeasurementOperator, QuantumMeasurement, QuantumHamiltonianOperator}
 ]
 
 nonzeroEntries[m_SparseArray] := m["NonzeroValues"]
