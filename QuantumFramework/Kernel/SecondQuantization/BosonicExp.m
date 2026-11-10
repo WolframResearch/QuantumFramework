@@ -67,11 +67,10 @@ thm44ANRHS[L_, R_, lambda_, {cr_, an_}] :=
 
 (* e^(w N + p ad^2 + q a^2 + mu ad + nu a) from the corner D = Cos[l] - w Sinc[l], l = Sqrt[4 p q - w^2], of
    exp[{{w, 2 p}, {-2 q, -w}}]; every coefficient but the root is regular in l, so l = 0 is its Series limit.
-   The root D^(-1/2) winds in oscillating evolutions, so for w != 0 it is e^(-i l/2) (e^(-i l) D)^(-1/2) with
-   l = i w Sqrt[1 - 4 p q/w^2], whose principal root stays continuous for Hermitian generators at real time.
+   The root D^(-1/2) winds in oscillating evolutions, so it is e^(-f/2) (e^(-f) D)^(-1/2) with the phase f of rootPhase.
    Antinormal order is the normal one under a -> ad, ad -> -a: (w, p, q, mu, nu) -> (-w, q, p, -nu, mu). *)
 quadraticExp[g_, {cr_, an_}, lv_, s_] :=
-    Module[{x, y, l, coeffs, c, w, p, q, mu, nu, t, m, u, v, e, r},
+    Module[{x, y, l, f, coeffs, c, w, p, q, mu, nu, t, m, u, v, e, r},
         coeffs = Association @ CoefficientRules[Expand @ dequantize[#, Thread[{cr, an} -> {x, y}]], {x, y}] &;
         c = coeffs[g];
         If[ ! SubsetQ[{{0, 0}, {1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, Keys[c]] || ! FreeQ[Values[c], Alternatives @@ lv["Generators"]], Return[$Failed, Module]];
@@ -80,15 +79,15 @@ quadraticExp[g_, {cr_, an_}, lv_, s_] :=
         {w, p, q, mu, nu} = {s, 1, 1, s, 1} Lookup[c, Key /@ If[s == 1, Identity, Map[Reverse]] @ {{1, 1}, {2, 0}, {0, 2}, {1, 0}, {0, 1}}, 0];
         {t, m, u, v, e, r} = Which[
             p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2, w/2},
-            PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[#, {l, 0, 0}], l, 0],
-            True, ReplacePart[# /. l -> Sqrt[4 p q - w^2], 6 -> (#[[6]] /. l -> If[w === 0, Sqrt[4 p q], I w Sqrt[1 - 4 p q/w^2]])] /. $nonuls
+            PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[# /. f -> 0, {l, 0, 0}], l, 0],
+            True, # /. {l -> Sqrt[4 p q - w^2], f -> rootPhase[{{w, 2 p}, {-2 q, -w}}, 1]} /. $nonuls
         ] & @ Join[
             {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
             {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
              nu Sinc[l] - (w nu - 2 q mu) (1 - Cos[l])/l^2,
              ((q mu^2 + p nu^2) (-2 w - (l^2 - 2 w) Cos[l] + l (1 + w) Sin[l]) + mu nu (l^2 + 2 w^2 + (l^2 (w - 1) - 2 w^2) Cos[l] - l w (1 + w) Sin[l]))/l^4
             } / (Cos[l] - w Sinc[l]),
-            {(-I l - Log[E^(-I l) (Cos[l] - w Sinc[l])])/2}];
+            {(-f - Log[E^-f (Cos[l] - w Sinc[l])])/2}];
         Exp[Lookup[c, Key[{0, 0}], 0] - s w/2 + e] (ncJoin[
             Exp[p t GeneralizedPower[NonCommutativeMultiply, #1, 2] + s u #1],
             Exp[If[w === 0, m (1/2 + s #1 ** #2), r + m s #1 ** #2]],
