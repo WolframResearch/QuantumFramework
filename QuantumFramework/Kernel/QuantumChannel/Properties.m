@@ -26,7 +26,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
 
 
 (qc_QuantumChannel[prop_ ? propQ, args___]) /; QuantumChannelQ[qc] := With[{
-    result = verdictScope[QuantumChannel, QuantumChannelProp[qc, prop, args]]
+    result = verdictScope[QuantumChannel, prop, QuantumChannelProp[qc, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumChannelProp[qc, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Operator", "QuantumOperator", "Basis"}, prop] &&

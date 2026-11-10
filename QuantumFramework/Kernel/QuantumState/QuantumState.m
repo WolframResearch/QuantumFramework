@@ -121,7 +121,7 @@ QuantumState[x : Except[_ ? QuantumStateQ | _ ? stateQ], basisArgs___] := Quantu
 
 (* "SymbolDomains" -> Reals on a state or operator: once the amplitudes are known, every symbol in them gets
    the fact *)
-QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBasisQ] /; KeyExistsQ[data["SymbolDomains"], All] :=
+QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBasisQ] /; KeyExistsQ[Lookup[data, "SymbolDomains", <||>], All] :=
     QuantumState[state, QuantumBasis[<|data, "SymbolDomains" -> allDomainsRecord[data["SymbolDomains"], amplitudeValues[state]]|>]]
 
 (* An amplitude that needs a sign the facts do not give, Sqrt[1 - q] with q a declared parameter and nothing
@@ -130,7 +130,7 @@ QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBa
    as given: an explicit Reals may mean values outside a channel's physical range on purpose. *)
 QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBasisQ] /;
     data["ParameterSpec"] =!= {} && ! FreeQ[amplitudeValues[state], Power[_, _Rational] | _Log] :=
-    With[{r = assumedSignRecord[data["SymbolDomains"], Complement[basis["Parameters"], Keys[data["SymbolDomains"]]], amplitudeValues[state]]},
+    With[{r = assumedSignRecord[Lookup[data, "SymbolDomains", <||>], Complement[basis["Parameters"], Keys[Lookup[data, "SymbolDomains", <||>]]], amplitudeValues[state]]},
         (
             Message[QuantumState::assumed, Replace[Last[r], (h : Greater | GreaterEqual | Less | LessEqual)[a_, 0] :> a, {1}], And @@ Last[r]];
             QuantumState[state, QuantumBasis[<|data, "SymbolDomains" -> First[r]|>]]
@@ -197,10 +197,10 @@ doubledReducedMatrix[qb_] := If[ qb["InputDimension"] === 1,
 (* The facts about the symbols do not depend on the basis, so a change of basis joins the facts of the old
    basis with those of the new one, as any merge does: a symbol named by both lies in both sets of domains,
    and one whose domains meet nowhere, or whose facts were taken away, keeps none. *)
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"]["SymbolDomains"] =!= <||> := With[{
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; symbolDomainsOf[qs] =!= <||> := With[{
     domains = MergeSymbolDomains[qs["Basis"], newBasis]
 },
-    QuantumState[qs, QuantumBasis[newBasis, "SymbolDomains" -> domains]] /; ! sameSymbolDomainsQ[domains, newBasis["SymbolDomains"]]
+    QuantumState[qs, QuantumBasis[newBasis, "SymbolDomains" -> domains]] /; ! sameSymbolDomainsQ[domains, symbolDomainsOf[newBasis]]
 ]
 
 sameSymbolDomainsQ[r1_, r2_] := KeySort[Sort /@ r1] === KeySort[Sort /@ r2]
@@ -299,7 +299,7 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
             ],
             qs1["Basis"],
             "ParameterSpec" -> MergeParameterSpecs[qs1, qs2],
-            "SymbolDomains" -> q2["Basis"]["SymbolDomains"]
+            "SymbolDomains" -> symbolDomainsOf[q2]
         ]
     ]
 

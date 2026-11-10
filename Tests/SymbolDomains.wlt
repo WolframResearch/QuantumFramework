@@ -735,7 +735,7 @@ VerificationTest[
 
 (* Within one operation the same message is issued once, however many nested checks raise it. *)
 VerificationTest[
-    verdictScope[QuantumState, {
+    verdictScope[QuantumState, "PhysicalQ", {
         reportVerdict[QuantumState, "PhysicalQ", undecided["tests"]],
         reportVerdict[QuantumOperator, "PhysicalQ", undecided["tests"]],
         reportVerdict[QuantumState, "PhysicalQ", undecided["time"]]

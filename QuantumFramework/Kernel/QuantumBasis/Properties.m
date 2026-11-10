@@ -34,7 +34,7 @@ $QuantumBasisProperties = {
     "ParameterArity", "Parameters", "InitialParameters", "FinalParameters", "ParameterAssumptions", "RealSymbols"
 };
 
-QuantumBasis["Properties"] := Union @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
+QuantumBasis["Properties"] := Union @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys, {"SymbolDomains"}]
 
 qb_QuantumBasis["ValidQ"] := quantumBasisQ[qb]
 
@@ -45,7 +45,7 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
     result = QuantumBasisProp[qb, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumBasisProp[qb, prop, args]] &&
-        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters", "ParameterArity"}], prop],
+        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters", "ParameterArity", "SymbolDomains"}], prop],
         cacheProperty[QuantumBasisProp[qb, prop, args], result],
         result
     ] /; !FailureQ[Unevaluated @ result] &&
@@ -62,8 +62,10 @@ QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] 
 
 QuantumBasisProp[QuantumBasis[data_Association], "ParameterArity"] := Length[data["ParameterSpec"]]
 
+QuantumBasisProp[QuantumBasis[data_Association], "SymbolDomains"] := Lookup[data, "SymbolDomains", <||>]
+
 (* a basis with no facts lists no "SymbolDomains", so it reads as one built before the record existed *)
-QuantumBasisProp[QuantumBasis[data_Association], "Options"] := DeleteCases[Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec", "SymbolDomains"}]], "SymbolDomains" -> <||>]
+QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ KeyTake[data, {"Picture", "Label", "ParameterSpec", "SymbolDomains"}]
 
 (* computed *)
 
@@ -269,7 +271,7 @@ QuantumBasisProp[qb_, "Permute", perm_Cycles] := With[{
                 "SplitDual", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
             ]
         ],
-        "SymbolDomains" -> qb["SymbolDomains"]
+        "SymbolDomains" -> symbolDomainsOf[qb]
     ]
 ]
 

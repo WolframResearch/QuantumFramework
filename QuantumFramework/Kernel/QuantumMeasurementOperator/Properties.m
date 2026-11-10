@@ -35,7 +35,7 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
 $QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits", "Basis"}
 
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
-    result = verdictScope[QuantumMeasurementOperator, QuantumMeasurementOperatorProp[qmo, prop, args]]
+    result = verdictScope[QuantumMeasurementOperator, prop, QuantumMeasurementOperatorProp[qmo, prop, args]]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumMeasurementOperatorProp[qmo, prop, args]] &&
         ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&

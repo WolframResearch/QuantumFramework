@@ -117,7 +117,7 @@ QuantumState::undefprop = "property `` is undefined for this state"
 QuantumState::failprop = "property `` failed with ``"
 
 (qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[Unevaluated[qs]] := With[{
-    result = verdictScope[QuantumState, QuantumStateProp[qs, prop, args]]
+    result = verdictScope[QuantumState, prop, QuantumStateProp[qs, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumStateProp[qs, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Basis", "State"}, prop] &&
@@ -322,7 +322,7 @@ QuantumStateProp[qs_, "AmplitudesList"] := Normal @ qs["StateVector"]
 QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[computableState[qs]]]
 
 QuantumStateProp[qs_, "Weights"] := Which[
-    qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
+    qs["VectorQ"] && ! qs["NumericQ"] || qs["PureStateQ"],
     amplitudeWeights[qs, qs["StateVector"]],
     TrueQ[Block[{$verdictMessages = False}, qs["PhysicalQ"]]] || ! qs["NumericQ"],
     refineOnParameters[qs, Abs @ Diagonal @ qs["DensityMatrix"]],
@@ -358,7 +358,11 @@ amplitudeWeights[_, v_] := Abs[v] ^ 2
 (* |amplitude|^2 / <v|v>, or the diagonal over the trace, with the normalization taken on the
    declared parameters' real domain *)
 QuantumStateProp[qs_ ? symbolicParametersQ, "Weight"] :=
-    qs["Weights"] / If[qs["StateType"] === "Vector", Simplify[parameterNormSquared[qs], qs["ParameterAssumptions"]], qs["Norm"]]
+    With[{w = qs["Weights"]}, w / Which[
+        qs["StateType"] =!= "Vector", qs["Norm"],
+        FreeQ[Normal[w], Abs | Conjugate | Re | Im], coefficientOnFacts[Total[Normal[w]], qs["ParameterAssumptions"]],
+        True, Simplify[parameterNormSquared[qs], qs["ParameterAssumptions"]]
+    ]]
 
 QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
 
@@ -576,7 +580,7 @@ QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify", args___] :=
 (* normalization *)
 
 QuantumStateProp[qs_ ? symbolicParametersQ, "Norm"] /; qs["StateType"] === "Vector" :=
-    Simplify[Sqrt @ parameterNormSquared[qs], qs["ParameterAssumptions"]]
+    With[{n2 = parameterNormSquared[qs]}, If[NumericQ[n2], Sqrt[n2], Simplify[Sqrt[n2], qs["ParameterAssumptions"]]]]
 
 (* <v|v> on the real domain: the real symbols leave the conjugate, so each phase cancels against its
    conjugate as the products v_i Conjugate[v_i] form. The sum is collected by the complex symbols and their
@@ -588,12 +592,21 @@ parameterNormSquared[qs_] := With[{v = Normal @ qs["StateVector"], assumptions =
     With[{n2 = Total[v Normal[conjugateOnDomains[v, qs["Basis"]]]]}, {zs = DeleteDuplicates @ Cases[n2, Conjugate[z_] :> z, {0, Infinity}]},
         Replace[
             If[ zs === {},
-                Simplify[n2, assumptions],
+                coefficientOnFacts[n2, assumptions],
                 Collect[Expand[n2], Join[zs, Conjugate /@ zs], Simplify[#, assumptions] &]
             ] //. z_ Conjugate[z_] :> Abs[z] ^ 2,
             n_ /; ! FreeQ[n, _Conjugate] :> Total[qs["Weights"]]
         ]
     ]
+]
+
+(* a coefficient of the norm on the facts: 0 or 1 when an exact zero test shows it, which is the common case
+   for a unitary circuit and needs no Simplify; otherwise Simplify under the facts *)
+coefficientOnFacts[c_ ? NumericQ, _] := c
+coefficientOnFacts[c_, assumptions_] := Which[
+    TrueQ[exponentialZeroTest[c - 1]], 1,
+    TrueQ[exponentialZeroTest[c]], 0,
+    True, Simplify[c, assumptions]
 ]
 
 QuantumStateProp[qs_, "Norm"] := With[{norm = If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]},
@@ -819,7 +832,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["Type"] === "Unknown"
 
 QuantumStateProp[qs_, "Computational"] := If[
     qs["Basis"]["ComputationalQ"],
-    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "SymbolDomains" -> qs["Basis"]["SymbolDomains"]]],
+    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "SymbolDomains" -> symbolDomainsOf[qs]]],
     QuantumState[qs,
         "Output" -> QuditBasis[qs["OutputDimensions"]],
         "Input" -> QuditBasis[qs["InputDimensions"]]["Dual"]

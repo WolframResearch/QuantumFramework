@@ -110,7 +110,7 @@ QuantumMeasurement["Properties"] := QuantumMeasurement["Properties"] =
 QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for this basis";
 
 (qm_QuantumMeasurement[prop_ ? propQ, args___]) /; QuantumMeasurementQ[qm] := With[{
-    result = verdictScope[QuantumMeasurement, QuantumMeasurementProp[qm, prop, args]]
+    result = verdictScope[QuantumMeasurement, prop, QuantumMeasurementProp[qm, prop, args]]
     },
     If[ ! TrueQ[$QuantumFrameworkPropCache] || cachedPropertyQ[QuantumMeasurementProp[qm, prop, args]] ||
         (* don't cache Simulated* results *)

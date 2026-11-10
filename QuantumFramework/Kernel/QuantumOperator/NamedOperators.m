@@ -518,7 +518,7 @@ controlledOperator[matrix_, order_, op_, controls1_, controls0_, label_, opts : 
         {Join[ConstantArray[2, controls1 + controls0], op["OutputDimensions"]], Join[ConstantArray[2, controls1 + controls0], op["InputDimensions"]]},
         label,
         opts,
-        "SymbolDomains" -> op["Basis"]["SymbolDomains"]
+        "SymbolDomains" -> symbolDomainsOf[op]
     ]
 
 controlledOperator[matrix_, order_, op_, controls1_, controls0_, label_, opts___] := QuantumOperator[

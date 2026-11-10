@@ -138,7 +138,7 @@ QuantumOperatorProp[QuantumOperator[state_, _], prop_String] /; MemberQ[$Quantum
    again, until $RecursionLimit. A name operators do not define is declined, for the
    circuit to answer. *)
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
-    result = verdictScope[QuantumOperator, QuantumOperatorProp[qo, prop, args]]
+    result = verdictScope[QuantumOperator, prop, QuantumOperatorProp[qo, prop, args]]
     },
     Which[
         FailureQ[Unevaluated @ result],
@@ -544,7 +544,7 @@ QuantumOperatorProp[qo_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qo["InputQu
 (* A symbolic matrix is Hermitian or unitary when it is so for every value its symbols' facts allow:
    M - M^dagger, or M^dagger M - 1, is formed from M and M^dagger refined under the facts and tested entry by entry
    (zeroVerdict), giving True, False, or Indeterminate with a message (yesNo). *)
-QuantumOperatorProp[qo_, "HermitianQ"] /; ! qo["State"]["NumericQ"] && SquareMatrixQ[qo["Matrix"]] :=
+QuantumOperatorProp[qo_, "HermitianQ"] /; ! qo["State"]["NumericQ"] && qo["OutputDimension"] == qo["InputDimension"] :=
     yesNo[QuantumOperator, "HermitianQ", hermitianVerdict, qo["Matrix"], qo["Basis"]]
 
 hermitianVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]}, zeroVerdict[symbolicEntries[m - conjugateTransposeOnDomains[m, qb]], qb]]
@@ -556,7 +556,7 @@ unitaryVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]}, zeroVerdict[
 
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "UnitaryQ"] /; ! qo["State"]["NumericQ"] && SquareMatrixQ[qo["Matrix"]] :=
+QuantumOperatorProp[qo_, "UnitaryQ"] /; ! qo["State"]["NumericQ"] && qo["OutputDimension"] == qo["InputDimension"] :=
     yesNo[QuantumOperator, "UnitaryQ", unitaryVerdict, qo["Matrix"], qo["Basis"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
