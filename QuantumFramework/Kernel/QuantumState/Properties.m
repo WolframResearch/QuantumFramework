@@ -357,7 +357,7 @@ amplitudeWeights[_, v_] := Abs[v] ^ 2
 
 (* |amplitude|^2 / <v|v>, or the diagonal over the trace, with the normalization taken on the
    declared parameters' real domain *)
-QuantumStateProp[qs_ ? symbolicParametersQ, "Weight"] :=
+QuantumStateProp[qs_, "Weight"] /; symbolicParametersQ[qs] :=
     With[{w = qs["Weights"]}, w / Which[
         qs["StateType"] =!= "Vector", qs["Norm"],
         FreeQ[Normal[w], Abs | Conjugate | Re | Im], coefficientOnFacts[Total[Normal[w]], qs["ParameterAssumptions"]],
@@ -579,7 +579,7 @@ QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify", args___] :=
 
 (* normalization *)
 
-QuantumStateProp[qs_ ? symbolicParametersQ, "Norm"] /; qs["StateType"] === "Vector" :=
+QuantumStateProp[qs_, "Norm"] /; symbolicParametersQ[qs] && qs["StateType"] === "Vector" :=
     With[{n2 = parameterNormSquared[qs]}, If[NumericQ[n2], Sqrt[n2], Simplify[Sqrt[n2], qs["ParameterAssumptions"]]]]
 
 (* <v|v> on the real domain: the real symbols leave the conjugate, so each phase cancels against its
@@ -682,7 +682,7 @@ QuantumStateProp[qs_, "NormalizedAmplitudes"] := With[{amplitudes = qs["Amplitud
 
 (* divided by the norm on the declared parameters' real domain, so a state "Norm" reports as
    normalized comes back unchanged *)
-QuantumStateProp[qs_ ? symbolicParametersQ, "NormalizedStateVector"] /; qs["StateType"] === "Vector" :=
+QuantumStateProp[qs_, "NormalizedStateVector"] /; symbolicParametersQ[qs] && qs["StateType"] === "Vector" :=
     qs["StateVector"] / qs["Norm"]
 
 QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]

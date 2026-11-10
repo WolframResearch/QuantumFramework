@@ -867,7 +867,11 @@ toleratedState[qs_] := If[
 
 (* With assumptions on the parameters of a symbolic state, the state is simplified under them before the monotone is
    read, its intermediate eigenvalues are simplified under them (assumedSimplify), and so is the value. *)
-assumedMonotone[qs_, a_, True] := entanglementMonotone[qs, Sequence @@ a]
+(* With no assumptions given, a value that holds symbols is refined under the state's own facts, the ranges its
+   roles and its declarations give, so Werner[p] with p in [0, 1] leaves no Conjugate[p] in its negativity. *)
+assumedMonotone[qs_, a_, True] := With[{v = entanglementMonotone[qs, Sequence @@ a]},
+    If[NumericQ[v] || FailureQ[v], v, refineOnFacts[v, qs["Basis"]]]
+]
 
 assumedMonotone[qs_, a_, given_] := Block[{$Assumptions = given},
     If[ ArrayQ[qs["State"], _, NumericQ],

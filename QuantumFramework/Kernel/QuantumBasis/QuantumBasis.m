@@ -116,21 +116,14 @@ $QuantumBasisDefaults = {
 
 ParameterSpecQ[spec_] := MatchQ[spec, subSpecs : {{_, _ ? NumericQ, _ ? NumericQ}...} /; DuplicateFreeQ[subSpecs[[All, 1]]]]
 
-quantumBasisQ[QuantumBasis[data : HoldPattern[Association[(_String -> _) ...]]]] := Enclose[
-    ConfirmAssert[ContainsAll[Keys[data], $QuantumBasisDataKeys]];
-
-    ConfirmAssert[QuditBasisQ[data["Input"]]];
-    ConfirmAssert[QuditBasisQ[data["Output"]]];
-
-    ConfirmAssert[MemberQ[$QuantumBasisPictures, data["Picture"]], Message[QuantumBasis::picture, data["Picture"]]];
-    (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
-
-    ConfirmAssert[ParameterSpecQ[data["ParameterSpec"]]];
-    If[KeyExistsQ[data, "SymbolDomains"], ConfirmAssert[symbolDomainsQ[data["SymbolDomains"]]]];
-    True,
-
-    False &
-]
+(* every basis built passes this check, so it is a plain chain of tests, each run only when those before it pass *)
+quantumBasisQ[QuantumBasis[data : HoldPattern[Association[(_String -> _) ...]]]] :=
+    ContainsAll[Keys[data], $QuantumBasisDataKeys] &&
+    QuditBasisQ[data["Input"]] &&
+    QuditBasisQ[data["Output"]] &&
+    (MemberQ[$QuantumBasisPictures, data["Picture"]] || (Message[QuantumBasis::picture, data["Picture"]]; False)) &&
+    ParameterSpecQ[data["ParameterSpec"]] &&
+    (! KeyExistsQ[data, "SymbolDomains"] || symbolDomainsQ[data["SymbolDomains"]])
 
 quantumBasisQ[___] := False
 
@@ -699,9 +692,33 @@ refineOnFacts[a_, qb_] /; ! basisFactsQ[qb] := a
 refineOnFacts[a_, qb_] := With[{reals = qb["RealSymbols"]},
     If[ reals === {} || entriesFreeQ[a, Alternatives @@ reals],
         a,
-        Block[{$Assumptions = qb["ParameterAssumptions"]}, mapValues[keptValues[#, Refine[#, TimeConstraint -> $refineTimeConstraint]] &, a]]
+        With[{b = mapValues[realClean[Alternatives @@ reals, symbolRanges[qb]], a]},
+            If[ entriesFreeQ[b, refineLeftover[Alternatives @@ reals]],
+                b,
+                Block[{$Assumptions = qb["ParameterAssumptions"]}, mapValues[keptValues[#, Refine[#, TimeConstraint -> $refineTimeConstraint]] &, b]]
+            ]
+        ]
     ]
 ]
+
+(* What the real symbols settle without Refine: the conjugate of an expression built from them and numbers,
+   Sqrt[x^2] = Abs[x] for such a real x, and Abs[x] where interval arithmetic on the ranges gives the sign. *)
+realClean[reals_, ranges_][x_] := x //. {
+    Conjugate[y_] /; conjugateByStructureQ[reals][y] :> (y /. Complex[u_, v_] :> Complex[u, - v]),
+    Power[Power[y_, 2], 1 / 2] /; realByStructureQ[reals][y] :> Abs[y],
+    Abs[y_] /; realByStructureQ[reals][y] && MatchQ[intervalSign[y, ranges, False], "Positive" | "Nonnegative" | "Zero"] :> y,
+    Abs[y_] /; realByStructureQ[reals][y] && MatchQ[intervalSign[y, ranges, False], "Negative" | "Nonpositive"] :> - y
+}
+
+realByStructureQ[reals_][y_] := FreeQ[y, _Complex] && conjugateByStructureQ[reals][y]
+
+(* what Refine may still settle: a conjugate, real or imaginary part, argument, sign or log of an expression in the
+   real symbols, an Abs of one that is not linear in a single symbol (whose sign the intervals give exactly), or a
+   square root of a square *)
+refineLeftover[reals_] := (Conjugate | Re | Im | Arg | Sign | Log)[y_ /; ! FreeQ[y, reals]] |
+    Abs[y_ /; ! FreeQ[y, reals] && ! linearOneSymbolQ[y]] | Power[Power[_, 2], 1 / 2]
+
+linearOneSymbolQ[y_] := With[{symbols = questionSymbols[y]}, Length[symbols] === 1 && PolynomialQ[y, symbols] && Exponent[y, First[symbols]] <= 1]
 
 keptValues[old_List, new_List] /; Length[old] === Length[new] := MapThread[keptStage, {old, new}]
 keptValues[old_, new_] := keptStage[old, new]

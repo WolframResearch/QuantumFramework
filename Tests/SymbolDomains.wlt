@@ -791,4 +791,17 @@ VerificationTest[
     TestID -> "SymbolDomains-AssumedSignTravels"
 ]
 
+(* ========== entanglement measures read the facts ========== *)
+
+(* The negativity of Werner[p], whose role puts p in [0, 1], holds no Conjugate, Re or Ramp of p, and agrees
+   with the negativity of the numeric state at p = 1/5. *)
+VerificationTest[
+    With[{n = QuantumEntanglementMonotone[QuantumState["Werner"[p]], "Negativity"]}, {
+        FreeQ[n, Conjugate | Re | Ramp],
+        Abs[N[n /. p -> 1 / 5] - N[QuantumEntanglementMonotone[QuantumState["Werner"[1 / 5]], "Negativity"]]] < 10 ^ -10
+    }],
+    {True, True},
+    TestID -> "SymbolDomains-MonotoneReadsFacts"
+]
+
 EndTestSection[]
