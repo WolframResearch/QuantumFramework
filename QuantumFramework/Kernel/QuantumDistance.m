@@ -212,10 +212,22 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dim
     nonQubitBlochFailure[qs1["Dimension"]]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, measure : Alternatives @@ $QuantumDistances] /; qs1["Dimension"] == qs2["Dimension"] :=
-    Apply[
-        If[equalMatricesQ[##], equalStateDistance[measure, #1], matrixDistance[measure][##]] &,
-        distanceMatrices[qs1, qs2]
+    onJoinedFacts[
+        Apply[
+            If[equalMatricesQ[##], equalStateDistance[measure, #1], matrixDistance[measure][##]] &,
+            distanceMatrices[qs1, qs2]
+        ],
+        qs1, qs2
     ]
+
+(* A symbolic distance refined under the facts of both states: their declared parameters and records, joined.
+   The kernel's singular values and square roots conjugate every symbol, and the facts settle those of the
+   real ones. *)
+onJoinedFacts[d_, qs1_, qs2_] /; NumericQ[d] || FailureQ[d] || ! basisFactsQ[qs1["Basis"]] && ! basisFactsQ[qs2["Basis"]] := d
+onJoinedFacts[d_, qs1_, qs2_] := refineOnFacts[d, QuantumBasis[
+    "ParameterSpec" -> DeleteDuplicatesBy[Join[qs1["ParameterSpec"], qs2["ParameterSpec"]], First],
+    "SymbolDomains" -> MergeSymbolDomains[qs1, qs2]
+]]
 
 (* Each measure as a function of the two density matrices. *)
 matrixDistance["Fidelity"] = fidelityDistance;

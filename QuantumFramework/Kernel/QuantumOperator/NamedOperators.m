@@ -1051,7 +1051,9 @@ QuantumOperator["Liouvillian"[H_, Ls : _ : {}, Gammas : _ : {}], opts___] := Enc
                     Total[MapThread[If[TrueQ[#1 == 0], 0, #1 * LindbladMixedOperator @@ #2] &, {PadRight[gammas, {Length[ls], Length[ls]}, 1], Outer[List, ls, ls, 1]}, 2], 2],
                 True, Confirm[Failure["InvalidGammas", <|"MessageTemplate" -> "Gammas must be a vector or matrix."|>]]
             ],
-        opts, "Label" -> "Liouvillian"
+        opts, "Label" -> "Liouvillian",
+        (* a jump rate is nonnegative by its role; the entries of a rate matrix are not, only the matrix is *)
+        If[VectorQ[gammas], roleDomainOption[gammas, Interval[{0, Infinity}]], Sequence @@ {}]
     ]
 ]
 

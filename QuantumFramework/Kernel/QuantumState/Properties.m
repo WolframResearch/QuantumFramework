@@ -832,7 +832,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["Type"] === "Unknown"
 
 QuantumStateProp[qs_, "Computational"] := If[
     qs["Basis"]["ComputationalQ"],
-    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "SymbolDomains" -> symbolDomainsOf[qs]]],
+    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "ParameterSpec" -> qs["ParameterSpec"], "SymbolDomains" -> symbolDomainsOf[qs]]],
     QuantumState[qs,
         "Output" -> QuditBasis[qs["OutputDimensions"]],
         "Input" -> QuditBasis[qs["InputDimensions"]]["Dual"]

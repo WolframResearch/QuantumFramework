@@ -804,4 +804,33 @@ VerificationTest[
     TestID -> "SymbolDomains-MonotoneReadsFacts"
 ]
 
+(* A jump rate of a Lindblad operator is nonnegative by its role. *)
+VerificationTest[
+    QuantumOperator["Hamiltonian"[QuantumOperator["Z"], {QuantumOperator["-"]}, {\[Gamma]}]]["Basis"]["SymbolDomains"],
+    <|\[Gamma] -> {Interval[{0, Infinity}]}|>,
+    TestID -> "SymbolDomains-JumpRateNonnegative"
+]
+
+(* The Wigner function in x and p takes only x, p and the symbols the facts make real as real: for
+   |0> + z |1> with z a symbol with no fact, its value at z = 1 + I is that of the numeric state. *)
+VerificationTest[
+    Needs["Wolfram`QuantumFramework`SecondQuantization`"];
+    With[{mk = QuantumState[Normalize[{1, #, 0, 0}], 4] &, pt = {x -> 3 / 10, y -> -2 / 5}},
+        Abs[N[Wolfram`QuantumFramework`SecondQuantization`WignerFunction[mk[z], {x, y}] /. z -> 1 + I /. pt] -
+            N[Wolfram`QuantumFramework`SecondQuantization`WignerFunction[mk[1 + I], {x, y}] /. pt]] < 10 ^ -10
+    ],
+    True,
+    TestID -> "SymbolDomains-WignerComplexSymbol"
+]
+
+(* The declared parameters of a state stay real through its computational form and in a distance between two
+   states: the Bloch vector, the trace distance and the fidelity of states with real angles hold no Conjugate. *)
+VerificationTest[
+    With[{a = QuantumState[{Cos[t], Sin[t]}, "Parameters" -> {t}], b = QuantumState[{Cos[s], Exp[I f] Sin[s]}, "Parameters" -> {s, f}]},
+        FreeQ[#, Conjugate] & /@ {b["BlochVector"], QuantumDistance[a, b, "Trace"], QuantumDistance[a, b, "Fidelity"]}
+    ],
+    {True, True, True},
+    TestID -> "SymbolDomains-ParametersStayReal"
+]
+
 EndTestSection[]
