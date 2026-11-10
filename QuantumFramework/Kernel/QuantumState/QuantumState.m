@@ -119,6 +119,16 @@ QuantumState[qb_ ? QuantumBasisQ, opts___] := Enclose @ If[
 QuantumState[x : Except[_ ? QuantumStateQ | _ ? stateQ], basisArgs___] := QuantumState[{x}, QuantumBasis[basisArgs]]
 
 
+(* "SymbolDomains" -> Reals on a state or operator: once the amplitudes are known, every symbol in them gets
+   the fact *)
+QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBasisQ] /; KeyExistsQ[data["SymbolDomains"], All] :=
+    QuantumState[state, QuantumBasis[<|data, "SymbolDomains" -> allDomainsRecord[data["SymbolDomains"], amplitudeValues[state]]|>]]
+
+amplitudeValues[s_SparseArray] := s["NonzeroValues"]
+amplitudeValues[s_List] := Flatten[s]
+amplitudeValues[_] := {}
+
+
 (* expand basis *)
 
 QuantumState[state : Except[_ ? QuantumStateQ], args : Except[_ ? QuantumBasisQ]] :=

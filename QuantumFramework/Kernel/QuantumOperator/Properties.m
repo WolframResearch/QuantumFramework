@@ -543,17 +543,21 @@ QuantumOperatorProp[qo_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qo["InputQu
 
 (* A symbolic matrix is Hermitian or unitary when it is so for every value its symbols' facts allow:
    M - M^dagger, or M^dagger M - 1, is computed with the real symbols taken real and tested entry by entry
-   (zeroOnDomains), giving True, False, or Undefined when neither is proven. *)
+   (zeroVerdict), giving True, False, or Indeterminate with a message (yesNo). *)
 QuantumOperatorProp[qo_, "HermitianQ"] /; ! qo["State"]["NumericQ"] && SquareMatrixQ[qo["Matrix"]] :=
-    zeroOnDomains[symbolicEntries @ onRealSymbols[# - ConjugateTranspose[#] &, qo["Matrix"], qo["Basis"]], qo["Basis"]]
+    yesNo[QuantumOperator, "HermitianQ", hermitianVerdict, qo["Matrix"], qo["Basis"]]
+
+hermitianVerdict[m_, qb_] := zeroVerdict[symbolicEntries @ onRealSymbols[# - ConjugateTranspose[#] &, m, qb], qb]
+
+unitaryVerdict[m_, qb_] := zeroVerdict[
+    symbolicEntries @ onRealSymbols[ConjugateTranspose[#] . # - IdentityMatrix[Length[#], SparseArray] &, m, qb],
+    qb
+]
 
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] /; ! qo["State"]["NumericQ"] && SquareMatrixQ[qo["Matrix"]] :=
-    zeroOnDomains[
-        symbolicEntries @ onRealSymbols[ConjugateTranspose[#] . # - IdentityMatrix[Length[#], SparseArray] &, qo["Matrix"], qo["Basis"]],
-        qo["Basis"]
-    ]
+    yesNo[QuantumOperator, "UnitaryQ", unitaryVerdict, qo["Matrix"], qo["Basis"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
 

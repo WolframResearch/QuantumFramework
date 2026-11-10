@@ -1683,10 +1683,11 @@ HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Inser
    constructs. A pattern-bearing key - only ever a symbolic / meta call - would otherwise create
    an over-matching DownValue (the latent bug the old code masked with Quiet) and emit Rule::rhs;
    such keys are simply left uncached. The key is small (obj + prop + args), so the FreeQ check
-   is cheap, and no Quiet is needed. Returns result either way. *)
+   is cheap, and no Quiet is needed. An Indeterminate answer is not stored either: it may come from a time
+   limit, and a later call with more time can decide it. Returns result either way. *)
 SetAttributes[cacheProperty, HoldFirst];
 cacheProperty[prop_, result_] := (
-    If[ FreeQ[Unevaluated[prop], _Pattern | _Blank | _BlankSequence | _BlankNullSequence | _Optional],
+    If[ result =!= Indeterminate && FreeQ[Unevaluated[prop], _Pattern | _Blank | _BlankSequence | _BlankNullSequence | _Optional],
         prop = result;
         $cachedPropertyKeys[Hash[Unevaluated[prop]]] = True
     ];

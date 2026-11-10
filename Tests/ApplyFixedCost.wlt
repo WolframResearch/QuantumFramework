@@ -248,7 +248,7 @@ VerificationTest[
 
 VerificationTest[
     QuantumCircuitOperator[{"H"}, Parameters -> {x}, Picture -> "Heisenberg"]["Elements"][[1]]["Basis"]["Options"],
-    {"Picture" -> "Heisenberg", "Label" -> "H", "ParameterSpec" -> {{x, 0, 1}}, "SymbolDomains" -> <||>},
+    {"Picture" -> "Heisenberg", "Label" -> "H", "ParameterSpec" -> {{x, 0, 1}}},
     TestID -> "circuit-own-options-as-symbols"
 ]
 
@@ -270,13 +270,13 @@ VerificationTest[
         SetOptions[QuantumCircuitOperator, "Parameters" -> {s}, "Picture" -> "Heisenberg"];
         QuantumCircuitOperator[{"H"}]["Elements"][[1]]["Basis"]["Options"]
     ],
-    {"Picture" -> "Heisenberg", "Label" -> "H", "ParameterSpec" -> {{s, 0, 1}}, "SymbolDomains" -> <||>},
+    {"Picture" -> "Heisenberg", "Label" -> "H", "ParameterSpec" -> {{s, 0, 1}}},
     TestID -> "circuit-SetOptions-defaults-apply"
 ]
 
 VerificationTest[
     QuantumCircuitOperator[{"H"}]["Elements"][[1]]["Basis"]["Options"],
-    {"Picture" -> "Schrodinger", "Label" -> "H", "ParameterSpec" -> {}, "SymbolDomains" -> <||>},
+    {"Picture" -> "Schrodinger", "Label" -> "H", "ParameterSpec" -> {}},
     TestID -> "circuit-defaults-after-SetOptions-block"
 ]
 

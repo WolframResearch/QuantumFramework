@@ -62,7 +62,8 @@ QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] 
 
 QuantumBasisProp[QuantumBasis[data_Association], "ParameterArity"] := Length[data["ParameterSpec"]]
 
-QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec", "SymbolDomains"}]]
+(* a basis with no facts lists no "SymbolDomains", so it reads as one built before the record existed *)
+QuantumBasisProp[QuantumBasis[data_Association], "Options"] := DeleteCases[Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec", "SymbolDomains"}]], "SymbolDomains" -> <||>]
 
 (* computed *)
 

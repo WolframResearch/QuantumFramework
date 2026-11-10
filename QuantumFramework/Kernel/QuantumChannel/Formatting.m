@@ -36,7 +36,7 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[Unevaluated[qc]
         },
         {
             {
-                BoxForm`SummaryItem[{"Trace preserving: ", TimeConstrained[qc["TracePreservingQ"], 1]}],
+                BoxForm`SummaryItem[{"Trace preserving: ", Block[{$verdictMessages = False}, TimeConstrained[qc["TracePreservingQ"], 1, Indeterminate]]}],
                 BoxForm`SummaryItem[{"Qudits: ", Row[{qc["InputQudits"], "\[RightArrow]", qc["OutputQudits"]}]}]
             },
             {

@@ -67,14 +67,18 @@ QuantumChannelProp[qc_, "TraceBasis"] := qc["Output"]["Extract", Range[qc["Trace
 QuantumChannelProp[qc_, "Unitality"] := QuantumOperator @ QuantumPartialTrace[
     QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
 
-QuantumChannelProp[qc_, "UnitalQ"] := With[{m = Chop @ qc["Unitality"]["MatrixRepresentation"]},
+QuantumChannelProp[qc_, "UnitalQ"] := unitality[qc, "UnitalQ"]
+
+QuantumChannelProp[qc_, "TracePreservingQ"] := unitality[qc["Adjoint"], "TracePreservingQ"]
+
+unitality[qc_, prop_] := With[{m = Chop @ qc["Unitality"]["MatrixRepresentation"]},
     If[ MatrixQ[m, NumericQ],
         m == IdentityMatrix[Length @ m, SparseArray],
-        zeroOnDomains[Flatten @ Normal[m - IdentityMatrix[Length @ m]], qc["Basis"]]
+        yesNo[QuantumChannel, prop, identityVerdict, m, qc["Basis"]]
     ]
 ]
 
-QuantumChannelProp[qc_, "TracePreservingQ"] := qc["Adjoint"]["UnitalQ"]
+identityVerdict[m_, qb_] := zeroVerdict[Flatten @ Normal[m - IdentityMatrix[Length @ m]], qb]
 
 QuantumChannelProp[qc_, "EvolutionChannel"] := QuantumChannel[
     (I #)["EvolutionOperator"] & /@  qc["UnstackOutput", 1]

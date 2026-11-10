@@ -181,13 +181,22 @@ QuantumStateProp[qs_, "MatrixQ" | "MatrixStateQ"] := qs["StateType"] === "Matrix
 
 QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "UnknownType"
 
-(* A symbolic density matrix with no declared parameters is physical when it is positive semidefinite for every
-   value its symbols' facts allow: True, False, or Undefined when neither is proven. *)
-QuantumStateProp[qs_, "PhysicalQ"] /; symbolicDensityMatrixQ[qs] := positiveSemidefiniteOnDomains[qs["DensityMatrix"], qs["Basis"]]
+(* A symbolic density matrix is physical when it is positive semidefinite for every value its symbols' facts
+   allow: True, False, or Indeterminate with a message (yesNo). *)
+QuantumStateProp[qs_, "PhysicalQ"] /; symbolicDensityStateQ[qs] :=
+    yesNo[QuantumState, "PhysicalQ", positiveSemidefiniteVerdict, qs["DensityMatrix"], qs["Basis"]]
 
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
-symbolicDensityMatrixQ[qs_] := qs["StateType"] === "Matrix" && qs["InputDimension"] == 1 && qs["ParameterArity"] == 0 && ! qs["NumericQ"]
+symbolicDensityStateQ[qs_] := qs["StateType"] === "Matrix" && qs["InputDimension"] == 1 && ! qs["NumericQ"]
+
+symbolicDensityMatrixQ[qs_] := symbolicDensityStateQ[qs] && qs["ParameterArity"] == 0
+
+(* Tr[rho^2] = Tr[rho]^2, tested with the real symbols taken real: True, False or Indeterminate *)
+symbolicPureQ[qs_] := zeroOnDomains[
+    {onRealSymbols[Tr[# . #] - Tr[#] ^ 2 &, Normal[qs["DensityMatrix"]], qs["Basis"]]},
+    qs["Basis"]
+]
 
 (* Reading a lazy container costs a materialization, and the property cascade
    asks for the same one over and over: "Type" alone is consulted by
@@ -316,7 +325,7 @@ QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[F
 QuantumStateProp[qs_, "Weights"] := Which[
     qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
     amplitudeWeights[qs, qs["StateVector"]],
-    qs["PhysicalQ"] || ! qs["NumericQ"],
+    TrueQ[Block[{$verdictMessages = False}, qs["PhysicalQ"]]] || ! qs["NumericQ"],
     refineOnParameters[qs, Abs @ Diagonal @ qs["DensityMatrix"]],
     True,
     (* the repaired state's own diagonal: asking it for "Weights" retests
@@ -763,8 +772,8 @@ QuantumStateProp[qs_, "Type"] := Which[
     "Pure",
     numericSemidefiniteQ[qs],
     "Mixed",
-    symbolicDensityMatrixQ[qs] && TrueQ[qs["PhysicalQ"]],
-    If[zeroOnDomains[{Tr[# . #] - Tr[#] ^ 2 & @ Normal[qs["DensityMatrix"]]}, qs["Basis"]] === True, "Pure", "Mixed"],
+    symbolicDensityMatrixQ[qs] && TrueQ[Block[{$verdictMessages = False}, qs["PhysicalQ"]]] && BooleanQ[symbolicPureQ[qs]],
+    If[symbolicPureQ[qs], "Pure", "Mixed"],
     qs["ParameterArity"] > 0,
     "Parametric",
     qs["MatrixQ"] && qs["OutputDimension"] == qs["InputDimension"],
@@ -1178,7 +1187,7 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := simplifyLabel @ Quantu
    matrix is taken as it is. *)
 machineHermitianPart[m_] := If[MatrixQ[m, NumericQ] && Precision[m] === MachinePrecision, (m + ConjugateTranspose[m]) / 2, m]
 
-QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
+QuantumStateProp[qs_, "Physical"] := If[MatchQ[Block[{$verdictMessages = False}, qs["PhysicalQ"]], True | Indeterminate], qs,
 	Block[{d, u},
 		{d, u} = eigensystem[normalizeMatrix[machineHermitianPart[qs["DensityMatrix"]]], Chop -> True, "Normalize" -> True];
 		d = Normalize[Max[#, 0] & /@ Re[d], Total];

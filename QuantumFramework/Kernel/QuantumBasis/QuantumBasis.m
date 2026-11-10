@@ -15,6 +15,7 @@ PackageScope["symbolDomainsFacts"]
 PackageScope["realDomainSymbols"]
 PackageScope["roleSymbolDomains"]
 PackageScope["roleDomainOption"]
+PackageScope["allDomainsRecord"]
 PackageScope["exactRealQ"]
 PackageScope["onRealSymbols"]
 PackageScope["conjugateOnDomains"]
@@ -23,6 +24,11 @@ PackageScope["zeroOnDomains"]
 PackageScope["basisFactsQ"]
 PackageScope["nonnegativeOnDomains"]
 PackageScope["positiveSemidefiniteOnDomains"]
+PackageScope["positiveSemidefiniteVerdict"]
+PackageScope["zeroVerdict"]
+PackageScope["yesNo"]
+PackageScope["$verdictMessages"]
+PackageScope["nonzeroEntries"]
 
 
 
@@ -58,6 +64,8 @@ QuantumBasis::domain = "`` is not a symbol domain; a domain is one of Reals, Non
 QuantumBasis::domainspec = "`` is not a symbol domain specification; give rules from a symbol or an indexed symbol to a domain or a list of domains; an empty list takes away every fact about the symbol"
 
 QuantumBasis::domainempty = "the domains `2` given for `1` have no point in common; no fact about `1` is kept"
+
+QuantumBasis::complexbounded = "`1` is declared both complex and in `2`, which bounds it as a real number; no fact about `1` is kept"
 
 QuantumBasis::phaseSpacePicture = "a phase space basis is already a phase space representation and cannot be renamed to the picture ``";
 
@@ -144,16 +152,55 @@ QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumB
 QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] /; FilterRules[{rules}, "SymbolDomains"] === {} :=
     QuantumBasis @ KeyMap[Replace["Parameter" | "Parameters" -> "ParameterSpec"]][<|data, Reverse @ FilterRules[{rules}, Join[$QuantumBasisDataKeys, {"Parameter", "Parameters"}]]|>]
 
-(* every "SymbolDomains" given joins the basis's record rather than replacing it *)
+(* Every "SymbolDomains" given joins the basis's record. A record, as roles and operations pass it, meets the
+   record already there. A declaration the user writes as rules does too, except that its plain Reals or
+   Complexes for a symbol replaces whatever the symbol had, a role's range included. A single domain name,
+   "SymbolDomains" -> Reals, is kept under All until the object's own symbols are known (allDomainsRecord). *)
 QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] := Enclose @ With[
     {given = Values @ FilterRules[Flatten[{rules}], "SymbolDomains"]},
-    {bad = SelectFirst[given, ! symbolDomainsQ[#] && ! symbolDomainsSpecQ[#] &, None]},
+    {bad = SelectFirst[given, ! symbolDomainsQ[#] && ! symbolDomainsSpecQ[#] && ! symbolDomainQ[#] &, None]},
     If[bad =!= None, domainSpecMessage[bad]; Confirm[$Failed]];
     QuantumBasis @ KeyMap[Replace["Parameter" | "Parameters" -> "ParameterSpec"]][<|
         data,
         Reverse @ FilterRules[{rules}, Join[DeleteCases[$QuantumBasisDataKeys, "SymbolDomains"], {"Parameter", "Parameters"}]],
-        "SymbolDomains" -> If[given === {}, data["SymbolDomains"], mergeSymbolDomains[Prepend[given, data["SymbolDomains"]]]]
+        "SymbolDomains" -> If[given === {}, data["SymbolDomains"], givenDomainsRecord[data["SymbolDomains"], given]]
     |>]
+]
+
+givenDomainsRecord[record_, given_List] := With[{
+    base = mergeSymbolDomains[Prepend[Select[given, symbolDomainsQ], record]],
+    user = Select[given, ! symbolDomainsQ[#] && ! symbolDomainQ[#] &],
+    all = Select[given, symbolDomainQ]
+},
+    withAllDomain[If[user === {}, base, withUserDomains[base, userDomainRecord[Flatten[Normal /@ user]]]], all]
+]
+
+withAllDomain[record_, {}] := record
+withAllDomain[record_, all_List] := mergeSymbolDomains[{record, <|All -> DeleteDuplicates[all]|>}]
+
+(* A declaration as the user writes it: for each symbol its domains meet each other; a complex mark wins over
+   Reals, and beside a range or an integer domain, which bounds the symbol as a real number, contradicts it and
+   leaves the symbol no fact. *)
+userDomainRecord[spec_] := Association @ KeyValueMap[#1 -> userDomainList[#1, #2] &, recordDomainLists[spec]]
+
+userDomainList[_, {}] := {}
+userDomainList[s_, ds_] /; MemberQ[ds, Complexes] && ! SubsetQ[{Complexes, Reals}, ds] :=
+    (Message[QuantumBasis::complexbounded, s, DeleteCases[DeleteDuplicates[ds], Complexes | Reals]]; {})
+userDomainList[s_, ds_] := meetDomainLists[s, {DeleteDuplicates[ds]}]
+
+(* the user's plain Reals or Complexes, or an empty list, replaces the symbol's facts; any other declaration
+   meets them *)
+withUserDomains[base_, user_] := Join[base, Association @ KeyValueMap[
+    #1 -> Replace[#2, d : Except[{} | {Reals} | {Complexes}] :> If[KeyExistsQ[base, #1], meetDomainLists[#1, {base[#1], d}], d]] &,
+    user
+]]
+
+(* "SymbolDomains" -> d, a single domain, made into a fact about every symbol of the object's amplitudes, met
+   with what each symbol already has *)
+allDomainsRecord[record_, values_] := With[{
+    symbols = DeleteDuplicates @ Cases[values, $domainSymbolPattern, {0, Infinity}]
+},
+    mergeSymbolDomains[{KeyDrop[record, All], AssociationThread[symbols, ConstantArray[record[All], Length[symbols]]]}]
 ]
 
 QuantumBasis[data_Association, args__] := Enclose @ Fold[ConfirmBy[QuantumBasis[##], QuantumBasisQ] &, ConfirmBy[QuantumBasis[data], QuantumBasisQ], Reverse @ {args}]
@@ -204,12 +251,15 @@ defaultParameterSpec[ps_List] := Catenate[defaultParameterSpec /@ ps]
 defaultParameterSpec[p : Except[_List]] := defaultParameterSpec[{p}]
 
 
+QuantumBasis[data_Association] /; KeyExistsQ[data, "SymbolDomains"] && symbolDomainQ[data["SymbolDomains"]] :=
+    QuantumBasis[<|data, "SymbolDomains" -> <|All -> {data["SymbolDomains"]}|>|>]
+
 QuantumBasis[data_Association] /; KeyExistsQ[data, "SymbolDomains"] && ! symbolDomainsQ[data["SymbolDomains"]] && ! symbolDomainsSpecQ[data["SymbolDomains"]] :=
     (domainSpecMessage[data["SymbolDomains"]]; $Failed)
 
 (* a valid specification merges into a valid record, so this rule fires at most once *)
 QuantumBasis[data_Association] /; ! symbolDomainsQ[data["SymbolDomains"]] && symbolDomainsSpecQ[data["SymbolDomains"]] :=
-    With[{record = mergeSymbolDomains[{data["SymbolDomains"]}]},
+    With[{record = userDomainRecord[data["SymbolDomains"]]},
         If[symbolDomainsQ[record], QuantumBasis[<|data, "SymbolDomains" -> record|>], $Failed]
     ]
 
@@ -403,7 +453,7 @@ symbolDomainsQ[a_] := AssociationQ[a] && AllTrue[Keys[a], domainKeyQ] &&
    indexed symbol, each value one domain or a list of them; an empty list takes away every fact *)
 domainRulesQ[a_] := MatchQ[a, _Association | {___Rule} | _Rule] && AllTrue[Keys @ Flatten[{Normal[a]}], domainKeyQ]
 
-domainKeyQ[k_] := MatchQ[k, $domainSymbolPattern]
+domainKeyQ[k_] := MatchQ[k, $domainSymbolPattern | All]
 
 symbolDomainsSpecQ[a_] := domainRulesQ[a] && AllTrue[Values @ Flatten[{Normal[a]}], symbolDomainQ[#] || ListQ[#] && AllTrue[#, symbolDomainQ] &]
 
@@ -473,7 +523,7 @@ preimage[_, _Interval, _, _] := Nothing
 
 (* the symbols, among the given ones and the keys of a record, taken as real; a symbol
    marked Complexes, or whose domains had no common point, is not *)
-realDomainSymbols[record_, declared_List] := DeleteDuplicates @ Join[
+realDomainSymbols[record_, declared_List] := DeleteCases[All] @ DeleteDuplicates @ Join[
     Select[declared, ! MatchQ[Lookup[record, Key[#], None], {Complexes} | {}] &],
     Keys @ Select[record, ! MatchQ[#, {Complexes} | {}] &]
 ]
@@ -484,7 +534,7 @@ symbolDomainsFacts[record_, declared_List] := With[{
     reals = Select[realDomainSymbols[record, declared], MatchQ[Lookup[record, Key[#], {Reals}], {Reals}] &]
 },
     And @@ Prepend[
-        Catenate @ KeyValueMap[Function[{s, ds}, domainFact[s, #] & /@ ds], Select[record, ! MatchQ[#, {Reals} | {Complexes}] &]],
+        Catenate @ KeyValueMap[Function[{s, ds}, domainFact[s, #] & /@ ds], Select[KeyDrop[record, All], ! MatchQ[#, {Reals} | {Complexes}] &]],
         Element[reals, Reals]
     ]
 ]
@@ -590,22 +640,37 @@ onlySymbolsQ[x_, symbols_List] := FreeQ[x,
 (* The conjugate of an array, matrix or scalar whose entries may hold the real symbols of qb. *)
 conjugateOnDomains[a_, qb_] := onRealSymbols[Replace[ArrayConjugate[#], ArrayConjugate[x_] :> Conjugate[x]] &, a, qb]
 
-(* Whether every entry of a list is zero for all values the facts of qb allow: True when each is proven zero,
-   False when one is nonzero at a point the facts allow, Undefined otherwise. Proven zero: after TrigToExp,
-   Together leaves numerator 0 (TrigToExp first, since Together alone takes Cos and Sin as unknowns). Nonzero:
-   the value at a fixed point inside the domains, real symbols inside their intervals (an integer for an integer
-   symbol), any other symbol at a complex point, each given to 30 digits, is larger than 10^-10. *)
-zeroOnDomains[es_List, qb_] := With[{rest = DeleteCases[es, _ ? (provenZeroQ)]},
-    Which[
-        rest === {}, True,
-        AnyTrue[rest, nonzeroAtPointQ[#, symbolRanges[qb]] &], False,
-        True, Undefined
+(* A yes/no question about every value the facts of qb allow is answered True, False, or undecided[reason, ...]
+   with the reason it is not decided: "time" (a test ran out of time), "tests" (no test applies), "fails" (it
+   fails for some values, and whether it holds for any is not known), "region" with where it holds, or
+   "notnumber" with an entry that is not a number. answer turns the last into Indeterminate. *)
+answer[v : True | False] := v
+answer[_undecided] := Indeterminate
+
+(* Whether every entry of a list is zero for all values the facts of qb allow. Proven zero: after TrigToExp,
+   Together leaves numerator 0 (TrigToExp first, since Together alone takes Cos and Sin as unknowns), within a
+   time limit. Not zero: the value at a fixed point inside the domains, real symbols inside their intervals (an
+   integer for an integer symbol), any other symbol at a complex point, each given to 30 digits, is larger than
+   10^-10. An expression that is not identically zero vanishes only on a lower-dimensional set, so the
+   property fails for generic values and the answer is False. *)
+zeroVerdict[es_List, qb_] := With[{tests = {#, provenZeroTest[#]} & /@ es},
+    With[{rest = Select[tests, #[[2]] =!= True &]},
+        Which[
+            rest === {}, True,
+            AnyTrue[rest[[All, 1]], nonzeroAtPointQ[#, symbolRanges[qb]] &], False,
+            MemberQ[rest[[All, 2]], $Aborted], undecided["time"],
+            True, undecided["tests"]
+        ]
     ]
 ]
 
+zeroOnDomains[es_List, qb_] := answer[zeroVerdict[es, qb]]
+
 $zeroTestTimeConstraint = 2
 
-provenZeroQ[e_] := e === 0 || TrueQ[TimeConstrained[Numerator[Together[TrigToExp[e]]] === 0, $zeroTestTimeConstraint, False]]
+provenZeroTest[e_] := If[e === 0, True, TimeConstrained[Numerator[Together[TrigToExp[e]]] === 0, $zeroTestTimeConstraint, $Aborted]]
+
+provenZeroQ[e_] := TrueQ[provenZeroTest[e]]
 
 nonzeroAtPointQ[e_, ranges_] := With[{
     v = e /. N[samplePoint[DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}], ranges], 30]
@@ -630,16 +695,34 @@ pointInside[Interval[{lo_, hi_}], integer_] := With[{x = Which[
 ]}, If[integer, Clip[Round[x], {Ceiling[lo], Floor[hi]}], x]]
 
 
-(* Whether every expression of a list is nonnegative for all values the facts of qb allow: True when each is
-   proven so, False when one is negative at a point the facts allow, Undefined otherwise. A proof comes from
+(* Whether every expression of a list is nonnegative for all values the facts of qb allow. A proof comes from
    interval arithmetic, or else from Simplify under the facts, with each symbol that has no fact split into its
-   real and imaginary parts, within a time limit. *)
-nonnegativeOnDomains[es_List, qb_] := With[{ranges = symbolRanges[qb]},
+   real and imaginary parts, within a time limit. A negative value at an allowed point means it fails there; the
+   values where it holds are then sought with Reduce over the real symbols, within a time limit: none gives
+   False, a region gives undecided["region", r]. *)
+nonnegativeVerdict[es_List, qb_] := With[{ranges = symbolRanges[qb]},
     With[{rest = Select[es, ! provenNonnegativeQ[#, ranges, qb] &]},
         Which[
             rest === {}, True,
-            AnyTrue[rest, negativeAtPointQ[#, ranges] &], False,
-            True, Undefined
+            AnyTrue[rest, negativeAtPointQ[#, ranges] &], whereNonnegative[es, ranges, qb],
+            True, undecided["tests"]
+        ]
+    ]
+]
+
+nonnegativeOnDomains[es_List, qb_] := answer[nonnegativeVerdict[es, qb]]
+
+$regionTimeConstraint = 1
+
+whereNonnegative[es_List, ranges_, qb_] := With[{symbols = DeleteDuplicates @ Cases[es, $domainSymbolPattern, {0, Infinity}]},
+    If[ ! SubsetQ[Keys[ranges], symbols],
+        undecided["fails"],
+        With[{r = TimeConstrained[Reduce[And @@ Thread[es >= 0] && qb["ParameterAssumptions"], symbols, Reals], $regionTimeConstraint, $Failed]},
+            Which[
+                r === False, False,
+                r === $Failed || ! FreeQ[r, Reduce], undecided["fails"],
+                True, undecided["region", r]
+            ]
         ]
     ]
 ]
@@ -661,21 +744,74 @@ negativeAtPointQ[e_, ranges_] := With[{
     NumberQ[v] && (Re[v] < - 10 ^ -10 || Abs[Im[v]] > 10 ^ -10)
 ]
 
-(* Whether a square matrix is positive semidefinite for all values the facts of qb allow, as True, False or
-   Undefined. It must be Hermitian first; then its principal minors must be nonnegative (Sylvester's criterion
-   in its form for semidefinite matrices, which needs every principal minor, not only the leading ones). That
-   is 2^d - 1 determinants, so it is used up to d = 4; a diagonal matrix needs only its diagonal, and a larger
-   one its eigenvalues, when they come within a time limit. *)
-positiveSemidefiniteOnDomains[m_, qb_] := With[{
-    hermitian = zeroOnDomains[nonzeroEntries @ onRealSymbols[# - ConjugateTranspose[#] &, m, qb], qb]
+(* Whether a square matrix is positive semidefinite for all values the facts of qb allow. It must be Hermitian
+   first; then its principal minors must be nonnegative (Sylvester's criterion in its form for semidefinite
+   matrices, which needs every principal minor, not only the leading ones). That is 2^d - 1 determinants, so it
+   is used up to d = 4; a diagonal matrix needs only its diagonal, and a larger one its eigenvalues, when they
+   come within a time limit. *)
+positiveSemidefiniteVerdict[m_, qb_] := With[{
+    hermitian = zeroVerdict[nonzeroEntries @ onRealSymbols[# - ConjugateTranspose[#] &, m, qb], qb]
 },
     If[ hermitian =!= True,
         hermitian,
         Replace[semidefiniteConditions[m], {
-            cs_List :> nonnegativeOnDomains[cs, qb],
-            _ -> Undefined
+            cs_List :> nonnegativeVerdict[cs, qb],
+            _ -> undecided["time"]
         }]
     ]
+]
+
+positiveSemidefiniteOnDomains[m_, qb_] := answer[positiveSemidefiniteVerdict[m, qb]]
+
+
+(* A yes/no property of a symbolic object, answered by check[m, qb] on its matrix m: True, False, or
+   Indeterminate with one message saying why. An entry that is not a number leaves it undecided. A False with
+   symbols that have no fact is checked again with them real; when that gives True, the message names them. The
+   messages are off while an object is formatted. *)
+$verdictMessages = True
+
+yesNo[head_, prop_, check_, m_, qb_] := With[{entries = nonzeroEntries[m]},
+    With[{bad = SelectFirst[entries, ! FreeQ[#, _NonCommutativeMultiply | _MatrixSymbol | _ArraySymbol | _QuantumState | _QuantumOperator | _QuantumChannel] &, None]},
+        If[ bad =!= None,
+            reportVerdict[head, prop, undecided["notnumber", bad]],
+            With[{v = check[m, qb]},
+                If[ v === False && $verdictMessages,
+                    undeclaredHint[head, prop, check, m, qb, entries]
+                ];
+                reportVerdict[head, prop, v]
+            ]
+        ]
+    ]
+]
+
+undeclaredHint[head_, prop_, check_, m_, qb_, entries_] := With[{
+    free = Complement[DeleteDuplicates @ Cases[entries, $domainSymbolPattern, {0, Infinity}], Keys[qb["SymbolDomains"]], qb["Parameters"]]
+},
+    If[ free =!= {} && check[m, QuantumBasis[qb, "SymbolDomains" -> Thread[free -> Reals]]] === True,
+        Message[MessageName[head, "undeclared"], prop, free]
+    ]
+]
+
+reportVerdict[_, _, v : True | False] := v
+reportVerdict[head_, prop_, undecided[reason_, args___]] := (
+    If[ $verdictMessages,
+        With[{tag = Replace[reason, {"tests" -> "undecided", "time" -> "undecidedtime", "fails" -> "undecidedfails", "region" -> "undecidedregion"}]},
+            Message[MessageName[head, tag], prop, args]
+        ]
+    ];
+    Indeterminate
+)
+
+Scan[
+    Function[head,
+        MessageName[head, "undecided"] = "`1` could not be decided by the tests for this object; the answer is Indeterminate.";
+        MessageName[head, "undecidedtime"] = "`1` could not be decided within the time limit; the answer is Indeterminate.";
+        MessageName[head, "undecidedfails"] = "`1` fails for some values the facts allow, and whether it holds for any could not be decided; the answer is Indeterminate.";
+        MessageName[head, "undecidedregion"] = "`1` holds only where `2`, not for every value the facts allow; the answer is Indeterminate.";
+        MessageName[head, "notnumber"] = "`1` cannot be decided: the entry `2` is not a number; the answer is Indeterminate.";
+        MessageName[head, "undeclared"] = "`1` is False because `2` may be complex; it is True when they are real, which \"SymbolDomains\" -> Reals declares."
+    ],
+    {QuantumState, QuantumOperator, QuantumChannel}
 ]
 
 nonzeroEntries[m_SparseArray] := m["NonzeroValues"]

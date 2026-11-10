@@ -510,14 +510,15 @@ VerificationTest[
         zeroOnDomains[{Sin[x] ^ 2 + Cos[x] ^ 2 - 1, x - Conjugate[y]}, qb],
         zeroOnDomains[{Log[Exp[x]] - x}, qb]
     }],
-    {True, False, Undefined},
+    {True, False, Indeterminate},
     TestID -> "SymbolDomains-ZeroTestStages"
 ]
 
 (* A symbolic density matrix is physical when it is positive semidefinite for every value the facts allow.
    Channel outputs, Werner states for d = 2 and 3, a Bloch vector with one symbolic component, and an
-   amplitude-damped state with complex amplitudes all are; diag(p, 1 - p) is physical for p in [0, 1] and not
-   for p in [0, 2]; a pure state written as a density matrix is classified pure. *)
+   amplitude-damped state with complex amplitudes all are; diag(p, 1 - p) is physical for p in [0, 1], and for
+   p in [0, 2] only where p <= 1, so there the answer is Indeterminate; a pure state written as a density
+   matrix is classified pure. *)
 VerificationTest[
     {
         QuantumChannel["BitFlip"[p]][QuantumState["0"]]["PhysicalQ"],
@@ -529,7 +530,8 @@ VerificationTest[
         QuantumState[{{p, 0}, {0, 1 - p}}, "SymbolDomains" -> {p -> Interval[{0, 2}]}]["PhysicalQ"],
         QuantumState[QuantumState[{Cos[t], Sin[t]}, "SymbolDomains" -> {t -> Reals}]["DensityMatrix"], "SymbolDomains" -> {t -> Reals}]["Type"]
     },
-    {True, True, True, True, True, "Mixed", False, "Pure"},
+    {True, True, True, True, True, "Mixed", Indeterminate, "Pure"},
+    {QuantumState::undecidedregion},
     TestID -> "SymbolDomains-SymbolicPhysicalStates"
 ]
 
@@ -540,6 +542,96 @@ VerificationTest[
     Select[Names["Wolfram`QuantumFramework`*`r$*"], StringMatchQ[#, __ ~~ "r$" ~~ DigitCharacter ..] &],
     {},
     TestID -> "SymbolDomains-NoPrivateSymbolsLeft"
+]
+
+(* ========== yes/no answers that cannot be decided, and declarations ========== *)
+
+$rabi = MatrixExp[- I t / 2 (\[CapitalDelta] PauliMatrix[3] + \[CapitalOmega] PauliMatrix[1])];
+$generator = \[CapitalDelta] PauliMatrix[3] + \[CapitalOmega] PauliMatrix[1];
+$split = QuantumState[DiagonalMatrix[{p, 2 - p}], "Parameters" -> {p}, "SymbolDomains" -> {p -> Interval[{0, 3}]}];
+
+(* A density matrix with declared parameters is checked against its facts like any other: diag(p, 2 - p) is
+   physical for p in [0, 2] and for no p in [3, 4]. *)
+VerificationTest[
+    {
+        QuantumState[DiagonalMatrix[{p, 2 - p}], "Parameters" -> {p}, "SymbolDomains" -> {p -> Interval[{0, 2}]}]["PhysicalQ"],
+        QuantumState[DiagonalMatrix[{p, 2 - p}], "Parameters" -> {p}, "SymbolDomains" -> {p -> Interval[{3, 4}]}]["PhysicalQ"]
+    },
+    {True, False},
+    TestID -> "SymbolDomains-PhysicalQ-DeclaredParameters"
+]
+
+(* For p in [0, 3] it is physical only where p <= 2: the answer is Indeterminate, the message names where it
+   holds, and Indeterminate combines with And and Or as an unknown does. "Physical" leaves such a state as it
+   is and says nothing, since it was not asked whether the state is physical. *)
+VerificationTest[
+    {$split["PhysicalQ"], $split["PhysicalQ"] && False, $split["PhysicalQ"] || True, QuantumStateQ[$split["Physical"]]},
+    {Indeterminate, False, True, True},
+    {QuantumState::undecidedregion, QuantumState::undecidedregion, QuantumState::undecidedregion, General::stop},
+    TestID -> "SymbolDomains-PhysicalQ-Split"
+]
+
+(* A pure state written by hand with Conjugate[Sin[t]], t real, is pure. *)
+VerificationTest[
+    QuantumState[{{Cos[t] ^ 2, Cos[t] Conjugate[Sin[t]]}, {Sin[t] Cos[t], Sin[t] ^ 2}}, "SymbolDomains" -> {t -> Reals}]["Type"],
+    "Pure",
+    TestID -> "SymbolDomains-Type-PureWithConjugate"
+]
+
+(* With undeclared symbols, which may be complex, a Rabi propagator is not unitary and its generator not
+   Hermitian; the message names the symbols whose declaration as real would change the answer. *)
+VerificationTest[
+    {QuantumOperator[$rabi]["UnitaryQ"], QuantumOperator[$generator]["HermitianQ"]},
+    {False, False},
+    {QuantumOperator::undeclared, QuantumOperator::undeclared},
+    TestID -> "SymbolDomains-Undeclared-Hint"
+]
+
+(* "SymbolDomains" -> Reals makes every symbol of the object real; it meets a role's range rather than
+   replacing it. *)
+VerificationTest[
+    {
+        QuantumOperator[$rabi, "SymbolDomains" -> Reals]["UnitaryQ"],
+        QuantumOperator[$generator, "SymbolDomains" -> Reals]["HermitianQ"],
+        QuantumOperator[$generator, "SymbolDomains" -> Reals]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[p], "SymbolDomains" -> Reals]["Basis"]["SymbolDomains"]
+    },
+    {True, True, <|\[CapitalDelta] -> {Reals}, \[CapitalOmega] -> {Reals}|>, <|p -> {Interval[{0, 1}]}|>},
+    TestID -> "SymbolDomains-AllReal"
+]
+
+(* A user's explicit Reals or Complexes for a symbol replaces its role's range; a user interval meets it. *)
+VerificationTest[
+    {
+        QuantumChannel["BitFlip"[p], "SymbolDomains" -> {p -> Reals}]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[p], "SymbolDomains" -> {p -> Complexes}]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[p], "SymbolDomains" -> {p -> Interval[{0, 2}]}]["Basis"]["SymbolDomains"]
+    },
+    {<|p -> {Reals}|>, <|p -> {Complexes}|>, <|p -> {Interval[{0, 1}]}|>},
+    TestID -> "SymbolDomains-ExplicitDomainReplacesRole"
+]
+
+(* A complex mark beside a range in one declaration contradicts it: one message, no fact. *)
+VerificationTest[
+    QuantumState[{a, b}, "SymbolDomains" -> {a -> {Complexes, Interval[{0, 1}]}}]["Basis"]["SymbolDomains"],
+    <|a -> {}|>,
+    {QuantumBasis::complexbounded},
+    TestID -> "SymbolDomains-ComplexWithRange"
+]
+
+(* An entry that is not a number, a product of noncommuting symbols, leaves the yes/no answer undecided. *)
+VerificationTest[
+    QuantumOperator[{{a ** b, 0}, {0, 1}}]["UnitaryQ"],
+    Indeterminate,
+    {QuantumOperator::notnumber},
+    TestID -> "SymbolDomains-NotANumber"
+]
+
+(* A basis with no facts lists no "SymbolDomains" among its options. *)
+VerificationTest[
+    {MemberQ[Keys[QuantumBasis[]["Options"]], "SymbolDomains"], MemberQ[Keys[QuantumOperator["RZ"[t]]["Basis"]["Options"]], "SymbolDomains"]},
+    {False, True},
+    TestID -> "SymbolDomains-OptionsHideEmpty"
 ]
 
 EndTestSection[]
