@@ -14,12 +14,6 @@ PackageScope[FromFullTableau]
 (* pattern. Cost is O(4^n) -- practical for n <= ~8.                            *)
 (* ============================================================================ *)
 
-(* Symplectic form J over F_2 used by the destabilizer search. *)
-agSymplecticForm[n_Integer] := ArrayFlatten[{
-    {ConstantArray[0, {n, n}], IdentityMatrix[n]},
-    {IdentityMatrix[n], ConstantArray[0, {n, n}]}
-}]
-
 (* Encode a tuple of Paulis (each in 0..3) as a 2n-bit row {x_1,..,x_n,z_1,..,z_n}. *)
 (* Convention matches PauliRow / FromFullTableau: I=00, X=10, Y=11, Z=01.       *)
 agEncodePauli[plist_List] := Catenate[Transpose @ Replace[plist, {0 -> {0, 0}, 1 -> {1, 0}, 2 -> {1, 1}, 3 -> {0, 1}}, {1}]]
@@ -44,31 +38,25 @@ agPickIndependent[bits_, n_Integer] := Module[{bag = Internal`Bag[]},
 (* Symplectic Gram matrix of a set of 2n-bit Pauli encodings over F_2. The      *)
 (* (i, j) entry is 1 exactly when encodings i and j anticommute; the diagonal   *)
 (* is always 0, so a mutually commuting set has an all-zero Gram matrix.        *)
-agSymplecticGram[rows_, n_Integer] := With[{J = agSymplecticForm[n]}, Mod[rows . J . Transpose[rows], 2]]
+agSymplecticGram[rows_, n_Integer] := agModTwoDot[Join[rows[[All, n + 1 ;;]], rows[[All, ;; n]], 2], Transpose[rows]]
 
-(* Given n stabilizer encodings (n x 2n) that form a square, independent,       *)
-(* isotropic set, construct n destabilizer encodings by symplectic             *)
-(* Gram-Schmidt: each D_i satisfies symp(D_i, S_j) = delta_ij and              *)
-(* symp(D_i, D_k) = 0 for k < i. Each D_i depends on prior D_k via the          *)
-(* augmented constraint matrix; expressed as Fold over Range[n]. Any input      *)
-(* outside that precondition returns $Failed (no message), so the LinearSolve   *)
-(* fold only ever runs on a solvable system.                                    *)
+(* Product of two 0/1 matrices mod 2. Entries of the product are at most the    *)
+(* inner dimension, exact in machine reals, so the product runs as a real       *)
+(* matrix product and is rounded back.                                          *)
+agModTwoDot[a_, b_] := Mod[Round[N[a] . N[b]], 2]
+
+(* Given n stabilizer encodings S (n x 2n) that form a square, independent,     *)
+(* isotropic set, construct n destabilizer encodings D with                     *)
+(* symp(D_i, S_j) = delta_ij and symp(D_i, D_k) = 0. One mod-2 solve with n     *)
+(* right-hand sides gives D0 with S J D0^T = I. Its Gram matrix G = D0 J D0^T   *)
+(* is symmetric with zero diagonal, and D = D0 + L S with L the strictly lower  *)
+(* triangle of G gives D J D^T = G + L + L^T = 0 while S J D^T stays I, since   *)
+(* S J S^T = 0. Cost: one O(n^3) solve. Any input outside the precondition       *)
+(* returns $Failed (no message), so the solve only runs on a solvable system.   *)
 agExtendToSymplecticBasis[stabBits_ ? MatrixQ, n_Integer] /;
     Dimensions[stabBits] === {n, 2 n} && MatrixRank[stabBits, Modulus -> 2] === n && Total[agSymplecticGram[stabBits, n], 2] === 0 :=
-    With[{J = agSymplecticForm[n]},
-        Fold[
-            Function[{dests, i},
-                Append[dests,
-                    LinearSolve[
-                        Mod[Join[stabBits, dests] . J, 2],
-                        Join[UnitVector[n, i], ConstantArray[0, Length[dests]]],
-                        Modulus -> 2
-                    ]
-                ]
-            ],
-            {},
-            Range[n]
-        ]
+    With[{d0 = Transpose[LinearSolve[Join[stabBits[[All, n + 1 ;;]], stabBits[[All, ;; n]], 2], IdentityMatrix[n], Modulus -> 2]]},
+        Mod[d0 + agModTwoDot[LowerTriangularize[agModTwoDot[Join[d0[[All, n + 1 ;;]], d0[[All, ;; n]], 2], Transpose[d0]], -1], stabBits], 2]
     ]
 
 agExtendToSymplecticBasis[_, _] := $Failed
@@ -287,7 +275,56 @@ PauliStabilizer[signs : {(-1 | 1) ...}, tableau_ ? PauliTableauQ] := With[
 
 $PauliString = Repeated["-" | "+", {0, 1}] ~~ ("I" | "X" | "Y" | "Z") ...
 
+(* Each Pauli string as a 2n-bit row {x_1..x_n, z_1..z_n}, signs dropped; a      *)
+(* shorter string is padded with I on the right, as the tableau builder does.     *)
+psStringBits[signedPauliStrings_List] := With[{bodies = StringDelete[signedPauliStrings, StartOfString ~~ ("-" | "+")]},
+    With[{pairs = Replace[Characters[StringPadRight[bodies, Max[StringLength[bodies]], "I"]], {"I" -> {0, 0}, "X" -> {1, 0}, "Y" -> {1, 1}, "Z" -> {0, 1}}, {2}]},
+        Join[pairs[[All, All, 1]], pairs[[All, All, 2]], 2]
+    ]
+]
+
+(* A list of signed Pauli strings is a stabilizer state only when the strings    *)
+(* commute and have F2 rank n: the rank, not the count, fixes the state. Fewer   *)
+(* independent strings fix a 2^(n - rank)-dimensional space of states, which no  *)
+(* tableau represents, so the constructor refuses them. More strings than n with *)
+(* rank n are reduced to n independent ones, each dropped string checked against *)
+(* the sign the kept ones give it.                                               *)
 PauliStabilizer[signedPauliStrings : {__String}] /; AllTrue[signedPauliStrings, StringMatchQ[$PauliString]] :=
+    With[{bits = psStringBits[signedPauliStrings]},
+    With[{n = Length[First[bits]] / 2, m = Length[bits]},
+    With[{bad = FirstPosition[Mod[bits[[All, ;; n]] . Transpose[bits[[All, n + 1 ;;]]] + bits[[All, n + 1 ;;]] . Transpose[bits[[All, ;; n]]], 2], 1, Missing["None"], {2}],
+          rank = MatrixRank[bits, Modulus -> 2]},
+        Which[
+            ! MissingQ[bad],
+                Message[PauliStabilizer::noncomm, signedPauliStrings[[bad[[1]]]], signedPauliStrings[[bad[[2]]]]]; $Failed,
+            rank < n,
+                Message[PauliStabilizer::rank, m, n, rank, 2 ^ (n - rank)]; $Failed,
+            m == n,
+                psFromSignedStrings[signedPauliStrings],
+            True,
+                psFromIndependentStrings[signedPauliStrings, agPickIndependent[bits, n], n]
+        ]
+    ]]]
+
+(* A signed string as "-" or "" followed by its letters padded with I to n.       *)
+psNormalizeSignedString[s_String, n_Integer] :=
+    If[StringStartsQ[s, "-"], "-", ""] <> StringPadRight[StringDelete[s, StartOfString ~~ ("-" | "+")], n, "I"]
+
+(* The kept strings are independent, so every dropped string is +-1 times their   *)
+(* product; it is consistent exactly when the kept tableau gives it expectation 1. *)
+psFromIndependentStrings[signedPauliStrings_, keep_, n_] := With[{
+    ps = psFromSignedStrings[signedPauliStrings[[keep]]],
+    dropped = psNormalizeSignedString[#, n] & /@ Delete[signedPauliStrings, List /@ keep]
+},
+    With[{wrong = SelectFirst[dropped, stabilizerExpectation[ps, #] === -1 &]},
+        If[ MissingQ[wrong],
+            ps,
+            Message[PauliStabilizer::inconsistent, wrong]; $Failed
+        ]
+    ]
+]
+
+psFromSignedStrings[signedPauliStrings_] :=
     PauliStabilizer @@
         MapAt[Transpose[PadRight[#, Automatic, {0, 0}], {3, 2, 1}] &, 2] @ Thread @ Replace[
             Characters[signedPauliStrings], {sign : "-" | "+" : 1, paulis___} :> {

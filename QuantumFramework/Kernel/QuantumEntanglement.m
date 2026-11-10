@@ -832,9 +832,10 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, args___, opts : OptionsPattern[
    density matrix in the Hilbert-Schmidt norm, the projection of Smolin, Gambetta and Smith, PRL 108, 070502 (2012),
    doi:10.1103/PhysRevLett.108.070502 ("Fast algorithm for Subproblem 1", p. 3): the eigenvectors are kept, and the
    eigenvalues mu are replaced by their projection onto the probability simplex, Ramp[mu - theta] with the one shift
-   theta that leaves a trace of 1. That sets the smallest eigenvalues to 0 and lowers all the others by one common
-   amount; clipping the negative eigenvalues and rescaling would instead scale the others, which is not the nearest
-   state. Under Gaussian noise of equal variance in a complete orthonormal operator basis this projection is also the
+   theta that leaves a trace of 1 (nearestDensityMatrix in Utilities.m, which the state property "Physical" uses
+   too). That sets the smallest eigenvalues to 0 and lowers all the others by one common amount; clipping the
+   negative eigenvalues and rescaling would instead scale the others, which is not the nearest state. Under Gaussian
+   noise of equal variance in a complete orthonormal operator basis this projection is also the
    maximum-likelihood state (same paper); here it is used only as the nearest state.
 
    How far the value can move, for a state of dimension n split into two parts, d the smaller of their dimensions. The
@@ -862,22 +863,6 @@ toleratedState[qs_] := If[
         If[Min[Re[es[[1]]]] < 0, QuantumState[nearestDensityMatrix[es], qs["Dimensions"]], qs]
     ],
     qs
-]
-
-(* The nearest density matrix from the eigensystem {mu, v} of a Hermitian matrix of trace 1, the eigenvectors v as
-   rows. The eigenvectors are orthonormalized first: for a degenerate eigenvalue at arbitrary precision Eigensystem
-   returns eigenvectors orthonormal only to well below the precision it reports, and the product would carry that
-   error into the state. *)
-nearestDensityMatrix[{mu_, v_}] := With[{w = Orthogonalize[v]}, Transpose[w] . DiagonalMatrix[simplexProjection[Re[mu]]] . Conjugate[w]]
-
-(* The Euclidean projection of a real vector mu onto the probability simplex, the eigenvalue step of the projection
-   above: with s the entries sorted down and k the last position where s_k exceeds (Total[s[[;; k]]] - 1) / k, every
-   entry is lowered by that amount at k and cut at 0. For mu summing to 1 the shift is minus the total of the entries
-   past k divided by k, the accumulator of Smolin, Gambetta and Smith's steps 2 to 4. *)
-simplexProjection[mu_] := With[{s = ReverseSort[mu]},
-    With[{k = Last @ Pick[Range[Length[s]], Thread[s - (Accumulate[s] - 1) / Range[Length[s]] > 0]]},
-        Ramp[mu - (Total[s[[;; k]]] - 1) / k]
-    ]
 ]
 
 (* With assumptions on the parameters of a symbolic state, the state is simplified under them before the monotone is

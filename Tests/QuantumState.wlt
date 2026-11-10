@@ -1590,7 +1590,8 @@ VerificationTest[
 ]
 
 (* Eigenvalues {3/5, 3/5, -1/10, -1/10}: "Physical" sets the negative pair to zero
-   and renormalizes, leaving 1/2 on each of the first two eigenvectors. *)
+   and lowers the other two by 1/10 each, leaving 1/2 on each of the first two
+   eigenvectors. *)
 VerificationTest[
     With[{v = BlockRandom[QuantumOperator["RandomUnitary", {1, 2}], RandomSeeding -> 8]},
         With[{vm = Normal[v["Matrix"]]},
@@ -1606,13 +1607,14 @@ VerificationTest[
 ]
 
 (* Four qubits with eigenvalues 7/20 three times, 1/10 twice, -1/8 twice and nine
-   zeros: dropping the negative pair leaves a total of 5/4, so the physical state
-   has 7/25 three times and 2/25 twice. *)
+   zeros: the nearest density matrix sets the negative pair and the zeros to 0 and
+   lowers the five positive eigenvalues by one common 1/20, which returns the
+   1/4 the negative pair took, so it has 3/10 three times and 1/20 twice. *)
 VerificationTest[
     With[{u = degenUnitary[16, 12]},
         degenDistance[
             QuantumState[degenRotated[u, N @ Join[{7/20, 7/20, 7/20, 1/10, 1/10, -1/8, -1/8}, ConstantArray[0, 9]]], ConstantArray[2, 4]]["Physical"]["DensityMatrix"],
-            degenRotated[u, N @ Join[{7/25, 7/25, 7/25, 2/25, 2/25}, ConstantArray[0, 11]]]
+            degenRotated[u, N @ Join[{3/10, 3/10, 3/10, 1/20, 1/20}, ConstantArray[0, 11]]]
         ]
     ],
     _ ? (# < 10^-8 &),
@@ -1636,7 +1638,7 @@ VerificationTest[
 ]
 
 (* A state that is not positive semidefinite reads its probabilities off its
-   "Physical" state, so they are the diagonal of the clipped state. *)
+   "Physical" state, so they are the diagonal of the repaired state. *)
 VerificationTest[
     With[{u = degenUnitary[4, 3]},
         Max[Abs[
@@ -1647,6 +1649,77 @@ VerificationTest[
     _ ? (# < 10^-8 &),
     SameTest -> MatchQ,
     TestID -> "Physical-ProbabilityList"
+]
+
+(* "Physical" is the density matrix nearest in the Hilbert-Schmidt norm: the
+   eigenvalues {3/5, 1/2, -1/10} go to their projection onto the probability
+   simplex, {11/20, 9/20, 0}, both positive ones lowered by 1/20. Clipping the
+   negative one and rescaling would give {6/11, 5/11, 0}, which is farther. An
+   exact input gives the exact answer. *)
+VerificationTest[
+    QuantumState[DiagonalMatrix[{3/5, 1/2, -1/10}], 3]["Physical"]["DensityMatrix"] // Normal,
+    DiagonalMatrix[{11/20, 9/20, 0}],
+    TestID -> "Physical-NearestStateExact"
+]
+
+(* An exact spectrum with radicals, {Sqrt[2]/2, 1/2, 1/2 - Sqrt[2]/2}: the
+   projection compares the values numerically, so it lowers the two positive
+   ones by (Sqrt[2] - 1)/4 each and returns a state of trace 1. *)
+VerificationTest[
+    QuantumState[DiagonalMatrix[{Sqrt[2]/2, 1/2, 1/2 - Sqrt[2]/2}], 3]["Physical"]["DensityMatrix"] // Normal // Simplify,
+    DiagonalMatrix[{(1 + Sqrt[2])/4, (3 - Sqrt[2])/4, 0}] // Simplify,
+    TestID -> "Physical-NearestStateExactRadicals"
+]
+
+(* At 40 digits a coherence of 10^-12 is part of the nearest state and is kept. *)
+VerificationTest[
+    QuantumState[SetPrecision[{{3/5, 10^-12, 0}, {10^-12, 1/2, 0}, {0, 0, -1/10}}, 40], 3]["Physical"]["DensityMatrix"][[1, 2]] // Normal,
+    _ ? (Abs[# - 10^-12] < 10^-20 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-ArbitraryPrecisionKeepsSmallEntries"
+]
+
+(* The same spectrum in a random eigenbasis, at machine precision. *)
+VerificationTest[
+    With[{u = degenUnitary[3, 21]},
+        degenDistance[
+            QuantumState[degenRotated[u, N @ {3/5, 1/2, -1/10}], 3]["Physical"]["DensityMatrix"],
+            degenRotated[u, N @ {11/20, 9/20, 0}]
+        ]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-NearestStateRotated"
+]
+
+(* Three of four eigenvalues positive and not all equal: the simplex projection shifts
+   each of them by the same 1/30, so no rescaling can reproduce it. The repaired
+   state is closer to the input than the clipped and rescaled one. *)
+VerificationTest[
+    With[{u = degenUnitary[4, 22], p = N @ {1/2, 3/10, 3/10, -1/10}},
+        With[{m = degenRotated[u, p], phys = Normal @ QuantumState[degenRotated[u, p], {2, 2}]["Physical"]["DensityMatrix"]},
+            {
+                degenDistance[phys, degenRotated[u, N @ {7/15, 4/15, 4/15, 0}]],
+                Norm[m - phys, "Frobenius"] < Norm[m - degenRotated[u, N @ {5/11, 3/11, 3/11, 0}], "Frobenius"]
+            }
+        ]
+    ],
+    {_ ? (# < 10^-8 &), True},
+    SameTest -> MatchQ,
+    TestID -> "Physical-NearestStateCloserThanClipped"
+]
+
+(* The entanglement monotones read a state accepted within a tolerance on its
+   nearest density matrix, so the negativity of the "Physical" state is the
+   negativity under that tolerance. *)
+VerificationTest[
+    With[{q = QuantumState[degenRotated[degenUnitary[4, 9], N @ {3/5, 1/2, 0, -1/10}], {2, 2}]},
+        QuantumEntanglementMonotone[q, {{1}, {2}}, "Negativity", Tolerance -> 1/5] -
+            QuantumEntanglementMonotone[q["Physical"], {{1}, {2}}, "Negativity"]
+    ],
+    _ ? (Abs[#] < 10^-10 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-AgreesWithToleratedMonotone"
 ]
 
 (* A density matrix that is Hermitian only to 10^-10, as one integrated

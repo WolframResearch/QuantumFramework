@@ -395,9 +395,36 @@ VerificationTest[
      BosonicMatrixElement[{{1}, {0}}, DisplacementOperator[\[Alpha]]],
      BosonicMatrixElement[{m, n}, bd1 ** b1, {{bd1}, {b1}}],
      BosonicMatrixElement[{2, 0}, Exp[z bd1], {{bd1}, {b1}}]},
-    {Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2], \[Alpha] E^(-Abs[\[Alpha]]^2/2),
+    {Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2], \[Alpha] E^(-Conjugate[\[Alpha]] \[Alpha]/2),
      Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2]},
     TestID -> "BME-Modes-OneModeSpellings"
+]
+
+(* The closed forms of D and S take a symbolic Fock index when m - n is a number: <n|D(g)|n> is
+   e^(-|g|^2/2) L_n(|g|^2), odd differences of S vanish, <2m|S|0> is the squeezed-vacuum amplitude,
+   and <n + 2|S|n> at n = 0, ..., 3 is the integer element. *)
+VerificationTest[
+    {
+        BosonicMatrixElement[{n, n}, DisplacementOperator[g]] - E^(-g Conjugate[g]/2) LaguerreL[n, g Conjugate[g]],
+        BosonicMatrixElement[{n + 1, n}, SqueezeOperator[{r, th}]],
+        Simplify[BosonicMatrixElement[{2 m, 0}, SqueezeOperator[{r, th}]] - Sqrt[(2 m)! Sech[r]] (-E^(I th) Tanh[r])^m/(2^m m!), m \[Element] Integers && m >= 0],
+        Table[Simplify[FunctionExpand[BosonicMatrixElement[{n + 2, n}, SqueezeOperator[{r, th}]] /. n -> j] - BosonicMatrixElement[{j + 2, j}, SqueezeOperator[{r, th}]]], {j, 0, 3}]
+    },
+    {0, 0, 0, {0, 0, 0, 0}},
+    TestID -> "BME-SymbolicIndexClosedForms"
+]
+
+(* Symbolic Fock indices are nonnegative integers, so a branch whose sign of m - n is impossible is
+   dropped: <0|D|n> and <m|S|0> keep one branch, while a fully symbolic <m|S|n> keeps both. *)
+VerificationTest[
+    {
+        BosonicMatrixElement[{0, n}, DisplacementOperator[g]] - (-Conjugate[g])^n E^(-g Conjugate[g]/2)/Sqrt[n!],
+        Length[First[BosonicMatrixElement[{m, 0}, SqueezeOperator[{r, th}]]]],
+        Length[First[BosonicMatrixElement[{0, n}, SqueezeOperator[{r, th}]]]],
+        Length[First[BosonicMatrixElement[{m, n}, SqueezeOperator[{r, th}]]]]
+    },
+    {0, 1, 1, 2},
+    TestID -> "BME-SymbolicIndexNonNegative"
 ]
 
 (* An exponential in one mode of several: the other mode contributes its overlap. *)

@@ -38,6 +38,14 @@ PauliStabilizer::invalidorder = "Gate wires must lie in the register {1, ..., `1
 
 PauliStabilizer::symbolicsigns = "Symbolic signs have no dense state to hand to Method -> `1`; use Method -> \"Stabilizer\" on this tableau."
 
+PauliStabilizer::noncomm = "Pauli strings `1` and `2` anticommute, so no state is stabilized by both."
+
+PauliStabilizer::rank = "The `1` Pauli strings on `2` qubits have rank `3` over F2, so they fix a `4`-dimensional space of states, not a single stabilizer state. A stabilizer state needs `2` independent commuting strings."
+
+PauliStabilizer::inconsistent = "`1` is a product of the other Pauli strings with the opposite sign, so no state is stabilized by all of them."
+
+PauliStabilizer::undetermined = "`1` commutes with every stabilizer generator but is not in the stabilizer group, so this tableau does not determine its outcome."
+
 
 
 (* ============================================================================ *)

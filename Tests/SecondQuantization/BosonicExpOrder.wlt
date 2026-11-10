@@ -761,16 +761,17 @@ VerificationTest[
    orderless Times of operator halves, which machine-number substitution re-sorts; that was
    0.19 off the exact exponential.  Each result is realized as a truncated operator and
    compared with MatrixExp of the generator on the n_a, n_b <= 2 block.  The anti-normal
-   form sums over states above the block, so each mode keeps 25 levels. *)
+   form sums over states above the block, so each mode keeps 25 levels.  The reference is
+   built in machine numbers: exact 625 x 625 products took 28 s of the test's 31. *)
 VerificationTest[
     Module[{s = 25, pars = {r -> 0.3, \[Theta] -> 0.7}, am, bm, idx, gen, exact},
-        am = KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
-        bm = KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
         idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
         gen = r E^(-I \[Theta]) \[FormalA]**\[FormalB] -
             r E^(I \[Theta]) SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]];
-        exact = MatrixExp[(r E^(-I \[Theta]) am . bm -
-            r E^(I \[Theta]) ConjugateTranspose[am] . ConjugateTranspose[bm]) /. pars][[idx, idx]];
+        exact = MatrixExp[(r E^(-I \[Theta]) /. pars) am . bm -
+            (r E^(I \[Theta]) /. pars) ConjugateTranspose[am] . ConjugateTranspose[bm]][[idx, idx]];
         Max[Abs[Normal[ToBosonicOperator[#, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] - exact]] < 10^-12 & /@ {
             BosonicExpOrder[Exp[gen], $vAB, Assumptions -> r > 0] /. pars,
             BosonicExpOrder[Exp[gen], $vAB, Assumptions -> r > 0, "Ordering" -> "Antinormal"] /. pars,
@@ -840,6 +841,43 @@ VerificationTest[
     ],
     {{1, 1, 3, 3}, True},
     TestID -> "TwoModeInterleavedProductNormalOrders"
+]
+
+(* The scalar of e^(-i t H), H = Na + 2 Nb + (ad bd + a b)/2, against its su(1,1) closed form: the vacuum
+   amplitude in normal order, and in antinormal order the same with -3/2 for 3/2 in front of Sin, from
+   a -> ad, ad -> -a.  Det[D] circles the origin with frequency 2 Sqrt[2], so the principal root alone flips
+   sign on t in [1.11, 3.33], [5.55, 7.77], [9.99, 12.2]: t = 2, 6, 10 sit inside, t = 1, 4 outside. *)
+VerificationTest[
+    Module[{h},
+        h = SuperDagger[\[FormalA]]**\[FormalA] + 2 SuperDagger[\[FormalB]]**\[FormalB] +
+            (SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]] + \[FormalA]**\[FormalB])/2;
+        Max[Abs[N[#1 /. (NormalOrdered | AntinormalOrdered)[_, _] -> 1 /. NonCommutativeMultiply -> Times /.
+            Thread[Flatten[$vAB] -> 0] /. t -> {1, 2, 4, 6, 10}, 30] -
+            N[E^(3 I t/2)/(Cos[Sqrt[2] t] + #2 3 I/(2 Sqrt[2]) Sin[Sqrt[2] t]) /. t -> {1, 2, 4, 6, 10}, 30]]] < 10^-25 & @@@ {
+            {BosonicExpOrder[Exp[-I t h], $vAB], 1},
+            {BosonicExpOrder[Exp[-I t h], $vAB, "Ordering" -> "Antinormal"], -1}
+        }
+    ],
+    {True, True},
+    TestID -> "TwoModeRootContinuousInTime"
+]
+
+(* A beam splitter on top of the squeezer, ordered at machine times: each vacuum amplitude matches the
+   truncated evolution, where the principal root alone gave the opposite sign at t = 2, 6.5, 11. *)
+VerificationTest[
+    Module[{s = 20, h, am, bm, vals, vecs},
+        h = SuperDagger[\[FormalA]]**\[FormalA] + 2 SuperDagger[\[FormalB]]**\[FormalB] +
+            (1/2 + I/5) SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]] + (1/2 - I/5) \[FormalA]**\[FormalB] +
+            (SuperDagger[\[FormalA]]**\[FormalB] + SuperDagger[\[FormalB]]**\[FormalA])/3;
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        {vals, vecs} = Eigensystem[h /. NonCommutativeMultiply -> Dot /.
+            {SuperDagger[\[FormalA]] -> ConjugateTranspose[am], SuperDagger[\[FormalB]] -> ConjugateTranspose[bm], \[FormalA] -> am, \[FormalB] -> bm}];
+        Max @ Table[Abs[(BosonicExpOrder[Exp[-I t h], $vAB] /. NormalOrdered[_, _] -> 1 /. NonCommutativeMultiply -> Times /.
+            Thread[Flatten[$vAB] -> 0]) - Abs[vecs[[All, 1]]]^2 . Exp[-I t vals]], {t, {1., 2., 6.5, 11.}}] < 10^-6
+    ],
+    True,
+    TestID -> "TwoModeRootContinuousAtMachineTime"
 ]
 
 EndTestSection[]

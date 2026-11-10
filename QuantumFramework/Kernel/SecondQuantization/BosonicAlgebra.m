@@ -146,29 +146,39 @@ Options[BosonicMatrixElement] = {"Basis" -> "Fock", Assumptions :> $Assumptions}
 
 SetAttributes[BosonicMatrixElement, HoldRest]
 
-BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, (DisplacementOperator | SqueezeOperator)[_?PossibleZeroQ]] :=
+fockIndexQ[x_] := ! ListQ[x] && (! NumericQ[x] || IntegerQ[x] && x >= 0)
+
+SetAttributes[ladderBranch, HoldAll]
+
+ladderBranch[up_, down_, {m_, n_}, d_, c_] := With[{a = {m, n} \[Element] NonNegativeIntegers},
+    Which[
+        NumericQ[d], If[d >= 0, up, down],
+        TrueQ[Refine[d >= 0, a]], Refine[Piecewise[{{up, c}}, 0], a],
+        TrueQ[Refine[d <= 0, a]], Refine[Piecewise[{{down, c}}, 0], a],
+        True, Refine[Piecewise[{{up, d >= 0 && c}, {down, d < 0 && c}}, 0], a]
+    ]
+]
+
+BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, (DisplacementOperator | SqueezeOperator)[_ ? PossibleZeroQ | {_ ? PossibleZeroQ, _}]] :=
     KroneckerDelta[m, n]
 
-BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, DisplacementOperator[\[Alpha]_]] :=
-    With[{a2 = Abs[\[Alpha]]^2},
-        If[m >= n,
-            E^(-a2/2) Sqrt[n!/m!] \[Alpha]^(m - n) LaguerreL[n, m - n, a2],
-            E^(-a2/2) Sqrt[m!/n!] (-Conjugate[\[Alpha]])^(n - m) LaguerreL[m, n - m, a2]
+BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, DisplacementOperator[\[Alpha]_]] :=
+    With[{a2 = Conjugate[\[Alpha]] \[Alpha], d = Simplify[m - n]},
+        E^(-a2/2) ladderBranch[
+            Sqrt[n!/m!] \[Alpha]^d LaguerreL[n, d, a2],
+            Sqrt[m!/n!] (-Conjugate[\[Alpha]])^(-d) LaguerreL[m, -d, a2],
+            {m, n}, d, True
         ]
     ]
 
-
-BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, SqueezeOperator[\[Xi]_]] :=
-    Module[{r = Abs[\[Xi]], \[Phi] = Arg[\[Xi]], \[Tau], s},
-        If[OddQ[m + n], Return[0]];
-        \[Tau] = Exp[I \[Phi]] Tanh[r];
-        If[m >= n,
-            s = (m - n)/2;
-            (-\[Tau]/2)^s / s! Sqrt[m!/n!] Sech[r]^(n + 1/2) *
-                Hypergeometric2F1[-n/2, (1 - n)/2, s + 1, -Sinh[r]^2],
-            s = (n - m)/2;
-            (Conjugate[\[Tau]]/2)^s / s! Sqrt[n!/m!] Sech[r]^(m + 1/2) *
-                Hypergeometric2F1[-m/2, (1 - m)/2, s + 1, -Sinh[r]^2]
+BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, SqueezeOperator[\[Xi]_]] :=
+    With[{r = If[ListQ[\[Xi]], First[\[Xi]], Abs[\[Xi]]], \[Phi] = If[ListQ[\[Xi]], Last[\[Xi]], Arg[\[Xi]]], d = Simplify[m - n]},
+        If[ NumericQ[d] && OddQ[d], 0,
+            ladderBranch[
+                (-E^(I \[Phi]) Tanh[r]/2)^(d/2)/(d/2)! Sqrt[m!/n!] Sech[r]^(n + 1/2) Hypergeometric2F1[-n/2, (1 - n)/2, d/2 + 1, -Sinh[r]^2],
+                (E^(-I \[Phi]) Tanh[r]/2)^(-d/2)/(-d/2)! Sqrt[n!/m!] Sech[r]^(m + 1/2) Hypergeometric2F1[-m/2, (1 - m)/2, 1 - d/2, -Sinh[r]^2],
+                {m, n}, d, Mod[d, 2] == 0
+            ]
         ]
     ]
 
