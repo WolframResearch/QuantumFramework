@@ -259,9 +259,13 @@ QuantumState["W"[subsystemCount : _Integer ? Positive : 3], args___] := Enclose 
 
 
 
+(* The swap of two qudits of dimension d sends |i j> to |j i>: entry (i d + j, j d + i) is 1. It is written out
+   rather than read off a permutation operator, which costs most of the build. *)
+swapMatrix[d_] := SparseArray[Catenate @ Table[{i d + j + 1, j d + i + 1} -> 1, {i, 0, d - 1}, {j, 0, d - 1}], {d ^ 2, d ^ 2}]
+
 wernerState[p_, qb_QuditBasis] /; qb["Qudits"] == 2 :=
     Module[{dim = qb["Dimension"], d = First[qb["Dimensions"]], fAB, sym, as},
-        fAB = QuantumOperator["Permutation"[qb["Dimensions"], Cycles[{{1, 2}}]]]["Matrix"];
+        fAB = swapMatrix[d];
         sym = IdentityMatrix[dim] + fAB;
         as = IdentityMatrix[dim] - fAB;
         QuantumState[p sym 1 / (dim + d) + 1 / (dim - d) (1 - p) as // Simplify, qb]

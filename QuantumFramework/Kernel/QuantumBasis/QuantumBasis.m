@@ -614,7 +614,7 @@ assumedSignRecord[record_, reals_List, values_] := Fold[
 
 signArguments[values_, reals_] := DeleteDuplicates @ Select[
     Join[
-        Cases[values, Power[a_, r_ ? NumericQ] /; ! IntegerQ[r] :> {a, If[r > 0, False, True]}, {0, Infinity}],
+        Cases[values, Power[a_, r_] /; ! NumericQ[a] && realNumberQ[r] && ! IntegerQ[r] :> {a, r < 0}, {0, Infinity}],
         Cases[values, Log[a_] :> {a, True}, {0, Infinity}]
     ],
     With[{symbols = questionSymbols[First[#]]}, Length[symbols] === 1 && MemberQ[reals, First[symbols]] && FreeQ[First[#], _Complex]] &
@@ -792,7 +792,9 @@ answer[_undecided] := Indeterminate
 (* The facts of qb about the given symbols only, for a question that holds no other symbol. *)
 linkedFacts[qb_, symbols_List] := symbolDomainsFacts[KeyTake[qb["SymbolDomains"], symbols], Intersection[qb["Parameters"], symbols]]
 
-questionSymbols[e_] := DeleteDuplicates @ Cases[e, $domainSymbolPattern, {0, Infinity}]
+(* the symbols of an expression, each taken whole: Subscript[theta, 1] and theta[1] are symbols, and the theta
+   inside them is not listed again *)
+questionSymbols[e_] := DeleteDuplicates @ Catenate @ Last @ Reap[e /. s : $domainSymbolPattern :> With[{x = Sow[s]}, x /; True]]
 
 (* Reduce and Simplify read the facts given to them and nothing the user set outside: $Assumptions is replaced,
    and Reduce gets every option it has. *)

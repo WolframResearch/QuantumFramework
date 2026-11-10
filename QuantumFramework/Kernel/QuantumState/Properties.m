@@ -340,14 +340,14 @@ amplitudeWeights[qs_ ? symbolicParametersQ, v_SparseArray] :=
 
 amplitudeWeights[qs_ ? symbolicParametersQ, v_] := valueWeights[qs, Normal[v]]
 
-(* An amplitude holding a symbol with no fact is weighed factor by factor (absSquared), with no Refine: a
-   symbol with no fact keeps |z|^2, and the factors of the real symbols are settled exactly. The others are
-   weighed with their conjugates, taken on the facts in one call. *)
-valueWeights[qs_, xs_List] := With[{reals = realSymbols[qs]}, {real = SubsetQ[reals, questionSymbols[#]] & /@ xs}, {ys = Pick[xs, real]},
-    With[{free = absSquared[qs] /@ xs},
+(* Every amplitude is first weighed factor by factor (absSquared), with no Refine: a real one gives its square, a
+   phase of real symbols 1, a symbol with no fact |z|^2. An amplitude of real symbols that this leaves with an Abs,
+   a complex sum such as Cos[t] + I Sin[t], is weighed with its conjugate, taken on the facts in one call. *)
+valueWeights[qs_, xs_List] := With[{reals = realSymbols[qs]}, {free = absSquared[If[SubsetQ[reals, questionSymbols[xs]], All, reals], qs["Basis"]] /@ xs},
+    With[{rest = MapThread[! FreeQ[#2, _Abs] && SubsetQ[reals, questionSymbols[#1]] &, {xs, free}]}, {ys = Pick[xs, rest]},
         If[ ys === {},
             free,
-            ReplacePart[free, Thread[Position[real, True] -> MapThread[amplitudeWeight[qs], {ys, conjugateOnDomains[ys, qs["Basis"]]}]]]
+            ReplacePart[free, Thread[Position[rest, True] -> MapThread[amplitudeWeight[qs], {ys, conjugateOnDomains[ys, qs["Basis"]]}]]]
         ]
     ]
 ]
@@ -355,11 +355,14 @@ valueWeights[qs_, xs_List] := With[{reals = realSymbols[qs]}, {real = SubsetQ[re
 (* |x|^2 factor by factor: of a product, the product; of an integer power, the power; of e^y, e^(y + Conjugate[y]) with
    the conjugate taken on the facts, so a phase e^(-I theta / 2) with theta real gives 1; of a factor real by
    its structure, its square; anything else, a sum or a symbol with no fact, keeps |x|^2. *)
-absSquared[qs_][x_Times] := Times @@ (absSquared[qs] /@ List @@ x)
-absSquared[qs_][Power[b_, n_Integer]] := absSquared[qs][b] ^ n
-absSquared[qs_][Power[E, y_]] := Exp[2 ComplexExpand[Re[y], nonRealSymbols[qs, y]]]
-absSquared[qs_][x_] /; realExpressionQ[qs][x] := x ^ 2
-absSquared[qs_][x_] := Abs[x] ^ 2
+(* reals is All when every symbol of the state is real, so no factor needs its symbols listed *)
+absSquared[reals_, qb_][x_Times] := Times @@ (absSquared[reals, qb] /@ List @@ x)
+absSquared[reals_, qb_][Power[b_, n_Integer]] := absSquared[reals, qb][b] ^ n
+absSquared[reals_, qb_][Power[E, y_]] /; (reals === All || SubsetQ[reals, questionSymbols[y]]) && FreeQ[y, Power[_, Except[_Integer]] | _Abs | _Conjugate] :=
+    Exp[Expand[y + (y /. Complex[u_, v_] :> Complex[u, - v])]]
+absSquared[reals_, qb_][Power[E, y_]] := Exp[2 ComplexExpand[Re[y], Complement[questionSymbols[y], reals]]]
+absSquared[reals_, _][x_] /; (reals === All || SubsetQ[reals, questionSymbols[x]]) && FreeQ[x, _Complex | Power[_, Except[_Integer]] | _Abs | _Conjugate] || NumericQ[x] && Im[x] == 0 := x ^ 2
+absSquared[_, _][x_] := Abs[x] ^ 2
 
 nonRealSymbols[qs_, x_] := Complement[questionSymbols[x], realSymbols[qs]]
 
@@ -367,14 +370,17 @@ nonRealSymbols[qs_, x_] := Complement[questionSymbols[x], realSymbols[qs]]
    the real form the norm of a phase takes *)
 realExponents[qs_][x_] := x /. Power[E, y_] /; ! FreeQ[y, _Conjugate] :> Exp[ComplexExpand[y, nonRealSymbols[qs, y]]]
 
-realExpressionQ[qs_][x_] := SubsetQ[realSymbols[qs], questionSymbols[x]] && FreeQ[x, _Complex | Power[_, Except[_Integer]] | _Abs | _Conjugate] ||
-    NumericQ[x] && Im[x] == 0
-
 amplitudeWeight[_][x_, cx_] /; FreeQ[cx, _Conjugate] && ! MatchQ[x, _Plus] && FreeQ[factorList[x], _Plus] := x cx
 
 factorList[x_Times] := Replace[List @@ x, Power[b_, _] :> b, {1}]
 factorList[Power[b_, _]] := {b}
 factorList[x_] := {x}
+
+(* a large amplitude of real symbols is weighed as x Conjugate[x], its conjugate taken on the facts: exact, with
+   no Abs, and with no Simplify, which costs more than it shortens there; a small one is simplified on the facts *)
+$weightSimplifyLeafCount = 40
+
+amplitudeWeight[_][x_, cx_] /; LeafCount[x] > $weightSimplifyLeafCount && FreeQ[cx, _Conjugate] := x cx
 
 amplitudeWeight[qs_][x_, _] := First @ refineOnParameters[qs, {Abs[x] ^ 2}]
 
@@ -857,7 +863,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["Type"] === "Unknown"
 
 QuantumStateProp[qs_, "Computational"] := If[
     qs["Basis"]["ComputationalQ"],
-    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "ParameterSpec" -> qs["ParameterSpec"], "SymbolDomains" -> symbolDomainsOf[qs]]],
+    QuantumState[qs["State"], QuantumBasis[qs["OutputDimensions"], qs["InputDimensions"], "Label" -> qs["Label"], "SymbolDomains" -> symbolDomainsOf[qs]]],
     QuantumState[qs,
         "Output" -> QuditBasis[qs["OutputDimensions"]],
         "Input" -> QuditBasis[qs["InputDimensions"]]["Dual"]
@@ -1423,7 +1429,8 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
     ]
 ]
 
-QuantumStateProp[qs_, "BlochVector"] := With[{d = qs["Dimension"], rho = qs["Computational"]["DensityMatrix"]},
+(* a state already in the computational basis is read as it is, so its declared parameters stay real *)
+QuantumStateProp[qs_, "BlochVector"] := With[{d = qs["Dimension"], rho = If[qs["Basis"]["ComputationalQ"], qs["DensityMatrix"], qs["Computational"]["DensityMatrix"]]},
     If[d > 1, Sqrt[d / 2 / (d - 1)], 1] (Chop[Tr[rho . #]] & /@ GellMannMatrices[d])
 ]
 
