@@ -335,15 +335,20 @@ QuantumStateProp[qs_, "Weights"] := Which[
 (* |v_i|^2 as v_i Conjugate[v_i] when v_i is a product whose conjugate holds no complex symbol: the
    real symbols leave the conjugate, so the phases cancel in the product as it is formed. A sum, or an
    amplitude with a complex symbol, keeps |v_i|^2 and its rewriting on the real symbols *)
-amplitudeWeights[qs_ ? symbolicParametersQ, v_SparseArray] := With[{pos = v["NonzeroPositions"]},
-    SparseArray[
-        Thread[pos -> MapThread[amplitudeWeight[qs], {v["NonzeroValues"], Extract[conjugateOnDomains[v, qs["Basis"]], pos]}]],
-        Dimensions[v]
+amplitudeWeights[qs_ ? symbolicParametersQ, v_SparseArray] :=
+    SparseArray[Thread[v["NonzeroPositions"] -> valueWeights[qs, v["NonzeroValues"]]], Dimensions[v]]
+
+amplitudeWeights[qs_ ? symbolicParametersQ, v_] := valueWeights[qs, Normal[v]]
+
+(* An amplitude holding a symbol with no fact keeps |x|^2: neither its conjugate nor the facts can settle it,
+   so it is neither conjugated nor refined. The others are weighed with their conjugates, taken on the facts
+   in one call. *)
+valueWeights[qs_, xs_List] := With[{reals = realSymbols[qs]}, {real = SubsetQ[reals, questionSymbols[#]] & /@ xs}, {ys = Pick[xs, real]},
+    If[ ys === {},
+        Abs[xs] ^ 2,
+        ReplacePart[Abs[xs] ^ 2, Thread[Position[real, True] -> MapThread[amplitudeWeight[qs], {ys, conjugateOnDomains[ys, qs["Basis"]]}]]]
     ]
 ]
-
-amplitudeWeights[qs_ ? symbolicParametersQ, v_] :=
-    MapThread[amplitudeWeight[qs], {Normal[v], Normal[conjugateOnDomains[v, qs["Basis"]]]}]
 
 amplitudeWeight[_][x_, cx_] /; FreeQ[cx, _Conjugate] && ! MatchQ[x, _Plus] && FreeQ[factorList[x], _Plus] := x cx
 
@@ -593,7 +598,7 @@ parameterNormSquared[qs_] := With[{v = Normal @ qs["StateVector"], assumptions =
         Replace[
             If[ zs === {},
                 coefficientOnFacts[n2, assumptions],
-                Collect[Expand[n2], Join[zs, Conjugate /@ zs], Simplify[#, assumptions] &]
+                Collect[Expand[n2], Join[zs, Conjugate /@ zs], coefficientOnFacts[#, assumptions] &]
             ] //. z_ Conjugate[z_] :> Abs[z] ^ 2,
             n_ /; ! FreeQ[n, _Conjugate] :> Total[qs["Weights"]]
         ]

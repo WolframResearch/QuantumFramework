@@ -36,6 +36,7 @@ PackageScope["$verdictMessages"]
 PackageScope["verdictScope"]
 PackageScope["symbolDomainsOf"]
 PackageScope["withRecord"]
+PackageScope["questionSymbols"]
 PackageScope["exponentialZeroTest"]
 PackageScope["assumedSignRecord"]
 PackageScope["reportVerdict"]
@@ -704,13 +705,13 @@ refineOnFacts[a_, qb_] := With[{reals = qb["RealSymbols"]},
 (* What the real symbols settle without Refine: the conjugate of an expression built from them and numbers,
    Sqrt[x^2] = Abs[x] for such a real x, and Abs[x] where interval arithmetic on the ranges gives the sign. *)
 realClean[reals_, ranges_][x_] := x //. {
-    Conjugate[y_] /; conjugateByStructureQ[reals][y] :> (y /. Complex[u_, v_] :> Complex[u, - v]),
+    Conjugate[y_] /; realStructureQ[reals][y] :> y,
     Power[Power[y_, 2], 1 / 2] /; realByStructureQ[reals][y] :> Abs[y],
     Abs[y_] /; realByStructureQ[reals][y] && MatchQ[intervalSign[y, ranges, False], "Positive" | "Nonnegative" | "Zero"] :> y,
     Abs[y_] /; realByStructureQ[reals][y] && MatchQ[intervalSign[y, ranges, False], "Negative" | "Nonpositive"] :> - y
 }
 
-realByStructureQ[reals_][y_] := FreeQ[y, _Complex] && conjugateByStructureQ[reals][y]
+realByStructureQ[reals_][y_] := realStructureQ[reals][y]
 
 (* what Refine may still settle: a conjugate, real or imaginary part, argument, sign or log of an expression in the
    real symbols, an Abs of one that is not linear in a single symbol (whose sign the intervals give exactly), or a
@@ -734,24 +735,39 @@ conjugateOnDomains[a_, qb_] := With[{direct = structuralConjugate[a, qb]},
     If[direct =!= $Failed, direct, refineOnFacts[conjugatedEntries[Replace[ArrayConjugate[a], ArrayConjugate[x_] :> Conjugate[x]], qb], qb]]
 ]
 
-(* The conjugate read off the structure when every entry is built from real symbols of qb, numbers, sums,
-   products, integer powers, exponentials, and trig or hyperbolic functions of such expressions: each real
-   symbol is its own conjugate, I becomes -I, and nothing needs Refine. Anything else gives $Failed. *)
+(* The conjugate read off the structure when every entry is built from symbols, exact numbers, sums,
+   products, integer powers, exponentials, and trig or hyperbolic functions, all of which commute with
+   conjugation: a real symbol of qb is its own conjugate, any other symbol z becomes Conjugate[z], I becomes
+   -I, and nothing needs Refine. Anything else, a square root say, gives $Failed. *)
 structuralConjugate[a_, qb_] /; ! basisFactsQ[qb] := $Failed
 structuralConjugate[a_SparseArray, qb_] := With[{vs = structuralConjugate[a["NonzeroValues"], qb]},
     If[vs === $Failed, $Failed, SparseArray[Thread[a["NonzeroPositions"] -> vs], Dimensions[a], Conjugate[a["Background"]]]]
 ]
 structuralConjugate[a_, qb_] := With[{reals = qb["RealSymbols"]},
-    If[ reals =!= {} && conjugateByStructureQ[Alternatives @@ reals][a], a /. Complex[x_, y_] :> Complex[x, - y], $Failed]
+    If[ reals =!= {} && conjugateByStructureQ[a],
+        a /. {r : Alternatives @@ reals :> r, Complex[x_, y_] :> Complex[x, - y], z : $domainSymbolPattern :> Conjugate[z]},
+        $Failed
+    ]
 ]
 
-conjugateByStructureQ[reals_][x_] := Which[
+conjugateByStructureQ[x_] := Which[
     NumericQ[x], FreeQ[x, _Complex] || MatchQ[x, Complex[_Rational | _Integer, _Rational | _Integer]],
+    MatchQ[x, $domainSymbolPattern], True,
+    MatchQ[x, _List | _Plus | _Times], AllTrue[List @@ x, conjugateByStructureQ],
+    MatchQ[x, Power[_, _Integer]], conjugateByStructureQ[First[x]],
+    MatchQ[x, Power[E, _]], conjugateByStructureQ[Last[x]],
+    MatchQ[x, (Sin | Cos | Tan | Cot | Sec | Csc | Sinh | Cosh | Tanh)[_]], conjugateByStructureQ[First[x]],
+    True, False
+]
+
+(* real by its structure: built as above from the real symbols of qb and real numbers only *)
+realStructureQ[reals_][x_] := Which[
+    NumericQ[x], Im[x] == 0,
     MatchQ[x, reals], True,
-    MatchQ[x, _List | _Plus | _Times], AllTrue[List @@ x, conjugateByStructureQ[reals]],
-    MatchQ[x, Power[_, _Integer]], conjugateByStructureQ[reals][First[x]],
-    MatchQ[x, Power[E, _]], conjugateByStructureQ[reals][Last[x]],
-    MatchQ[x, (Sin | Cos | Tan | Cot | Sec | Csc | Sinh | Cosh | Tanh)[_]], conjugateByStructureQ[reals][First[x]] && FreeQ[First[x], _Complex],
+    MatchQ[x, _Plus | _Times], AllTrue[List @@ x, realStructureQ[reals]],
+    MatchQ[x, Power[_, _Integer]], realStructureQ[reals][First[x]],
+    MatchQ[x, Power[E, _]], realStructureQ[reals][Last[x]],
+    MatchQ[x, (Sin | Cos | Tan | Cot | Sec | Csc | Sinh | Cosh | Tanh)[_]], realStructureQ[reals][First[x]],
     True, False
 ]
 
