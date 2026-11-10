@@ -450,12 +450,12 @@ VerificationTest[
     TestID -> "SymbolDomains-DaggerOfRealAngles"
 ]
 
-(* A symbol the user marks complex keeps its conjugate; so does the square root of a real symbol whose
-   sign is unknown, and of a symbol with no fact at all. *)
+(* A symbol the user marks complex keeps its conjugate; so does the square root of a symbol the user declared
+   real, whose sign is unknown, and of a symbol with no fact at all. *)
 VerificationTest[
     {
         FreeQ[Normal[QuantumOperator["RZ"[\[Theta]], "SymbolDomains" -> {\[Theta] -> Complexes}]["Dagger"]["Matrix"]], Conjugate],
-        FreeQ[Normal[QuantumState[{Sqrt[x], 1}, "Parameters" -> {x}]["DensityMatrix"]], Conjugate],
+        FreeQ[Normal[QuantumState[{Sqrt[x], 1}, "SymbolDomains" -> {x -> Reals}]["DensityMatrix"]], Conjugate],
         FreeQ[Normal[QuantumState[{Sqrt[q], 1}]["DensityMatrix"]], Conjugate]
     },
     {False, False, False},
@@ -743,6 +743,52 @@ VerificationTest[
     {Indeterminate, Indeterminate, Indeterminate},
     {QuantumState::undecided, QuantumState::undecidedtime},
     TestID -> "SymbolDomains-MessagesOncePerOperation"
+]
+
+(* ========== assumed signs ========== *)
+
+(* An amplitude that needs a sign the facts do not give, Sqrt[1 - q] and Sqrt[q] with q a declared parameter
+   and nothing more, gets each argument nonnegative: q in [0, 1] joins the facts of the object, with one
+   message, and every later step uses it, so the density matrix and the probabilities come out free of
+   Conjugate and Abs. *)
+VerificationTest[
+    With[{s = QuantumState[{Sqrt[1 - q], Sqrt[q]}, "Parameters" -> {q}]}, {
+        s["Basis"]["SymbolDomains"],
+        Normal @ s["DensityMatrix"],
+        Normal @ s["ProbabilitiesList"]
+    }],
+    {
+        <|q -> {Interval[{0, 1}]}|>,
+        {{1 - q, Sqrt[1 - q] Sqrt[q]}, {Sqrt[1 - q] Sqrt[q], q}},
+        {1 - q, q}
+    },
+    {QuantumState::assumed},
+    TestID -> "SymbolDomains-AssumedSign"
+]
+
+(* Nothing is assumed for a symbol with a stated domain, the user's explicit Reals included (a channel may be
+   studied outside its physical range on purpose), for a symbol with no fact (it may be complex), or for a
+   sign on two symbols at once, which no range of one symbol can state. *)
+VerificationTest[
+    {
+        QuantumState[{Sqrt[1 - q], Sqrt[q]}, "SymbolDomains" -> {q -> Reals}]["Basis"]["SymbolDomains"],
+        QuantumChannel["BitFlip"[p], "SymbolDomains" -> {p -> Reals}]["Basis"]["SymbolDomains"],
+        QuantumState[{Sqrt[1 - q], Sqrt[q]}]["Basis"]["SymbolDomains"],
+        QuantumState[{Sqrt[a - b], 1}, "Parameters" -> {a, b}]["Basis"]["SymbolDomains"]
+    },
+    {<|q -> {Reals}|>, <|p -> {Reals}|>, <||>, <||>},
+    TestID -> "SymbolDomains-NothingAssumed"
+]
+
+(* The assumed range travels with the facts: a tensor product and an operator built from such amplitudes keep it. *)
+VerificationTest[
+    {
+        QuantumTensorProduct[QuantumState[{Sqrt[1 - q], Sqrt[q]}, "Parameters" -> {q}], QuantumState["0"]]["Basis"]["SymbolDomains"],
+        QuantumOperator[{{Sqrt[g], 0}, {0, 1}}, "Parameters" -> {g}]["Basis"]["SymbolDomains"]
+    },
+    {<|q -> {Interval[{0, 1}]}|>, <|g -> {Interval[{0, Infinity}]}|>},
+    {QuantumState::assumed, QuantumState::assumed},
+    TestID -> "SymbolDomains-AssumedSignTravels"
 ]
 
 EndTestSection[]

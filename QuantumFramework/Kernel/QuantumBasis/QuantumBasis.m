@@ -34,6 +34,7 @@ PackageScope["simplifyOnFacts"]
 PackageScope["yesNo"]
 PackageScope["$verdictMessages"]
 PackageScope["verdictScope"]
+PackageScope["assumedSignRecord"]
 PackageScope["reportVerdict"]
 PackageScope["undecided"]
 PackageScope["nonzeroEntries"]
@@ -67,7 +68,7 @@ QuantumBasis::dependentElements = "elements should be linearly independent";
 
 QuantumBasis::invalidSpec = "`` is not a valid basis specification";
 
-QuantumBasis::domain = "`` is not a symbol domain; a domain is one of Reals, NonNegativeReals, PositiveReals, Integers, NonNegativeIntegers, PositiveIntegers, Complexes, or a real Interval[{a, b}]"
+QuantumBasis::domain = "`` is not a symbol domain; a domain is one of Reals, NonNegativeReals, PositiveReals, Integers, NonNegativeIntegers, PositiveIntegers, Complexes, or a real Interval[{a, b}], whose ends may be -Infinity and Infinity for a half-line"
 
 QuantumBasis::domainspec = "`` is not a symbol domain specification; give rules from a symbol or an indexed symbol to a domain or a list of domains; an empty list takes away every fact about the symbol"
 
@@ -396,7 +397,11 @@ MergeSymbolDomains[objs___] := mergeSymbolDomains[If[Head[#] === QuantumBasis, #
    Complexes holds every other one. *)
 $symbolDomainNames = {Reals, NonNegativeReals, PositiveReals, Integers, NonNegativeIntegers, PositiveIntegers, Complexes}
 
-symbolDomainQ[d_] := MemberQ[$symbolDomainNames, d] || MatchQ[d, Interval[{a_ ? realNumberQ, b_ ? realNumberQ}] /; a <= b]
+symbolDomainQ[d_] := MemberQ[$symbolDomainNames, d] || MatchQ[d, Interval[{a_ ? lowerEndQ, b_ ? upperEndQ}] /; a <= b && ! (a === - Infinity && b === Infinity)]
+
+(* an end of a range: a real number, or -Infinity below and Infinity above for a half-line *)
+lowerEndQ[a_] := realNumberQ[a] || a === - Infinity
+upperEndQ[b_] := realNumberQ[b] || b === Infinity
 
 realNumberQ[x_] := NumericQ[x] && Im[x] == 0
 
@@ -547,8 +552,65 @@ symbolDomainsFacts[record_, declared_List] := With[{
     ]
 ]
 
+domainFact[s_, Interval[{- Infinity, b_}]] := s <= b
+domainFact[s_, Interval[{a_, Infinity}]] := a <= s
 domainFact[s_, Interval[{a_, b_}]] := a <= s <= b
 domainFact[s_, d_] := Element[s, d]
+
+
+(* signs the amplitudes need *)
+
+(* A square root, another non-integer power or a log of a real expression of one of the given real symbols has
+   two values or none unless the sign of its argument is known. When the facts of a record do not give that sign, the
+   argument is taken nonnegative (positive under a log or a negative power) when the facts allow it, and of the
+   opposite sign otherwise; the range of the symbol this leaves joins the record, so every later step reads it
+   as a fact. The arguments are taken in turn, each under the ranges the ones before left. A sign on two
+   symbols at once is not a range of either, and is not assumed. The result is {record, conditions}. *)
+assumedSignRecord[record_, reals_List, values_] := Fold[
+    assumeSign[reals],
+    {record, {}},
+    signArguments[values, reals]
+]
+
+signArguments[values_, reals_] := DeleteDuplicates @ Select[
+    Join[
+        Cases[values, Power[a_, r_ ? NumericQ] /; ! IntegerQ[r] :> {a, If[r > 0, False, True]}, {0, Infinity}],
+        Cases[values, Log[a_] :> {a, True}, {0, Infinity}]
+    ],
+    With[{symbols = questionSymbols[First[#]]}, Length[symbols] === 1 && MemberQ[reals, First[symbols]] && FreeQ[First[#], _Complex]] &
+]
+
+assumeSign[reals_][{record_, conditions_}, {a_, strict_}] := With[{s = First @ questionSymbols[a]},
+    With[{ranges = <|s -> domainsRange[Lookup[record, Key[s], {Reals}]]|>, facts = symbolDomainsFacts[KeyTake[record, {s}], {s}]},
+        If[ intervalSign[a, ranges, False] =!= None,
+            {record, conditions},
+            With[{chosen = SelectFirst[
+                If[strict, {a > 0, a < 0}, {a >= 0, a <= 0}],
+                ! MatchQ[reduceOnFacts[#, {s}, facts], False | $Aborted] &,
+                None
+            ]},
+                With[{range = If[chosen === None, None, conditionInterval[reduceOnFacts[chosen, {s}, facts], s]]},
+                    If[ range === None,
+                        {record, conditions},
+                        {mergeSymbolDomains[{record, <|s -> {range}|>}], Append[conditions, chosen]}
+                    ]
+                ]
+            ]
+        ]
+    ]
+]
+
+(* the closed interval a one-symbol condition from Reduce states, or None *)
+conditionInterval[r_, s_] := Replace[r, {
+    HoldPattern[Inequality[lo_, Less | LessEqual, s, Less | LessEqual, hi_]] :> Interval[{lo, hi}],
+    HoldPattern[(LessEqual | Less)[lo_, s, hi_]] :> Interval[{lo, hi}],
+    HoldPattern[(GreaterEqual | Greater)[s, lo_]] :> Interval[{lo, Infinity}],
+    HoldPattern[(LessEqual | Less)[s, hi_]] :> Interval[{- Infinity, hi}],
+    HoldPattern[Equal[s, c_]] :> Interval[{c, c}],
+    _ -> None
+}]
+
+QuantumState::assumed = "the amplitudes need the signs of `1`; `2` is taken, where the facts allow it, and kept as a fact of the object."
 
 
 (* computing on the facts *)

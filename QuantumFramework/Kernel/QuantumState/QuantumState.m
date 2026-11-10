@@ -124,6 +124,19 @@ QuantumState[x : Except[_ ? QuantumStateQ | _ ? stateQ], basisArgs___] := Quantu
 QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBasisQ] /; KeyExistsQ[data["SymbolDomains"], All] :=
     QuantumState[state, QuantumBasis[<|data, "SymbolDomains" -> allDomainsRecord[data["SymbolDomains"], amplitudeValues[state]]|>]]
 
+(* An amplitude that needs a sign the facts do not give, Sqrt[1 - q] with q a declared parameter and nothing
+   more, gets one: the range it leaves for its symbol joins the facts, with one message (assumedSignRecord).
+   A symbol with any stated domain, the user's, a role's, or one given by "SymbolDomains" -> Reals, keeps it
+   as given: an explicit Reals may mean values outside a channel's physical range on purpose. *)
+QuantumState[state_ ? stateQ, basis : QuantumBasis[data_Association] ? QuantumBasisQ] /;
+    data["ParameterSpec"] =!= {} && ! FreeQ[amplitudeValues[state], Power[_, _Rational] | _Log] :=
+    With[{r = assumedSignRecord[data["SymbolDomains"], Complement[basis["Parameters"], Keys[data["SymbolDomains"]]], amplitudeValues[state]]},
+        (
+            Message[QuantumState::assumed, Replace[Last[r], (h : Greater | GreaterEqual | Less | LessEqual)[a_, 0] :> a, {1}], And @@ Last[r]];
+            QuantumState[state, QuantumBasis[<|data, "SymbolDomains" -> First[r]|>]]
+        ) /; Last[r] =!= {}
+    ]
+
 amplitudeValues[s_SparseArray] := s["NonzeroValues"]
 amplitudeValues[s_List] := Flatten[s]
 amplitudeValues[_] := {}
