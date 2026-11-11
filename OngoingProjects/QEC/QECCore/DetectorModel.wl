@@ -9,6 +9,7 @@ PackageScope[demExactReport]
 PackageScope[codeDetectorModel]
 PackageScope[circuitFaultMechanisms]
 PackageScope[idleMechanisms]
+PackageScope[circuitMechanisms]
 PackageScope[faultEffect]
 PackageScope[recordDetectors]
 PackageScope[codeExtraction]   (* Measurement.wl *)

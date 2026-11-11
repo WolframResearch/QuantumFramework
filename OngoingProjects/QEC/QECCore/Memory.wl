@@ -11,6 +11,7 @@ PackageScope[demDecoderTable]
 PackageScope[demSampledFailure]
 PackageScope[demExactFailure]
 PackageScope[demRate]
+PackageScope[demSampledReport]
 
 
 (* ============================================================================ *)
@@ -146,13 +147,13 @@ demDecoderTable[a_Association, reach_Integer] := demDecoderTable[a, reach] = Mod
    they trip are DISCARDED, and the answer becomes conditional -- so it comes back as
    an association carrying its own acceptance rather than as a bare number that could
    be mistaken for an unconditional probability. *)
-demSampledFailure[a_Association, count_Integer, reach_Integer] := Module[
+demSampledFailure[a_Association, count_Integer, reach_Integer, dec_ : Automatic] := Module[
     {d, o, h, groups, table, dKeys, oKeys, hKeys,
      detectors, observables, heralds, predicted, wrong, accepted, nAcc},
 
     {d, o, h} = demRowKeys[a];
     groups = demGroups[a];
-    table = demDecoderTable[a, reach];
+    table = If[dec === Automatic, demDecoderTable[a, reach], dec];
 
     (* index 0 means no fault, so the key lists are padded at the front *)
     dKeys = Prepend[d, 0];
@@ -177,7 +178,7 @@ demSampledFailure[a_Association, count_Integer, reach_Integer] := Module[
 
     (* A pattern the table does not reach is undecodable, hence a failure; -1 is
        never a real observable key, so those shots count as one. *)
-    predicted = Lookup[table, detectors, -1];
+    predicted = Lookup[decoderLookup[table, detectors], detectors, -1];
     wrong = MapThread[Boole[#1 =!= #2] &, {predicted, observables}];
 
     If[ Lookup[a, "Heralds", 0] === 0,
@@ -206,7 +207,7 @@ demSampledFailure[a_Association, count_Integer, reach_Integer] := Module[
    denominator are slices of the same fold.  That makes the space 2^(det+obs+heralds),
    so $QECExactDetectorLimit bites sooner on a post-selected circuit -- which is
    honest, since post-selection is exactly where sampling is the better route. *)
-demExactFailure[a_Association, reach_Integer] := Module[
+demExactFailure[a_Association, reach_Integer, dec_ : Automatic] := Module[
     {d, o, h, no, nd, nh, dim, sigs, groups, dist, idx, table, wrong, accept, num, den},
 
     nd = a["Detectors"];
@@ -235,7 +236,10 @@ demExactFailure[a_Association, reach_Integer] := Module[
         {rows, groups}
     ];
 
-    table = demDecoderTable[a, reach];
+    table = If[ dec === Automatic,
+        demDecoderTable[a, reach],
+        decoderLookup[dec, DeleteDuplicates[BitShiftRight[idx, no + nh]]]
+    ];
 
     (* 1 on the states the decoder gets wrong, and 1 on the states that survive
        post-selection.  With no heralds every state is accepted and this reduces to
@@ -278,13 +282,39 @@ demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer]
     demRate[a, noise, rounds, count, reach, "BareAncilla"]
 
 demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
-    mode_String] := Module[{dem},
+    mode_String] := demRate[a, noise, rounds, count, reach, mode, Automatic]
+
+(* The decoder at the two noisy levels: the detector model's own lightest-fault table
+   unless matching is asked for, by name or by a matching QECDecoder. *)
+demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
+    mode_String, spec_] := Module[{dem, dec},
     dem = codeDetectorModel[a, noise, rounds, mode];
+    dec = demDecoderFor[dem, spec];
+    If[ dec === $Failed, Return[$Failed]];
     If[ count === None,
-        demExactFailure[dem, reach],
+        demExactFailure[dem, reach, dec],
         If[ noiseSymbolicQ[noise],
             Message[QECLogicalErrorRate::symbolicshots]; $Failed,
-            demSampledFailure[dem, count, reach]
+            demSampledFailure[dem, count, reach, dec]
         ]
     ]
 ]
+
+(* The sampled report for a model already built.  A sweep over the noise rate --
+   QECThreshold's -- builds the model once with the rate symbolic and substitutes
+   each value into it, since the fault list and the detectors do not depend on the
+   rate; building it again at every point is what the sweep would otherwise spend
+   nearly all its time on.  The report has the shape of QECLogicalErrorRate[..., All]
+   whether or not anything was post-selected. *)
+demSampledReport[dem_Association, count_Integer, spec_, reachSpec_] := Module[{dec, reach, r},
+    dec = demDecoderFor[dem, spec];
+    If[dec === $Failed, Return[$Failed]];
+    reach = If[matchingSpecQ[spec], 1, decoderReachFor[dem["Code"], reachSpec]];
+    r = demSampledFailure[dem, count, reach, dec];
+    If[ AssociationQ[r], r, <|"Rate" -> r, "Acceptance" -> 1., "Accepted" -> count, "Shots" -> count|>]
+]
+
+demDecoderFor[dem_Association, "Matching"] := Replace[demMatching[dem], m_Association :> matchingLookup[m]]
+demDecoderFor[dem_Association, QECDecoder[d_Association]] /; d["Method"] === "Matching" :=
+    demDecoderFor[dem, "Matching"]
+demDecoderFor[_, _] := Automatic
