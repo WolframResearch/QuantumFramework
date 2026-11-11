@@ -246,7 +246,15 @@ QECCode[a_Association]["EncodingGates"] := codeEncodingGates[a]
 QECCode[a_Association]["EncodingCircuit"] := Wolfram`QuantumFramework`QuantumCircuitOperator[codeEncodingGates[a]]
 QECCode[a_Association]["EncodingCircuitValidQ"] := codeEncodingValidQ[a]
 
-QECCode[a_Association]["PauliStabilizer"] := Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ codeVectors[a]]
+(* The engine holds states, and m < n generators do not fix one: they fix a
+   2^(n-m)-dimensional space.  So the code is handed over completed to n generators
+   (codeCompletedGenerators), which pins one fiducial codeword, as the tech note
+   describes.  Handing over the bare generators used to be accepted by the engine and
+   built a tableau whose measurements were wrong; since November 2026 the engine
+   refuses strings of rank below n, which is what exposed this. *)
+QECCode[a_Association]["PauliStabilizer"] := With[{gens = codeCompletedGenerators[a]},
+    If[gens === $Failed, $Failed, Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ gens]]
+]
 QECCode[a_Association]["State"] := QECCode[a]["PauliStabilizer"]["State"]
 
 QECCode[a_Association]["Syndrome", err_] := codeSyndrome[a, err]
