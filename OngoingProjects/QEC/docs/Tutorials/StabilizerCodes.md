@@ -571,6 +571,86 @@ QECRemoveQubit[QECCode["5QubitCode"]]["Generators"]
 
 <!-- => {"XZZX", "YXXY"} -->
 
+## Codes that scale
+
+Every code so far has a fixed size. The codes used in practice come in **families** whose distance
+grows with the number of qubits, and whose checks stay local — each touches a few neighbouring
+qubits, whatever the size — which is what lets them be built on a chip. The two families of
+Got26 ch. 17 are constructors of the same code object, so everything above works on them.
+
+`QECCode["Surface", d]` is the rotated surface code, $[[d^2, 1, d]]$: data qubits on a
+$d \times d$ grid, a check on each corner of a $2 \times 2$ block, alternating X and Z like a
+checkerboard, and half-checks of weight two on the boundary — X on the top and bottom, Z on the
+left and right. Those are the two kinds of boundary of sec. 17.1.4, and they are why the code
+holds one logical qubit: logical X runs between the Z-checked sides and logical Z between the
+X-checked ones. Drawn at $d = 5$, with data qubits as dots, red X checks, blue Z checks, and the
+weight-two boundary checks as triangles pointing out of the grid:
+
+```wl
+With[{d = 5, code = QECCode["Surface", 5]},
+    Graphics[{
+        Table[
+            With[{cells = QuotientRemainder[# - 1, d] & /@ QECPauli[g]["Support"], x = StringContainsQ[g, "X"]},
+                {If[x, RGBColor[0.95, 0.6, 0.55], RGBColor[0.55, 0.7, 0.95]], EdgeForm[White],
+                 If[Length[cells] == 4,
+                    Polygon[{#[[2]], -#[[1]]} & /@ cells[[{1, 2, 4, 3}]]],
+                    (* a boundary half-check: a triangle pointing out of the grid *)
+                    With[{pts = {#[[2]], -#[[1]]} & /@ cells},
+                        Polygon[Append[pts, Mean[pts] + 0.5 Which[
+                            cells[[1, 1]] == cells[[2, 1]] == 0, {0, 1},
+                            cells[[1, 1]] == cells[[2, 1]], {0, -1},
+                            cells[[1, 2]] == cells[[2, 2]] == 0, {-1, 0},
+                            True, {1, 0}]]]]]}],
+            {g, code["Generators"]}],
+        Black, PointSize[0.03], Point[Flatten[Table[{c, -r}, {r, 0, d - 1}, {c, 0, d - 1}], 1]]},
+        ImageSize -> 260]
+]
+```
+
+---
+
+`QECCode["Toric", L]` is the toric code of sec. 17.1.1, $[[2L^2, 2, L]]$: qubits on the edges of
+an $L \times L$ lattice on a torus, Z on the four edges of each face, X on the four edges of each
+vertex. The product of all faces is the identity, and so is the product of all vertices
+(eq. 17.3), so one of each is left out; two logical qubits remain, one per way around the torus.
+
+The parameters are not asserted by the construction — they come out of the layer's own rank and
+exact distance search:
+
+```wl
+Dataset @ Association @ Join[
+    Table["Surface " <> ToString[d] -> QECCode["Surface", d]["Parameters"], {d, 2, 4}],
+    Table["Toric " <> ToString[l] -> QECCode["Toric", l]["Parameters"], {l, 2, 4}]]
+```
+
+<!-- => Surface 2, 3, 4 -> {4,1,2}, {9,1,3}, {16,1,4}; Toric 2, 3, 4 -> {8,2,2}, {18,2,3}, {32,2,4} -->
+
+---
+
+On nine qubits the whole error set is still enumerable, so the distance-3 surface code gets an
+exact logical error rate — leading order $p^2$, as a distance-3 code owes — and an exact
+pseudothreshold:
+
+```wl
+With[{s3 = QECCode["Surface", 3]},
+    <|"bit-flip rate" -> Expand[QECLogicalErrorRate[s3, QECNoiseModel["BitFlip", p]]],
+      "pseudothreshold, depolarizing" -> N[QECPseudothreshold[s3, QECNoiseModel["Depolarizing", p]]["Value"]]|>]
+```
+
+<!-- => <|"bit-flip rate" -> 18 p^2 - 70 p^3 + 99 p^4 - 6 p^5 - 168 p^6 + 240 p^7 - 144 p^8 + 32 p^9, "pseudothreshold, depolarizing" -> 0.0974664|> -->
+
+---
+
+The circuits are checked against Stim like every other code in the layer: the distance-3 surface
+code at circuit level and the $L = 3$ toric code at phenomenological level, two million shots each,
+agree with this layer's exact detector rates to within 2.5 sigma on every detector, and PyMatching
+decodes both exported circuits unchanged.
+
+What does not scale is everything that enumerates. The exact rate needs all $4^n$ errors, so it
+stops at $d = 3$, and the distance search takes seconds at $d = 5$ and is out of reach at $d = 7$.
+The decoder does scale: the surface code's own decoder, minimum-weight perfect matching, is built
+in, and [Decoding by matching](#decoding-by-matching) below takes these codes past $d = 3$.
+
 ## Noise
 
 None of the above says anything about whether a code *works*, because a code only means something
@@ -923,7 +1003,8 @@ answer them alike.
 
 The decoders behind the rate can be held. `QECDecoder[code]` is the minimum-weight table,
 `QECDecoder[code, noise]` maximum likelihood (or, at circuit level, the detector model's decoder),
-`QECDecoder[dem]` the detector model's lightest-fault rule:
+`QECDecoder[dem]` the detector model's lightest-fault rule; `"Method" -> "Matching"` on the last
+two is the matching decoder of [Decoding by matching](#decoding-by-matching):
 
 ```wl
 With[{d = QECDecoder[QECCode["SteaneCode"]]}, {d["Method"], d["Decode", {0, 0, 0, 1, 1, 1}]}]
@@ -2063,6 +2144,232 @@ errors, and PyMatching decodes every exported circuit unchanged, which is a seco
 check: a malformed circuit does not produce a detector error model that decomposes into a matching
 graph.
 
+## Decoding by matching
+
+Every decoder above is a table — over errors up to a weight, over cosets, over sets of faults — and
+a table is what stops at $d = 3$. The surface code is decoded in practice by **minimum-weight
+perfect matching** (Got26 sec. 17.2), and `"Method" -> "Matching"` builds that decoder natively.
+
+The idea, simply. On the surface code a single X error trips at most two Z checks. So draw a
+graph: checks are nodes, each possible error is an edge between the checks it trips (or to a
+virtual *boundary* node, if it trips one). A syndrome lights some nodes; an error that explains it
+is a set of paths pairing the lit nodes up, or sending them to the boundary. With independent
+errors of probability $p_e$, the most likely such set minimises $\sum_e w_e$ with
+$w_e = \log\frac{1-p_e}{p_e}$ — a minimum-weight perfect matching on the lit nodes, at
+shortest-path distances. That is Edmonds' problem, solved exactly here by the built-in
+`FindIndependentEdgeSet`.
+
+```wl
+With[{dec = QECDecoder[QECCode["Surface", 3], QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"]},
+    {dec["Method"], dec["Decode", {0, 0, 0, 0, 1, 0, 0, 0}], dec["Graph"]}]
+```
+
+<!-- => {"Matching", "XIIIIIIII", Graph[...]}: the fifth check is the Z check on qubits 1 and 4, lit alone,
+     so the lightest explanation is one X on its corner qubit, matched to the boundary -->
+
+---
+
+Where the answer is already known, matching has to reproduce it. On a line it is majority voting,
+and on the surface code under bit flips — where the X errors are exactly a graph problem — it is
+the maximum-likelihood decoder's equal, polynomial for polynomial:
+
+```wl
+With[{s3 = QECCode["Surface", 3], noise = QECNoiseModel["BitFlip", p]},
+    Simplify[QECLogicalErrorRate[s3, noise, "Decoder" -> "Matching"] - QECLogicalErrorRate[s3, noise]]]
+```
+
+<!-- => 0 -->
+
+---
+
+The point is what it does past $d = 3$. Sampled, at code capacity, the bit-flip rates of
+$d = 3, 5, 7$ at four noise levels:
+
+```wl
+BlockRandom[SeedRandom[1];
+    Dataset @ AssociationMap[
+        Function[p, AssociationMap[
+            QECLogicalErrorRate[QECCode["Surface", #], QECNoiseModel["BitFlip", p], 20000, "Decoder" -> "Matching"] &,
+            {3, 5, 7}]],
+        {1/20, 2/25, 3/25, 4/25}]]
+```
+
+<!-- => p = 0.05: 0.0354, 0.0233, 0.0143    p = 0.08: 0.0849, 0.0776, 0.0688
+        p = 0.12: 0.1576, 0.1781, 0.1982    p = 0.16: 0.2404, 0.2788, 0.3181 -->
+
+Below about $10\%$ the larger code is better, above it worse: the curves cross between $0.08$ and
+$0.12$, around the known $10.3\%$ of matching on this noise. That crossing is the family's
+threshold, a different quantity from the pseudothreshold of one code — and
+[Thresholds of a family](#thresholds-of-a-family) locates it.
+
+---
+
+At circuit level the graph comes from the detector model. Two things happen to a fault on the way
+to an edge. On a CSS code it is first **split** into its X part and its Z part: the two are seen by
+disjoint sets of detectors (Z checks see X errors, X checks see Z errors), so a $Y$, or a two-qubit
+fault with both, is two independent edges — never one edge from an X-check detector to a Z-check
+detector, which would be a shortcut the matching takes between unrelated defects. A part that still
+trips more than two detectors is **decomposed** into edges the graph already has, whose
+observables must add up to its own. This is what Stim's `decompose_errors` does for PyMatching.
+
+Matching against the lightest-fault table on the distance-3 surface code, circuit noise $1/500$,
+three rounds, two hundred thousand shots:
+
+```wl
+With[{s3 = QECCode["Surface", 3], noise = QECNoiseModel["Circuit", 1/500]},
+    BlockRandom[SeedRandom[1];
+        <|"lightest-fault table" -> QECLogicalErrorRate[s3, noise, 200000, "Rounds" -> 3],
+          "matching" -> QECLogicalErrorRate[s3, noise, 200000, "Rounds" -> 3, "Decoder" -> "Matching"]|>]]
+```
+
+<!-- => <|"lightest-fault table" -> 0.0504, "matching" -> 0.0080|> -->
+
+The table, at its default reach of one fault, has no entry for most patterns two faults make, and
+counts each as a failure; matching decodes them. On the same circuit's $\bar{Z}$ observable alone —
+what a Stim memory experiment reads — matching fails in $0.439\%$ of shots, and PyMatching on
+Stim's own graph in $0.443\%$ (StimCrossCheck, November 2026). On Stim's decomposed graph the two
+decoders agree shot for shot.
+
+---
+
+That comparison found something the code-capacity numbers could not. The bare-ancilla circuit
+touches a check's qubits one CNOT at a time, so a fault on the ancilla halfway through leaves the
+check's letter on the qubits not yet touched — the *hook error* of sec. 12.1.1, a pair of data
+errors from one fault. If the pair lies along the logical operator of the same letter, the
+circuit's distance drops in that basis. Logical X runs down a column and logical Z along a row,
+so `QECCode["Surface", d]` carries a **check order**: X checks row by row, Z checks column by column,
+every hook perpendicular to the logical it could have helped build.
+
+```wl
+QECCode["Surface", 3]["CheckOrder"]
+```
+
+<!-- => {{2,3}, {1,2,4,5}, {5,6,8,9}, {7,8}, {1,4}, {2,5,3,6}, {4,7,5,8}, {6,9}} -->
+
+With both kinds of check in reading order, $\bar{X}$ failed in $0.98\%$ of shots and fell by only a
+factor of five when the noise fell by four — the linear term of a distance lost. With the order
+it is $0.40\%$, as low as $\bar{Z}$, and falls by thirteen. Any other code is measured in qubit
+order, as before.
+
+---
+
+What matching refuses. It needs every single-qubit error to trip at most two checks — on a code
+that is not CSS, every $Y$ too. The Steane code, where one X trips three checks, and the five-qubit
+code, whose $Y$'s trip three, are hypergraphs; pairing their defects is not decoding them, so the
+decoder says so instead, at code capacity and at circuit level alike:
+
+```wl
+QECDecoder[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"]
+```
+
+<!-- => QECDecoder::notgraphlike: Matching needs every single-qubit error to trip at most two checks;
+     on this code "IIIIIIX" trips 3. ... -> $Failed -->
+
+The matching is exact but not yet fast. Each distinct syndrome costs one call to
+`FindIndependentEdgeSet` on its lit nodes, remembered afterwards, so a sample pays per distinct
+syndrome rather than per shot; that covers $d \le 7$ comfortably and is no rival to PyMatching's
+sparse blossom at $d = 25$. For that scale the seam of [Decoders as objects](#decoders-as-objects) —
+`QECDecoder[code, f]` around PyMatching itself — is still the way.
+
+## Thresholds of a family
+
+A pseudothreshold compares one code against no code. A **threshold** compares the members of a
+family against each other: it is the noise rate below which a larger member fails less often than
+a smaller one, so that growing the code drives the logical rate to zero (sec. 17.3.5). Its
+signature is the crossing of the curves seen above. `QECThreshold` takes a family — by name and
+sizes, or as a list of codes — and a noise model with one symbolic rate, and finds the crossing.
+
+When every member is small enough for the exact rate, at code capacity, each curve is a polynomial
+and each crossing a root. The repetition code under bit flips crosses at exactly $1/2$, for every
+pair, since $p_L^{(5)} - p_L^{(3)} = 3p^2(1-p)^2(2p-1)$:
+
+```wl
+th = QECThreshold[{"Repetition", {3, 5, 7}}, QECNoiseModel["BitFlip", p]];
+{th["Value"], th["Crossings"], th["Method"]}
+```
+
+<!-- => {1/2, <|{3, 5} -> 1/2, {5, 7} -> 1/2|>, "Exact"} -->
+
+---
+
+Otherwise each curve is sampled on a grid of $p$, spaced evenly in $\log p$, with the matching
+decoder whenever every member is a graph. Each neighbouring pair gives a crossing: the two grid
+points where the larger code stops being better are joined by a line in $\log p$, and the root
+carries the binomial errors of the four rates it came from. With the default range, a coarse pass
+with a fifth of the shots finds the bracket first, and the full pass is laid around it:
+
+```wl
+BlockRandom[SeedRandom[1];
+    thSurface = QECThreshold[{"Surface", {3, 5, 7}}, QECNoiseModel["BitFlip", p]]];
+{thSurface["Value"], thSurface["Crossings"]}
+```
+
+<!-- => {Around[0.0945, 0.0062], <|{3, 5} -> Around[0.0938, 0.0057], {5, 7} -> Around[0.0945, 0.0062]|>} -->
+
+The large-size value for matching on this noise is $10.3\%$ (Dennis, Kitaev, Landahl and Preskill;
+Wang, Harrington and Preskill), and these small sizes reach it within their error bars:
+
+```wl
+thSurface["Plot"]
+```
+
+---
+
+The value reported is the crossing of the two largest members, and the others are kept, because
+pairwise crossings **drift** with size and that drift is information, not noise to average away.
+The repetition code with measurement errors at the same rate as data errors — which is the toric
+code at code capacity in disguise, so its matching threshold is the same $10.3\%$ — shows it:
+
+```wl
+BlockRandom[SeedRandom[1];
+    QECThreshold[{"Repetition", {3, 5, 7}}, QECNoiseModel["BitFlip", p, "MeasurementError" -> p], "Shots" -> 10000]["Crossings"]]
+```
+
+<!-- => <|{3, 5} -> Around[0.091, 0.0027], {5, 7} -> Around[0.111, 0.0074]|> -->
+
+At the phenomenological and circuit levels each member is a memory experiment, run for as many
+rounds as its size. The detector model is built once per member with $p$ symbolic and each grid
+value substituted into it — the faults and detectors do not depend on $p$, and building the model
+is most of a point's cost — which is checked to give the very samples a model built at the point
+gives. The distance-3 and distance-5 surface codes on the bare-ancilla circuit:
+
+```wl
+BlockRandom[SeedRandom[2];
+    QECThreshold[{"Surface", {3, 5}}, QECNoiseModel["Circuit", p], "Shots" -> 4000, "Points" -> 5]["Value"]]
+```
+
+<!-- => Around[0.0027, 0.00025] -->
+
+About $0.3\%$, against the $0.5$–$1\%$ usually quoted for the surface code at circuit level. Two
+things pull it down, and they are not separated here. The extraction measures an X check by
+rotating its data qubits with $H$ before and after the CNOTs (sec. 12.1.1), which puts extra
+one-qubit fault locations on the data every round, where the usual circuits prepare the ancilla in
+$|+\rangle$ and leave the data alone. And a crossing of $d = 3$ and $d = 5$ sits below the
+large-size value, as the drift above shows.
+
+---
+
+The caveats are assembled from the case. At code capacity the first one is the important one:
+
+```wl
+th["Caveats"]
+```
+
+<!-- => code capacity is not a fault-tolerance threshold; it is the maximum-likelihood decoder's (the best possible);
+     exact roots at small sizes can still differ from the large-size threshold -->
+
+When the larger code wins everywhere in the range, the value is `Missing["AboveRange"]` and the
+caveats say so, rather than a crossing being invented; `"Range"` moves the grid.
+
+---
+
+"Threshold" has a second meaning, and the function answers it too. Given a code alone,
+`QECThreshold[code, "Method" -> "Concatenation"]` gives a *rigorous lower bound* on the threshold of
+concatenating its fault-tolerant protocol, from the protocol's extended rectangles and their
+malignant sets (Got26 ch. 14). For the 7-qubit code it is $1.46 \times 10^{-5}$. That is a proof
+that a threshold exists, under adversarial noise, not an estimate of where one lies; section 8 of
+the *Fault-Tolerant Gadgets* tech note builds it.
+
 ## Where this comes from
 
 Every claim above is either computed by the package and checked against an independent oracle, or
@@ -2088,7 +2395,12 @@ Correction* unless the thesis is named.
 | Serial extraction, waiting, and why idle noise matters more not less | Book §15.5.1, §15.5.2 |
 | Detectors as differences of repeated noisy syndromes | Dennis, Kitaev, Landahl, Preskill, [arXiv:quant-ph/0110143](https://arxiv.org/abs/quant-ph/0110143) |
 | The detector error model as an object, and the Stim syntax | Gidney, [arXiv:2103.02202](https://arxiv.org/abs/2103.02202) |
-| Minimum-weight matching on a detector model | Higgott and Gidney, PyMatching |
+| Decoding the surface code as minimum-weight matching | Book §17.2; Dennis, Kitaev, Landahl, Preskill (above) |
+| Minimum-weight perfect matching | Edmonds, *Can. J. Math.* 17, 449 (1965) |
+| Matching on a detector model, and decomposing its faults into edges | Higgott and Gidney, PyMatching; Gidney (above) |
+| Hook errors and the CNOT order of the surface code | Book §12.1.1; Tomita and Svore, [arXiv:1404.3747](https://arxiv.org/abs/1404.3747) |
+| That the surface-code family has a threshold | Book §17.3.5 |
+| The threshold as the crossing of the family's curves; 10.3 % for matching at code capacity, and the repetition code with measurement errors as the same problem | Dennis, Kitaev, Landahl, Preskill (above); Wang, Harrington, Preskill, [arXiv:quant-ph/0207088](https://arxiv.org/abs/quant-ph/0207088) |
 
 Two places where this note is deliberately outside the sources, and says so rather than implying
 cover it does not have. The exact circuit-level rate is a closed-form polynomial obtained by
@@ -2123,8 +2435,9 @@ for a decoder retuned at each p.
 
 **The circuit-level decoder is minimum weight over fault subsets, up to a reach.** It is exact at
 low weight and explodes combinatorially past it, so it stops and says so at
-`$QECDecoderSubsetLimit`. A matching decoder plugs in at the detector model and returns the same
-kind of answer; that is roadmap work, not a gap in the model.
+`$QECDecoderSubsetLimit`. `"Decoder" -> "Matching"` replaces it with minimum-weight matching,
+which has no reach and does not explode; its weights are also set at `$QECDecoderProbeRate` when
+the noise is symbolic, and it is the exact minimum-weight matching, not an approximation of one.
 
 **The default extraction circuit is not fault tolerant, and is not claimed to be.** Its ancillas
 are bare rather than verified, which is what produces the hook errors measured above. That is an
@@ -2148,7 +2461,7 @@ weakest.
 ## How this is checked
 
 Nothing above is trusted because the package computed it. Every fast routine is cross-checked
-against a slow, obvious one, and the checks run as a suite of 720 tests.
+against a slow, obvious one, and the checks run as a suite of 767 tests.
 
 | What | Checked against |
 |---|---|
@@ -2183,6 +2496,7 @@ against a slow, obvious one, and the checks run as a suite of 720 tests.
 | The code-space probability | The dense projector: $1/6$ on five copies of $|R\rangle$ |
 | The Clifford hierarchy level | The book's own placements: $T$, Toffoli, CCZ, $CS$ at 3, and one level per halving of the angle |
 | The pseudothreshold | The binomial tail of the repetition code, which crosses at exactly $1/2$ |
+| The surface and toric codes | Their known parameters from the rank and the exact distance search, locality of every check, and Stim sampling their circuits |
 
 The habit is worth keeping when extending the layer: a result checked only against the code that
 produced it is not checked.

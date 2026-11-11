@@ -8,15 +8,17 @@ want to ask about one — its logical operators and distance, its syndromes and 
 a circuit that prepares a codeword, a circuit that measures its checks, and whether a
 logical qubit survives a given noise model.
 
-Priorities are set by [`QEC-Development-Plan.md`](QEC-Development-Plan.md). Items 1 and 2
-of that plan are done; 3 is partly done; 4 and 5 are not started.
+Priorities are set by [`QEC-Development-Plan.md`](QEC-Development-Plan.md). Items 1 to 3
+of that plan are done; 4 is done for the surface and toric codes; 5 is done at the level of
+analysis of the book's chapter 14.
 
 **Start here:** [`docs/Tutorials/StabilizerCodes.nb`](docs/Tutorials/StabilizerCodes.nb) —
-a tech note in 28 sections with 104 runnable examples, which is the guided tour of
+a tech note in 34 sections with 130 runnable examples, which is the guided tour of
 everything below. Its source is the markdown beside it; the notebook is generated.
 [`QECCoreInternals`](docs/Tutorials/QECCoreInternals.nb) goes file by file, and
 [`FaultTolerantGadgets`](docs/Tutorials/FaultTolerantGadgets.nb) covers the six gadget
-objects.
+objects, verified ancillas, the extended rectangles behind the concatenation threshold, and the
+magic state that makes the protocol universal.
 
 The public surface was redesigned after an API audit
 ([`QEC-API-Audit-and-Redesign.md`](QEC-API-Audit-and-Redesign.md)); what was done, and the
@@ -28,8 +30,8 @@ and say what replaced them.
 ## What is here
 
 ```
-QECCore/           the layer: 28 files and a loader, ~7,400 lines, 21 public functions
-Tests/             720 tests in 26 MUnit files, plus a local runner
+QECCore/           the layer: 33 files and a loader, ~9,600 lines, 23 public functions
+Tests/             790 tests in 29 MUnit files, plus a local runner
 StimCrossCheck/    the external oracle: emit the circuits, compare against Stim
 docs/              markdown sources, the build script, and the built notebook
 References/        an index of the source material (the PDFs are not in the repo)
@@ -153,9 +155,9 @@ standard errors. It needs a Python install, which is why it sits outside the `.w
 |---|---|
 | 1. Rebuild and QA the code core | Done. Remaining: move into the paclet, then the guide page and one reference page per public symbol; harvest the older scattered QEC notebooks |
 | 2. Decoder and noise model | Done — three noise levels, the extraction circuit, the detector error model, the memory experiment exactly and by sampling, the Stim bridge |
-| 3. Logical error rate and threshold | Rate done at all three levels. `QECThreshold[family, noise]` not written; it needs item 4 to have a family to cross |
-| 4. Scalable families | Not started: surface, toric, bivariate-bicycle qLDPC. They slot into `Families.wl` and the rest of the layer needs no change. Matching decoders (PyMatching) plug into the detector model here |
-| 5. Fault-tolerant operations, resource counting | Not started |
+| 3. Logical error rate and threshold | Done. The rate at all three levels; `QECPseudothreshold` for one code; `QECThreshold` for a family, exact where the rates are and sampled with error bars otherwise |
+| 4. Scalable families | Surface and toric done, with a native minimum-weight matching decoder that reproduces PyMatching. Bivariate-bicycle qLDPC codes are not started |
+| 5. Fault-tolerant operations, resource counting | Done at the book's level of analysis: verified cats, Steane EC with verified ancillas, transversal gates, the `FT(C)` substitution, extended rectangles with malignant-pair counting, the π/8 gate by magic-state injection (prepared, tested and checked on state vectors), the concatenation threshold bound for the Clifford and the universal gate set, and the overhead of concatenation (table 14.1). Not built: magic-state distillation, `FT(C)` with T gates in it (a Clifford correction conditioned on an outcome does not fit in a Pauli frame), and malignant triples |
 
 ## Sources
 

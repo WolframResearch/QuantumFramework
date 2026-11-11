@@ -152,6 +152,8 @@ QECSyndromeCircuit::noprop = "`1` is not a property of QECSyndromeCircuit. Use c
 
 $circuitOneQubitOps = {"H", "S", "Sdg", "V", "Vdg", "X", "Y", "Z"};
 
+QECDetectorModel::nonclifford = "Instruction `2` is a `1` gate, which takes a Pauli error to something that is not a Pauli; the Pauli frame cannot follow it.";
+
 (* CZ is here because a fault-tolerant Pauli measurement needs controlled-P from the
    ancilla to the data (book sec. 12.1.2), and conjugating the data letter to Z with the
    rotations above turns every controlled-P into a controlled-Z.  Note the direction is
@@ -183,22 +185,23 @@ letterAt[v_List, n_Integer, q_Integer] := {v[[q]], v[[n + q]]}
 rotation[f_, v_List, n_Integer, support_List] :=
     Table[With[{g = f[letterAt[v, n, q]]}, If[g === None, Nothing, {g, q}]], {q, support}]
 
-(* One generator, one ancilla, one round. *)
-generatorInstructions[v_List, n_Integer, ancilla_Integer] := With[
-    {support = Select[Range[n], letterAt[v, n, #] =!= {0, 0} &]},
-    Join[
-        {{"R", ancilla}},
-        rotation[basisGate, v, n, support],
-        Table[{"CNOT", q, ancilla}, {q, support}],
-        rotation[unbasisGate, v, n, support],
-        {{"M", ancilla}}
-    ]
+(* One generator, one ancilla, one round.  The CNOTs follow the given order of the
+   support, qubit order when none is given. *)
+generatorInstructions[v_List, n_Integer, ancilla_Integer] :=
+    generatorInstructions[v, n, ancilla, Select[Range[n], letterAt[v, n, #] =!= {0, 0} &]]
+
+generatorInstructions[v_List, n_Integer, ancilla_Integer, support_List] := Join[
+    {{"R", ancilla}},
+    rotation[basisGate, v, n, support],
+    Table[{"CNOT", q, ancilla}, {q, support}],
+    rotation[unbasisGate, v, n, support],
+    {{"M", ancilla}}
 ]
 
 codeCircuitInstructions[a_Association, rounds_Integer] := codeCircuitInstructions[a, rounds] = With[
-    {n = a["Qubits"], mat = a["CheckMatrix"]},
+    {n = a["Qubits"], mat = a["CheckMatrix"], order = codeCheckOrder[a]},
     Catenate @ Table[
-        Catenate @ Table[generatorInstructions[mat[[j]], n, n + j], {j, Length[mat]}],
+        Catenate @ Table[generatorInstructions[mat[[j]], n, n + j, order[[j]]], {j, Length[mat]}],
         {rounds}
     ]
 ]
@@ -303,6 +306,8 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
                still emitted rather than elided: the encoder produces them, and a
                gate the noise model cannot see is a fault location silently lost. *)
             "X" | "Z" | "Y", Null,
+            (* a Pauli pushed through T is not a Pauli: refuse rather than drop it *)
+            "T" | "Tdg", Message[QECDetectorModel::nonclifford, First[step], i]; Return[$Failed, Module],
             "M",    Internal`StuffBag[out, x[[step[[2]]]]],
             "MH",   Internal`StuffBag[heralds, x[[step[[2]]]]]
         ];

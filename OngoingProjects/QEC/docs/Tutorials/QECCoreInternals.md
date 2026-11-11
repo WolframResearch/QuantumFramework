@@ -1716,7 +1716,8 @@ the Pauli mixture has the channel's own superoperator.
 
 ## Decoder.wl — three decoders that already existed, given one head
 
-`QECDecoder` adds no decoding. Its four methods delegate: `"MinimumWeight"` to
+`QECDecoder` adds no decoding of its own except matching, which has its own file below. The other
+four methods delegate: `"MinimumWeight"` to
 `codeDecoderToWeight`, `"MaximumLikelihood"` to `codeCosetRepresentatives` and
 `codeMaximumLikelihoodDecoder`, `"DetectorModel"` to `demDecoderTable`, and `"Function"` to whatever
 was passed. The rate consumes decoders as syndrome-key → class-key tables; `decoderClassTable` builds
@@ -1734,6 +1735,50 @@ engine returns (a number without heralds, an association with) into one report s
 reads the rate off it, and the public entry points choose which of the two to return by whether `All`
 was passed. The detector model's `demExactReport` is memoised, so `"LogicalErrorRate"`,
 `"Acceptance"` and `"Failure"` cost one computation between them.
+
+## Matching.wl — pairing defects
+
+The fifth method, `"Matching"`, is the first decoder in the layer that does not enumerate.
+`matchingFromMechanisms` turns a list of mechanisms — detectors tripped, observable flipped,
+probability — into a weighted graph: one node per detector plus a boundary node, parallel edges
+merged ($p + q - 2pq$ for the same observable, the likelier kept across different ones), weights
+$\log\frac{1-p}{p}$, and all-pairs distances computed once with `GraphDistanceMatrix`.
+`matchingDecodeIndices` then solves one syndrome: the lit nodes, a private copy of the boundary for
+each, and `FindIndependentEdgeSet` on weights $C - w$, which is maximum-cardinality and then
+maximum-weight, hence perfect and of minimum $w$. The observable is the XOR along the matched
+shortest paths, memoised per pair of nodes.
+
+The mechanisms come from two places. `codeMatching` uses the single-qubit $X_q$ and $Z_q$ at code
+capacity. `demMatching` uses a detector model's rows, and on a CSS code splits each row first:
+detector $(r, i)$ is check $i$, so its type is read off the check matrix, the row's Z-check
+detectors and its $\bar{Z}$-product bits make the X part, the X-check detectors and the
+$\bar{X}$-product bits the Z part. Without the split, a $Y$ is an edge from an X-check detector to a
+Z-check one, and on the distance-3 surface code at circuit level that added 40 such shortcuts to
+the graph and took $\bar{Z}$ failures from $0.44\%$ to $0.68\%$.
+
+`codeGraphlikeQ` decides which codes match at all — every $X_q$ and $Z_q$ (and $Y_q$, off CSS) trips
+at most two checks — and both constructors ask it, unmemoised, so a refused code says why every
+time. The decoder is lazy: `matchingLookup` wraps the graph, and `decoderLookup` turns it into a
+syndrome → class table only for the syndromes a rate actually meets.
+
+```wl
+With[{m = Wolfram`QuantumFramework`QEC`PackageScope`demMatching[
+        First @ QECDetectorModel[QECCode["Surface", 3], QECNoiseModel["Circuit", 1/500], 3]]},
+    {m["Detectors"], Length[m["Edges"]], m["DroppedMechanisms"]}]
+```
+
+<!-- => {32, 110, 0} -->
+
+---
+
+The comparison with PyMatching is also what found the missing **check order**. `generatorInstructions`
+takes the order in which a check's CNOTs touch its qubits, `codeCheckOrder` supplies it — the
+code's `"CheckOrder"` key when it has one, qubit order otherwise — and `QECCode["Surface", d]` stores
+row-major order for X checks and column-major for Z checks, so that the hook pair of
+[The hook error](#the-hook-error) is perpendicular to the logical of its own letter. In qubit order
+the Z checks' hooks lay along logical Z and cost $\bar{X}$ a distance. Every consumer of the
+instruction list — the frame propagator, the detector model, the Stim writer — goes through
+`codeCircuitInstructions`, so all of them follow the order at once.
 
 ## Deprecated.wl — the names that were retired
 
@@ -1787,6 +1832,78 @@ encoding help at low noise, and only then is the first crossing where it *stops*
 the value is `Missing["EncodingDoesNotHelp"]` and the roots go to `"Crossings"`. The caveats are
 assembled from the case — the level, the rounds, whether the rate is post-selected — not printed as
 boilerplate.
+
+## Threshold.wl — crossings, exact or sampled
+
+`QECThreshold` resolves its members first (`thresholdMembers`): a family by name and sizes, whose
+sizes also serve as each memory experiment's rounds, or a list of codes, ordered by qubit count. It
+then takes one of two routes.
+
+The **exact** route runs when no shot count is given, the noise is at code capacity and every member
+is within `$QECExactEnumerationLimit`. Each rate is the exact report's polynomial, and
+`exactCrossing` solves `large == small` on $(0, 1)$ and keeps the root where the difference goes
+from negative to positive, checked numerically just either side of it.
+
+The **sampled** route builds one curve per member on a grid even in $\log p$. `pointSampler` is
+where the cost is decided: at code capacity it calls the rate directly; below it, it builds the
+detector model once with $p$ symbolic (`codeDetectorModel`) and samples each substituted copy
+through `demSampledReport`, a small entry point added to `Memory.wl` for this. The test file checks
+that a substituted model gives the same samples, under the same seed, as one built at the point.
+`crossingBracket` finds the **last** grid interval where the larger code goes from better to worse
+— at low $p$ the difference of two near-zero rates changes sign on noise alone — and
+`sampledCrossing` interpolates the root in $\log p$, propagating the four rates' binomial errors
+with `AroundReplace`. With no such interval, whichever code is ahead at the top of the range decides
+between `Missing["AboveRange"]` and `Missing["BelowRange"]`.
+
+```wl
+With[{th = QECThreshold[{"Repetition", {3, 5}}, QECNoiseModel["BitFlip", p]]},
+    {th["Value"], th["Method"], th["Rates"]}]
+```
+
+<!-- => {1/2, "Exact", <|3 -> (3 - 2 p) p^2, 5 -> p^3 (10 - 15 p + 6 p^2)|>} -->
+
+## ExRec.wl and Malignant.wl — the threshold theorem's bookkeeping
+
+`QECErrorCorrection[..., "Ancilla" -> "Verified"]` is built from **pieces** (`steanePieces`): each is
+a region name, its instructions, and the herald checks it carries. The regions and the herald
+positions are read off the pieces, never matched out of the flat list. `cssZeroInstructions` is the
+CSS encoder (Hadamards on the pivots of the row-reduced X part, CNOTs packed into layers by
+`cnotLayers`); `verificationChecks` gives the parities a clean comparison leaves at zero; and
+`acceptedQ` applies them to a run's heralds. `steaneResidual` is the measured claim: one fault, the
+gadget's own correction (`cssCorrection`, the lightest error of a syndrome), the residual's weight
+modulo the stabilizer.
+
+`exRecLayout` assembles an exRec as named parts — `"LeadingEC"`, the gadget, `"TrailingEC"` — with two
+workspaces per block, so the trailing EC's ancillas are prepared while the leading EC runs.
+`exRecLocations` lists every location with the Paulis it can carry: the detector model's own
+`circuitMechanisms` for the instructions, and `exRecLiveWaits` for the waits. A live wait is a qubit
+left alone between two of its instructions, the first neither a measurement nor a reset — stricter
+than `circuitIdleSlots`, which charges every idle qubit because the detector model wants idling
+everywhere.
+
+`exRecMalignantCounts` is the counting. `exRecAtomEffects` propagates each single-qubit X and Z once
+and packs its effect into ten integers: herald parities, leading and trailing syndromes per block,
+the frame at the seam and at the end, and the readout. `blockTables` holds, over all $2^n$ frames,
+the syndrome, the correction and the decoded logical bits. A pair of faults is then an XOR, the
+leading correction's own downstream effect is a table over its $2^{nB}$ values, and the verdict on
+every Pauli choice at a location against every choice at all later locations is one vectorised pass.
+The test file checks it pair by pair against a direct simulation written independently.
+
+```wl
+With[{r = QECExtendedRectangle[QECCode["SteaneCode"], "Measurement"]},
+    {r["Locations"], r["MalignantSingles"], r["MalignantPairs"]}]
+```
+
+<!-- => {179, 0, 507} -->
+
+`Magic.wl` holds the $\pi/8$ pieces. `magicStateInstructions` is the CSS encoder plus one wire: the
+representative of $\bar{X}$ returned by `magicWire` has no support on the pivots of the X checks
+(it is reduced against them with `gf2Reduce`), so the fan-out never writes into a qubit a check
+still needs in $|0\rangle$. `magicTestInstructions` is the cat measurement of fig. 14.9, and
+`instructionStateVector` is a plain state-vector simulator for small instruction lists, which is
+how the encoder, the test and the injection are checked: the frame cannot follow a $T$, and
+`framePropagate` refuses one with `QECDetectorModel::nonclifford` rather than letting it pass as
+the identity.
 
 ## Where this comes from
 

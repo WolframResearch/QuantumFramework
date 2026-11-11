@@ -37,7 +37,8 @@ $QECMemoisedFunctions := {
     transversalCliffordWords, transversalGateNames, transversalPatterns,
     ftGateWord,
     codeEncoderMatrix, codeSyndromeProjectors, codeLogicalClassPaulis, demExactReport,
-    codeStabilizerGroup, hierarchyPaulis
+    codeStabilizerGroup, hierarchyPaulis, codeMatchingGraph, demMatchingGraph, codeNonGraphlikeLetter,
+    exRecMalignantCounts, blockTables, cssCorrectionTable, correctionResidualWeights, hadamardIsLogicalQ
 };
 
 (* A cached answer is a rule whose left-hand side holds no pattern: its arguments

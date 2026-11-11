@@ -40,6 +40,39 @@ decoded every exported circuit unchanged.
 CSS, its generators carry `Y`, and so it is the only case that exercises the
 sqrt(X) basis change and its round trip through Stim's `SQRT_X`.
 
+## Result of the run on 2026-11-03: the scalable families
+
+Two more cases, added with `QECCode["Surface", d]` and `QECCode["Toric", L]`, two million shots
+each (Stim 1.16.0, PyMatching 2.4.0).
+
+| case | detectors | max sigma | observable (ours, exact) | observable (Stim) | sigma | MWPM |
+|---|---|---|---|---|---|---|
+| `surface3-circ` | 32 | 2.49 | 0.06574 | 0.06549 | 1.42 | 0.00443 |
+| `toric3-phen` | 48 | 2.23 | 0.03869 | 0.03874 | 0.39 | 0.00129 |
+
+80 detector rates and 2 observable rates, all within 2.5 sigma; PyMatching decodes both. The
+`surface3-circ` MWPM column is the first number in this table that a native matching decoder in the
+layer will have to reproduce.
+
+## Result of the run on 2026-11-04: the surface-code check order and the native matching decoder
+
+`surface3-circ` re-emitted after `QECCode["Surface", d]` started carrying its CNOT order (`code["CheckOrder"]`: X checks
+row by row, Z checks column by column, so no hook error lies along a logical operator), two million
+shots:
+
+| case | detectors | max sigma | observable (ours, exact) | observable (Stim) | sigma | MWPM |
+|---|---|---|---|---|---|---|
+| `surface3-circ` | 32 | 1.61 | 0.06574 | 0.06582 | 0.43 | 0.00443 |
+
+The `Z-bar` statistics do not move with the Z-check order -- that order only places Z errors -- which
+is what the unchanged exact rate shows. The layer's own `QECDecoder[..., "Method" -> "Matching"]`,
+on the graph it builds from its own detector model, fails on `Z-bar` in 0.439 % of 200 000 shots of
+the same circuit, against PyMatching's 0.443 %. On Stim's own decomposed graph the two decoders
+agree shot for shot (100 000 shots, 100 %). The native decoder also reports `X-bar`, which this
+single-basis experiment cannot: 0.40 %, and its scaling from p = 1/500 to 1/2000 (a factor 13)
+is quadratic. With the old row-by-row Z checks it was 0.98 % and fell by only a factor 5 -- the
+linear term of a hook error along logical `Z`.
+
 ## What this does and does not establish
 
 It establishes that the emitted circuit, the fault enumeration, the frame

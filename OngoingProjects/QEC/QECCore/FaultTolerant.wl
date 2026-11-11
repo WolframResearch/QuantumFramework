@@ -5,6 +5,8 @@ Package["Wolfram`QuantumFramework`QEC`"]
 PackageExport[QECFaultTolerantCircuit]
 
 PackageScope[ftGateWord]
+PackageScope[ftGateInstructions]
+PackageScope[ftTwoQubitInstructions]
 PackageScope[ftRelocate]
 PackageScope[ftPreparation]
 PackageScope[ftMeasurement]
@@ -117,11 +119,19 @@ ftRelocate[instr_List, n_Integer, offset_Integer, dataBase_Integer, ancillaBase_
 
 (* Preparation of an encoded |0>: reset the block and run the code's encoder.  Not
    fault tolerant, and reported as such rather than assumed away. *)
-ftPreparation[a_Association, b_Integer] := With[{n = a["Qubits"], base = (b - 1) a["Qubits"]},
+ftPreparation[a_Association, b_Integer] := ftPreparation[a, b, 1, "Encoder"]
+
+ftPreparation[a_Association, b_Integer, _Integer, "Encoder"] := With[{n = a["Qubits"], base = (b - 1) a["Qubits"]},
     Join[
         Table[{"R", base + q}, {q, n}],
         codeEncodedZeroInstructions[a, base]
     ]
+]
+
+(* Verified: the block itself is the kept copy, and the first n qubits of its own
+   error-correction workspace -- idle at this point -- are the checker. *)
+ftPreparation[a_Association, b_Integer, blocks_Integer, "Verified"] := With[{n = a["Qubits"]},
+    verifiedZeroInstructions[a, (b - 1) n, blocks n + (b - 1) ancillaWidth[a, "Verified"]]
 ]
 
 (* Measurement of the logical Z: measure every qubit of the block.  The logical bit
@@ -145,11 +155,13 @@ ftReadoutSupport[a_Association] := With[
 (* The error correction gadget, moved onto block b with that block's own ancilla
    workspace -- one workspace per block, so that the ECs of one layer can run in
    parallel rather than queueing on a shared ancilla. *)
-ftCorrection[a_Association, b_Integer, blocks_Integer, order_String] := With[
+ftCorrection[a_Association, b_Integer, blocks_Integer, order_String] := ftCorrection[a, b, blocks, order, "Encoder"]
+
+ftCorrection[a_Association, b_Integer, blocks_Integer, order_String, mode_String] := With[
     {n = a["Qubits"]},
     ftRelocate[
-        steaneInstructions[a, n, order], n, n,
-        (b - 1) n, (blocks + b - 1) n
+        Catenate[steanePieces[a, n, order, mode][[All, 2]]], n, n,
+        (b - 1) n, blocks n + (b - 1) ancillaWidth[a, mode]
     ]
 ]
 
@@ -196,8 +208,10 @@ ftTwoQubitInstructions[a_Association, g_String, c_Integer, t_Integer] := With[
    The measurement record is tracked while emitting, not recovered afterwards: the
    n outcomes of a measurement gadget sit in the middle of a record otherwise made
    of EC outcomes, and their positions are what a decoder needs. *)
-ftAssemble[a_Association, circuit_List, blocks_Integer, order_String] := Catch[Module[
-    {n = a["Qubits"], support, layers, status, out, rows, readouts, records, emit, touched},
+ftAssemble[a_Association, circuit_List, blocks_Integer, order_String] := ftAssemble[a, circuit, blocks, order, "Encoder"]
+
+ftAssemble[a_Association, circuit_List, blocks_Integer, order_String, mode_String] := Catch[Module[
+    {n = a["Qubits"], support, layers, status, out, rows, readouts, records, emit, touched, heralds, checks},
 
     support = ftReadoutSupport[a];
     If[support === $Failed, Throw[$Failed, "QECFaultTolerantCircuit"]];
@@ -208,6 +222,17 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String] := Catch[M
     rows = Internal`Bag[];
     readouts = <||>;
     records = 0;
+    heralds = 0;
+    checks = Internal`Bag[];
+
+    (* The herald checks of a verified gadget are positions among ITS heralds;
+       shifted by the heralds already emitted they become positions in the whole
+       record of heralds. *)
+    emit[kind_, location_, bs_List, instr_List, hc_List] := (
+        Internal`StuffBag[checks, {heralds + #[[1]], #[[2]]} & /@ hc, 1];
+        heralds += Count[instr, {"MH", _}];
+        emit[kind, location, bs, instr]
+    );
 
     emit[kind_, location_, bs_List, instr_List] := (
         Internal`StuffBag[out, instr, 1];
@@ -230,7 +255,8 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String] := Catch[M
                 touched = Join[touched, qs];
                 Which[
                     op === "R",
-                        emit["Preparation", step, qs, ftPreparation[a, First[qs]]];
+                        emit["Preparation", step, qs, ftPreparation[a, First[qs], blocks, mode],
+                            If[mode === "Verified", {{Range[n], verificationChecks[a, "Z"]}}, {}]];
                         status[[First[qs]]] = "Live",
 
                     AnyTrue[qs, status[[#]] === "Unprepared" &],
@@ -279,7 +305,8 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String] := Catch[M
            after preparation, gate and storage gadgets, never after a measurement. *)
         Do[
             If[status[[b]] === "Live",
-                emit["ErrorCorrection", {"EC", b}, {b}, ftCorrection[a, b, blocks, order]]
+                emit["ErrorCorrection", {"EC", b}, {b}, ftCorrection[a, b, blocks, order, mode],
+                    piecesHeraldChecks[steanePieces[a, n, order, mode]]]
             ],
             {b, blocks}
         ],
@@ -290,27 +317,30 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String] := Catch[M
         "Instructions" -> Internal`BagPart[out, All],
         "Gadgets" -> Internal`BagPart[rows, All],
         "Readouts" -> readouts,
-        "Measurements" -> records
+        "Measurements" -> records,
+        "HeraldChecks" -> Internal`BagPart[checks, All]
     |>
 ], "QECFaultTolerantCircuit"]
 
 
 (* ---- construction ---- *)
 
-Options[QECFaultTolerantCircuit] = {"Order" -> "BitFlipFirst"};
+Options[QECFaultTolerantCircuit] = {"Order" -> "BitFlipFirst", "Ancilla" -> "Encoder"};
 
 QECFaultTolerantCircuit[circuit_List, code_QECCode, opts : OptionsPattern[]] := Module[
-    {a = First[code], blocks, order, assembled},
+    {a = First[code], blocks, order, mode, assembled},
 
     order = OptionValue["Order"];
+    mode = OptionValue["Ancilla"];
     blocks = Max[Cases[circuit, {_String, qs__Integer} :> Max[{qs}]], 0];
 
     Which[
         ! codeCSSQ[a], Message[QECFaultTolerantCircuit::css]; $Failed,
         codeLogicalQubits[a] =!= 1, Message[QECFaultTolerantCircuit::logical, codeLogicalQubits[a]]; $Failed,
         blocks === 0, Message[QECFaultTolerantCircuit::location, circuit]; $Failed,
+        ! MemberQ[$ancillaModes, mode], Message[QECErrorCorrection::ancilla, mode, $ancillaModes]; $Failed,
         True,
-            assembled = ftAssemble[a, circuit, blocks, order];
+            assembled = ftAssemble[a, circuit, blocks, order, mode];
             If[ assembled === $Failed,
                 $Failed,
                 QECFaultTolerantCircuit[<|
@@ -318,8 +348,9 @@ QECFaultTolerantCircuit[circuit_List, code_QECCode, opts : OptionsPattern[]] := 
                     "Circuit" -> circuit,
                     "Blocks" -> blocks,
                     "Order" -> order,
+                    "Ancilla" -> mode,
                     (* data blocks first, then one EC workspace per block *)
-                    "Qubits" -> 2 blocks a["Qubits"],
+                    "Qubits" -> blocks (a["Qubits"] + ancillaWidth[a, mode]),
                     assembled
                 |>]
             ]
@@ -334,7 +365,7 @@ $faultTolerantProperties = {
     "InstructionCount", "Depth", "Locations", "CircuitLocations", "Measurements",
     "Readouts", "Gadgets", "GadgetCounts", "GadgetInstructions", "GateCounts",
     "QuantumCircuitOperator", "Diagram", "SizeOverhead",
-    "QubitOverhead", "DepthOverhead", "Overheads", "OpenAssumptions", "Properties"
+    "QubitOverhead", "DepthOverhead", "Overheads", "OpenAssumptions", "Ancilla", "HeraldChecks", "Properties"
 };
 
 faultTolerantData[QECFaultTolerantCircuit[a_Association]] := a
@@ -345,6 +376,8 @@ QECFaultTolerantCircuit[a_Association][prop : ("Circuit" | "Blocks" | "Qubits" |
     "Instructions" | "Readouts" | "Measurements")] := a[prop]
 
 QECFaultTolerantCircuit[a_Association]["Code"] := QECCode[a["Code"]]
+QECFaultTolerantCircuit[a_Association]["Ancilla"] := Lookup[a, "Ancilla", "Encoder"]
+QECFaultTolerantCircuit[a_Association]["HeraldChecks"] := Lookup[a, "HeraldChecks", {}]
 QECFaultTolerantCircuit[a_Association]["LogicalQubits"] := a["Blocks"]
 QECFaultTolerantCircuit[a_Association]["InstructionCount"] := Length[a["Instructions"]]
 QECFaultTolerantCircuit[a_Association]["Depth"] := gadgetDepth[a["Instructions"], a["Qubits"]]
@@ -388,6 +421,17 @@ QECFaultTolerantCircuit[a_Association]["Overheads"] := <|
     "Qubits" -> QECFaultTolerantCircuit[a]["QubitOverhead"],
     "Depth" -> QECFaultTolerantCircuit[a]["DepthOverhead"]
 |>
+
+QECFaultTolerantCircuit[a_Association]["OpenAssumptions"] /; Lookup[a, "Ancilla", "Encoder"] === "Verified" := {
+    "Every encoded |0> -- the preparation gadgets and the ancillas of every error \
+correction gadget -- is verified against a second copy and post-selected (Got26 \
+fig. 13.3); a rejected preparation has to be repeated, and the acceptance is part \
+of the cost.",
+    "The gate gadgets are transversal, so the protocol is Clifford only. A universal \
+set (Def 10.5) needs the constructions of chapter 13.",
+    "Corrections are carried in the Pauli frame (sec. 12.5.2) rather than applied, so \
+the emitted circuit has no classically conditioned instruction."
+}
 
 QECFaultTolerantCircuit[a_Association]["OpenAssumptions"] := {
     "Preparation of an encoded |0> uses the code's own encoder, which is not fault \
