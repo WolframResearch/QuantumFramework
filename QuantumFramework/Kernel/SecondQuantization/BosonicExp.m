@@ -80,7 +80,9 @@ quadraticExp[g_, {cr_, an_}, lv_, s_] :=
         {t, m, u, v, e, r} = Which[
             p === q === 0, {0, w, mu (E^w - 1)/w, nu (E^w - 1)/w, mu nu (E^w - 1 - w)/w^2, w/2},
             PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[# /. f -> 0, {l, 0, 0}], l, 0],
-            True, # /. {l -> Sqrt[4 p q - w^2], f -> rootPhase[{{w, 2 p}, {-2 q, -w}}]} /. $nonuls
+            True, # /. {l -> Sqrt[4 p q - w^2], f -> With[{x = {{w, 2 p}, {-2 q, -w}}},
+                If[MatrixQ[x / SelectFirst[Flatten[x], ! PossibleZeroQ[#] &], NumericQ], rootPhase[x],
+                    Piecewise[{{I Sign[Re[I w]] Sqrt[4 p q - w^2], Im[4 p q - w^2] == 0 && Re[4 p q - w^2] > 0}}, 0]]]} /. $nonuls
         ] & @ Join[
             {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
             {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
@@ -127,26 +129,30 @@ rootPhase[x_, tau_] /; MatrixQ[x / tau, NumericQ] :=
 
 rootPhase[__] := 0
 
-affineShift[x_, ell_, n_] /; AllTrue[ell, PossibleZeroQ] := {ConstantArray[0, n], ConstantArray[0, n], 0}
+adjointMatrix[w_, p_, q_] := ArrayFlatten[{{w, -p}, {q, -Transpose[w]}}]
 
-affineShift[x_, ell_, n_] :=
-    Module[{ss = DiagonalMatrix[Join[ConstantArray[1, n], ConstantArray[-1, n]]], jj, m, aug},
-        jj = ArrayFlatten[{{0, -IdentityMatrix[n]}, {IdentityMatrix[n], 0}}];
-        m = ss . Transpose[x] . ss;
-        aug = MatrixExp[ArrayFlatten[{
-            {m, jj, ConstantArray[0, {2 n, 1}]},
-            {ConstantArray[0, {2 n, 2 n}], -Transpose[m], Transpose[{ell}]},
-            {ConstantArray[0, {1, 2 n}], ConstantArray[0, {1, 2 n}], {{0}}}}]];
+affineShift[m_, ell_, n_] /; AllTrue[ell, PossibleZeroQ] := {ConstantArray[0, n], ConstantArray[0, n], 0}
+
+affineShift[m_, ell_, n_] :=
+    With[{aug = MatrixExp[ArrayFlatten[{
+            {Transpose[m], ArrayFlatten[{{0, -IdentityMatrix[n]}, {IdentityMatrix[n], 0}}], ConstantArray[0, {2 n, 1}]},
+            {ConstantArray[0, {2 n, 2 n}], -m, Transpose[{ell}]},
+            {ConstantArray[0, {1, 2 n}], ConstantArray[0, {1, 2 n}], {{0}}}}]]},
         Simplify @ Append[TakeDrop[aug[[2 n + 1 ;; 4 n, -1]], n], (aug[[2 n + 1 ;; 4 n, 2 n + 1 ;; 4 n]] . ell) . aug[[;; 2 n, -1]] / 2]
     ]
 
 (* e^(ad P ad/2 + ad W a + a Q a/2 + mu ad + nu a) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
    e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
-   :e^(ad (e^W - 1) a):; linear terms come in through affineShift and braid to the wings.
-   Antinormal order is the same under a -> ad, ad -> -a. *)
+   :e^(ad (e^W - 1) a):; linear terms come in through affineShift and braid to the wings.  Antinormal order is the same
+   under a -> ad, ad -> -a.  An exact numeric matrix is exponentiated as z m/tau, z -> tau: MatrixExp of the number form
+   expands nested radicals twentyfold, the symbolic one keeps them in RootSum. *)
 multimodeQuadraticExp[g_, lv_, s_] :=
-    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, lam, rho, kap, m, k, e, d, yy, l},
+    Module[{n = Length[ladderModes[lv, g]], x, y, z, xs, ys, cr, an, op, middle, mexp, poly, w, p, q, lam, rho, kap, m, k, e, d, yy, l},
         {xs, ys} = {Array[x, n], Array[y, n]};
+        mexp[mm_] := If[ MatrixQ[mm, NumericQ] && Precision[mm] === Infinity,
+            With[{tau = SelectFirst[Flatten[mm], ! PossibleZeroQ[#] &, 1]}, MatrixExp[z mm / tau] /. z -> tau],
+            MatrixExp[mm]
+        ];
         {cr, an} = If[s == 1, Identity, Reverse] @ ladderVars[lv][[All, ladderModes[lv, g]]];
         op = ncPolynomial[Expand[# /. Thread[ys -> s ys]], Join[xs, ys], Join[cr, an]] &;
         middle = If[ DiagonalMatrixQ[#],
@@ -154,14 +160,15 @@ multimodeQuadraticExp[g_, lv_, s_] :=
             If[s == 1, NormalOrdered, AntinormalOrdered][Exp[op[xs . (# - IdentityMatrix[n]) . ys]], ladderVars[lv]]
         ] &;
         poly = Expand @ dequantize[If[s == 1, BosonicNormalOrder, BosonicAntinormalOrder][g, ladderVars[lv]] /. $nonuls, Thread[Join[cr, an] -> Join[xs, s ys]]];
-        If[ n < 2 || ! PolynomialQ[poly, Join[xs, ys]] || ! SubsetQ[{0, 1, 2}, Total /@ Keys @ CoefficientRules[poly, Join[xs, ys]]], Return[$Failed, Module]];
+        If[ n < 2 || FreeQ[poly, Alternatives @@ xs] || FreeQ[poly, Alternatives @@ ys] ||
+            ! PolynomialQ[poly, Join[xs, ys]] || ! SubsetQ[{0, 1, 2}, Total /@ Keys @ CoefficientRules[poly, Join[xs, ys]]], Return[$Failed, Module]];
         {w, p, q} = {D[poly, {xs}, {ys}], D[poly, {xs, 2}], D[poly, {ys, 2}]};
         m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
-        {lam, rho, kap} = affineShift[m, Flatten[{D[poly, {xs}], D[poly, {ys}]} /. Thread[Join[xs, ys] -> 0]], n];
+        {lam, rho, kap} = affineShift[adjointMatrix[w, p, q], Flatten[{D[poly, {xs}], D[poly, {ys}]} /. Thread[Join[xs, ys] -> 0]], n];
         Exp[(poly /. Thread[Join[xs, ys] -> 0]) + kap + lam . rho / 2] If[ AllTrue[Flatten[{p, q}], PossibleZeroQ],
-            k = MatrixExp[w];
+            k = mexp[w];
             ncJoin[Exp[op[Simplify[k . lam] . xs]], middle[k], Exp[op[rho . ys]]],
-            e = MatrixExp[m];
+            e = mexp[m];
             d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
             yy = -d . e[[n + 1 ;;, ;; n]];
             l = rootPhase[m];
@@ -231,6 +238,16 @@ pairRulesNO[{cr1_, an1_}, {cr2_, an2_}] := {
             Sec[Omega] (Exp[(beta Tan[Omega]/Omega) cr1 ** cr2] **
                 Exp[Log[Sec[Omega]] (cr1 ** an1 + cr2 ** an2)] **
                 Exp[(alpha Tan[Omega]/Omega) an1 ** an2])
+        ],
+
+    Exp[w1_. cr1 ** an1 + w2_. cr2 ** an2 + alpha_. cr1 ** cr2 + beta_. an1 ** an2 + c_.] /;
+            FreeQ[{w1, w2, alpha, beta, c}, cr1 | an1 | cr2 | an2] && ! (PossibleZeroQ[alpha] && PossibleZeroQ[beta]) :>
+        With[{s = (w1 + w2)/2, d = (w1 - w2)/2, mu = Sqrt[alpha beta - (w1 + w2)^2/4]},
+            With[{e = Cos[mu] - s Sinc[mu]},
+                E^(c - s)/e (Exp[(alpha Sinc[mu]/e) cr1 ** cr2] **
+                    Exp[(d - Log[e]) cr1 ** an1 - (d + Log[e]) cr2 ** an2] **
+                    Exp[(beta Sinc[mu]/e) an1 ** an2])
+            ]
         ]
 }
 
@@ -293,6 +310,16 @@ pairRulesAN[{cr1_, an1_}, {cr2_, an2_}] := {
             Sec[Omega] (Exp[(alpha Tan[Omega]/Omega) an1 ** an2] **
                 Exp[-Log[Sec[Omega]] (an1 ** cr1 + an2 ** cr2)] **
                 Exp[(beta Tan[Omega]/Omega) cr1 ** cr2])
+        ],
+
+    Exp[w1_. cr1 ** an1 + w2_. cr2 ** an2 + alpha_. cr1 ** cr2 + beta_. an1 ** an2 + c_.] /;
+            FreeQ[{w1, w2, alpha, beta, c}, cr1 | an1 | cr2 | an2] && ! (PossibleZeroQ[alpha] && PossibleZeroQ[beta]) :>
+        With[{s = (w1 + w2)/2, d = (w1 - w2)/2, mu = Sqrt[alpha beta - (w1 + w2)^2/4]},
+            With[{e = Cos[mu] + s Sinc[mu]},
+                E^(c - s)/e (Exp[(beta Sinc[mu]/e) an1 ** an2] **
+                    Exp[(d + Log[e]) an1 ** cr1 + (Log[e] - d) an2 ** cr2] **
+                    Exp[(alpha Sinc[mu]/e) cr1 ** cr2])
+            ]
         ]
 }
 
@@ -456,7 +483,7 @@ expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
                 ],
                 tc
             ],
-            r : Except[$Aborted] :> TimeConstrained[Simplify[r, ExcludedForms -> _GeneralizedPower, Trig -> False], tc, r]
+            r : Except[$Aborted] :> TimeConstrained[Simplify[r, ExcludedForms -> _GeneralizedPower | _Piecewise, Trig -> False], tc, r]
         ]
     ]
 
@@ -533,13 +560,42 @@ adAction[b_, op_, lv_] :=
             Which[
                 cmt === 0,                                      op,
                 cNumberQ[cmt, lv["Generators"]] || zeroQ[cmt2], op + cmt,
-                True,                                           adRotate[op, cmt, Simplify[cmt2 / op], lv]
+                True,                                           Replace[adRotate[op, cmt, Simplify[cmt2 / op], lv], $Failed :> linearConjugate[b, op, lv]]
             ]
         ]
     ]
 
+linearConjugate[b_, op_, lv_] :=
+    Module[{modes = ladderModes[lv, {b, op}], n, x, y, xs, ys, cr, an, zero, pb, po, w, p, q, e},
+        n = Length[modes];
+        {xs, ys} = {Array[x, n], Array[y, n]};
+        {cr, an} = ladderVars[lv][[All, modes]];
+        zero = Thread[Join[xs, ys] -> 0];
+        {pb, po} = Expand @ dequantize[BosonicNormalOrder[#, ladderVars[lv]] /. $nonuls, Thread[Join[cr, an] -> Join[xs, ys]]] & /@ {b, op};
+        If[ ! AllTrue[{pb, po}, PolynomialQ[#, Join[xs, ys]] &] || Max[Total /@ Keys @ CoefficientRules[pb, Join[xs, ys]]] > 2 ||
+            Max[Total /@ Keys @ CoefficientRules[po, Join[xs, ys]]] > 1, Return[$Failed, Module]];
+        {w, p, q} = {D[pb, {xs}, {ys}], D[pb, {xs, 2}], D[pb, {ys, 2}]};
+        e = If[ AllTrue[Flatten[{w, {D[pb, {xs}], D[pb, {ys}]} /. zero}], PossibleZeroQ],
+            bogoliubovExp[p, q],
+            $Failed
+        ];
+        If[ FreeQ[e, $Failed | Indeterminate | ComplexInfinity | MatrixFunction],
+            Join[cr, an] . (e . (Join[D[po, {xs}], D[po, {ys}]] /. zero)) + (po /. zero),
+            e = MatrixExp[ArrayFlatten[{
+                    {adjointMatrix[w, p, q], ConstantArray[0, {2 n, 1}]},
+                    {{Join[D[pb, {ys}], -D[pb, {xs}]] /. zero}, {{0}}}}]] .
+                Append[Join[D[po, {xs}], D[po, {ys}]] /. zero, po /. zero];
+            Simplify[Join[cr, an] . Most[e] + Last[e]]
+        ]
+    ]
+
+bogoliubovExp[p_, q_] :=
+    With[{c = MatrixFunction[Cosh[Sqrt[#]] &, #] &, s = MatrixFunction[If[PossibleZeroQ[#], 1, Sinh[Sqrt[#]] / Sqrt[#]] &, #] &},
+        ArrayFlatten[{{c[-p . q], -p . s[-q . p]}, {q . s[-p . q], c[-q . p]}}]
+    ]
+
 expConjugate[b_, Exp[g_], lv_] /; ncPolyQ[{b, g}, lv] :=
-    Replace[adAction[b, g, lv], h : Except[$Failed] :> Exp[h]]
+    Replace[expConjugate[b, g, lv], h : Except[$Failed] :> Exp[h]]
 
 expConjugate[b_, op_, lv_] /; ncPolyQ[{b, op}, lv] :=
     Replace[adAction[b, op, lv], $Failed :> conjugateParts[b, op, lv]]
