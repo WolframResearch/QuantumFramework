@@ -1,0 +1,244 @@
+
+\section{Complexity-theoretic foundation of the experiment}\label{sec:complexity}
+
+The notion of quantum supremacy was originally introduced by John Preskill~\cite{preskill_2012}. He conceived of it as ``the day when well controlled quantum systems can perform tasks surpassing what can be done in the classical world''. For the purpose of an experimental demonstration we would like to refine the definition.
+\\
+\newline
+\noindent Demonstrating quantum supremacy requires:
+\begin{enumerate}
+\item A well defined computational task, i.e.~a mathematical specification of a computational problem with a well defined solution. 
+
+Comment: This requirement, standard in computer science, excludes tasks such as ``simulate a glass of water''. However, it would include finding the ground state energy of an H$_{2}$O molecule to a given precision governed by a specific Hamiltonian. Note that a mathematical specification of a computational problem calls for highly accurate control resulting in measurable system fidelity. 
+
+\item Programmable computational device
+
+Comment: Many physics experiments estimate the values of observables to a precision which can not be obtained numerically. But those do not involve a freely programmable computational device and the computational task is often not well defined as required above. Ideally, we would even restrict ourselves to devices that are computationally universal. However, this would exclude proposals to demonstrate quantum supremacy with BosonSampling~\cite{AA11} or IQP circuits~\cite{BM16}.
+
+\item A scaling runtime difference between the quantum and classical computational processes that can be made large enough as a function of problem size so that it becomes impractical for a supercomputer to solve the task using any known classical algorithm. 
+
+Comment: What is impractical for classical computers today may become tractable in ten years. So the quantum supremacy frontier will be moving towards larger and larger problems. But if a task is chosen such that the scaling for the quantum processors is polynomial while for the classical computer it is exponential then this shift will be small. Establishing an exponential separation requires substantial efforts designing and benchmarking classical algorithms~\cite{RAED07x,smelyanskiy2016qhipster,boixo2018characterizing,Boi17,villalonga2019flexible,RAED19a,villalonga2019establishing,chen2018classical,MS08,zhang2019alibaba}, and support from complexity theory arguments~\cite{boixo2018characterizing,aaronson2017complexity,Bou19}. Sampling the output of random quantum circuits is likely to exhibit this scaling separation as a function of the number of qubits for large enough depth. In this context, we note that quantum analog simulations that estimate an observable in the thermodynamic limit typically do not define a problem size parameter. 
+\end{enumerate}
+The requirements above are satisfied by proposals of quantum supremacy emerging from computer science, such as BosonSampling~\cite{AA11}, IQP circuits~\cite{BM16}, and random circuit sampling~\cite{boixo2018characterizing,neill2018blueprint,aaronson2017complexity,Bou19,movassagh2019cayley}. They are also implicit in the “Extended Church-Turing Thesis”: any “reasonable” model of computation can be efficiently simulated, as a function of problem size, by a Turing machine. 
+
+We note that formal complexity proofs are asymptotic, and therefore assume an arbitrarily large number of qubits. This is only possible with a fault tolerant quantum computer and therefore near term practical demonstrations of quantum supremacy must rely on a careful comparison with highly optimized classical algorithms on state-of-the-art supercomputers. 
+
+So far we have argued for quantum supremacy by comparing the running time of the quantum experiment with the time required for the same task using the best known classical algorithms, running on the most powerful supercomputers currently available. The fastest known algorithm for exact sampling (or for computing transition probabilities) runs in time exponential in the treewidth of the quantum circuit \cite{MS08, Boi17}; for a depth $D$ circuit on a rectangular lattice of sizes $l_x$ and  $l_y$, the treewidth is given by $\min(\min(l_x, l_y)D, l_x l_y)$. For approximate simulation in which one only requires a given global fidelity $F$, the classical cost is reduced linearly in $F$ \cite{markov_quantum_2018}. As classical algorithms and compute power can be improved in the future, the classical cost benchmark is a moving target.  
+
+A complementary approach to back up supremacy claims consists of giving complexity-theoretic arguments for the classical hardness of the problem solved (in our case sampling from the output distribution of a random circuit of a given number of qubits, depth and output fidelity). Previous work gave hardness results for sampling \textit{exactly} from the output distribution of different classes of circuits \cite{AA11, BJS10, HM17, boixo2018characterizing, TD02}. Most relevant to us are Refs. \cite{Bou19, HM18,movassagh2019cayley}, which proved that it is classically intractable (unless the polynomial hierarchy collapses to its third level, which is considered extremely unlikely \cite{AB09}) to sample from the exact probability distribution of outcomes of measurements in random circuits. We note the distribution of circuits considered in \cite{Bou19, HM18,movassagh2019cayley} is different from ours. 
+
+An important clarification is that such results are asymptotic, i.e. they show that, unless the polynomial hierarchy collapses, there are no polynomial-time classical algorithms for sampling from output measurements of certain quantum circuits. But they cannot be used directly to give concrete lower bounds for quantum computations of a fixed number of qubits and depth. Refs. \cite{CNS18, Dal18, MS19} tackled this question using tools from fine-grained complexity, giving several finite size bounds. 
+
+There are also results arguing for the hardness of \textit{approximate} sampling (see e.g. \cite{AA11, BM16, boixo2018characterizing, HM17}), where the task is only to sample from a distribution which is close to the ideal one. As the quantum experiment will never be perfect, this is an important consideration. However those results are weaker than the ones for exact sampling, as the hardness assumptions required have been much less studied (and in fact were introduced with the exact purpose of arguing for quantum supremacy). Another drawback is that the results only apply to the situation where the samples come from a distribution very close to the ideal one (i.e. with high fidelity with the ideal one). This is not the regime in which our experiment operates.
+
+With these challenges in mind, we consider an alternative hardness argument in this section, which will allow us to lower bound the classical simulation cost of noisy quantum circuits by the cost of the ideal one. On one hand, our argument will be more restrictive than previous results in that we will assume a particular noise model for the quantum computer (one, however, which models well the experiment). On the other hand, it will be stronger in two ways: (1) it will apply even to the setting in which the output fidelity of the experimental state with the ideal one can be very small, but still the product of total fidelity with exact computational cost is large; and (2) it will be based on more mainstream complexity assumptions in contrast to the tailor-made conjectures required in e.g. \cite{AA11, BM16, HM17} to handle the case of small adversarial noise. 
+
+\subsection{Error model}
+
+Our error model is the following. We assume that the quantum computer samples from the following output distribution:
+\begin{equation} \label{rdistrib}
+r_{U, F}(x) := F |\bra{x}U\ket{0}|^2 + (1 - F)/2^n,
+\end{equation}
+with $U$ the circuit implemented. In words, we assume global depolarizing noise. Ref. \cite{boixo2018characterizing} argues that Eq.~(\ref{rdistrib}) is a good approximation for the output state of random circuits (see Sec. \ref{sec:xeb_theory} and Section III of \cite{boixo2018characterizing}); this form has also been verified experimentally on a small number of qubits. In the experiment, $F$ is in the range $10^{-2}-10^{-3}$. 
+
+We note that while we assume a global white noise model in this section, we do not assume it in the rest of the paper, neither for validating the cross entropy test nor in the comparison with state-of-the-art classical algorithms (and indeed the algorithm considered in Section \ref{sec:classical_sim} samples from an approximate distribution different from the one in Eq.~(\ref{rdistrib})). 
+
+\subsection{Definition of computational problem}
+
+Before stating our result, let us define precisely the computational problem we consider. We start with the ideal version of the problem with no noise:
+
+
+\vspace{0.2 cm}
+
+\noindent \textbf{Circuit Sampling}: The input is a description of a $n$ qubit quantum circuit $U$, described by a sequence of one- and two-qubit gates. The task of the problem is to sample from the probability distribution of outcomes $p_U(x) := |\langle x | U | 0 \rangle|^2$. 
+
+
+\vspace{0.2 cm}
+
+Circuit sampling is an example of a \textit{sampling problem} \cite{aaronson2014equivalence}. A classical algorithm for circuit sampling can be thought of, without loss of generality, as a function $A$ mapping $m \in \text{poly(n)}$ bits $r = (r_1, \ldots r_m)$ to $n$ bits such that
+\begin{equation} \label{samplingfunccyion}
+\frac{1}{2^m} | \{ (r_1, \ldots, r_m) \hspace{0.1 cm} \text{s.t.}   \hspace{0.1 cm} A(r_1, \ldots, r_m) = x \}  | = \tilde{p}_U(x), 
+\end{equation}
+with $\tilde{p}(x)$ an approximation of $p_U(x)$ to $l \in \text{poly(n)}$ bits of precision. So when $r$ is chosen uniformly at random, the output of $A$ are samples from $p$ (up to rounding errors which can be made super-exponentially small).
+
+Assuming the polynomial hierarchy does not collapse, it is known that Circuit Sampling cannot be solved classically efficiently in $n$, meaning any algorithm $A$ satisfying Eq.~(\ref{samplingfunccyion}) must have superpolynomial circuit complexity, for several classes of circuits (such as short depth circuits \cite{TD02}, IQP \cite{BJS10} and Boson Sampling \cite{AA11}). We might also be interested in the average case of circuit sampling (for a restricted class of circuits).
+
+\vspace{0.2 cm}
+
+
+\noindent \textbf{Random Circuit Sampling}: The input is a set of quantum circuits ${\cal U}$ on $n$ qubits. The task is to sample from $p_U(x) := |\langle x | U | 0 \rangle|^2$ for most circuits $U \in {\cal U}$. 
+
+\vspace{0.2 cm}
+
+
+Ref. \cite{Bou19} proved that an efficient (in terms of $n$) classical algorithm for this task for random circuits would also collapse the polynomial hierarchy. As every realistic quantum experiment will be somewhat noisy, it is relevant to consider a variant of this task allowing for small deviations from ideal. One possible formulation is the following:
+
+
+\vspace{0.2 cm}
+
+
+\noindent \textbf{$\varepsilon$-Approximate Random Circuit Sampling}: The input is a set of quantum circuits ${\cal U}$ on $n$ qubits. The task is to sample for most circuits $U \in {\cal U}$, from any distribution $q_U$ s.t. $d_{\text{VD}}(q_U, p_{U})\leq \varepsilon$, where $d_{\text{VD}}(p, q)$ is the variational-distance between the distributions $p, q$ \cite{Note2} and  $p_U(x) := |\langle x | U | 0 \rangle|^2$.
+\vspace{0.2 cm}
+
+
+Refs. \cite{AA11, BM16, boixo2018characterizing} put forward new complexity-theoretic assumptions about the $\#\text{P}$-hardness of certain problems and proved they imply that several restricted classes of circuits are hard to approximately sample for $\varepsilon$ sufficiently close to zero. However, we cannot use these results here as the $\varepsilon$ we achieve is far from zero. We will resort to the following different variant of approximate circuit sampling.
+
+\vspace{0.2 cm}
+
+
+\noindent \textbf{Unbiased-Noise $F$-Approximate Random Circuit Sampling}: The input is a set of quantum circuits ${\cal U}$ on $n$ qubits. The task is to sample from the distribution $r_{U, F}$ given by Eq.~(\ref{rdistrib}), for most circuits $U \in {\cal U}$.  
+
+\vspace{0.2 cm}
+
+
+We note that there are alternatives for defining the computational problem for which supremacy is achieved without having to use sampling problems. These have the advantage that it is possible to verify, for each problem instance, that the task was achieved (whereas while it is in principle possible to verify that one is sampling from the correct distribution by estimating the frequencies of outcomes, this is unfeasible in practice for high entropy distributions with $>2^{50}$ outcomes as the one we consider here). 
+
+One such problem (considered on Refs. \cite{aaronson2017complexity, boixo2018characterizing}) is the following:
+
+\vspace{0.2 cm}
+
+
+\noindent \textbf{$b$-Heavy Output Generation}: Given as input a number $b > 1$ and a random circuit $U$ on $n$ qubits (drawn at random from a set of circuits ${\cal U}$), generate output strings $x_1, \ldots, x_k$ s.t. \begin{equation}
+\frac{1}{k} \sum_{j=1}^k |\langle x_j | U | 0 \rangle|^2 \geq \frac{b}{2^n}     
+\end{equation}
+
+\vspace{0.2 cm}
+
+
+Ref. \cite{aaronson2017complexity} argues for the hardness of this task for every $b > 1$, although here again one has to resort to rather bold complexity-theoretic conjectures. Cross entropy benchmarking allows us to estimate $b$ for a reasonable value of $k$ (though the classical time needed to compute $|\langle x_j | U | 0 \rangle|^2$ still grows very fast), see Sec. \ref{sec:xeb_theory}. In terms of known algorithms, the complexity of solving Heavy Output Generation is equivalent to the complexity of sampling $k$ samples from a noisy distribution corresponding to the same $b$ value. 
+
+The experiment we report in this paper can be interpreted as showing quantum supremacy in solving the $b$-Heavy Output Generation with $b = 1 + F$ and $F$ the fidelity of the output quantum state.  
+
+
+\subsection{Computational hardness of unbiased-noise sampling}
+
+
+
+To state our result, we use the complexity class Arthur-Merlin, which is a variant of the class NP and is denoted by AM$[T]$. It is defined as the class of problems for which there is an Arthur-Merlin one-round protocol of the following form: given an instance of a problem in $AM[T]$ (which Arthur would like to decide if it is a YES or NO instance), Arthur first sends random bits to Merlin. Merlin (which is computationally unbounded) then sends back a proof to Arthur. Finally Arthur uses the proof and decides in time $T$ if he accepts. In the YES case, Arthur accepts with probability larger than 2/3. In the NO case, he accepts with probability no larger than 1/3. 
+
+
+\begin{theorem} \label{globaldepolarizing}
+Assume there is a classical algorithm running in time $T$ and using $m$ bits of randomness that samples from the distribution $r_{U, F}(x)$ given by Eq.~(\ref{rdistrib}), for a given quantum circuit $U$ on $n$ qubits and $F \geq 0$. Then for every integer $L$, there is an $AM[LT + 2Lm]$ protocol for deciding, given $\lambda > 0$, whether
+\begin{equation}
+ |\bra{0}U\ket{0}|^2 \geq  \lambda \left(1 + \frac{2}{L}  \right)  +  \frac{2(1-F)}{F L2^n}  
+\end{equation}
+or 
+\begin{equation}
+|\bra{0}U\ket{0}|^2 \leq \lambda \left(1 - \frac{2}{L}  \right)  -  \frac{2(1 - F)}{F L2^n}  
+\end{equation}
+\end{theorem}
+
+Before giving the proof, let us discuss the significance of the result. We are interested in the theorem mostly when $L = c/F$ with $c$ a small constant (say 10). Noting that for a random circuit, with high probability, $|\bra{0}U\ket{0}|^2 \geq  2^{-n}/5$ \cite{HM18}, the theorem states that if we can sample classically in time $T$ from the distribution given in Eq.~(\ref{rdistrib}), then we can calculate a good estimate for $|\bra{0}U\ket{0}|^2$ in time $10T/F$ (with the help from an all-powerful but untrustworthy Merlin). It is unlikely that Merlin can be of any help for this task for random circuits, as estimating $|\bra{0}U\ket{0}|^2$ for random circuits is a $\#\text{P}$-hard problem \cite{Bou19}, and it is believed $\#\text{P}$ is vastly more complex than $AM$ (which is contained on the third level of the polynomial hierarchy \cite{AB09}). Therefore we conclude that global white noise leads to no more than a linear decrease in fidelity in classical simulation time (which is in fact optimal as it is achieved by the method presented in Ref. \cite{markov_quantum_2018}). 
+
+
+Ref. \cite{Aa19} proposed a similar, but more demanding, conjecture about the non-existence of certain AM protocols for estimating transition probabilities of random circuits. This conjecture was applied to show that the output bits of our supremacy experiment can be used to produce certifiable random bits. 
+
+We note Theorem \ref{globaldepolarizing} does not establish a lower bound on the classical computation cost of calculating a transition amplitude with additive error $\delta/{2^{n}}$, for small constant $\delta > 0$. What it does is to show that the sampling problem with unbiased noise is as hard as this task, up to a linear reduction in $F$ in complexity. 
+
+Concerning the hardness of computing $|\langle 0| U | 0 \rangle|^2$ it is known that this problem is $\#\text{P}$ hard for random circuits to additive error $2^{-poly(n)}$ \cite{Bou19}. This implies that there is no subexponential-time algorithms for this task (unless $\#\text{P}$ collapses to P). For finite size bounds, which are more relevant to our experiment, the result of Ref. \cite{CNS18} is the most relevant. It shows that under the Strong Exponential Time Hypothesis (SETH) \cite{calabro2009complexity}, there are quantum circuits on $n$ qubits which require $2^{(1 - o(1))n}$ time for estimating $|\langle 0 | U |0 \rangle|^2$ to additive error $2^{-(n+1)}$ \cite{Note3}. Together with Theorem \ref{globaldepolarizing}, we find there is a quantum circuit $U$ on $n$ qubits for which the distribution $r_{U, F}$ (given by Eq.~(\ref{rdistrib})) cannot be sampled in time $F2^{(1-o(1)n)}$, unless SETH is false. 
+
+It is an open question to show a similar lower bound to the one proved in Ref. \cite{CNS18} for estimating the transition probability of random circuits. Even more relevant for this work, it would be interesting to study if one can show a lower bound of the form $2^{(1 - o(1))\text{treewidth}}$ for a random quantum circuit, under a suitable complexity-theoretic assumption, as the depth of the construction in  \cite{CNS18} is relatively high.  
+
+\subsection{Proof of Theorem \ref{globaldepolarizing}}
+
+The proof will follow along similar lines to previous work \cite{AA11, BM16, HM17}. We will use approximate counting (which can be done in AM) to show that a sampling algorithm for $r_{U, F}$ running in time $T$ implies an AM protocol to
+compute $r_{U, F}(0)(1 \pm 1/L)$, with classical verification of order $LT$. Since the noise is unbiased, i.e. $r_{U, F}(0) = F\langle 0 | U | 0 \rangle |^2 + (1-F)/2^n$, we can subtract it and find an AM protocol for estimating $|\langle 0 | U | 0 \rangle |^2$ as stated in the theorem.      
+
+In more detail, suppose there is a classical algorithm for sampling from $r_{U, F}$ given by a function $A$ mapping $m \in \text{poly(n)}$ bits $r = (r_1, \ldots r_m)$ to $n$ bits such that
+\begin{multline}  \label{algorithmsamplingr}
+\frac{1}{2^m} | \{ (r_1, \ldots, r_m) \hspace{0.1 cm} \text{s.t.}   \hspace{0.1 cm} A(r_1, \ldots, r_m) = x \}  | \\ = r_{U, F}(x). 
+\end{multline}
+
+Let $a(r_1, \ldots, r_m)$ be a function which is 1 if $A(r_1, \ldots, r_m) = 0^n$ and zero otherwise. 
+
+We start with the following lemma, showing the existence of $A$ implies an $AM[LT + 2Lm]$ protocol for estimating $r_{U, F}(0)$:
+
+\begin{lemma} \label{AMprotcolforr}
+Assume there is an algorithm $A$ given by Eq.~(\ref{algorithmsamplingr}). Then for every $\theta$ and $L$ there is an $AM[LT + 2Lm]$ protocol which determines if (i) $r_{U, F}(0) \geq \theta (1 + 2/L)$ (YES instance) or (ii) $r_{U, F}(0) \leq \theta (1 - 2/L)$ (NO instance).  
+\end{lemma}
+
+\textit{Proof:} The protocol is the following:
+
+\begin{enumerate} 
+
+\item For every $t \in [Lm]$, Arthur chooses a function at random $h_{t} \in H_{Lm, t}$ from a family $H_{Lm, t}$ of 2-universal linear hash functions from $\{0, 1\}^{L m}$ to  $\{0, 1 \}^t$ \cite{AB09}. Then he communicates his choice of $(h_{1}, \ldots, h_{Lm})$ to Merlin.
+
+\item Merlin sends an $Lm$-bitstring $w$ to Arthur and an integer $s \in [Lm]$ .
+
+\item Arthur verifies that $h_{s}(w) = 0$ and
+\begin{align}
+a(w_{1, 1}, \ldots w_{1, m}) \wedge \ldots \wedge a(w_{L, 1}, \ldots w_{L, m}) \nonumber = 0.
+\end{align}
+He rejects if any of the three equations is not satisfied. Then he checks if $\theta \leq 2^{-m} 20^{1/L} 2^{s/L} (1+2/L)^{-1}$, accepting if it is the case and rejecting otherwise.
+\end{enumerate}
+
+The cost to compute $a(w_{1, 1}, \ldots w_{1, m})$ is $T$, and the cost to compute is $h_{s}(w)$ is less than $2Lm$, so the total verification time of the AM protocol is $LT + 2Lm$.
+
+Let us analyze the completeness and soundness of the protocol.
+
+\vspace{0.3 cm}
+
+\noindent \textit{Completeness}: Suppose we have a YES instance, $r_{U, F}(0) \geq \theta (1 + 2/L)$. Let us show that Merlin can send $w$ and $s$ which makes  Arthur accept with high probability. 
+
+Let $M$ be the number of solutions of $a(r_1, \ldots, r_m) = 0$ (i.e. $M = 2^m r_{U, F}(0)$). Then $a(r_{1, 1}, \ldots r_{1, m}) \wedge \ldots \wedge a(r_{L, 1}, \ldots r_{L, m})$ has $M^L$ solutions, $M$ for each copy of the function $a$. As part of the proof Merlin sends $s$ satisfying $20 \geq M^L/2^s \geq 10$ (such a value always exists as $s$ can be an arbitrary integer less than or equal to $Lm$).
+
+Let us apply Lemma \ref{hashfunction} (stated below) with $q = Lm$, $t = s$, $\delta = 1/2$, and $S$ the set of solutions, so $|S| = M^L$. Then indeed $|S|/2^s > 10 > 1/\delta^3$. Therefore, with high probability, the number of solutions of
+\begin{equation}
+a(x_{1, 1}, \ldots x_{1, m}) \wedge \ldots \wedge a(x_{L, 1}, \ldots x_{L, m})  \wedge h_s(x) 
+\end{equation}
+is in the interval $[(1/2) M^L/2^s, 2  M^L/2^s]$. Since $(1/2) M^L/2^s \geq 1$, there is a string $w$ s.t. $a(w_{1, 1}, \ldots w_{1, m}) \wedge \ldots \wedge a(w_{L, 1}, \ldots w_{L, m})  \wedge h_s(w) = 0$, which Merlin also sends to Arthur as part of the proof. 
+
+
+Since $M = 2^m r_{U, F}(0) \geq 2^m \theta (1 + 2/L)$ and $M^L/2^s \leq 20$,
+\begin{equation}
+20 \geq \frac{M^L}{2^s} \geq \frac{2^{Lm}}{2^s} \theta^L \left( 1 + \frac{2}{L} \right)^L,  
+\end{equation}
+so indeed $\theta \leq 2^{-m} 20^{1/L} 2^{s/L} (1+2/L)^{-1}$ and Arthur will accept with high probability. 
+
+\vspace{0.3 cm}
+
+\noindent \textit{Soundness}:   Suppose we have a NO instance, $r_{U, F}(0) \leq \theta (1 - 2/L)$. Let us show that no matter which witnesses $w, s$ Merlin sends, Arthur will only accept with a small probability. Merlin must send $s$ such that 
+\begin{equation}
+\theta^L \leq (20) 2^{-Lm}  2^{s} (1+2/L)^{-L},
+\end{equation}
+otherwise Arthur rejects. By Lemma \ref{hashfunction} (stated below), the number of solutions of
+\begin{equation} \label{hashingeqs}
+a(x_{1, 1}, \ldots x_{1, m}) \wedge \ldots \wedge a(x_{L, 1}, \ldots x_{L, m})  \wedge h_s(x) 
+\end{equation}
+will be in the interval $[(1/2) M^L/2^s, 2  M^L/2^s]$, with $M = 2^m r_{U, F}(0) \leq 2^m \theta (1 - 2/L)$. Since 
+\begin{eqnarray}
+&& 2 M^L/2^s \leq 2 (2^{-s}) 2^{Lm} \theta^L  (1 - 2/L)^{L} \nonumber \\ 
+&\leq& 40 (1 - 2/L)^{L} (1 + 2/L)^{-L}  \leq 40 e^{-4} < 1,
+\end{eqnarray}
+there is no solution to Eq.~(\ref{hashingeqs}) and thus there is no $w$ which will make Arthur accept. This finishes the proof of Lemma \ref{AMprotcolforr}. 
+
+\vspace{0.3 cm}
+
+\noindent \textit{Reduction to AM protocol for $|\langle 0 | U | 0 \rangle|^2$}: Finally let us show how to use Lemma \ref{AMprotcolforr} to build the AM protocol stated in Theorem \ref{globaldepolarizing}. Since $r_{U, F}(0) = F |\bra{0}U\ket{0}|^2 + (1 - F)/2^n$, on one hand:
+\begin{equation} \label{alternative1}
+|\langle 0 | U | 0 \rangle|^2 \geq   \lambda \left(1 + \frac{2}{L}  \right)  +  \frac{2(1 - F)}{F L2^n}  
+\end{equation}
+implies that 
+\begin{equation}
+r_{U, F}(0) \geq   \left( F \lambda + (1 - F)/2^n   \right) \left(1 + \frac{2}{L}  \right).
+\end{equation}
+On the other hand:
+\begin{equation} \label{alternative2}
+|\langle 0 | U | 0 \rangle|^2 \leq \lambda \left(1 - \frac{2}{L}  \right)  -  \frac{2(1 - F)}{F L 2^n}  
+\end{equation}
+implies that 
+\begin{equation}
+r_{U, F}(0) \leq   \left(  F \lambda + (1 - F)/2^n   \right) \left(1 - \frac{2}{L}  \right).
+\end{equation}
+
+Setting $\theta = F \lambda + (1 - F)/2^n$ we see that the AM protocol from before can also be used to decide if Eq.~(\ref{alternative1}) or Eq.~(\ref{alternative2}) hold true. This ends the proof of the theorem. 
+
+\begin{lemma}  \label{hashfunction}
+\cite{AB09} For $t \leq q$, let $H_{q, t}$ be a family of pairwise-independent linear hash functions mapping $\{0, 1 \}^q$ to $\{0, 1 \}^t$, and let $\delta > 0$. Let $S \subseteq \{0, 1 \}^n$ be arbitrary with 
+$|S| \geq \delta^{-3} 2^t$. Then with probability larger than $9/10$ over the choice of $h \in H_{n, t}$,
+\begin{equation}
+  (1 - \delta) \frac{|S|}{2^t} \leq |  \{ x \in S | h(x) = 0^t    \}   | \leq(1 + \delta) \frac{|S|}{2^t}  
+\end{equation}
+Moreover $h(x)$ can be evaluated in time $2n$, for every $h \in H_{n, t}$. 
+\end{lemma}
+
+  

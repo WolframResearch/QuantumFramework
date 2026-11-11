@@ -1,0 +1,11 @@
+# Findings outside the deck (for Mads)
+
+1. Course HHL bug: Courses/QuantumOptimization/BookFormat/Chap_5_QLS.nb, section "Harrow-Hassidim-Lloyd algorithm (HHL)", subsection "Circuit Implementation", the cell defining HHL = QuantumCircuitOperator[{...}]. It has "C"["RY"[θvalues[[1]]]] -> {2,1} and "C"["RY"[θvalues[[2]]]] -> {3,1} with θvalues = {π, π/3}; the controls are swapped (qubit 3 is set for λ̃ = 1). Fix: -> {3,1} and -> {2,1}. The chapter's b = (0,1) check passes only by symmetry; for general b the uncorrected circuit misses LinearSolve.
+2. DiracMatrix paclet: Needs["WolframQuantumComputation`DiracMatrix`"] fails (Get::noopen) because the Kernel extension declares context "DiracMatrix`"; Needs["DiracMatrix`"] loads but raises Needs::nocont. Fix in PacletInfo.wl. The CliffordBasis sign bug is already fixed in that checkout (DiracMatrix.wl:186).
+3. TransmonLab: the documented "PopulationSampleTime" option has no effect on the TransmonPhysics "Populations" path; without a Readout the populations are sampled at the 500 ns horizon, not at the end of the pulse.
+4. Stabilizer magic example (Talk-Slides topic 7.2): T gates on a GHZ backbone compress to 2 frame terms for any t, so that example overstates the cost of magic; T gates on separate |+> qubits give 2^t.
+5. VQE/QNGD chapter claim: the natural gradient is faster at learning rate 0.05, but at 0.2 plain descent wins from two of three starts.
+6. QF: applying a circuit whose measurement record is never used by a later gate returns a QuantumMeasurement rather than a state (teleportation slide converts with m["State"]).
+7. WL crash: a drive switched by WhenEvent on the state, with a matrix-valued unknown, segfaults the kernel (exit 139) in plain NDSolve as well as in QuantumEvolve; worth a bug report. QuantumEvolve with a discrete-variable drive emits QuantumEvolve::pulseform (even the OpenSystems Showcase Ex 5 example).
+8. QF trap: QuantumState[matrix] without a dimension argument factors d = 30 into {2,3,5} (and 81 into four qutrits); always pass the dimension.
+9. Per the batch B writer, the source cat-decoherence example it drew on (open-quantum-systems catalog, topic 2) used a thermal Lindblad bath, not the Caldeira-Leggett equation.

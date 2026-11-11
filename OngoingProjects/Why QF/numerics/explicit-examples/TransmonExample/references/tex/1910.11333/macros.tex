@@ -1,0 +1,55 @@
+\def\({\left(}
+\def\){\right)}
+
+\def\bra#1{\mathinner{\langle{#1}|}}
+\def\ket#1{\mathinner{|{#1}\rangle}}
+\def\braket#1#2{\mathinner{\langle{#1}|#2 \rangle}}
+
+\def\avg#1{\mathinner{\langle{#1} \rangle}}
+
+\def\Id{{\rm Id}}
+\def\CZ{{\rm CZ}}
+\def\CR{{\rm CR}}
+\def\T{{\rm T}}
+\def\X{{\rm X}}
+\def\Y{{\rm Y}}
+\def\Z{{\rm Z}}
+\def\H{{\rm H}}
+\def\A{{\cal A}}
+\def\IQC{{\rm IQC}}
+\def\bP{{\mathbb P}}
+\def\cL{{\mathcal L}}
+
+\def\u#1{^{(#1)}}
+\def\c#1{{\mathcal #1}}
+
+%\def\tr{{\rm tr}\,}
+\newcommand{\tr}{\operatorname{tr}}
+
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+
+% Figures. Example usage:
+% \quickfig{\columnwidth}{my_image}{This is the caption}{fig:my_fig}
+\DeclareRobustCommand{\quickfig}[4]{
+\begin{figure}
+\begin{centering}
+\includegraphics[width=#1]{#2}
+\par\end{centering}
+\caption{#3}
+\label{#4}
+\end{figure}
+}
+
+\DeclareRobustCommand{\quickwidefig}[4]{
+\begin{figure*}[h]
+\begin{centering}
+\includegraphics[width=#1]{#2}
+\par\end{centering}
+\caption{#3}
+\label{#4}
+\end{figure*}
+}

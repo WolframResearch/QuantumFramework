@@ -1,0 +1,252 @@
+\section{Quantum circuits}\label{sec:circuits}
+
+\subsection{Background}
+We sample the output of random quantum circuits (RQCs) with two use cases in mind: performing a computational task beyond the reach of state-of-the-art supercomputers (quantum supremacy); and estimating the experimental fidelity (performance evaluation).
+
+In order for the RQCs to cover both use cases, we define a circuit family with a varying number of qubits $n$ and cycles $m$. Our quantum supremacy demonstration uses RQCs with a large number of qubits $n = 53$ and high depth $m = 20$. Large number of qubits hinders wave function (Schr\"odinger) simulation and high depth impedes tensor network (Feynman) simulation (see Sec. \ref{subsec:fa}). We find that the most competitive classical simulator for our hardest RQCs is the Schr\"odinger-Feynman algorithm (SFA, see Sec. \ref{subsec:sa_sfa}) which copes well with high depth circuits on many qubits.
+
+SFA takes as input an $n$-qubit quantum circuit and a \textit{cut} which divides $n = n_1 + n_2$ qubits into two contiguous partitions with $n_1$ and $n_2$ qubits. The algorithm computes the output state as the sum over simulation paths formed as the product of the terms of the Schmidt decomposition of all cross-partition gates. By the distributive law there are $r^g$ such simulation paths for a circuit with $g$ cross-partition gates of Schmidt rank $r$. Consequently, the algorithm achieves runtime proportional to $(2^{n_1} + 2^{n_2}) r^g$. Circuit cuts with $n_1$, $n_2$ and $g$ that make the simulation task tractable are called \textit{promising cuts}. The most promising cut for our largest RQCs runs parallel to the shorter axis of the device starting in the vicinity of the broken qubit. The sum over the simulation paths can be interpreted as tensor contraction. In this view, the $r^g$ factor can be thought of as the \textit{bond dimension} associated with the circuit partitioning, i.e. the cardinality of the index set ranged over in the contraction corresponding to all cross-partition gates. SFA is described in more detail in \cite{markov_quantum_2018} and section \ref{sec:classical_sim}.
+
+\subsection{Overview and technical requirements}
+The two use cases for our RQCs give rise to a tension in technical requirements at the heart of quantum supremacy. On the one hand, supremacy RQC sampling should by definition be prohibitively hard to simulate classically. On the other hand, performance evaluation entails classical simulation of the RQCs. To resolve the conflict, we note that the fidelity of a RQC experiment depends primarily on the number and quality of the gates. By contrast, the simulation cost is highly sensitive to minor perturbations in the circuit. Consequently, experiment fidelity for RQCs that cannot be simulated directly may be approximated from the experiment fidelity of similar RQCs obtained as the result of transformations that reduce simulation cost without significantly affecting experiment fidelity (see Section \ref{sec:circuit_variants}).
+
+Performance evaluation using XEB provides another design consideration. The procedure requires knowledge of the cross-entropy of the theoretical output distribution of the circuit. An analytical expression for this quantity has been derived in \cite{boixo2018characterizing} for circuits whose measurement probabilities approach the Porter-Thomas distribution. We find that our RQCs satisfy this assumption when the circuit depth is larger than 12, see Fig.~\ref{fig:distribution_of_Dp}a. Note that high circuit depth also increases the cost of classical simulation.
+
+\subsection{Circuit structure}
+A RQC with $n$ qubits generally utilizes qubits 1 through $n$ in the qubit order shown in Fig.~\ref{fig:qubit_order} with small deviations from this default qubit ordering in some circuits. The qubit order has been chosen to ensure that for most RQCs with fewer than 51 qubits, there is a partitioning of the qubits into two similarly sized blocks connected by only five couplers. The next larger RQC, with 51 qubits, has seven couplers along the most promising circuit cut. Since the cost of SFA grows exponentially in the number of gates across the partitions our circuit geometry leads to a steep increase in the simulation cost of 51-qubit RQCs relative to the circuits with fewer qubits. This creates a sizeable gap in the computational hardness between most of our evaluation circuits and the quantum supremacy circuits ($n = 53$).
+
+In the time dimension, each RQC is a series of $m$ full cycles and one half cycle followed by measurement of all qubits. Every full cycle consists of two steps. In the first step, a single-qubit gate is applied to every qubit. In the second step, two-qubit gates are applied to pairs of qubits. Different qubit pairs are allowed to interact in different cycles. Specifically, in the supremacy RQCs we loop through the direct neighbors of every qubit over the eight-cycle sequence ABCDCDAB and in the evaluation RQCs we use the four-cycle sequence EFGH where A, B, ..., H are coupler activation patterns shown in Fig.~\ref{fig:gate_patterns}. The sequence is repeated in subsequent cycles. The cost of SFA simulation is highly sensitive to the specific sequence employed in a circuit, see \ref{sec:wedge_formation}. Border qubits have fewer than four neighbors and no gate is applied to them in some cycles. The half cycle preceding the measurement consists of the single-qubit gates only. The overall structure of our RQCs is shown in Fig.~3 of the main paper \cite{arute2019}.
+
+\begin{figure*}
+\includegraphics[scale=0.3]{figures/sup_circuits/gate_patterns.pdf}
+\caption{\label{fig:gate_patterns} \textbf{Coupler activation patterns.} Coupler activation pattern determines which qubits are allowed to interact simultaneously in a cycle. Quantum supremacy RQCs utilize the staggered patterns shown in the top row in the sequence ABCDCDAB, repeated in subsequent cycles. Performance evaluation RQCs employ the patterns shown in the bottom row in the sequence EFGH, likewise repeated in subsequent cycles. The former sequence makes SFA simulation harder by facilitating prompt transfer of entanglement created at promising circuit cuts into the bulk of each circuit partition.}
+\end{figure*}
+
+\subsection{Randomness}
+Single-qubit gates in every cycle are chosen randomly using a pseudo-random number generator (PRNG). The generator is initialized with a seed $s$ which is the third parameter for our family of RQCs. 
+The single-qubit gate applied to a particular qubit in a given cycle depends only on $s$. Consequently, two RQCs with the same $s$ apply the same single-qubit gate to a given qubit in a given cycle as long as the qubit and the cycle belong in both RQCs as determined by their size $n$ and depth $m$ parameters. 
+
+Conversely, the choice of single-qubit gates is the sole property of our RQCs that depends on $s$. In particular, the same two-qubit gate is applied to a given qubit pair in a given cycle by all RQCs that contain the pair and the cycle.
+
+\subsection{Quantum gates}\label{subsec:quantum_gates}
+In our experiment, we configure three single-qubit gates. Each one is a $\pi/2$-rotation around an axis lying on the equator of the Bloch sphere. Up to global phase, the gates are
+
+\begin{align}
+X^{1/2} \equiv R_X(\pi / 2) = \frac{1}{\sqrt{2}} \begin{bmatrix}
+1  & -i \\
+-i &  1 
+\end{bmatrix}, \\
+Y^{1/2} \equiv R_Y(\pi / 2) = \frac{1}{\sqrt{2}} \begin{bmatrix}
+1 & -1 \\
+1 &  1 
+\end{bmatrix}, \\
+W^{1/2} \equiv R_{X+Y}(\pi / 2) = \frac{1}{\sqrt{2}} \begin{bmatrix}
+1  & -\sqrt{i} \\
+\sqrt{-i} &  1
+\end{bmatrix}
+\end{align}
+where $W = (X + Y)/\sqrt{2}$ and $\sqrt{\pm i}$ denotes the principal value of the square root. The first two belong to the single-qubit Clifford group, while $W^{1/2}$ is a non-Clifford gate. Single-qubit gates in the first cycle are chosen independently and uniformly at random from the set of the three gates above. In subsequent cycles, each single-qubit gate is chosen independently and uniformly at random from among the gates above except the gate applied to the qubit in the preceding cycle. This prevents simplifications of some simulation paths in SFA. Consequently, there are $3^n 2^{nm}$ possible random choices for a RQC with $n$ qubits and $m$ cycles.
+
+Two-qubit gates in our RQCs are not randomized, but are determined by qubit pair and cycle number. The gates preserve the number of ground and excited states of the qubits which gives their matrices block diagonal structure with $1 \times 1$, $2 \times 2$ and $1 \times 1$ blocks. Therefore, up to global phase they belong to $U(1) \oplus U(2) \oplus U(1) / U(1)$ and thus can be described by five real parameters (see Fig.~\ref{fig:params_control_model}, and Eq.~\ref{eq:unitary_angles}). Each gate in this family can be decomposed into four Z-rotations described by three free parameters and the two-parameter fermionic simulation gate
+\begin{equation} \label{eq:fsim}
+{\rm fSim}(\theta, \phi) = \begin{bmatrix}
+1 &             0  &              0 & 0 \\
+0 &   \cos(\theta) & -i \sin(\theta) & 0 \\
+0 & -i \sin(\theta) &   \cos(\theta) & 0 \\
+0 &             0  &              0 & e^{-i \phi}
+\end{bmatrix}
+\end{equation}
+which is the product of a fractional iSWAP and controlled phase gate (see Fig.~\ref{fig:two_qubit_gates}b).
+
+In our experiment, we tune up the two-qubit gates close to $\theta \approx \pi/2$ and $\phi \approx \pi/6$ radians and then infer more accurate values of all five parameters for each qubit pair using XEB. Consequently, all five parameters of the two-qubit gate depend on the qubit pair. While inferred unitaries are suitable for RQC sampling, future applications of the Sycamore processor, for example, in quantum chemistry, will require precise targeting of the entangling parameters \cite{kivlichan2018quantum, babbush2018low}. The three parameters which control the Z-rotations implicit in the two-qubit gates can be canceled out with active Z-rotations turning an arbitrary five-parameter gate into pure $\rm{fSim} (\theta, \phi)$. In our RQCs, we have decided not to apply such correction gates. This choice affords us greater number of interactions within the available circuit depth budget and introduces additional implicit non-Clifford single-qubit gates into the RQCs.
+
+The Z-rotations have two origins. First, they capture the phase shifts due to qubit frequency excursions during the two-qubit gate. Second, they account for phase changes due to different idle frequencies of the interacting qubits. The latter introduces dependency of the three parameters defining the Z-rotations on the time at which the gate is applied. By contrast, for a given qubit pair $\theta$ and $\phi$ do not depend on the cycle.
+
+The $\rm{fSim} (\pi/2, \pi/6)$ gate is the product of a non-Clifford controlled phase gate and an iSWAP which is a two-qubit Clifford gate.
+
+\subsection{Programmability and universality}
+
+Programmability of Sycamore rests on our ability to tune up a variety of gate sets including sets that are universal for quantum computation. For example, the set of gates employed in our quantum supremacy demonstration is universal, as we show in this section.
+
+The proof consists of two parts. First, we show that the {\rm CZ} gate can be obtained as a composition of two fSim gates and single-qubit rotations. Second, we outline how the well-known proof that the $H$ and $T$ gates are universal for {\rm SU(2)} \cite{Boykin1999OnUniversal} can be adapted for $X^{1/2}$ and $W^{1/2}$. The conclusion follows from the fact that the gate set consisting of the {\rm CZ} gate and {\rm SU(2)} is universal \cite{DiVincenzo1995Twobit}.
+
+\subsubsection{Decomposition of {\rm CZ} into {\rm fSim} gates}
+
+Here, we show how to decompose a controlled-phase gate into two {\rm fSim} gates and several single-qubit gates.  The {\rm fSim} gate is native to our hardware and can be decomposed into
+\begin{align}\label{cz_to_syc:eq:Sycamore_a}
+    {\rm fSim}(\theta, \phi) = e^{-i\theta(X\otimes X + Y\otimes Y)/2}\, e^{-i\phi(I-Z)\otimes (I-Z)/4}\,,
+\end{align}
+where the iSWAP angle $\theta \simeq \pi/2$ and the controlled-phase angle $\phi \simeq \pi/6$. The controlled-phase part can be further decomposed into
+\begin{align}
+&e^{-i\phi(I-Z)\otimes (I-Z)/4}\nonumber\\
+&\quad = e^{-i\phi/4}\, e^{i\phi (Z\otimes I + I\otimes Z)/4}\, e^{-i\phi Z\otimes Z/4}\,.
+\end{align}
+To simplify notations, we introduce the two-qubit gate
+\begin{align}\label{cz_to_syc:eq:Sycamore_b}
+    \Upsilon(\theta, \phi)&= e^{-i\theta(X\otimes X + Y\otimes Y)/2}\, e^{-i\phi Z\otimes Z/4}\nonumber\\[2pt] 
+    &= e^{i\phi/4}\, e^{-i\phi (Z\otimes I + I\otimes Z)/4}\: {\rm fSim}(\theta, \phi)
+    \,,
+\end{align}
+which is equivalent to the {\rm fSim} gate up to single-qubit $Z$ rotations. The sign of $\theta$ in $\Upsilon(\theta, \phi)$ can be changed by the single-qubit transformation,
+\begin{align}\label{cz_to_syc:eq:Sycamore_b}
+  Z_1\, \Upsilon(\theta, \phi)\, Z_1  = \Upsilon(-\theta, \phi) \,,
+\end{align}
+where $Z_1 = Z\otimes I$ ($Z_2 = I\otimes Z$ works equally well).  
+
+Multiplying two $\Upsilon$ gates with opposite values of $\theta$ on both sides the operator $X_1 = X\otimes I$, we have
+\begin{align}
+ \Upsilon(-\theta, \phi)\, X_1\, \Upsilon(\theta, \phi)&= e^{i\theta Y\otimes Y /2}\, X_1\,e^{-i\theta Y\otimes Y /2}\nonumber\\
+ &= \cos\theta\, X_1 + \sin\theta\, Z\otimes Y\,.\label{cz_to_syc:eq:X_1_identity}
+\end{align}
+With the identity~\eqref{cz_to_syc:eq:X_1_identity}, we have
+\begin{widetext}
+\begin{align}
+ \Upsilon(-\theta, \phi)\, e^{i\alpha X_1}\, \Upsilon(\theta, \phi)
+ &= \cos\alpha\, \Big(\cos\frac{\phi}{2}\,I\otimes I -i\sin\frac{\phi}{2}\, Z\otimes Z\Big) + i\sin\alpha\, \Big(\cos\theta\, X\otimes I + \sin\theta\, Z\otimes Y\Big)\nonumber\\[3pt]
+ &= \Big(\cos\alpha\cos\frac{\phi}{2}\, I + i\sin\alpha\cos\theta\, X\Big) \otimes I - i Z\otimes \Big(\cos\alpha\sin\frac{\phi}{2}\, Z - \sin\alpha\sin\theta\, Y\Big)\,,\label{cz_to_syc:eq:composite_gate}
+\end{align}
+\end{widetext}
+where $0 \leq\alpha\leq \pi/2$ is to be determined.  We introduce the Schmidt operators
+\begin{align}
+    &\Gamma_1(\alpha) = \cos\alpha\cos(\phi/2)\, I + i\sin\alpha\cos\theta\, X\,,\\[3pt]
+    &\Gamma_2(\alpha) = \cos\alpha\sin(\phi/2)\, Z - \sin\alpha\sin\theta\, Y\,,
+\end{align}
+and the unitary~\eqref{cz_to_syc:eq:composite_gate} takes the simple form
+\begin{align}\label{cz_to_syc:eq:composite_gate_schmidt}
+  \Upsilon(-\theta, \phi)\, e^{i\alpha X_1}\, \Upsilon(\theta, \phi) =  \Gamma_1\otimes I -iZ\otimes \Gamma_2\,.
+\end{align}
+The Schmidt rank of this unitary is two.  Therefore, it is equivalent to a controlled-phase gate (also with Schmidt rank two) up to some single-qubit unitaries.  The two non-zero Schmidt coefficients of the unitary~\eqref{cz_to_syc:eq:composite_gate} are equal to the operator norms of $\Gamma_{1,\,2}$.  
+
+The target controlled-phase gate that we want to decompose into the {\rm fSim} gate is
+\begin{align}
+\diag\big(1,\, 1,\, 1,\, e^{-i\delta}\big) = e^{-i\delta(I-Z)\otimes (I-Z)/4} \,,
+\end{align}
+where $0\leq\delta\leq 2\pi$.  It has two non-zero Schmidt coefficients  $\cos(\delta/4)$ and $\sin(\delta/4)$.  For example, we set the operator norm of $\Gamma_2$ to be equal to the second Schmidt coefficient of the target unitary
+\begin{align}
+\big\lvert\Gamma_2(\alpha)\big\rvert &= \sqrt{\big(\cos\alpha\sin(\phi/2)\big)^2 + \big(\sin\alpha\sin\theta\big)^2}\nonumber\\[3pt]
+&= \sin(\delta/4)\,,\label{cz_to_syc:eq:second_sch_coeff}
+\end{align}
+and the parameter $\alpha$ can be determined
+\begin{align}\label{cz_to_syc:eq:alpha}
+\sin\alpha = \sqrt{\frac{\sin(\delta/4)^2 - \sin(\phi/2)^2}{\sin(\theta)^2-\sin(\phi/2)^2}}\;.
+\end{align}
+This equation has a solution if and only if one of the following two conditions is satisfied
+\begin{align}
+\lvert\sin\theta\rvert \leq \sin(\delta/4) \leq \lvert\sin(\phi/2)\rvert\,,\\[3pt]
+\lvert\sin(\phi/2)\rvert\leq \sin(\delta/4)  \leq \lvert\sin\theta\rvert \,.
+\end{align}
+A large set of controlled-phase gates can be implemented with the typical values of $\theta$ and $\phi$ of the {\rm fSim} gate, except for those that are very close to the identity. 
+
+To fix the local basis of the first qubit in Eq.~\eqref{cz_to_syc:eq:composite_gate}, we introduce two $X$ rotations of the same angle
+\begin{gather}
+ e^{-i\xi X/2}\, \Gamma_1(\alpha)\, e^{-i\xi X/2} = \cos(\delta/4)\,I\,,\\[2pt]
+  e^{-i\xi X/2}\, Z\:  e^{-i\xi X/2}=  Z\,,
+\end{gather}
+where the angle $\xi$ is 
+\begin{align}
+ \xi = \arctan \bigg(\frac{\tan\alpha \cos\theta}{\cos(\phi/2)}\bigg) + \frac{\pi}{2}\, \Big(1-\sgn\big(\cos(\phi/2)\big)\Big)\,.
+\end{align}
+To fix the local basis of the second qubit in Eq.~\eqref{cz_to_syc:eq:composite_gate}, we introduce two $X$ rotations of opposite angles
+\begin{align}
+ e^{i\eta X/2}\, \Gamma_2(\alpha)\, e^{-i\eta X/2}= \sin(\delta/4)\,Z\,,
+\end{align}
+where the angle $\eta$ is
+\begin{align}
+\eta = \arctan \bigg(\frac{\tan\alpha \sin\theta}{\sin(\phi/2)}\bigg) + \frac{\pi}{2}\, \Big(1-\sgn\big(\sin(\phi/2)\big)\Big)\,.
+\end{align}
+Applying these local $X$ rotations before and after the gate sequence in Eq.~\eqref{cz_to_syc:eq:composite_gate}, we have
+\begin{align}
+ & e^{-i(\xi X_1 - \eta X_2)/2}\,\Upsilon(-\theta, \phi)\, e^{i\alpha X_1}\, \Upsilon(\theta, \phi)\, e^{-i(\xi X_1 + \eta X_2)/2}\nonumber\\[2pt]
+ & \quad= \cos(\delta/4)\: I \otimes I - i\sin(\delta/4)\, Z\otimes Z\,,\label{cz_to_syc:eq:final_decomposition}
+\end{align}
+which is the desired controlled-phase gate up to some single-qubit $Z$ rotations.  
+
+The target controlled-phase gate equals to the \CZ\ gate for $\delta = \pi$.  We numerically checked that the decomposition~\eqref{cz_to_syc:eq:final_decomposition} yields the \CZ\ gate for all 86 {\rm fSim} gates (with different values of $\theta$ and $\phi$) in our device.
+
+\subsubsection{Universality for {\rm SU(2)}}
+
+Here, we show how the argument for the well-known result that the $H$ and $T$ gates are universal for {\rm SU}(2) \cite{Boykin1999OnUniversal} can be adapted for the $X^{1/2}$ and $W^{1/2}$ gates. At the core of the argument lies the observation that $T \equiv R_Z(\pi / 4)$ followed by $HTH \equiv R_X(\pi / 4)$ is a single-qubit rotation by angle $\alpha$ which is an irrational multiple of $\pi$. Specifically, $\alpha$ is such that
+
+\begin{equation}
+\cos\frac{\alpha}{2} = \cos^2\frac{\pi}{8} = \frac{1}{2}\left(1 + \frac{1}{\sqrt{2}}\right).
+\end{equation}
+By Theorem B.1 in Appendix B of \cite{Boykin1999OnUniversal}, $\alpha/\pi$ is irrational because the monic minimal polynomial with rational coefficients of $e^{i\alpha}$
+
+\begin{equation}\label{eq:minimal_polynomial}
+x^4 + x^3 + \frac{1}{4}x^2 + x + 1
+\end{equation}
+is not cyclotomic (since not all its coefficients are integers).
+
+Similarly, $W^{1/2} \equiv R_{X+Y}(\pi / 2)$ followed by $X^{1/2} \equiv R_X(\pi / 2)$ is a single-qubit rotation by angle $\beta$ such that
+
+\begin{equation}
+\cos\frac{\beta}{2} = \cos^2\frac{\pi}{4} - \frac{1}{\sqrt{2}}\sin^2\frac{\pi}{4} = \frac{1}{2}\left(1 - \frac{1}{\sqrt{2}}\right).
+\end{equation}
+The monic minimal polynomial with rational coefficients of $e^{i\beta}$ is \eqref{eq:minimal_polynomial}, the same as that of $e^{i\alpha}$. Therefore, $\beta$ is also an irrational multiple of $\pi$. The rest of the universality argument for $H$ and $T$ also applies in the case of $X^{1/2}$ and $W^{1/2}$.
+
+\subsection{Circuit variants}
+\label{sec:circuit_variants}
+Since XEB entails classical simulation, it is hard or impossible to use it to estimate experimental fidelity of circuits which are hard or impossible to simulate classically. As described above, we designed our RQCs to ensure that an effective partitioning for SFA exists for circuits with fewer than 51 qubits. This gives rise to a significant gap in the cost of classical simulation between quantum supremacy circuits and most of our performance evaluation circuits. This gap facilitates performance evaluation of the Sycamore processor near the quantum supremacy frontier. In practice, however, we would like greater control over the simulation hardness, for two reasons. First, performance evaluation is still very costly for large $n$ approaching the supremacy frontier. Second, we would like to be able to estimate the fidelity of supremacy RQCs more directly, even though classical simulation of this case is unfeasible by definition.
+
+In order to achieve more fine-grained control over the cost of classical simulation of our RQCs, we exploit the fact that the experimental fidelity depends primarily on the number and quality of the gates while the simulation cost is highly sensitive to the structure of the quantum circuit. Therefore, we approximate the experimental fidelity of RQCs which are hard or impossible to simulate from the fidelity of similar RQCs obtained as the result of transformations that reduce simulation cost without significantly affecting experimental fidelity.
+
+We employ two such transformations. Each decreases simulation cost by reducing the bond dimension of promising circuit cuts. The first one removes some or all cross-partition gates. We say that the removed gates have been \textit{elided} and term the transformation \textit{gate elision}. The second transformation changes the sequence of coupler activation patterns shown in Fig.~\ref{fig:gate_patterns} to enable the formation of \textit{wedges} which reduce the bond dimension by slowing the spread of entanglement generated at the circuit cut.
+
+The two transformations complete the description of RQCs used in our experiment. Consequently, each RQC is uniquely determined by five parameters: number of qubits $n$, number of cycles $m$, PRNG seed $s$, number of elided gates and the sequence of coupler activation patterns.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Circuit variant} & \textbf{Gates elided} & \textbf{Sequence of patterns} \tabularnewline
+\hline
+\hline
+non-simplifiable full & none & ABCDCDAB \tabularnewline
+non-simplifiable elided & some & ABCDCDAB \tabularnewline
+non-simplifiable patch & all & ABCDCDAB \tabularnewline
+simplifiable full      & none & EFGH \tabularnewline
+simplifiable elided    & some & EFGH \tabularnewline
+simplifiable patch     & all  & EFGH \tabularnewline
+\hline
+\end{tabular}
+\caption{\label{table:rqc_variants} \textbf{Circuit variants.} Six variants of RQCs employed in quantum supremacy demonstration (non-simplifiable full) and performance evaluation (remaining five variants) classified by transformations applied in order to control the cost of classical simulation. The eight coupler activation patterns A, B, ..., H are shown in Fig.~\ref{fig:gate_patterns}.}
+\end{table}
+ 
+\subsubsection{Gate elision}
+\label{subsubsection:gate_elision}
+The most straightforward way to reduce the cost of classical simulation of a RQC is to remove a number of cross-partition gates across the most promising circuit cut. In order to enable independent propagation by the SFA of the wave function of each circuit partition for the first few cycles, the gates are elided beginning with the initial cycle. Each elided gate reduces the bond dimension of the partitioning by a factor of two or four, see Section \ref{sec:classical_sim}.
+
+We refer to RQCs with a small number of elided gates as \textit{elided circuits}. A particularly dramatic speedup is possible when all two-qubit gates across the partitions are elided leading to two disconnected circuits running in parallel. We refer to such disconnected RQCs as \textit{patch circuits}. Base RQCs in which no gates have been elided are referred to as \textit{full circuits}.
+
+If the error probability of the elided two-qubit gate is similar to the error probability of the two-qubit identity gate which it is replaced with, the circuit resulting from gate elision exhibits fidelity that is similar to the fidelity of the original circuit. This assumption holds when the two-qubit gate errors are dominated by the same decoherence processes that govern the single-qubit gate errors such as finite $T_1$ and $T_2$. Indeed, for circuit sizes where XEB on full circuits is possible, we have observed good agreement between fidelity estimates produced for patch, elided and full circuits. For harder circuits, we have observed good agreement between fidelity estimates for patch and elided circuits. See Section \ref{sec:large_scale_xeb} for detailed discussion of these results.
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline 
+\textbf{Circuit variant} & \textbf{$n$} & \textbf{$m$} & \textbf{Single-qubit gates} & \textbf{All two-qubit gates} & \textbf{Cross-partition two-qubit gates} \tabularnewline
+\hline 
+\hline 
+non-simplifiable full & 53 & 20 & 1113 & 430 & 35 \tabularnewline
+non-simplifiable elided & 53 & 20 & 1113 & 408 & 13 \tabularnewline
+non-simplifiable patch & 53 & 20 & 1113 & 395 & 0 \tabularnewline
+simplifiable full & 38 & 14 & 570 & 210 & 18 \tabularnewline
+simplifiable elided & 38 & 14 & 570 & 204 & 12 \tabularnewline
+simplifiable patch & 38 & 14 & 570 & 192 & 0 \tabularnewline
+\hline 
+\end{tabular}
+\caption{\label{table:rqc_params} \textbf{Gate counts.} Number of gates in selected random quantum circuits employed for quantum supremacy demonstration and performance evaluation of the Sycamore processor.} 
+\end{table*}
+
+\subsubsection{Wedge formation}
+\label{sec:wedge_formation}
+The most competitive algorithm for our hardest circuits, SFA (see Sec. \ref{subsec:sa_sfa}) scales proportionally to the bond dimension of the circuit partitioning which is equal to the product of Schmidt rank of all cross-partition gates (see Sec. \ref{subsec:sim_target_fidelity}). The Schmidt decomposition of most two-qubit gates in our RQCs consists of four terms (a few gates can be replaced with simpler gates with Schmidt rank of two, see Section \ref{sec:classical_sim}). Therefore most cross-partition gates contribute a factor of four to the bond dimension of the partitioning. However, when two consecutive cross-partition gates share a qubit forming a \textit{wedge} as shown in Fig.~\ref{fig:wedge}, the Schmidt decomposition of the resulting three-qubit unitary also has only four terms. In other words, the second cross-partition gate does not generally produce substantial new entanglement (as quantified by the Schmidt rank) among the partitions in excess of the entanglement produced by the first gate. Consequently, every wedge reduces the bond dimension of the partitioning by a factor of four.
+
+The eight-cycle sequence ABCDCDAB and the four constituent coupler activation patterns A, B, C and D shown in Fig.~\ref{fig:gate_patterns} have been designed to prevent formation of wedges across promising circuit cuts. In other words, the sequence ensures that entanglement created in a given cycle by cross-partition gates is transferred into the bulk of each partition in the following cycle. 
+
+On the other hand, the four-cycle sequence EFGH enables formation of wedges and thus efficient simulation of RQCs using SFA. We employ the latter sequence in most evaluation circuits and use the former eight-cycle sequence for the quantum supremacy circuits and largest evaluation circuits, see Table \ref{table:rqc_variants}.
+
+\begin{figure}
+\includegraphics[scale=0.67]{figures/sup_circuits/wedge.pdf}
+\caption{\label{fig:wedge} \textbf{Cross-partition wedge.} Two consecutive cross-partition gates which share a qubit form a \textit{wedge}, as illustrated here with gates highlighted in turquoise and magenta. Schmidt rank of a single two-qubit gate is at most four. Schmidt rank of a wedge is also at most four. Therefore, generally wedges are not efficient at increasing entanglement across partitions and can be simulated efficiently by the SFA.}
+\end{figure}

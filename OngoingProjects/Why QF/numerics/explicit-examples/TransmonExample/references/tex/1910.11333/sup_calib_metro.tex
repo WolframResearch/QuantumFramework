@@ -1,0 +1,325 @@
+\section{Metrology and calibration}\label{sec:calib_metro}
+
+\subsection{Calibration overview}
+Quantum computations are physically realized through the time-evolution of quantum systems steered by analog control signals. As quantum information is stored in continuous amplitudes and phases, these control signals must be carefully chosen to achieve the desired result. Calibration is the process of performing a series of experiments on the quantum system to learn optimal control parameters. 
+
+Calibration is challenging for a number of reasons.  Analog control requires careful control-pulse shaping as any deviation from the ideal will introduce error. Qubits require individual calibration as variations in the control system and qubits necessitate different control parameters to hit target fidelities. Optimal control parameters can also drift in time, requiring calibrations to be revisited to maintain performance. Additionally, the full calibration procedure requires bootstrapping: using a series of control sequences with increasing complexity to determine circuit and control parameters to increasingly higher degrees of precision. Lastly, each qubit needs to perform a number of independent operations which are independently calibrated: single-qubit gates, two-qubit gates, and readout. 
+
+Our Sycamore processor offers a high degree of programmability: we can dynamically change the frequency of each qubit, as well as the effective qubit-qubit coupling between nearest neighbor qubits. This tunability gives us the freedom to enact many different control strategies, as well as account for non-uniformities in the processor's parameters. However, these extra degrees of freedom are a double-edged sword. Additional control knobs always introduce a source of decoherence and control errors as well as an added burden on calibration. 
+
+Our approach is to systematize and automate our calibration procedure as much as possible, thus abstracting complexity away. This automation allows us to turn calibration into a science, where we can compare calibration procedures to determine optimal strategies for time, performance, and reliability. By employing calibration science to study full-system performance with different control strategies, we have been able to improve full-system fidelities by over an order of magnitude from initial attempts while decreasing the calibration time and improving reliability. Lastly, we design our calibration to be done almost entirely at the single- or two-qubit level, rather than at the system level, in order to be as scalable as possible. 
+
+\subsubsection{Device registry}
+The device registry is a database of control variables and configuration information we use to control our quantum processors. The registry stores information such as operating frequencies, control biases, gate parameters such as duration, amplitude, parameterization of circuit models, etc. The goal of calibration is to experimentally determine and populate the registry with optimal control parameters. We typically store \textgreater100 parameters per qubit to achieve high fidelity across all of the various qubit operations. The large number of parameters and subtle interdependencies between them highlights the need for automated calibration. 
+
+\subsubsection{Scheduling calibrations: ``Optimus"}
+We seek a strategy for identifying and maintaining optimal control parameters for a system of physical qubits given incomplete system information. To perform these tasks, we use the ``Optimus" formulation as in Ref~\cite{jkelly2018physical}, where each calibration is a node in a directed acyclic graph that updates one or more registry parameters, and the bootstrapping nature of calibration sequences is represented as directed edges between nodes. Now, calibrating a system of physical qubits becomes a well-defined graph traversal problem. The calibration graph used for the Sycamore device can be see in Figure~\ref{fig:optimus_graph}. This strategy is particularly useful for maintaining calibrations in the presence of drift, where we want to do the minimal amount of work to bring the system back in spec, and when extending the calibration procedure, as interdependencies are explicit. Typical timescales for bringup of a new Sycamore processor are approximately 36 hours upon first cooldown, and 4 hours per day thereafter for maintaining calibrations. These times are specific to current available technology, and can be significantly improved. 
+
+\begin{figure}
+\includegraphics{figures/sup_calibration_metrology/cal_graph_figure.pdf}
+\caption{\label{fig:optimus_graph} \textbf{Optimus calibration graph for Sycamore.} Calibration of physical qubits is a bootstrapping procedure between different pulse sequences or ``experiments" to extract control and system parameters. Initial experiments are coarse and have interplay between fundamental operations and elements such as single-qubit gates, readout, and the coupler. Final experiments involve precise metrology for each of the qubit operations: single-qubit gates, two-qubit gates, and readout. }
+\end{figure}
+
+\subsection{Calibration procedure}
+\subsubsection{Device configuration}
+
+\begin{figure}
+\includegraphics{figures/sup_calibration_metrology/configs.pdf}
+\caption{\label{fig:device_configs}  \textbf{Configurations of the device over the course of calibration.} \textbf{a,} In the root configuration, we start with no knowledge of the system and measure basic device parameters. \textbf{b,} We create a single qubit configuration for each qubit, where all qubits except the qubit of interest are biased to near zero frequency. \textbf{c,} Using knowledge learned in the single qubit configurations, we build a grid of qubits. }
+\end{figure}
+
+
+Throughout the calibration procedure, the device registry may be configured in different states in order to calibrate certain parameters. We call these different states ``device configurations", and different kinds of configurations reflect our knowledge of the system at different points in the full calibration procedure. As illustrated in Figure~\ref{fig:device_configs}, the primary difference between the different configurations is the set of ``active" qubits, where active qubits are biased to an operating frequency between 5-7\,GHz, and ``inactive" qubits are biased near zero frequency. Following the outline above, we have three device configurations of interest:
+
+\paragraph{Root config.}
+The root configuration is the starting state of the system immediately after cool down and basic system verification. In this configuration, we calibrate coarse frequency vs bias curves for each readout resonator, qubit, and coupler.
+\paragraph{Single qubit config.} 
+After completing root calibrations, we now know how to bias each qubit to its minimum and maximum frequencies. We create one configuration of the device registry for each qubit, where the qubit of interest is biased in a useful region (5-7 GHz) and the remaining qubits are biased to their minimum frequencies in order to isolate the qubit of interest. In each of these configurations, we fine tune the bias vs frequency curves for the qubit and its associated couplers and resonators, and also measure $T_1$ as a function of frequency, necessary due to background TLS defects and modes.
+\paragraph{Grid config.}
+After completing calibrations in each isolated qubit configuration, we feed the information we learned into a frequency optimization procedure. The optimizer places the biases for each qubit and coupler in a user defined grid of any desired size up to the entire chip. We then proceed to calibrate high fidelity single qubit gates, two qubit gates, and readout.
+
+\subsubsection{Root config: procedure}
+
+We begin calibration with simple frequency-domain experiments to understand how each qubit and coupler responds to its flux bias line. 
+\begin{itemize}
+\item Calibrate each parametric amplifier (flux bias, pump frequency, pump power).
+\item For each qubit, identify its readout resonator and measure the readout signal versus qubit bias (``Resonator Spectroscopy") \cite{Wallraff2004StrongCoupling}. Estimate the resonator and qubit frequency as a function of qubit bias.
+\item For each coupler, place one of its qubits near maximum frequency and the other near minimum frequency, then measure the readout signal of the first qubit as a function of coupler bias. The readout signal changes significantly as the coupler frequency passes near the qubit frequency. Identify where the coupler is near its maximum frequency, so the qubit-qubit coupling is small (a few MHz) and relatively insensitive to coupler bias.
+\end{itemize}
+
+\subsubsection{Single-qubit config: procedure}
+After setting the biases to isolate a single qubit, we follow the procedure outlined in \cite{chen2018metrology} which we will summarize here:
+\begin{itemize}
+\item Perform fixed microwave drive qubit spectroscopy while sweeping the qubit bias and detecting shifts in the resonator response, to find the bias that places the qubit at the desired resonant frequency.
+\item Using the avoided level crossing identified in the root config, determine the operating bias to bring the qubit on resonance with its readout resonator to perform active ground state preparation. We use a 10~$\mu s$ pulse consistent with the readout resonator ringdown time.
+\item Perform power Rabi oscillations to find the drive power that gives a $\pi$ pulse to populate the $|1\rangle$ state.
+\item Optimize the readout frequency and power to maximize readout fidelity.
+\item Fine tune parameters (qubit resonant frequency, drive power, drive detuning \cite{chen2016measuring}) for $\pi$ and $\pi/2$ pulses.
+\item Calibrate the timing between the qubit microwave drive, qubit bias, and coupler bias.
+\item Perform qubit spectroscopy as a function of qubit bias to fine tune the qubit bias vs frequency curves.
+\item Measure $T_1$ vs.\ frequency by preparing the qubit in $|1\rangle$ then biasing the qubit to a variable frequency for a variable amount of time, and measuring the final population \cite{paultls}.
+\item Measure the response of a qubit to a detuning pulse to calibrate the frequency-control transfer function \cite{kelly2014optimal, neill2018blueprint, chen2018metrology}.
+\end{itemize}
+
+With the single-qubits calibrated in isolation, we have a wealth of information on circuits parameters and coherence information for each qubit. We use this information as input to a frequency placement algorithm to identify optimal operating frequencies for when the full processor is in operation. 
+
+\subsubsection{Optimizing qubit operating frequencies}
+\label{sec:opt_freqs}
+
+In our quantum processor architecture, we can independently tune each qubit's operating frequency. Since qubit performance varies strongly with frequency, selecting good operating frequencies is necessary to achieve high fidelity gates.  In arbitrary quantum algorithms, each qubit operates at three distinct types of frequencies: idle, interaction, and readout frequencies. Qubits idle and execute single-qubit gates at their respective idle frequencies. Qubit pairs execute two-qubit gates near their respective interaction frequencies. Finally, qubits are measured at their respective readout frequencies. In selecting operating frequencies, it is necessary to mitigate and make nontrivial tradeoffs between energy-relaxation, dephasing, leakage, and control imperfections. We solve and automate the frequency selection problem by abstracting it into an optimization problem. 
+
+\begin{figure*}
+\includegraphics{figures/sup_calibration_metrology/snake_tradeoffs.pdf}
+\caption{\label{fig:snake}  \textbf{Idle frequency solutions found by our Snake optimizer with different error mechanisms enabled.} The optimizer makes increasingly complex tradeoffs as more error mechanisms are enabled. These tradeoffs manifest as a transition from a structured frequency configuration into an unstructured one. Similar tradeoffs are simultaneously made in optimizing interaction and readout frequencies. Optimized idle and interaction operating frequencies are shown in Figure \ref{fig:qubit_freqs} and optimized readout frequencies are shown in Figure \ref{fig:readout_freqs}. Color scales are chosen to maximize contrast. Grey indicates that there is no preference for any frequency.  }
+\end{figure*}
+
+\begin{figure}
+\includegraphics{figures/sup_calibration_metrology/optimized_idles_ints.pdf}
+\caption{\label{fig:qubit_freqs}  \textbf{Optimized idle and interaction frequencies found by our Snake optimizer.} \textbf{a,} Idle frequencies, \textbf{b,} interaction frequencies. Readout frequencies are shown in Figure \ref{fig:readout_freqs}. These solutions are sufficient for state-of-the-art system performance. See Figure \ref{fig:snake} to understand some of the tradeoffs that are made during optimization. Color scales are chosen to maximize contrast. }
+\end{figure}
+
+We construct a quantum-algorithm-dependent and gate-dependent optimization objective that maps operating frequencies onto a metric correlated with system error.  The error mechanisms embedded within the objective function are parasitic coupling between nearest-neighbor and next-nearest-neighbor qubits, spectrally-diffusing two-level-system (TLS) defects \cite{paultls}, spurious microwave modes, coupling to control lines and the readout resonator, frequency-control electronics noise, frequency-control pulse distortions, microwave-control pulse distortions, and microwave-carrier bleedthrough. Additional considerations in selecting readout frequencies are covered in Section \ref{sec:readout_cals}. The objective is constructed from experimental data and numerics, and the individual error mechanisms are weighted by coefficients determined either heuristically or through statistical learning. 
+
+Minimizing the objective function is a complex combinatorial optimization problem. We characterize the complexity of the problem by the optimization dimension and search space. For a processor with $N$ qubits on a square lattice with nearest-neighbor coupling, there are $N$ idle, $N$ readout, and $\sim2N$ interaction frequencies to optimize. In an arbitrary quantum algorithm, all frequencies are potentially intertwined due to coupling between qubits. Therefore, the optimization dimension is $\sim4N$. The optimization search-space is constrained by qubits' circuit parameters and control-hardware specifications. Discretizing each qubit's operational range to 100 frequencies results in an optimization search space of $\sim100^{4N}$. This is much larger than the dimension of the Hilbert space of an $N$ qubit processor, which is $2^N$. 
+
+Given the problem complexity, it is assumed that finding globally optimal operating frequencies is intractable.  However, we have empirically verified that locally optimal solutions are sufficient for state-of-the-art system performance. To find local optima, we developed the ``Snake" homebrew optimizer that combines quantum algorithm structure with physics intuition to exponentially reduce optimization complexity and take intelligent optimization steps. For the circuits used here, the optimizer exploits the time-interleaved structure of single-qubit gates, two-qubit gates, and readout. For our 53 qubit processor, it returns local optima in $\sim10$ seconds on a desktop. Because of its favorable scaling in runtime versus number of qubits, we believe the Snake optimizer is a viable long-term solution to the frequency selection problem. 
+
+To illustrate how the Snake optimizer makes tradeoffs between error mechanisms, we plot idle frequency solutions with different error mechanisms enabled (Figure \ref{fig:snake}). Starting with an ideal processor with no error mechanisms enabled, there is no preference for any frequency configuration. Enabling frequency-control electronics noise, the optimizer pushes qubits towards their respective maximum frequencies, to minimize flux-noise susceptibility. Note that each qubit has a different maximum frequency due to fabrication variability. Enabling frequency-control pulse distortions forces a gradual transition between qubit frequencies to minimize two-qubit-gate frequency-sweep amplitudes. Enabling nearest-neighbor (NN) and next-nearest neighbor (NNN) parasitic coupling further lowers the degeneracy between qubit frequencies into a structure that resembles a multi-tiered checkerboard. Finally, enabling errors from TLS defects, spurious microwave modes, and all other known error mechanisms removes any obvious structure. A set of optimized idle and interaction frequencies is shown in Figure \ref{fig:qubit_freqs}, and readout frequencies are shown in Figure \ref{fig:readout_freqs}. 
+
+\subsubsection{Grid config: procedure}
+Calibrating a grid of qubits follows the same procedure as calibrating an isolated qubit with additional calibrations to turn off the qubit-qubit coupling. 
+\begin{itemize}
+\item Achieve basic state discrimination for each qubit at its desired frequency.
+\item For each coupler, minimize the qubit-qubit coupling (note changing coupler biases affects qubit frequencies). For each case below, we choose the coupler bias minimizing the interaction.
+\begin{itemize}
+    \item For qubit pairs idling within 60 MHz of each other, use a resonant swapping experiment. We excite one qubit and apply flux pulses to nominally put the qubits on resonance and let the qubits interact over time \cite{andrew_thesis}.
+    \item For qubit pair idling further apart, use a conditional phase experiment. We perform two Ramsey experiments on one qubit, where the other qubit is in the ground state and the excited state, to identify the state-dependent frequency shift of the first qubit.
+\end{itemize}
+\item Adjust the qubit biases to restore the desired qubit frequencies and proceed with qubit calibration as in the single-qubit configurations.
+\item Calibrate the entangling gate.
+\begin{itemize}
+    \item Estimate the qubit pulse amplitudes to reach the desired interaction frequency with their frequency versus bias calibration.
+    \item Fine-tune the qubit pulse amplitudes to reach resonance, compensating for pulse undershoot.
+    \item Tune the coupler pulse amplitude to achieve a complete photon exchange.
+\end{itemize}
+\end{itemize}
+
+In the next two sections, we describe in more detail the fine tuning required to achieve high fidelity two qubit gates and multiqubit readout.
+
+\subsection{Two-qubit gate metrology}
+High-fidelity two-qubit gates are very hard to achieve.  In an effort to make this easier, we design qubits with tunable frequencies and tunable interactions.  This added control allows for immense flexibility when implementing gates.  In the following subsections, we discuss a simple high-fidelity control and metrology strategy for two-qubit gates in our system. 
+
+\subsubsection{The natural two-qubit gate for transmon qubits}
+Consider two transmon qubits at different frequencies (say 6.0 and 6.1 GHz).  Here are two potential ways of generating a multi-qubit gate in this system.  If the qubits are tuned into resonance, then excitations swap back-and-forth and this interaction can be modeled as a partial-iSWAP gate \cite{bialczak2010quantum}.  If the qubits are detuned by an amount close to their nonlinearity, then the 11-state undergoes an evolution that can be modeled as a controlled-phase gate (assuming the population does not leak) \cite{martinis2014fast, dicarlo2009cz}.  In fact, any two-qubit control sequence that does not leak can be modeled as a partial-iSWAP followed by a controlled-phase gate.  
+
+A typical control sequence is shown Fig.~\ref{fig:two_qubit_gates}a.  Gate times of 12~ns are chosen to trade off decoherence (too slow) and leakage to higher states of the qubit (too fast).  Figure \ref{fig:two_qubit_gates}b depicts how this operation can be decomposed as a quantum circuit.  This circuit contains Z-rotations that result from the frequency excursions of the qubits, and can be expressed by the unitary:
+\begin{equation}\label{eq:unitary_angles}
+    \begin{bmatrix}
+        1 & 0 & 0 & 0 \\
+        0 & e^{i(\Delta_++\Delta_-)}\cos\theta & -ie^{i(\Delta_+-\Delta_{-,\mathrm{off}})}\sin\theta & 0 \\
+        0 & -ie^{i(\Delta_++\Delta_{-,\mathrm{off}})}\sin\theta & e^{i(\Delta_+-\Delta_-)}\cos\theta & 0 \\
+        0 & 0 & 0 & e^{i(2\Delta_+-\phi)}
+    \end{bmatrix}.
+\end{equation}
+These gates have an efficient mapping to interacting fermions and have been coined `fSim' gates, short for fermionic simulation \cite{kivlichan2018quantum}.  The long-term goal is to implement the entire space of gates (shown in Fig.~\ref{fig:two_qubit_gates}c).
+
+For quantum supremacy, the two-qubit gate of choice is the iSWAP gate. For example, CZ is less computationally expensive to simulate on a classical computer by a factor of two \cite{markov_quantum_2018, villalonga2019flexible}.  A dominant error-mechanism when trying to implement an iSWAP is a small conditional-phase that is generated by an interaction of the $|11\rangle$-state with higher states of the transmons ($|02\rangle$ and $|20\rangle$).  For this reason, the fSim gate with swap-angle $\theta \approxeq 90^{\circ}$ and conditional phase $\phi \approxeq 30^{\circ}$ has become the gate of choice in our supremacy experiment.  Note that small deviations from these angles are also viable quantum supremacy gates.  These gates result from the natural evolution of two qubits making them easy to calibrate, high intrinsic fidelity gates for quantum supremacy.
+
+\begin{figure}
+\includegraphics[width=3.2in]{figures/sup_calibration_metrology/two_qubit_gates.pdf}
+\caption{\label{fig:two_qubit_gates}  \textbf{Two-qubit gate strategy.}  \textbf{a,} Control waveforms for two qubits and a coupler.  Each curve represents the control flux applied to the qubit's and coupler's SQUID loops as a function of time.  \textbf{b,} Generic circuit representation for an arbitrary two-qubit gate using flux pulses.  This family of gates have been named ``fSim'' gates, short for fermionic-simulation gates. Our definition of the fSim gate uses $\theta$ with the sign opposite to the common convention for the iSWAP gate. \textbf{c,} Control landscape for fSim gates as a function of the swap angle and conditional phase, up to single qubit rotations.  The coordinates of common entangling gates are marked along with the Sycamore gate fSim($\theta = 90^{\circ}, \phi = 30^{\circ}$). 
+}
+
+\end{figure}
+
+
+\subsubsection{Using cross entropy to learn a unitary model}
+We have recently introduced cross-entropy as a fidelity metric for quantum supremacy experiments.   Cross-entropy benchmarking (XEB) was introduced as an analog to randomized benchmarking (RB) that can be used with any number of qubits and is independent of state-preparation and measurement errors \cite{neill2018blueprint, boixo2018characterizing}.
+
+A distinct advantage of XEB is that the resulting data can be analyzed to find an optimal representation of a unitary; this process is outlined in Fig.~\ref{fig:xeb_learn_unitary}. The gate sequence for a two-qubit XEB experiment is shown in Fig.~\ref{fig:xeb_learn_unitary}a.  The sequence alternates between single-qubit gates on both qubits and a two-qubit gate between them.  At the end of the sequence, both qubits are measured and the probabilities of bitstrings (00, 01, 10, 11) are estimated.  This procedure is repeated for $\sim$10-20 instances of randomly selected single-qubit gates.  The measured probabilities can then be compared to the ideal probabilities using the expression for fidelity Eq.~(3) in Ref.~\cite{neill2018blueprint}.
+
+The data from a two-qubit XEB experiment is shown in Fig.~\ref{fig:xeb_learn_unitary}b (green dots).  By performing additional sequences with tomography rotations prior to measurement, we can infer the decay of purity with increasing circuit depth (blue dots).  For two qubits, the decay of fidelity tells us the total error of our gates while the purity decay tells us the contribution from decoherence \textemdash the difference is control error.  Based on the data in green and blue, it appears that the total error is about half control and half decoherence.  
+
+So far, we have established a generic unitary model (Fig.~\ref{fig:two_qubit_gates}b), a training dataset (Fig.~\ref{fig:xeb_learn_unitary}a), and a cost-function (Fig.~\ref{fig:xeb_learn_unitary}b).  These three ingredients form the foundation for using optimization techniques to improve fidelity.  Using a simple Nelder-Mead optimization protocol, we can maximize the XEB fidelity by varying the parameters of the unitary model.  The fidelity decay curve for the optimal unitary model are shown in Fig.~\ref{fig:xeb_learn_unitary}b (orange dots).  The optimized results are nearly coherence limited.  
+
+The optimal control-model parameters for all pairs are shown as integrated histograms in Fig.~\ref{fig:params_control_model}a,b.  Panel (a) shows the histograms for partial-iSWAP angles ($\sim$90 degrees)  and conditional phases ($\sim$30 degrees).  Panel (b) shows histograms for the various flavors of Z-rotations.  While conceptually there are four possible Z-rotations (see Fig.~\ref{fig:two_qubit_gates}b), only three of these rotations are needed to uniquely define the operation.  These three rotations can be thought of as the detuning of the qubits before the iSWAP, the detuning after the iSWAP, and an overall frequency shift of both qubits which commutes with the iSWAP.
+
+
+\begin{figure}
+\includegraphics{figures/sup_calibration_metrology/xeb_learn_unitary.pdf}
+\caption{\label{fig:xeb_learn_unitary}  \textbf{Using XEB to learn a unitary model.} \textbf{a,} Process flow diagram for using XEB to learn a unitary model. After running basic calibrations, we have an approximate model for our two-qubit gate. Using this gate, we construct a random circuit that is fed into both the quantum computer and a classical computer. The results of both outputs can be compared using cross-entropy.  Optimizing over the parameters in the two qubit model provide a high-fidelity representation of the two-qubit unitary. \textbf{b,} Data from a two-qubit XEB experiment. The two-qubit purity (blue) was measured tomographically and provides the coherence-limit of the operations. The decay of the XEB fidelity is shown in green and orange.  In orange, the parameters of a generic unitary model were optimized to determine a higher-fidelity representation of the unitary. All errors are quoted as Pauli errors.
+}
+\end{figure}
+
+
+\begin{figure}
+\includegraphics{figures/sup_calibration_metrology/params_ctrl_model.pdf}
+\caption{\label{fig:params_control_model} \textbf{Parameters of the control model.}  A generic model for two-qubit gates using flux-control has five free parameters.  Using XEB we can measure these parameters with high fidelity.  \textbf{a,}  Integrated histogram (cumulative distribution) of the control parameters that determine the interaction between the qubits.  \textbf{b,}  An integrated histogram of the remaining three parameters that represent different flavors of single-qubit Z-rotations.  While the first two parameters (panel a) define the entangling gate, the final three parameters (panel b) are simply measured and then kept track of during an algorithm. Intuitively, these three angles correspond to a detuning before the swap, a detuning after the swap, and an overall frequency shift which commutes through the swap; these correspond to $\Delta_-+\Delta_{-,\mathrm{off}}$, $\Delta_--\Delta_{-,\mathrm{off}}$, and $2\Delta_+$ respectively in Eq.~(\ref{eq:unitary_angles}). Note that $\theta$ and $\phi$ angles are 360 degrees periodic and Z-rotation angles are 720 degree periodic.
+}
+\end{figure}
+
+\subsubsection{Comparison with randomized benchmarking}
+In Fig.~\ref{fig:compare_xeb_rb} we show that two-qubit gate fidelity extracted using XEB agrees well with the fidelity as measured with RB, an important sanity check in validating XEB as a gate metrology tool.  In two-qubit XEB, we extract the error per cycle which consists of a single-qubit gate on each qubit and a two-qubit gate between them.  In Fig.~\ref{fig:compare_xeb_rb}a we show the individual RB decay curves for single-qubit gates.  In panel b, we show the RB decay curve for benchmarking a CZ gate.  Adding up the three errors from RB, we would expect an XEB cycle error of 0.57\%.  In panel c, we show the measured XEB decay curve which indicates a cycle error of 0.59\% \textemdash nearly identical to the value predicted by RB.
+
+For single-qubit gate benchmarking on the Sycamore device used in this work (see Table \ref{tab:system_params}), we find that $\pi$ pulse fidelities are somewhat worse than $\pi/2$ pulse fidelities, which we attribute to reflections from the imperfect microwave environment. Because the XEB gateset we have used consists only of $\pi/2$ pulses, we find that the single-qubit gate errors extracted from conventional RB, which contains $\pi$ pulses, are somewhat higher than those extracted from single-qubit XEB. Using only $\pi/2$ pulses instead of $\pi$ pulses in single-qubit RB brings the extracted error close to that measured via XEB.
+
+\begin{figure}
+\includegraphics[width=3.2in]{figures/sup_calibration_metrology/compare_rb_xeb.pdf}
+\caption{\label{fig:compare_xeb_rb} \textbf{Sanity check:  XEB agrees with RB.}  \textbf{a,} Single-qubit randomized benchmarking (RB) data taken separately on two qubits.  \textbf{b,} Two-qubit randomized benchmarking data for a CZ on the same pair of qubits.  \textbf{c,} Two-qubit cross-entropy benchmarking (XEB) on the same pair of qubits.  The measured XEB error (0.59\% / cycle) agrees well with the prediction from single- and two-qubit RB (0.57\%).  All errors are quoted as Pauli errors.}
+\end{figure}
+
+\subsubsection{Speckle purity benchmarking (SPB)}
+
+It is experimentally useful to be able to extract state purity from XEB experiments in order to error-budget the contribution of decoherence. Conventionally, purity estimation can be done with state tomography, where the full density matrix $\rho$ is reconstructed and used to quantify the state purity. This involves expanding a single sequence into a collection of sequences each appended with single-qubit gates. Unfortunately, full tomographic reconstruction scales exponentially in the number of qubits, both for the number of sequences needed as well as the number of measurements needed per sequence. Here, we introduce an exponentially more efficient method to extract the state purity without additional sequences.
+
+We use a re-scaled purity definition such that a fully-decohered state has a purity of 0, and a pure state has a purity of 1. We define
+\begin{align}
+  \label{eq:puritydef}
+  \textrm{Purity} = \frac{D}{D-1}\left( \textrm{Tr}(\rho^2) - \frac{1}{D}\right),
+\end{align}
+which is consistent with what is defined in Ref.~\cite{jwallman2015estimating}. This can be understood as the squared length of the generalized Bloch vector in $D$ dimensions (for a qubit, $D=2$, this definition gives  $\langle X \rangle^2 + \langle Y \rangle^2 + \langle Z \rangle^2$).
+
+“Speckle” Purity Benchmarking (SPB) is the method of measuring the state purity from raw XEB data. Assuming the depolarizing-channel model with polarization parameter $p$, we can model the quantum state as 
+\begin{align}
+  \label{eq:polarizationmodel}
+  \rho = p \, \ket{\psi} \bra{\psi} + (1-p)\, \frac{\openone}{D}.
+\end{align}
+Here, $p$ is the probability of a pure state $\ket{\psi}$ (which in this case is not necessarily known to us), while $1-p$ is the probability of being in the fully-decohered state ($\openone$ is the identity operator). For the state (\ref{eq:polarizationmodel}), from the definition (\ref{eq:puritydef}) it is easy to find the relation 
+    \begin{align}
+    \label{eq:purity-p-relation}
+\textrm{Purity}=p^2. 
+    \end{align}
+We will now work out how to obtain $p^2$ from a distribution of measured probabilities $P_m$ of various bitstrings for a sequence, collected over many XEB sequences (Figs.\ \ref{fig:speckle_xeb}a and \ref{fig:speckle_xeb}b). 
+
+First, we note that for $p=0$ the probabilities of all bitstrings are $1/D$, and the distribution is the $\delta$-function located at $1/D$ (the integrated histogram is then the step-function -- see Fig.\ \ref{fig:speckle_xeb}b). In contrast, if $p=1$, then the measured probabilities $P_m$ follow the $D$-dimensional Porter-Thomas distribution \cite{boixo2018characterizing}
+    \begin{align}
+    \label{eq:D-dim-Porter-Thomas}
+    {\cal P}_{\rm PT}(P_m) = (D-1)(1-P_m)^{D-2},
+    \end{align}
+which has the same average $1/D$ and variance
+    \begin{align}
+     \label{eq:D-dim-Porter-Thomas-variance}
+{\rm Var}_{\rm PT}(P_m)=\frac{D-1}{D^2(D+1)}.
+    \end{align}
+
+For the fully-decohered state all bitstrings have the same probability $1/D$, so in this case the variance of the distribution of probabilities is zero. For the state (\ref{eq:polarizationmodel}) with an arbitrary $p$, the histogram of probabilities $P_m$ will be described by the distribution (\ref{eq:D-dim-Porter-Thomas}) shrunk towards the average $1/D$ by the factor $p$. Consequently, the variance of the experimental probabilities will be $p^2$ times the Porter-Thomas variance (\ref{eq:D-dim-Porter-Thomas-variance}).
+
+Thus, we can find $p^2$ by dividing the variance of experimentally measured probabilities $P_m$ by the Porter-Thomas variance (\ref{eq:D-dim-Porter-Thomas-variance}). Finally, using the relation (\ref{eq:purity-p-relation}) for the depolarization model (\ref{eq:polarizationmodel}), we can relate the variance of the experimental probabilities $P_m$ to the average state purity
+\begin{align}
+  \label{eq:specklypuritydefinition}
+  \textrm{Purity} = \textrm{Var}(P_m) \, \frac{D^2 (D+1)}{D-1}.
+\end{align}
+
+With these convenient relations, we can directly compare the XEB fidelity $\xebfidelity=p$ to $\sqrt{\rm Purity}$ from SPB on the same scale, and check their dependence $p=p_c^m$ on the number of cycles $m$. Without systematic control errors, the XEB and SPB results should coincide. Experimentally, we always have control errors which lead us to incorrectly predict $\ket{\psi}$, so control errors give XEB a higher error than SPB. Thus, with a single XEB dataset we can extract the XEB error per-cycle, and the purity loss per-cycle with SPB. By subtracting these, we are left with the control error per-cycle. Thus, with a single experiment we can error budget total error into control error and decoherence error. 
+
+These relationships can be seen experimentally in Figure \ref{fig:speckle_xeb}. Amazingly, computing the speckle purity can be done with no knowledge of the specific gate sequence performed; as long as the experiment introduces sufficient randomization of the Hilbert Space, Porter-Thomas statistics apply. Practically, SPB allows us to measure the state purity from raw XEB data with exponentially fewer number of pulse sequences as compared to full state tomography. This favorable scaling allows one to extend purity measurements to larger numbers of qubits. It is important to note that an exponential number of measurements are still required to fully characterize the probability distribution for a given sequence, as in tomography, so purity measurements of the full processor are impractical. 
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/sup_calibration_metrology/speckle_purity_figure.pdf}
+\caption{\label{fig:speckle_xeb} \textbf{``Speckle" purity extracted from XEB.} \textbf{a,} Measured probabilities from XEB for a two-qubit system and 30 random circuits. Raw probabilities show a speckle pattern at low cycles (orange dashed) over circuit instance and probabilities ($|00\rangle$, $|01\rangle$, $|10\rangle$, $|11\rangle$). The speckle contrast decreases with cycles and thus decoherence (green dashed). \textbf{b,} Integrated histogram (cumulative distribution) of probabilities. The x-axis is scaled by the dimension $D=2^2$, so the uniform distribution is a step function at 1.0. At low cycles, the distribution is well-described by Porter-Thomas, and at high cycles, the distribution approaches the uniform distribution. \textbf{c,} We can directly relate the variance of the distribution to the average state purity. We fit an exponential to the square root of Purity. We compare this purity-derived number per-cycle$=0.00276$ to a similar number per-cycle=$0.00282$ derived from tomographic measure of purity, and see good agreement. The error of XEB, which also includes control errors, is slightly higher at error per-cycle=$0.00349$.}
+\end{figure}
+
+\subsubsection{``Per-layer" parallel XEB}
+To execute quantum circuits efficiently, it is helpful to run as many gates as possible in parallel. We wish to benchmark our entangling gates operating simultaneously. Resulting fidelities and optimized unitaries may differ from the isolated case, where we benchmark each pair individually, due to imperfections such as control crosstalk and stray qubit-qubit interactions. In the quantum supremacy algorithm, we partition the set of two-qubit gates into four layers, each of which can be executed in parallel. We then cycle through these layers interleaved with randomly chosen single-qubit gates (see Fig.~3a). However, it is intractable to directly use full-system XEB to benchmark our entangling gates for two reasons: we would simultaneously optimize over the unitary model parameters of every entangling gate, and the classical simulation would be exponentially expensive in system size.
+
+We solve this problem with ``per-layer" parallel XEB (see Ref.~\cite{erhard2019characterizing} for a related technique in the context of RB). Instead of alternating among the four layers of entanglers, where each qubit becomes entangled with each of its neighbors, we perform four separate experiments, one for each layer. The experiment sequences are illustrated in Fig.~\ref{fig:per_layer_xeb}a. For each layer, we construct parallel sequences where the layer is repeated with interleaved single-qubit gates; nominally, each qubit only interacts with one other. Following each parallel XEB sequence, we measure all the qubits and extract the equivalent XEB data for each pair. Every two-qubit gate can be characterized in these four experiments, regardless of system size. The optimization and classical simulation are also efficient, as each pair can be analyzed individually.
+
+\begin{figure*}[htbp]
+\includegraphics{figures/sup_calibration_metrology/parallel_xeb_schematic_9.pdf}
+\caption{\label{fig:per_layer_xeb} \textbf{Parallel XEB.} \textbf{a,} Schematics of four device-wide sequences, one for each entangler layer. Black points are active qubits, colored circles are single-qubit gates, and colored lines are two-qubit gates. We cycle between single- and two-qubit gates $m$ times. Compare to Fig.~3a, main text, where the layers are interleaved. \textbf{b,} Integrated histograms of Pauli error $e_{2c}$ (see Fig.~2a, main text). These include isolated results, where each entangler is measured in its own experiment, and simultaneous (parallel) results. Purity is “speckle” purity. \textbf{c,} Difference, $\delta$, in unitary model parameters (Eq.~\ref{eq:unitary_angles}) between the unitaries obtained in the isolated and simultaneous experiments. $\delta\Delta_-$ is not plotted because it has a negligible effect on the unitary when $\theta\approx90$ degrees.}
+\end{figure*}
+
+We present experimental results of ``per-layer" parallel XEB in Fig.~\ref{fig:per_layer_xeb}b-c. In Fig.~\ref{fig:per_layer_xeb}b, we compare the performance in the isolated and simultaneous (parallel) experiments. In both cases, the optimized XEB error is close to purity-limited. Simultaneous operation modestly increases the error, by roughly 0.003. This increase is primarily from purity error, which would arise from unintended interactions with other qubits, where coherent errors at the system scale manifest as incoherent errors when we focus on individual pairs. The unitaries we obtain in the simultaneous case differ slightly from the isolated case, which would arise from control crosstalk and unintended interactions. To quantify how these differences affect the gate error, we recalculate the error with the unitaries from the isolated optimization and the data from the simultaneous experiment, which increases the error. We also plot the distributions of the differences in unitary model parameters in Fig.~\ref{fig:per_layer_xeb}c. The dominant change is in $\Delta_+$, a single-qubit phase.
+
+
+\subsection{Grid readout calibration}\label{sec:readout_cals}
+\subsubsection{Choosing qubit frequencies for readout}
+The algorithm described in Section \ref{sec:opt_freqs} generally chooses qubit idling frequencies which are far detuned from the resonator to optimize for dephasing. However, these idling frequencies are not optimal for performing readout. To address this problem, we dynamically bias each qubit to a different frequency during the readout phase of the experiment. The qubit frequencies during readout are shown in Fig.~\ref{fig:readout_freqs} (compare to Fig.~\ref{fig:qubit_freqs}).
+
+To choose the qubit frequencies for readout, we first measure readout fidelity as a function of qubit frequency and resonator drive frequency at a fixed resonator drive power, in each of the isolated single qubit configurations. This scan captures errors due to both non-optimal detuning between the qubit and resonator, as well as regions with low $T_1$ values due to TLSs. We then use the data for each qubit and a few constraints to optimize the placement of the qubit frequencies during readout, using the same optimization technique that was described in Section \ref{sec:opt_freqs}. We describe two of the important constraints and related error reduction techniques below.
+
+First, because the coupling between qubits relies on a dispersive interaction with the coupler, the coupling would no longer be off when the qubits were detuned by a significant amount from their idling positions. Thus, we impose a constraint that qubits should not be placed near resonance during readout. Nevertheless, we found that for some pairs of qubits, we had to dynamically bias the coupler during readout to avoid any swapping transitions between the qubits during readout. This readout coupler bias is found by sweeping the coupler bias and maximizing the two-qubit readout fidelity.
+
+\begin{figure}[hbp]
+\includegraphics[width=3.0in]{figures/sup_calibration_metrology/readout_freqs.pdf}
+\caption{\label{fig:readout_freqs} \textbf{a,} Drive frequencies for the readout resonators for each qubit. The red outline shows the area where we had to perform correlated discrimination because of unwanted cross-couplings between the resonators. \textbf{b,} Qubit frequencies during readout, found using a frequency optimization procedure.}
+\end{figure}
+
+Second, the pattern of the bare resonator frequencies on the chip as shown in Fig.~\ref{fig:readout_freqs} led to an unexpected problem. Pairs of readout resonators which were coupled to neighboring qubits and were also within a few MHz in frequency space were found to have non-negligible coupling. This coupling was strong enough to mediate swapping of photons from one resonator to the other. The pairs of qubits with similar resonator frequencies were all located in a diagonal chain bisecting the qubit grid, as shown by the red outline in Fig.~\ref{fig:readout_freqs}. To mitigate this problem, we arrange the qubit frequencies for these qubits so that the resonator eigenfrequencies are as far apart as possible. The resulting spectral separation is not quite enough to eliminate all deleterious effects, so in addition, we use correlated discrimination on the eight of the qubits in this chain. In other words, we use the results of all eight detector values to determine which one of $2^8 = 256$ states the eight qubits were in. All other qubits in the grid are discriminated as isolated qubits.
+
+
+\subsubsection{Single qubit calibration}
+After placing the qubit frequencies for readout, we calibrate and fine tune the readout parameters for each qubit. For each qubit, we use a 1~$\mu$s drive pulse and a 1~$\mu$s demodulation window. We summarize the procedure for choosing the remaining parameters as follows:
+\begin{itemize}
+    \item Choose the resonator drive frequency to maximize the separation between measurements performed with the qubit in either $|0\rangle$ and $|1\rangle$ \cite{bultink2018general}.
+    \item Choose the resonator drive power to hit a target separation between $|0\rangle$ and $|1\rangle$, so that the error due to this separation is below a 0.3\% threshold. We do not choose the readout power to maximize the separation as doing so would saturate our amplifiers, and cause unwanted transitions of the qubit state \cite{johnson2012heralded, Jeffrey2014Fast, dan_thesis, Sank2016Transitions}.
+    \item Find the optimal demodulation weight function by measuring the average detector voltage as a function of time during the course of the readout pulse \cite{bultink2018general, ryan2015tomography}.
+    \item Finally, choose the discrimination line between the measurement results for $|0\rangle$ and $|1\rangle$, except as noted in the previous section where we need to apply correlated discrimination.
+\end{itemize}
+
+After completing these calibrations, we check each qubit's readout fidelity by preparing either $|0\rangle$ or $|1\rangle$ and reading the qubit out. We define the identification error to be the probability that the qubit was not measured in the state we intended to prepare. We achieve 0.97\% median identification error for the $|0\rangle$ state, and 4.5\% for $|1\rangle$, when each qubit is measured in isolation. The full distribution is shown in dashed lines in Fig.~\ref{fig:mq_readout}a. We conjecture that the error in $|0\rangle$ is due to thermal excitation during preparation or measurement, and that the error in $|1\rangle$ is due to energy relaxation during readout. 
+
+\begin{figure}[hbp]
+\includegraphics[width=3.3in]{figures/sup_calibration_metrology/readout_errors.pdf}
+\caption{\label{fig:mq_readout} \textbf{Readout errors.} \textbf{a,} Histogram of readout errors for each qubit when prepared in $|0\rangle$ or $|1\rangle$, and readout in isolation or simultaneously. \textbf{b,} Distribution of errors in multiqubit readout. The x-axis Hamming distance is the number of bits that are different between measured and prepared states, while the y-axis is the difference in the number of 1’s in the states. For example, if we prepare $|011\rangle$ and measure $|101\rangle$, the Hamming distance is 2 and the difference in the number of excitations is 0.}
+\end{figure}
+
+\subsubsection{Characterizing multi-qubit readout}
+To assess the fidelity of multi-qubit readout, we prepare and measure 150 random classical bitstring states with 53 qubits, with 3000 trials per state. We find that 13.6\% of all trials successfully identified the prepared state. We can decompose this overall fidelity in two ways.
+First, we plot in solid lines in Fig.~\ref{fig:mq_readout} the errors for each qubit during simultaneous readout, averaged over the 150 random bitstrings. We find that the median errors increase from 0.97\% for $|0\rangle$ and 4.5\% for $|1\rangle$ in isolation, to 1.8\%  and 5.1\% for simultaneous readout. We do not yet understand the root causes of this increase in error. In addition, we show in Fig.~\ref{fig:mq_readout} the distribution of errors among the multiqubit results. We see that the most likely error is one lost excitation in the measured state.
+
+
+\begin{table*}[htbp]
+\caption{\label{tab:system_params} Aggregate system parameters}
+\begin{ruledtabular}
+\begin{tabular}{lccccr}
+Parameter & Median & Mean & Stdev. & Units & Figure\\
+\hline
+Qubit maximum frequency & 6.924 & 6.933 & 0.114 & GHz & \ref{fig:qubit_freq_params}\\
+Qubit idle frequency    & 6.661 & 6.660 & 0.057 & GHz & \ref{fig:qubit_freqs} \\
+Qubit frequency at readout & 5.750 & 5.766 & 0.360 & GHz & \ref{fig:readout_freqs} \\
+Readout drive frequency & 4.618 & 4.588 & 0.076 & GHz & \ref{fig:readout_freqs}\\
+Qubit anharmonicity & -208.0 & -208.0 &  4.7 &  MHz & \ref{fig:qubit_freq_params}\\
+Resonator linewidth $\kappa/2\pi$ & 0.64 & 0.69 & 0.23 & MHz & \ref{fig:qubit_freq_params} \\
+Qubit-resonator coupling $g/2\pi$ & 72.3 & 72.1 &  2.8 & MHz & \ref{fig:qubit_freq_params}\\
+$T_1$ at Idle Frequency & 15.54 & 16.04 & 4.00 & $\mu$s & \ref{fig:qubit_freq_params}\\
+Readout error $|0\rangle$ isolated / simultaneous & 0.97 / 1.8 & 1.2 / 2.3 & 0.8 / 2.1 & \% & \ref{fig:mq_readout}\\
+Readout error $|1\rangle$ isolated / simultaneous & 4.5 / 5.1 & 5.0 / 5.5 & 1.8 / 2.2 & \% & \ref{fig:mq_readout}\\
+1Q RB\footnotemark[1] $e_1$ & 0.19 & 0.22 & 0.10 & \% & \ref{fig:single_qubit_gate_benchmarking}\\
+1Q RB\footnotemark[1]  $e_1$ ($\pi/2$ gateset)& 0.15 & 0.16 & 0.06 & \% & \ref{fig:single_qubit_gate_benchmarking}\\
+1Q RB\footnotemark[1] tomographic $e_1$ purity & 0.14 & 0.15 & 0.04 & \% & \ref{fig:single_qubit_gate_benchmarking}\\
+1Q XEB $e_1$ isolated / simultaneous & 0.13 / 0.14 & 0.15 / 0.16 & 0.05 / 0.05 & \% & 3a (main) \ref{fig:single_qubit_gate_benchmarking}\\
+1Q XEB $e_1$ purity isolated / simultaneous & 0.11 / 0.11 & 0.11 / 0.12 &  0.03 / 0.03 & \% & \ref{fig:single_qubit_gate_benchmarking}\\
+2Q XEB $e_2$ isolated / simultaneous & 0.30 / 0.60 & 0.36 / 0.62 & 0.17 / 0.24 & \% & 3a (main) \\
+2Q XEB $e_{2c}$ isolated / simultaneous & 0.64 / 0.89 & 0.65 / 0.93 & 0.20 / 0.26 & \% & 3a (main) \\ 
+2Q XEB $e_{2c}$ purity isolated / simultaneous & 0.59 / 0.86 & 0.62 / 0.89 & 0.20 / 0.24 & \% & \ref{fig:per_layer_xeb}\\ 
+Measurement $e_m$ isolated /  simultaneous & 2.83 / 3.50 & 3.05 / 3.77 & 1.09 / 1.61 & \% & 3a (main) \\
+
+\end{tabular}
+\end{ruledtabular}
+\footnotetext[1]{RB data taken at a later date}
+\end{table*}
+
+
+\subsection{Summary of system parameters}
+Table \ref{tab:system_params} reports aggregate values for qubit and pair parameters in our processor. A complete table of single-qubit parameter values by qubit is available in supporting online materials, Ref.~\cite{SOM_csv}, and illustrated in Figs.~\ref{fig:qubit_freq_params} through \ref{fig:qubit_readout_errors}. Single-qubit metrics represent a sample size of 53. Two-qubit metrics represent 86 pairs. 
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=2.0\columnwidth]{figures/sup_calibration_metrology/qubit_freq_params_final.pdf}
+\caption{\label{fig:qubit_freq_params} Typical distribution of single-qubit parameters over the Sycamore processor.}
+\end{figure*}
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=2.0\columnwidth]{figures/sup_calibration_metrology/single_qubit_gate_benchmarking_final.pdf}
+\caption{\label{fig:single_qubit_gate_benchmarking} Typical distribution of single-qubit gate benchmarking errors over the Sycamore processor, for both isolated and simultaneous operation.}
+\end{figure*}
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=2.0\columnwidth]{figures/sup_calibration_metrology/readout_errors_final.pdf}
+\caption{\label{fig:qubit_readout_errors} Typical distribution of readout errors over the Sycamore processor, for both isolated and simultaneous operation.}
+\end{figure*}
+
+\clearpage

@@ -1,0 +1,120 @@
+# QuTiP 5.3.1, SciPy 1.18.1, NumPy 2.5.4, Python 3.13.1, macOS-14.2-arm64-arm-64bit-Mach-O, 2026-10-19 13:17
+case	variant	package	setting	observable	result	exact	abs_error	seconds	note
+1 docs	pulse 0.7<t<0.75	QuTiP 5.3.1	default	<n>(1)	1	0.00101281857331	9.990e-01	0.0012	
+1 docs	pulse 0.7<t<0.75	QuTiP 5.3.1	max_step 0.0245	<n>(1)	0.00101280601601	0.00101281857331	1.256e-08	0.0014	
+1 docs	pulse 0.7<t<0.75	QuTiP 5.3.1	max_step 0.01 (docs example)	<n>(1)	0.00101281791853	0.00101281857331	6.548e-10	0.0014	
+2a #1265	wait 0 (c_x)	QuTiP 5.3.1	default	Pe(99.5)	0.999999462299	1	5.377e-07	0.0031	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 0 (c_x)	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.999999462299	1	5.377e-07	0.0032	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 10	QuTiP 5.3.1	default	Pe(99.5)	1.00000027357	1	2.736e-07	0.0033	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 10	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.999998601406	1	1.399e-06	0.0034	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 20	QuTiP 5.3.1	default	Pe(99.5)	0.499994076108	1	5.000e-01	0.0026	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 20	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.999998594702	1	1.405e-06	0.0032	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 23	QuTiP 5.3.1	default	Pe(99.5)	0.499994076108	1	5.000e-01	0.0027	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 23	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.99999973111	1	2.689e-07	0.0032	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 23.0017	QuTiP 5.3.1	default	Pe(99.5)	0.499994076108	1	5.000e-01	0.0027	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 23.0017	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.999999697897	1	3.021e-07	0.0032	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 23.0018 (BoxiLi threshold)	QuTiP 5.3.1	default	Pe(99.5)	0.499994076108	1	5.000e-01	0.0027	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 23.0018 (BoxiLi threshold)	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.99999969591	1	3.041e-07	0.0032	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 24	QuTiP 5.3.1	default	Pe(99.5)	0.499994076239	1	5.000e-01	0.0027	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 24	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	0.999998024059	1	1.976e-06	0.0031	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 30	QuTiP 5.3.1	default	Pe(99.5)	0.499994076239	1	5.000e-01	0.0027	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 30	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	1.00000150742	1	1.507e-06	0.0033	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 40 (c_x_bug)	QuTiP 5.3.1	default	Pe(99.5)	0.499994076212	1	5.000e-01	0.0026	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 40 (c_x_bug)	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	1.0000005933	1	5.933e-07	0.0033	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 50	QuTiP 5.3.1	default	Pe(99.5)	0.499994076212	1	5.000e-01	0.0026	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2a #1265	wait 50	QuTiP 5.3.1	max_step 9.8	Pe(99.5)	1.00000020969	1	2.097e-07	0.0033	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2b #1945	tlist linspace(0,700,267)	QuTiP 5.3.1	default	max_t |<sz> - exact|	1.01847258158e-05	0	1.018e-05	0.0018	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2b #1945	tlist linspace(0,700,267)	QuTiP 5.3.1	max_step 245	max_t |<sz> - exact|	1.01847258158e-05	0	1.018e-05	0.0017	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2b #1945	tlist linspace(0,700,268)	QuTiP 5.3.1	default	max_t |<sz> - exact|	1.99993077831	0	2.000e+00	0.0015	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2b #1945	tlist linspace(0,700,268)	QuTiP 5.3.1	max_step 245	max_t |<sz> - exact|	2.59226159406e-06	0	2.592e-06	0.0017	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2b #1945	tlist linspace(0,700,800)	QuTiP 5.3.1	default	max_t |<sz> - exact|	2.17970805289e-06	0	2.180e-06	0.0045	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2b #1945	tlist linspace(0,700,800)	QuTiP 5.3.1	max_step 245	max_t |<sz> - exact|	9.76273025999e-06	0	9.763e-06	0.0044	FutureWarning: The signature f(t, args) is deprecated and will be removed in QuTiP 5.
+2c #2552	index92	QuTiP 5.3.1	default	|<0|psi(T)>|^2	2.26753659836e-15	3.66313136648e-14	3.436e-14	0.0186	Theta - pi/2 = -1.914e-07
+2c #2552	index92	QuTiP 5.3.1	max_step 4.875e-08	|<0|psi(T)>|^2	4.26144687308e-11	3.66313136648e-14	4.258e-11	0.0183	Theta - pi/2 = -1.914e-07
+2c #2552	index93	QuTiP 5.3.1	default	|<0|psi(T)>|^2	0.499993517148	5.72403555188e-16	5.000e-01	0.0183	Theta - pi/2 = -2.392e-08
+2c #2552	index93	QuTiP 5.3.1	max_step 4.875e-08	|<0|psi(T)>|^2	4.75647320308e-11	5.72403555188e-16	4.756e-11	0.0188	Theta - pi/2 = -2.392e-08
+2c #2552	index94	QuTiP 5.3.1	default	|<0|psi(T)>|^2	7.58925890719e-15	3.66313137498e-14	2.904e-14	0.0189	Theta - pi/2 = -1.914e-07
+2c #2552	index94	QuTiP 5.3.1	max_step 4.875e-08	|<0|psi(T)>|^2	3.41352564319e-11	3.66313137498e-14	3.410e-11	0.0188	Theta - pi/2 = -1.914e-07
+2d #2814 train	5 Gaussian pi/5, w 0.04	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0002	pulses captured 0.00 of 5
+2d #2814 train	5 Gaussian pi/5, w 0.04	QuTiP 5.3.1	max_step 0.0196	P1(100)		1		0.0097	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+2d #2814 train	5 Gaussian pi/5, w 0.04	QuTiP 5.3.1	max_step 0.0196, nsteps 10205	P1(100)	0.99999999952	1	4.796e-10	0.0213	pulses captured 5.00 of 5
+3 pi pulse	square Piecewise, w 1.0	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0002	
+3 pi pulse	square Piecewise, w 1.0	QuTiP 5.3.1	max_step 0.49	P1(100)	1	1	1.159e-13	0.0005	
+3 pi pulse	square Piecewise, w 1.0	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0012	
+3 pi pulse	square UnitStep, w 1.0	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square UnitStep, w 1.0	QuTiP 5.3.1	max_step 0.49	P1(100)	1	1	1.159e-13	0.0009	
+3 pi pulse	square UnitStep, w 1.0	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0013	
+3 pi pulse	Gaussian sigma=w/4, w 1.0	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	Gaussian sigma=w/4, w 1.0	QuTiP 5.3.1	max_step 0.49	P1(100)	1	1	2.220e-16	0.0007	
+3 pi pulse	Gaussian sigma=w/4, w 1.0	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	sech tau=w/4, w 1.0	QuTiP 5.3.1	default	P1(100)	6.58121409878e-51	1	1.000e+00	0.0001	
+3 pi pulse	sech tau=w/4, w 1.0	QuTiP 5.3.1	max_step 0.49	P1(100)	0.999999999999	1	7.443e-13	0.0009	
+3 pi pulse	sech tau=w/4, w 1.0	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	1.37601455525e-104	1	1.000e+00	0.0012	
+3 pi pulse	square Piecewise, w 0.1	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square Piecewise, w 0.1	QuTiP 5.3.1	max_step 0.049	P1(100)	0.999999999998	1	1.656e-12	0.0019	
+3 pi pulse	square Piecewise, w 0.1	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	square UnitStep, w 0.1	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square UnitStep, w 0.1	QuTiP 5.3.1	max_step 0.049	P1(100)	0.999999999998	1	1.656e-12	0.0045	
+3 pi pulse	square UnitStep, w 0.1	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0012	
+3 pi pulse	Gaussian sigma=w/4, w 0.1	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	Gaussian sigma=w/4, w 0.1	QuTiP 5.3.1	max_step 0.049	P1(100)	1	1	2.975e-14	0.0029	
+3 pi pulse	Gaussian sigma=w/4, w 0.1	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	sech tau=w/4, w 0.1	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	sech tau=w/4, w 0.1	QuTiP 5.3.1	max_step 0.049	P1(100)	0.999999999998	1	2.098e-12	0.0031	
+3 pi pulse	sech tau=w/4, w 0.1	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	square Piecewise, w 0.01	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square Piecewise, w 0.01	QuTiP 5.3.1	max_step 0.0049	P1(100)		1		0.0022	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	square Piecewise, w 0.01	QuTiP 5.3.1	max_step 0.0049, nsteps 40817	P1(100)	0.999999999993	1	6.781e-12	0.0176	
+3 pi pulse	square Piecewise, w 0.01	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	square UnitStep, w 0.01	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square UnitStep, w 0.01	QuTiP 5.3.1	max_step 0.0049	P1(100)		1		0.0051	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	square UnitStep, w 0.01	QuTiP 5.3.1	max_step 0.0049, nsteps 40817	P1(100)	0.999999999993	1	6.781e-12	0.0413	
+3 pi pulse	square UnitStep, w 0.01	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	Gaussian sigma=w/4, w 0.01	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0002	
+3 pi pulse	Gaussian sigma=w/4, w 0.01	QuTiP 5.3.1	max_step 0.0049	P1(100)		1		0.0032	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	Gaussian sigma=w/4, w 0.01	QuTiP 5.3.1	max_step 0.0049, nsteps 40817	P1(100)	0.999999999999	1	6.943e-13	0.0262	
+3 pi pulse	Gaussian sigma=w/4, w 0.01	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	sech tau=w/4, w 0.01	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	sech tau=w/4, w 0.01	QuTiP 5.3.1	max_step 0.0049	P1(100)		1		0.0034	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	sech tau=w/4, w 0.01	QuTiP 5.3.1	max_step 0.0049, nsteps 40817	P1(100)	0.999999999998	1	2.104e-12	0.0266	
+3 pi pulse	sech tau=w/4, w 0.01	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	square Piecewise, w 0.001	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square Piecewise, w 0.001	QuTiP 5.3.1	max_step 0.00049	P1(100)		1		0.0021	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	square Piecewise, w 0.001	QuTiP 5.3.1	max_step 0.00049, nsteps 408164	P1(100)	1	1	4.419e-13	0.1644	
+3 pi pulse	square Piecewise, w 0.001	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0011	
+3 pi pulse	square UnitStep, w 0.001	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	square UnitStep, w 0.001	QuTiP 5.3.1	max_step 0.00049	P1(100)		1		0.0049	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	square UnitStep, w 0.001	QuTiP 5.3.1	max_step 0.00049, nsteps 408164	P1(100)	1	1	4.419e-13	0.3947	
+3 pi pulse	square UnitStep, w 0.001	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0012	
+3 pi pulse	Gaussian sigma=w/4, w 0.001	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	Gaussian sigma=w/4, w 0.001	QuTiP 5.3.1	max_step 0.00049	P1(100)		1		0.0032	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	Gaussian sigma=w/4, w 0.001	QuTiP 5.3.1	max_step 0.00049, nsteps 408164	P1(100)	0.999999999999	1	6.901e-13	0.2545	
+3 pi pulse	Gaussian sigma=w/4, w 0.001	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0012	
+3 pi pulse	sech tau=w/4, w 0.001	QuTiP 5.3.1	default	P1(100)	0	1	1.000e+00	0.0001	
+3 pi pulse	sech tau=w/4, w 0.001	QuTiP 5.3.1	max_step 0.00049	P1(100)		1		0.0033	IntegratorException: Excess work done on this call. Try to increasing the nsteps parameter in the Options class
+3 pi pulse	sech tau=w/4, w 0.001	QuTiP 5.3.1	max_step 0.00049, nsteps 408164	P1(100)	1	1	4.317e-13	0.2588	
+3 pi pulse	sech tau=w/4, w 0.001	QuTiP 5.3.1	default, tlist linspace(0,100,201)	P1(100)	0	1	1.000e+00	0.0012	
+4 transmon	windowed	SciPy DOP853 reference	rtol 1e-13, max_step 0.01, pulse only	P1, P2	0.987073888303982, 0.000549441656529876				
+4 transmon	windowed, gap 0	QuTiP 5.3.1	default	P1, P2	0.987073892425, 0.000549436858945			0.0004	
+4 transmon	windowed, gap 0	QuTiP 5.3.1	max_step 7.84	P1, P2	0.987073892425, 0.000549436858945			0.0003	
+4 transmon	windowed, gap 100	QuTiP 5.3.1	default	P1, P2	0, 0			0.0001	
+4 transmon	windowed, gap 100	QuTiP 5.3.1	max_step 7.84	P1, P2	0.987073897637, 0.00054943171266			0.0004	
+4 transmon	windowed, gap 1000	QuTiP 5.3.1	default	P1, P2	0, 0			0.0001	
+4 transmon	windowed, gap 1000	QuTiP 5.3.1	max_step 7.84	P1, P2	0.987073840624, 0.000549465298561			0.0006	
+4 transmon	windowed, gap 10000	QuTiP 5.3.1	default	P1, P2	0, 0			0.0001	
+4 transmon	windowed, gap 10000	QuTiP 5.3.1	max_step 7.84	P1, P2	0.987073896321, 0.000549433414977			0.0017	
+4 transmon	untruncated	SciPy DOP853 reference	rtol 1e-13, max_step 0.01, pulse only	P1, P2	0.98907510392313, 1.83133871409595e-08				
+4 transmon	untruncated, gap 0	QuTiP 5.3.1	default	P1, P2	1.78271476601e-27, 3.54455405558e-63			0.0001	
+4 transmon	untruncated, gap 0	QuTiP 5.3.1	max_step 7.84	P1, P2	0.989075024062, 1.80845722759e-08			0.0010	
+4 transmon	untruncated, gap 100	QuTiP 5.3.1	default	P1, P2	1.52218488916e-175, 0			0.0001	
+4 transmon	untruncated, gap 100	QuTiP 5.3.1	max_step 7.84	P1, P2	0.989075023811, 1.80845772035e-08			0.0010	
+4 transmon	untruncated, gap 1000	QuTiP 5.3.1	default	P1, P2	0, 0			0.0001	
+4 transmon	untruncated, gap 1000	QuTiP 5.3.1	max_step 7.84	P1, P2	0.989075135824, 1.77495230864e-08			0.0012	
+4 transmon	untruncated, gap 10000	QuTiP 5.3.1	default	P1, P2	0, 0			0.0001	
+4 transmon	untruncated, gap 10000	QuTiP 5.3.1	max_step 7.84	P1, P2	0.989075118499, 1.84301982345e-08			0.0030	
+5 square from t0, then Gaussian	Boole[t>=0] Boole[t<=1]	QuTiP 5.3.1	default	P1(100)	0.500042546382	1	5.000e-01	0.0002	
+5 square from t0, then Gaussian	Boole[t>=0] Boole[t<=1]	QuTiP 5.3.1	max_step 0.049	P1(100)	0.999999999996	1	4.258e-12	0.0033	
+5 square from t0, then Gaussian	UnitStep[t] UnitStep[1-t]	QuTiP 5.3.1	default	P1(100)	0.500042546382	1	5.000e-01	0.0003	
+5 square from t0, then Gaussian	UnitStep[t] UnitStep[1-t]	QuTiP 5.3.1	max_step 0.049	P1(100)	0.999999999996	1	4.258e-12	0.0057	
+5 square from t0, then Gaussian	Boole[0<=t<=1]	QuTiP 5.3.1	default	P1(100)	0.500042546382	1	5.000e-01	0.0002	
+5 square from t0, then Gaussian	Boole[0<=t<=1]	QuTiP 5.3.1	max_step 0.049	P1(100)	0.999999999996	1	4.258e-12	0.0033	

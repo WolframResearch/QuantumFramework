@@ -1,0 +1,44 @@
+\section{Sensitivity of XEB to errors}\label{sec:xeb_sens}
+
+\begin{figure*}
+\includegraphics[scale=0.4]{figures/sup_xeb_sensitivity/discrete_error.pdf}
+\caption{\label{fig:discrete_error} \textbf{Impact of one single-qubit Pauli error on fidelity estimate from XEB.} \textbf{a,} Distributions of fidelity estimates from XEB using measured bitstrings and quantum circuits with one bit-flip or one phase-flip error. For each $n$, shades of blue represent the normalized histogram of the estimates obtained for the error gate placed at different circuit locations. The highest fidelity estimates correspond to phase-flip errors immediately preceding measurement and are equal to the fidelity estimates from XEB using error-free circuits. \textbf{b,} Quartiles of the distributions shown in \textbf{a} (blue) compared to the fidelity estimates from XEB using measured bitstrings and unmodified quantum circuits (red). Both plots use linear scale between $10^{-4}$ and $-10^{-4}$ and logarithmic scale everywhere else.}
+\end{figure*}
+
+\begin{figure}
+\includegraphics[scale=0.55]{figures/sup_xeb_sensitivity/continuous_error.pdf}
+\caption{\label{fig:continuous_error} \textbf{Impact of the $R_z(\theta)$ error on XEB.} Fidelity estimates computed by XEB from measured bitstrings and circuits with $n=20$ qubits and $m=14$ cycles modified to include $R_z(\theta)$ error applied in 10th cycle to one of the qubits as a function of $\theta$ (orange dots). Also shown is XEB fidelity computed using the same bitstrings and unmodified circuits (blue solid line) and a simple model which predicts the effect of the error (green dashed line).}
+\end{figure}
+
+An important requirement for a procedure used to evaluate quantum processors, such as XEB, is sensitivity to errors. Qubit amplitudes are complex variables and therefore quantum errors are inherently continuous. Nevertheless, they can be given a discrete description, for example in the form of a finite set of Pauli operators. The digital error model is used for instance in quantum error correction where errors are discretized by syndrome extraction. In this section we examine the impact of both discrete and continuous errors on the fidelity estimate obtained from the XEB algorithm.
+
+The XEB procedure uses a set of random quantum circuits $\mathcal{U} = \{U_1, \dots, U_S\}$ with $n$ qubits and $m$ cycles. Every circuit is executed $N_s$ times on the quantum processor under test. Each execution of the circuit $U_j$ applies the quantum operation $\Lambda_j$, which is an imperfect realization of $U_j$, to the input state $\ket{0}\bra{0}$. The result of the experiment is a set $\mathcal{B}$ of $S N_s$ bitstrings $q_{i,j}$ sampled from the distributions $p_e(q_{i,j}) = \bra{q_{i,j}} \rho_j \ket{q_{i,j}}$ where $\rho_j = \Lambda_j(\ket{0}\bra{0})$ is the output state in the experiments with circuit $U_j$. For each bitstring $q_{i,j}$, a simulator computes the ideal probability $p_s(q_{i,j}) = |\braket{q_{i,j}}{\psi_j}|^2$ where $\ket{\psi_j} = U_j\ket{0}$ is the ideal output state of the circuit $U_j$. Finally, XEB uses Eq.~\eqref{eq:linear_xeb_fidelity} or \eqref{eq:log_xeb_fidelity} to compute an estimate $\xebfidelity(\mathcal{B}, \mathcal{U})$ of fidelity $F(\ket{\psi_j}\bra{\psi_j}, \rho_j) = \bra{\psi_j}\rho_j\ket{\psi_j}$ averaged over circuits $\mathcal{U}$. The result quantifies how well the quantum processor is able to realize quantum circuits of size $n$ and depth $m$. See section \ref{sec:xeb_theory} for more details on XEB.
+
+The estimate $\xebfidelity(\mathcal{B}, \mathcal{U})$ is a function of bistrings $\mathcal{B}$ obtained in experiment and of the set of quantum circuits $\mathcal{U}$ used to compute ideal probabilities. This enables a test of the sensitivity of the method to errors by replacing the error-free reference circuits $\mathcal{U} = \{U_1, \dots, U_S\}$ with circuits $\mathcal{U}_E = \{U_{1,E}, \dots, U_{S,E}\}$ where $U_{j,E}$ is the quantum circuit obtained from $U_j$ by the insertion at a particular location in the circuit of a gate $E$ representing the error. We identify errors inserted at different circuit locations that lead to the same output distribution since XEB cannot differentiate between them.
+
+We first consider the impact of a discrete single-qubit Pauli error $E$ placed in a random location in the circuit. In Fig.~\ref{fig:discrete_error} we plot $\xebfidelity(\mathcal{B}, \mathcal{U}_E)$ where $\mathcal{B}$ are bitstrings observed in our experiment and $\mathcal{U}_E$ are quantum circuits modified by the insertion of an additional $X$ or $Z$ gate following an existing single-qubit gate. Each fidelity estimate corresponds to a different circuit location where the error gate has been inserted. For every $n$, the highest fidelity values correspond to the insertion of the $Z$ gate in the final cycle of the circuit. They have no impact on measurements and thus are equivalent to absence of error. The corresponding fidelity estimates match the estimates for the unmodified circuits.
+
+The probability of only seeing the error $E$ is approximately $q = e p$ where $e$ is the probability of $E$ arising at the particular circuit location and $p$ is the probability that no other error occurs. The fraction $q$ of executions realize circuit $U_{j,E} \in \mathcal{U}_E$ yielding bitstrings $\mathcal{B}_E$ while the remaining fraction $1 - q$ yield bitstrings $\mathcal{B}_*$. XEB averages over circuit executions, so
+
+\begin{multline}
+\xebfidelity(\mathcal{B}, \mathcal{U}_E) = \\ q \, \xebfidelity(\mathcal{B}_E, \mathcal{U}_E) + (1 - q) \, \xebfidelity(\mathcal{B}_*, \mathcal{U}_E).
+\end{multline}
+Since bitstrings $\mathcal{B}_E$ originated in a perfect realization of $\mathcal{U}_E$ we have $\xebfidelity(\mathcal{B}_E, \mathcal{U}_E) \simeq 1$ with high probability. Also, assuming the circuits randomize the output quantum state sufficiently, we have $\xebfidelity(\mathcal{B}_*, \mathcal{U}_E) \simeq 1/\sqrt{D}$, where $D = 2^n$, see Eq.~\eqref{eq:xeb_cm} and Fig.~\ref{fig:xeb_puali_error}. Therefore, for large $n$
+
+\begin{equation}
+\xebfidelity(\mathcal{B}, \mathcal{U}_E) \simeq q + \frac{1 - q}{\sqrt{D}} \simeq q
+\end{equation}
+with high probability.
+
+Now, the probability $p$ that no error other than $E$ occurs is approximately equal to the experimental fidelity $F$ which is approximated by $\xebfidelity(\mathcal{B}, \mathcal{U})$, so
+
+\begin{equation} \label{eq:xeb_proportionality}
+\xebfidelity(\mathcal{B}, \mathcal{U}_E) \simeq e \, \xebfidelity(\mathcal{B}, \mathcal{U})
+\end{equation}
+which means that XEB result obtained using circuits modified to include $E$ is approximately proportional to the XEB result obtained using the error-free reference circuits. Moreover, the ratio of the two XEB results is approximately equal to the probability of $E$.
+
+The data in Fig.~\ref{fig:discrete_error} agrees with the approximate proportionality in Eq.~\eqref{eq:xeb_proportionality} and allows us to estimate the median probability of a Pauli error. Based on the drop in XEB fidelity estimate by a factor of almost 100 due to the insertion of one single-qubit Pauli error into the circuit, the probability is on the order of $1\%$. While more work on the gate failure model needs to be done to correctly relate Sycamore gate error rates to the probability of specific Pauli errors, we already see that $e$ has the same order of magnitude as our per cycle and per qubit error given by $e_{2c}/2 \simeq 0.5\%$, see Table \ref{tab:system_params}. A possible resolution of the factor of two discrepancy may lie in the fact that more than one gate failure can manifest itself as a particular Pauli error $E$ in a particular circuit location.
+
+Lastly, we consider the impact of continuous errors on XEB result. Fig.~\ref{fig:continuous_error} shows the fidelity estimate obtained from XEB using bitstrings observed in our experiment and quantum circuits modified to include a single rotation $R_Z(\theta)$. The middle point of the plot is equal to the fidelity estimate obtained for one of the discrete errors in Fig.~\ref{fig:discrete_error} whereas the leftmost and rightmost points correspond to the fidelity estimate obtained from XEB using the error-free reference circuit.
+
+The analysis above illustrates how questions about the behavior and performance of quantum processors can be formulated in terms of modifications to the reference quantum circuits and how XEB can help investigate these questions. While XEB has proven itself a powerful tool for calibration and performance evaluation (see sections \ref{sec:calib_metro} and \ref{sec:large_scale_xeb}), more work is required to assess its efficacy as a diagnostic tool for quantum processors.

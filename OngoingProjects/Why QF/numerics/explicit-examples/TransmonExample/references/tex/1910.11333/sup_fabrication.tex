@@ -1,0 +1,16 @@
+\section{Fabrication and layout}
+
+Our Sycamore quantum processor is configured as a diagonal array of qubits as seen in the schematic of Fig.~1 in the main text. The processor contains 142 transmon qubits, of which 54 qubits have individual microwave and frequency controls and are individually read out (referred to as qubits).  The remaining 88 transmons are operated as adjustable couplers remaining in their ground state during the algorithms (referred to as couplers).
+
+The qubits consist of a DC SQUID sandwiched between two metal islands, operating in the transmon regime. An on-chip bias line is inductively coupled to the DC SQUID, which allows us to tune qubit frequency by applying control fluxes into the SQUID loop. For regular operations, we tune qubits through a small frequency range ($<$ 100 MHz). This corresponds to a relatively small control signal and makes qubit operation less sensitive to flux crosstalk. 
+
+Each pair of nearest-neighbor qubits are coupled through two parallel channels: direct capacitive coupling and indirect coupling mediated by coupler \cite{charles_thesis, andrew_thesis, Yan-2018-MIT}. Both channels result in qubit-qubit coupling in the form of $\sigma_i^x \sigma_j^x + \sigma_i^y \sigma_j^y$ in the rotating frame, although with different signs. The indirect coupling is negative, given it is a second-order virtual process. The strength of the indirect coupling is adjusted by changing the coupler frequency with an additional on-chip bias line, giving a net zero qubit-qubit coupling at a specific flux bias. 
+
+The Sycamore processor consists of two die that we fabricated on separate high resistivity silicon wafers. The fabrication process, using aluminum on silicon, requires a total of 14 lithography layers utilizing both optical and electron beam lithography. Crosstalk and dissipation are mitigated through ground plane shielding \cite{dunsworth2018method}.   After fabrication and die singulation, we use indium bump bonding \cite{rosenberg20173bumps, Foxen_2017} of the two separate dies to form the Sycamore processor. 
+
+The Sycamore processor is connected to a 3-layer Al-plated circuit board with Al wirebonds \cite{foxen2018high_speed}.  Each line is routed through a microwave connector to an individual coax cable.  We shield the processor from stray light using a superconducting Al lid with black coating, and from magnetic fields using a mu-metal shield as shown in Fig.~\ref{fig:package}.
+
+\begin{figure}[t!]
+\includegraphics[width=\columnwidth]{figures/sup_fab/syc_packagingv2}
+\caption{\label{fig:package} \textbf{A photograph of a packaged Sycamore processor.} The processor is shielded from the electromagnetic environment by a mu-metal shield (middle) and a superconducting aluminum cap, inside the mu-metal shield. The processor control wires are routed, through PCB circuit board, to coaxial connectors shown around the edge.}
+\end{figure}
