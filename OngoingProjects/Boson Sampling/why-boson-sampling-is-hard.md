@@ -10,7 +10,7 @@ Author: Mads Bahrami
 Two-photon interference, normalized permanent amplitudes, classical computation, and the assumptions behind sampling hardness: a computation-first narrative with the Wolfram Language and QuantumFramework
 
 <!-- #| style: Author -->
-Mads Bahrami (last updated: Oct 22, 2026)
+Mads Bahrami (last updated: Nov 2, 2026)
 
 <!-- #| style: Affiliation -->
 Wolfram Research Inc, USA
@@ -18,6 +18,8 @@ Wolfram Research Inc, USA
 ## Modes, Occupation Lists, and Assumptions
 
 An **occupation list** $\{n_1,n_2,\ldots,n_m\}$ records the photon count in each of the $m$ modes, with one entry per mode. Here, each input or output mode corresponds to a port of the optical network. An **input occupation list** specifies how many photons enter each input port; an **output occupation list** specifies how many photons are detected at each output port. The occupation list $\{n_1,n_2,\ldots,n_m\}$ labels the Fock state $|n_1,n_2,\ldots,n_m\rangle$.
+
+A **collision-free** input or output occupation list has at most one photon per mode. For example, $\{1,0,1\}$ describes two photons, one in mode 1 and one in mode 3.
 
 We will follow two photons through a beam splitter, derive the normalized permanent amplitude, compare ways of computing it, and examine what this says about classical sampling. Computing one amplitude, collecting every probability, and drawing one sample are different tasks; keeping them separate is essential to the hardness argument.
 
@@ -39,7 +41,7 @@ Start with the smallest interesting case: two identical photons, one into each p
 Build a two-mode interferometer that is a single balanced beam splitter (the angle $\theta=\pi/4$ makes the reflection and transmission amplitudes equal in size):
 
 ```wl
-qbs = QuantumInterferometer[{"BS"[Pi/4, 0] -> {1, 2}}, 2]
+qbs = QuantumInterferometer[{"BS"[\[Pi]/4, 0] -> {1, 2}}, 2]
 ```
 
 Draw it, so we can see the one element the photons meet:
@@ -136,11 +138,11 @@ ClearAll[distProb];
 distProb[w_, s_, t_] := Permanent[(Abs[w]^2)[[modeList[t], modeList[s]]]] / Times @@ Factorial[t]
 ```
 
-For indistinguishable noninteracting fermions, odd permutations contribute a minus sign, giving a **determinant**. A valid input occupation list has only zero-or-one counts; output collisions have probability zero. Define the probability for such inputs:
+For indistinguishable noninteracting fermions, odd permutations contribute a minus sign, giving a **determinant**. A valid input occupation list has only zero-or-one counts; output collisions have probability zero, and the definition returns that zero directly instead of relying on a numerically computed determinant of a matrix with a repeated row. Define the probability for such inputs:
 
 ```wl
 ClearAll[fermionProb];
-fermionProb[w_, s_, t_] := Abs[Det[w[[modeList[t], modeList[s]]]]]^2
+fermionProb[w_, s_, t_] := If[Max[t] > 1, 0, Abs[Det[w[[modeList[t], modeList[s]]]]]^2]
 ```
 
 Put the three particle types in one table, with one row per output occupation list:
@@ -158,10 +160,10 @@ The distinguishable probabilities are a quarter, a half, a quarter. Bosonic coin
 Check the coincidence amplitude at a variable beam-splitter angle:
 
 ```wl
-ClearAll[theta];
-With[{splitter = QuantumInterferometer[{"BS"[theta, 0] -> {1, 2}}, 2]},
- FullSimplify[splitter["Amplitude", {1, 1} -> {1, 1}] == Cos[2 theta],
-  Element[theta, Reals]]
+ClearAll[\[Theta]];
+With[{splitter = QuantumInterferometer[{"BS"[\[Theta], 0] -> {1, 2}}, 2]},
+ FullSimplify[splitter["Amplitude", {1, 1} -> {1, 1}] == Cos[2 \[Theta]],
+  \[Theta] \[Element] Reals]
 ]
 ```
 
@@ -173,14 +175,14 @@ The same amplitude formula follows directly from how a passive network acts on t
 
 $$ a_k^\dagger \;\longmapsto\; \sum_j W_{jk}\, a_j^\dagger . $$
 
-Replace the commuting creation operators by variables $x_j$. The transformed input is encoded by
+Take an input occupation list $S=\{s_1,\ldots,s_m\}$, with $s_k$ photons entering port $k$ and $n=\sum_k s_k$ photons in total. Its Fock state is $|S\rangle=\prod_k \frac{(a_k^\dagger)^{s_k}}{\sqrt{s_k!}}\,|0\rangle$. Substituting the transformed operator for every $a_k^\dagger$ and expanding the product gives
 
 $$
-F_S(x)=\prod_k\left(\sum_j W_{jk}x_j\right)^{s_k}
-      =\sum_T c_T\prod_j x_j^{t_j}.
+\prod_k\left(\sum_j W_{jk}\,a_j^\dagger\right)^{s_k}
+      =\sum_T c_T\prod_j (a_j^\dagger)^{t_j},
 $$
 
-The coefficient $c_T$ collects all contributions to $T$. Restoring Fock-state normalization gives
+where the sum runs over all output occupation lists $T=\{t_1,\ldots,t_m\}$ with $\sum_j t_j=n$. The creation operators commute with one another, so this expansion is ordinary polynomial algebra, and the coefficient $c_T$ collects all contributions to $T$. Acting on the vacuum, $\prod_j (a_j^\dagger)^{t_j}|0\rangle=\sqrt{\prod_j t_j!}\,|T\rangle$, so the input normalization and this factor together give
 
 $$
 A(T\leftarrow S)=c_T\sqrt{\frac{\prod_j t_j!}{\prod_k s_k!}},
@@ -188,7 +190,7 @@ A(T\leftarrow S)=c_T\sqrt{\frac{\prod_j t_j!}{\prod_k s_k!}},
 \operatorname{Per}(W_{T,S})=c_T\prod_j t_j!.
 $$
 
-Thus coefficient extraction and the permanent formula compute the same complex amplitude.
+Thus coefficient extraction and the permanent formula compute the same complex amplitude. Because the creation operators commute, the same expansion can be carried out with ordinary variables $x_j$ in place of $a_j^\dagger$, in the polynomial $F_S(x_1,\ldots,x_m)=\prod_k(\sum_j W_{jk}x_j)^{s_k}$. Its coefficients give every amplitude at once, which is how `QuantumInterferometer` computes the full output distribution below.
 
 To watch this on a network with no special structure, draw one at random. A random unitary is the natural "generic" network, and `QuantumInterferometer["Random"[m]]` builds an $m$-mode one and factors it into beam splitters and phase shifters.
 
@@ -212,7 +214,7 @@ W = qi["TransferMatrix"];
 W // MatrixForm
 ```
 
-Now use input occupation list $\{1,1,1,0,0\}$, with one photon entering each of ports 1, 2, and 3, and ask for the amplitude of output occupation list $\{1,0,1,1,0\}$, with one photon leaving each of ports 1, 3, and 4. The corresponding mode assignment lists select columns $\{1,2,3\}$ and rows $\{1,3,4\}$ of $W$. Both occupation lists are collision-free: every count is zero or one. All factorials in the normalization are therefore one, so the amplitude is the permanent of this selected $3\times 3$ matrix.
+Now use input occupation list $\{1,1,1,0,0\}$, with one photon entering each of ports 1, 2, and 3, and ask for the amplitude of output occupation list $\{1,0,1,1,0\}$, with one photon leaving each of ports 1, 3, and 4. The corresponding mode assignment lists select columns $\{1,2,3\}$ and rows $\{1,3,4\}$ of $W$. Both occupation lists are collision-free, so all factorials in the normalization are one and the amplitude is the permanent of the selected $3\times3$ matrix.
 
 Compute that amplitude directly from `QuantumInterferometer`:
 
@@ -283,14 +285,12 @@ For passive Fock inputs, `"Probabilities"` obtains all amplitudes by expanding $
 First compare the complex amplitudes, so relative-phase errors cannot disappear upon squaring. The call `qi[in]` returns the coefficient-based amplitude association:
 
 ```wl
-With[{in = {1, 1, 1, 0, 0}},
- With[{amps = qi[in]},
-  Max[Abs[Lookup[amps, QuditName[#], 0] -
-       Permanent[W[[modeList[#], modeList[in]]]]/
-        Sqrt[Times @@ Factorial[Join[in, #]]]] & /@
-     FrobeniusSolve[ConstantArray[1, 5], Total[in]]] < 10^-12
- ]
-]
+With[{in = {1, 1, 1, 0, 0}}, {amps = qi[in]},
+   Max[Abs[Lookup[amps, QuditName[#], 0] -
+              Permanent[W[[modeList[#], modeList[in]]]]/
+                Sqrt[Times @@ Factorial[Join[in, #]]]] & /@
+         FrobeniusSolve[ConstantArray[1, 5], Total[in]]] < 10^-12
+  ]
 ```
 
 Verify the probabilities independently as well:
@@ -304,98 +304,92 @@ Both routes agree within numerical precision. Polynomial expansion shares work a
 
 ## The Cost of One Amplitude
 
-How does the cost of `qi["Amplitude", S -> T]` grow with photon count? Compare three input and output occupation patterns in random networks with $m=2n$ modes: collision-free, pairs (plus one single photon when $n$ is odd), and all photons in one mode. For each $n$, use the same transfer matrix for all three patterns and move the occupied output modes to the other half of the ports.
+How does the cost of `qi["Amplitude", S -> T]` grow with photon count? Compare collision-free, paired, and fully bunched occupation lists in random networks with $m=2n$ modes. The input occupies the first half of the ports; the output repeats its occupation pattern in the second half.
 
-Define the input occupation lists and display them for six photons:
+For six photons in 12 modes, the three input occupation lists are:
+
+- **Collision-free:** each photon occupies its own mode. For six photons, $\{1,1,1,1,1,1,0,0,0,0,0,0\}$.
+- **Paired:** photons occupy modes in groups of two, with one singly occupied mode if the total is odd. For six photons, $\{2,2,2,0,0,0,0,0,0,0,0,0\}$.
+- **Fully bunched:** all photons occupy one mode, $\{6,0,0,0,0,0,0,0,0,0,0,0\}$.
+
+Define the three input occupation lists. For pairs, `Quotient` gives the number of doubly occupied ports and `Mod` supplies any remaining photon; `PadRight` fills unused ports with zeros:
 
 ```wl
-ClearAll[inputOccupation, patterns];
-inputOccupation[n_, "collision-free"] := PadRight[ConstantArray[1, n], 2 n];
-inputOccupation[n_, "pairs"] :=
- PadRight[Join[ConstantArray[2, Quotient[n, 2]], ConstantArray[1, Mod[n, 2]]], 2 n];
-inputOccupation[n_, "bunched"] := PadRight[{n}, 2 n];
-patterns = {"collision-free", "pairs", "bunched"};
-AssociationMap[inputOccupation[6, #] &, patterns]
+ClearAll[occupations];
+occupations[n_] := PadRight[#, 2 n] & /@ <|
+ "collision-free" -> ConstantArray[1, n],
+ "pairs" -> Append[ConstantArray[2, Quotient[n, 2]], Mod[n, 2]],
+ "bunched" -> {n}
+|>
 ```
 
-Each point measures one evaluation after `ClearSystemCache[]`, using machine-precision transfer matrices. Construct the network before timing; for the direct reference, also prepare the selected matrix and normalization first. The timer returns `{seconds, amplitude}` so we can check the value as well as the cost.
-
-Define the timer and the two ways to evaluate one normalized amplitude:
+Display the input occupation lists for six photons:
 
 ```wl
-ClearAll[singleTiming, transitionTiming, amplitudeCost];
-SetAttributes[singleTiming, HoldAll];
-singleTiming[expr_] := (ClearSystemCache[]; AbsoluteTiming[expr]);
+occupations[6]
+```
 
-transitionTiming[q_, s_, t_, "QI"] := singleTiming[q["Amplitude", s -> t]];
-transitionTiming[q_, s_, t_, "Permanent"] :=
- With[{matrix = q["TransferMatrix"][[modeList[t], modeList[s]]],
-   normalization = Sqrt[Times @@ Factorial[Join[s, t]]]},
-  singleTiming[Permanent[matrix]/normalization]
- ];
+Build a reproducible network for each photon count. `BlockRandom` keeps the seed local, so this does not change the random state of the surrounding calculation:
 
-amplitudeCost[n_, pattern_, method_: "QI"] := BlockRandom[
+```wl
+ClearAll[randomInterferometer];
+randomInterferometer[n_] := BlockRandom[
  SeedRandom[1107 + 1000 n];
- With[{q = QuantumInterferometer["Random"[2 n]], s = inputOccupation[n, pattern]},
-  transitionTiming[q, s, RotateRight[s, n], method]
- ]
-];
+ QuantumInterferometer["Random"[2 n]]
+]
 ```
 
-Confirm that the QI and direct-reference amplitudes agree for all three six-photon patterns:
+Each measurement uses one `AbsoluteTiming` evaluation after `ClearSystemCache[]`. Construct the network and output occupation list before starting the clock. The result is `{seconds, amplitude}`:
 
 ```wl
-And @@ Table[
- Abs[Last[amplitudeCost[6, pattern]] -
-    Last[amplitudeCost[6, pattern, "Permanent"]]] < 10^-12,
- {pattern, patterns}]
+ClearAll[timeAmplitude];
+timeAmplitude[q_, s_List] := With[{t = RotateRight[s, Total[s]]},
+ ClearSystemCache[];
+ AbsoluteTiming[q["Amplitude", s -> t]]
+]
 ```
 
-Time the QI amplitudes through 28 photons. This sweep can take several minutes; shorten `photonCounts` for a quicker run:
+Use the same network for all three occupation patterns and keep their names as association keys:
 
 ```wl
-ClearAll[photonCounts, qiTimings];
-photonCounts = {2, 6, 10, 14, 18, 22, 24, 26, 28};
-qiTimings = AssociationMap[
- Function[pattern, Table[{n, First[amplitudeCost[n, pattern]]}, {n, photonCounts}]],
- patterns];
+ClearAll[amplitudeBenchmark];
+amplitudeBenchmark[n_] := With[{q = randomInterferometer[n]},
+ timeAmplitude[q, #] & /@ occupations[n]
+]
 ```
 
-Plot the cost of one QI amplitude against photon count:
+Use photon counts up to 24 for the plot; shorten the list for a quicker run:
 
 ```wl
-ListLogPlot[Values[qiTimings],
+photonCounts = {2, 6, 10, 14, 18, 22, 24};
+```
+
+Run the benchmark, indexing the results first by photon count and then by occupation pattern:
+
+```wl
+amplitudeTimings = AssociationMap[amplitudeBenchmark, photonCounts];
+```
+
+Group the `{photon count, seconds}` pairs by occupation pattern. `KeyValueMap` retains each photon count, and `Merge` collects the three curves:
+
+```wl
+plotData = Merge[
+ KeyValueMap[Function[{n, results}, {n, First[#]} & /@ results], amplitudeTimings],
+ Identity];
+```
+
+Plot the cost of one QI amplitude:
+
+```wl
+ListLogPlot[Values[plotData],
  Joined -> True, PlotMarkers -> Automatic, Frame -> True, GridLines -> Automatic,
  AspectRatio -> 1/2, ImageSize -> Large,
  FrameLabel -> {"photons n (m = 2 n modes)", "seconds per QI amplitude"},
- PlotLegends -> Keys[qiTimings],
+ PlotLegends -> Keys[plotData],
  PlotLabel -> "Occupation structure changes the cost of one amplitude"]
 ```
 
-The collision-free and paired patterns become costly, while QI exploits repeated occupations and occupied modes to keep the fully bunched case cheap. Here every selected entry is $W_{n+1,1}$, so the normalized amplitude reduces to $W_{n+1,1}^{\,n}$. This structured case does not represent a generic permanent. Submillisecond single-call timings are noisy; focus on the large separation in cost.
-
-Compare QI with the default built-in `Permanent` at 22 photons, using the same timer and reusing the QI measurements above:
-
-```wl
-Grid[
- Prepend[
-  Table[{pattern,
-    SelectFirst[qiTimings[pattern], First[#] == 22 &][[2]],
-    First[amplitudeCost[22, pattern, "Permanent"]]},
-   {pattern, patterns}],
-  {"occupation pattern", "QI (seconds)", "direct Permanent (seconds)"}],
- Frame -> All]
-```
-
-The collision-free QI timings track the default `Permanent`, which QI calls internally for that case. The bunched comparison shows what exploiting occupation structure saves.
-
-Using this protocol on the machine used here (Wolfram Language 15.0, macOS ARM), the collision-free call took about 148 seconds at 28 photons and 295 seconds at 29 photons. Thus 28 is a comfortable stopping point for a five-minute-per-call budget here, while 29 leaves little margin. Timings vary with hardware and kernel version.
-
-Optionally time the 29-photon collision-free amplitude:
-
-```wl
-First[amplitudeCost[29, "collision-free"]]
-```
+The collision-free and paired timings rise rapidly, while QI exploits repeated occupations and occupied modes to keep the fully bunched case cheap. Here every selected entry is $W_{n+1,1}$, so the normalized amplitude reduces to $W_{n+1,1}^{\,n}$. This structured case does not represent a generic permanent. Submillisecond single-call timings are noisy; focus on the large separation in cost. For the collision-free and paired cases, QI calls the built-in `Permanent` directly, so those two curves measure the cost of a general permanent and track each other.
 
 For a general dense complex $n\times n$ matrix, algorithms such as Ryser's and Glynn's take $O(n2^n)$ arithmetic operations to evaluate its permanent, while Gaussian elimination evaluates its determinant in $O(n^3)$. These timings characterize particular implementations and occupation patterns. Computing a general permanent exactly is #P-hard (Valiant, 1979), a worst-case result that permits easy structured instances.
 
@@ -413,14 +407,54 @@ Chop[Total[Abs[W]^2] - 1]
 
 This verifies the normalized single-photon distributions used by that sampler, without evaluating any permanent.
 
-The missing bridge is a complexity result. Aaronson and Arkhipov showed that a polynomial-time classical algorithm for exact boson sampling would collapse the polynomial hierarchy to its third level, contrary to a standard complexity assumption. Their approximate-sampling argument additionally assumes average-case hardness of Gaussian permanents and permanent anticoncentration ([Aaronson and Arkhipov, 2010](https://arxiv.org/abs/1011.3245)). These assumptions rule out polynomial-time sampling; they do not prove that every classical algorithm takes exponential time.
+Define that sampler. Each photon in the input picks its output mode from its own column of $|W|^2$, and counting the picks gives an output occupation list:
 
-The original approximate-hardness argument uses a dilute regime with many more modes than photons, connecting optical submatrices to Gaussian random matrices. That is not a universal restriction: later work extends hardness evidence to a linear number of modes, where collisions are common ([Bouland et al., 2026](https://journals.aps.org/prx/abstract/10.1103/xc7b-sjm5)).
+```wl
+ClearAll[distinguishableSample];
+distinguishableSample[w_, s_] := With[{m = Length[w]},
+ Lookup[Counts[RandomChoice[Abs[w[[All, #]]]^2 -> Range[m]] & /@ modeList[s]], Range[m], 0]
+]
+```
 
-Classical algorithms also improve on full-distribution enumeration. Clifford and Clifford give exact sampling in $O(n2^n+\operatorname{poly}(m,n))$ time, with further average-case improvements in denser regimes ([Clifford and Clifford, 2020](https://arxiv.org/abs/2005.04214)). Algorithmic improvements and conditional hardness coexist: the former exploit structure or share work, while the latter concern suitable growing families of instances.
+Indistinguishable bosons have no such shortcut. The simplest exact sampler enumerates every output occupation list, weights each by `bosonProb`, and draws from that list:
+
+```wl
+ClearAll[bosonSamples];
+bosonSamples[w_, s_, k_] := With[{outputs = FrobeniusSolve[ConstantArray[1, Length[w]], Total[s]]},
+ RandomChoice[(bosonProb[w, s, #] & /@ outputs) -> outputs, k]
+]
+```
+
+Draw ten thousand samples of each kind for input occupation list $\{1,1,1,0,0\}$ and record how often at least two photons leave through the same port:
+
+```wl
+SeedRandom[2027];
+With[{in = {1, 1, 1, 0, 0}, k = 10^4},
+ N @ <|
+   "indistinguishable bosons" -> Mean[Boole[Max[#] > 1] & /@ bosonSamples[W, in, k]],
+   "distinguishable bosons" -> Mean[Boole[Max[#] > 1] & /@ Table[distinguishableSample[W, in], k]]
+ |>
+]
+```
+
+Indistinguishable bosons leave through a shared port much more often than distinguishable photons sent through the same network: the bunching seen at the beam splitter survives in a generic network and shows up in the samples themselves, with no amplitude in sight. The boson sampler paid for this by computing every probability first, enumerating all $\binom{n+m-1}{n}$ output occupation lists; a useful classical sampler would have to avoid exactly that cost.
+
+The missing bridge is a complexity result, and its mechanism fits in a few steps. A classical sampler is a program that turns random bits into an output occupation list, so the probability of any chosen output is the fraction of random-bit strings that produce it. Stockmeyer's approximate counting estimates such a fraction to within a constant factor in randomized polynomial time with an NP oracle, a class that lies in the third level of the polynomial hierarchy. If a polynomial-time classical algorithm sampled exactly from the boson distribution, this would estimate $|\operatorname{Per}(M)|^2$ to within a constant factor, a task that is itself #P-hard. By Toda's theorem every problem in the polynomial hierarchy reduces to a #P problem, so the whole hierarchy would collapse to its third level, contrary to a standard complexity assumption ([Aaronson and Arkhipov, 2010](https://arxiv.org/abs/1011.3245)).
+
+Real devices are imperfect, so the claim that matters concerns approximate sampling: producing samples from a distribution $Q$ whose total-variation distance from the ideal distribution $P$ satisfies
+
+$$
+d_{\mathrm{TV}}(P,Q)=\tfrac12\sum_T|P(T)-Q(T)|\le\varepsilon,
+$$
+
+in time polynomial in $n$ and $1/\varepsilon$. Such a sampler may put all of its error on the outputs we ask about, so the argument hides the matrix of interest as a random $n\times n$ block of a larger network, and the sampler cannot tell which block matters. That guarantees only a small additive error on most outputs. Two further assumptions finish the argument, each with its own job. Permanent anticoncentration says typical values of $|\operatorname{Per}|^2$ are not much smaller than their mean, which turns the additive error into a constant-factor one. Average-case hardness says that estimating the permanents of Gaussian random matrices to that accuracy remains #P-hard. Under these assumptions, polynomial-time approximate sampling would again collapse the polynomial hierarchy; they do not prove that every classical algorithm takes exponential time.
+
+The hiding step is where the original argument needs a dilute regime, with many more modes than photons: only then does a small block of a random network look like a matrix of independent Gaussian entries. That is not a universal restriction: later work extends hardness evidence to a linear number of modes, where collisions are common ([Bouland et al., 2026](https://journals.aps.org/prx/abstract/10.1103/xc7b-sjm5)).
+
+Classical algorithms also improve on full-distribution enumeration. Clifford and Clifford give exact sampling in $O(n2^n+\operatorname{poly}(m,n))$ time ([Clifford and Clifford, 2018](https://arxiv.org/abs/1706.01260)), with further average-case improvements when the number of modes grows only in proportion to the photon count ([Clifford and Clifford, 2020](https://arxiv.org/abs/2005.04214)). Algorithmic improvements and conditional hardness coexist: the former exploit structure or share work, while the latter concern suitable growing families of instances.
 
 ## Summary and Next Questions
 
-We have connected two-photon interference to normalized permanent amplitudes, checked those amplitudes and probabilities against an independent coefficient calculation, and measured how photon count and occupation structure affect QI amplitude calculations. The computations explain the optical probabilities; the cited complexity results supply the separate, conditional argument about classical sampling.
+We have connected two-photon interference to normalized permanent amplitudes, checked those amplitudes and probabilities against an independent coefficient calculation, measured how photon count and occupation structure affect QI amplitude calculations, and drawn samples in which bosonic bunching is visible directly. The computations explain the optical probabilities; the cited complexity results supply the separate, conditional argument about classical sampling.
 
 The next questions concern partial distinguishability, loss, and detector resolution, each of which changes the experiment differently. Replacing single-photon inputs by squeezed vacuum leads to Gaussian boson sampling, where hafnians take the role played here by permanents.
