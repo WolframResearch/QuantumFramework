@@ -436,81 +436,45 @@ QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCirc
 QuantumCircuitOperatorProp[qco_, "ZXTensorNetwork", opts : OptionsPattern[ZXTensorNetwork]] := ZXTensorNetwork[qco, opts]
 
 
-(* A state-injection operator has no input qudits and at least one output qudit (e.g. a
-   Cup or a |+> ket): it prepares a state rather than acting as a gate, so OpenQASM (which
-   starts every qubit in |0>) cannot represent it directly. It is lowered to a reset
-   followed by a preparation gate sequence (the same decomposition the qiskit path uses).
-   A co-state / projection (Cap: output dim 1, input dim > 1) is NOT an injection and falls
-   through to the gate emitter, which reports it as non-serializable. *)
-qasmStateInjectionQ[op_] := MatchQ[op, _QuantumOperator] && op["InputDimension"] == 1 && op["OutputDimension"] >= 2
-
-(* "Reset"[state] on wires w discards w and leaves state there, which is the state injection
-   QuantumOperator[state, {w, {}}] when state is pure; a reset to a mixed state has no OpenQASM
-   gate sequence and becomes the "// Unimplemented" marker *)
-qasmResetQ[op_] := MatchQ[op, _QuantumOperator] && MatchQ[op["Label"], "Reset"[_]] && op["OutputOrder"] === op["InputOrder"]
-
-(* resetState gives the state with its qudits on op["Sort"]["OutputOrder"] *)
-qasmResetLines[op_] := With[{state = resetState[op]},
-    If[ state["PureStateQ"],
-        qasmStatePrepLines[QuantumOperator[state, {op["Sort"]["OutputOrder"], {}}]],
-        {qasmUnimplemented[Replace[op["Label"], "Reset"[None] -> "Reset to a mixed or symbolic state"]]}
-    ]
-]
-
-qasmZeroStateQ[state_] := With[{v = Normal[state["StateVector"]]},
-    TrueQ[Chop[Norm[v - UnitVector[Length[v], 1]]] == 0]
-]
-
-(* Lower a state-injection operator to OpenQASM lines: reset for a |0...0> injection (the
-   base case), otherwise decompose the state into a preparation circuit on the target wires
-   and recurse (its leading |0> kets become resets, the rest become gates). *)
-qasmStatePrepLines[op_] := Module[{state = op["State"], order = op["OutputOrder"], subOps},
-    If[ qasmZeroStateQ[state],
-        Map["reset q[" <> ToString[# - 1] <> "];" &, order],
-        subOps = QuantumCircuitOperator[QuantumCircuitOperator[state], order]["Flatten"]["Operators"];
-        Catenate @ Map[
-            Function[sub,
-                If[ qasmStateInjectionQ[sub],
-                    qasmStatePrepLines[sub],
-                    {qasmGateLines[sub]}
-                ]
-            ],
-            subOps
-        ]
-    ]
-]
-
-(* OpenQASM measures only in the computational basis, so a measurement in any other basis B
-   must be lowered before emission, the same way the qiskit export path does it (Qiskit.m): the
-   basis-change gate Inverse[B] rotates B's eigenstates onto the computational basis, after which
-   a computational measurement reproduces the original outcome statistics. QuantumShortcut
-   decomposes that unitary into emittable gates. A computational measurement (Inverse[B] is the
-   identity) is returned untouched, so existing exports are byte-for-byte unchanged; a
-   non-square basis matrix (a genuine POVM, which has no unitary basis-change) is also left
-   as-is. *)
-qasmComputationalBasisQ[m_] := With[{n = Length[m]}, Chop[Normal[m] - IdentityMatrix[n]] == ConstantArray[0, {n, n}]]
-
-qasmRebaseMeasurement[op_ ? QuantumMeasurementOperatorQ] := With[{bm = Normal @ op["Basis"]["Input"]["Matrix"]},
-    If[ ! SquareMatrixQ[bm],
-        {op},
-        With[{rot = Inverse[bm], targets = op["Target"]},
-            If[ qasmComputationalBasisQ[rot],
-                {op},
-                Append[QuantumOperator /@ QuantumShortcut[QuantumOperator[rot, targets]], QuantumMeasurementOperator[targets]]
-            ]
-        ]
-    ]
-]
-qasmRebaseMeasurement[op_] := {op}
-
 (* The gate lines of one circuit element (an operator, or a channel through its operator). An
    element the emitter cannot serialize is the "// Unimplemented" marker naming it; QuantumQASM
    of the element alone is a Failure. QuantumQASM is called directly, not through the "QASM"
    property, whose dispatcher reports a returned Failure with a failprop message. *)
 qasmGateLines[op_] := Replace[
     QuantumQASM[If[QuantumOperatorQ[op], op, op["QuantumOperator"]]],
-    Failure["QuantumQASM", _] :> qasmUnimplemented[op["Label"]]
+    Failure["QuantumQASM", _] :> qasmUnimplemented[qasmGateName[op]]
 ]
+
+(* the name a failure gives an operator: its label, or for an unnamed matrix its wires *)
+qasmGateName[op_] := Replace[op["Label"], None -> "a matrix on wires " <> ToString[op["InputOrder"]]]
+
+(* An unnamed two-qubit unitary has no OpenQASM name; its KAK decomposition (local gates and CX)
+   does. The decomposition is checked against the operator before it is used. *)
+qasmKAKLines[op_] := Enclose @ With[{kak = ConfirmBy[op["KAK"], QuantumCircuitOperatorQ]},
+    ConfirmAssert[
+        With[{a = N @ Normal @ op["Sort"]["Matrix"], b = N @ Normal @ QuantumOperator[kak]["Sort"]["Matrix"]},
+            Dimensions[a] === Dimensions[b] && With[{ov = Tr[ConjugateTranspose[a] . b]},
+                Abs[ov] > 10 ^ -8 && Chop[Norm[Flatten[b - ov / Abs[ov] a], Infinity], 10 ^ -10] == 0
+            ]
+        ]
+    ];
+    Catenate[Confirm @ qasmInstructionLines[#] & /@ Confirm @ circuitInstructions[kak]]
+]
+
+qasmUnimplementedQ[line_] := StringQ[line] && StringContainsQ[line, "// Unimplemented"]
+
+qasmInstructionLines[{"Gate", op_}] := With[{line = qasmGateLines[op]},
+    If[ qasmUnimplementedQ[line] && op["Label"] === None && MatchQ[op["Dimensions"], {2, 2, 2, 2}] && MatrixQ[op["Matrix"], NumericQ],
+        Replace[qasmKAKLines[op], _Failure -> {line}],
+        {line}
+    ]
+]
+qasmInstructionLines[{"Reset", w_}] := {"reset q[" <> ToString[w - 1] <> "];"}
+qasmInstructionLines[{"Measure", w_, k_}] := {"c[" <> ToString[k] <> "] = measure q[" <> ToString[w - 1] <> "];"}
+(* barriers are not written: they do not change what the circuit does *)
+qasmInstructionLines[{"Barrier", _}] := {}
+
+
 
 (* "// Unimplemented" markers among emitted lines mean the WL emitter cannot serialize those
    gates: a QuantumQASM Failure naming them rather than invalid OpenQASM, or None when there
@@ -530,41 +494,21 @@ qasmUnimplementedFailure[lines_List] := With[{unimpl = DeleteDuplicates @ Flatte
     ]
 ]
 
-qasmEmitCircuit[qco_] := Enclose @ Module[{lines, failure},
-    (* fold over operators threading a global classical-bit counter, so successive
-       measurements write c[0], c[1], ... instead of every one writing c[0]. *)
-    lines = DeleteCases[""] @ First @ Fold[
-        Function[{state, op},
-            With[{acc = state[[1]], clbit = state[[2]]},
-                Which[
-                    QuantumMeasurementOperatorQ[op],
-                    With[{targets = op["Target"]},
-                        {
-                            Append[acc, StringRiffle[MapIndexed[
-                                "c[" <> ToString[clbit + First[#2] - 1] <> "] = measure q[" <> ToString[#1 - 1] <> "];" &,
-                                targets], "\n"]],
-                            clbit + Length[targets]
-                        }
-                    ],
-                    qasmStateInjectionQ[op],
-                    {Join[acc, qasmStatePrepLines[op]], clbit},
-                    qasmResetQ[op],
-                    {Join[acc, qasmResetLines[op]], clbit},
-                    True,
-                    {Append[acc, ConfirmBy[qasmGateLines[op], StringQ]], clbit}
-                ]
-            ]
-        ],
-        {{}, 0},
-        Catenate[qasmRebaseMeasurement /@ qco["Flatten"]["Operators"]]
+(* The circuit's OpenQASM 3: the lines of each instruction of circuitInstructions, the lowering
+   the qiskit export reads too. *)
+qasmEmitCircuit[qco_] := Enclose @ Module[{instructions, lines, failure},
+    instructions = circuitInstructions[qco];
+    If[ FailureQ[instructions],
+        Return @ Failure["QuantumQASM", <|"MessageTemplate" -> instructions["MessageTemplate"], "MessageParameters" -> instructions["MessageParameters"]|>]
     ];
+    lines = DeleteCases[""] @ Catenate[Confirm @ qasmInstructionLines[#] & /@ instructions];
     failure = qasmUnimplementedFailure[lines];
     If[FailureQ[failure], Return[failure]];
     (* qubit count is the highest wire index ("Max"), not "Arity": a circuit that begins
        with state preparation has input arity 0 but still acts on all its wires. The
        stdgates.inc include declares the standard gates (cx, cz, swap, p, ...) the lines use;
        only U and gphase are built into the language. *)
-    StringTemplate["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[``] q;\nbit[``] c;\n"][qco["Max"], qco["TargetCount"]] <> StringRiffle[lines, "\n"]
+    StringTemplate["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[``] q;\nbit[``] c;\n"][qco["Max"], Count[instructions, {"Measure", __}]] <> StringRiffle[lines, "\n"]
 ]
 
 QuantumCircuitOperatorProp[qco_, "QASM"] := QuantumQASM[qco, "WL"]

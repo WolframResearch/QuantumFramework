@@ -3,6 +3,8 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["ImportOpenQASM"]
 PackageScope["qasmStringQ"]
 PackageScope["qasmFileQ"]
+PackageScope["qasmGateElements"]
+PackageScope["qasmGateNames"]
 
 
 
@@ -153,6 +155,25 @@ qasmAngle[str_String] := Module[{e = StringTrim[str], idents, wl, val},
 qasmAngles[argStr_String] := qasmAngle /@ qasmSplitTopComma[argStr]
 
 
+(* "name(params) operands" -> {name, params, operands}; the parameter list may hold nested
+   parentheses (a regular expression stopping at the first ")" would cut "rz(-(pi/2))") *)
+qasmSplitCall[stmt_String] := Module[{m, name, rest, chars, depth, close},
+    m = StringCases[StringTrim[stmt], RegularExpression["^([A-Za-z_][A-Za-z0-9_]*)\\s*([\\s\\S]*)$"] :> {"$1", "$2"}];
+    If[m === {}, Return[Missing["NotACall"]]];
+    {name, rest} = m[[1]];
+    If[ ! StringStartsQ[rest, "("], Return[{name, "", rest}]];
+    chars = Characters[rest];
+    depth = FoldList[Plus, 0, Replace[chars, {"(" -> 1, ")" -> -1, _ -> 0}, {1}]];
+    close = FirstPosition[Rest[depth], 0, {Missing[]}, {1}][[1]];
+    If[ MissingQ[close], qasmThrow["Syntax", "Unbalanced parentheses in `1`.", {stmt}]];
+    {name, StringTake[rest, {2, close - 1}], StringTrim @ StringDrop[rest, close]}
+]
+
+(* the control sign of each control wire, in the order the ctrl / negctrl modifiers are written:
+   the outermost modifier takes the first wires *)
+qasmControlSigns[mods_List] := Catenate @ Replace[mods, {"ctrl"[k_] :> ConstantArray[1, k], "negctrl"[k_] :> ConstantArray[0, k], _ -> {}}, {1}]
+
+
 (* ---- gate-name table: name -> {baseShortcutBuilder, nParams, nControls, daggerQ} ---- *)
 
 qasmGateSpec[name_String] := Lookup[$qasmGateTable, ToLowerCase[name], Missing["UnknownGate"]]
@@ -193,12 +214,23 @@ $qasmGateTable = <|
     "cu1" -> {Function[p, "P"[p[[1]]]], 1, 1, False},
     "cphase" -> {Function[p, "P"[p[[1]]]], 1, 1, False},
     "cu3" -> {Function[p, "U"[p[[1]], p[[2]], p[[3]]]], 3, 1, False},
+    (* stdgates.inc cu(theta, phi, lambda, gamma): the controlled E^(I gamma) U(theta, phi, lambda) *)
+    "cu" -> {Function[p, Exp[I p[[4]]] Normal[QuantumOperator["U"[p[[1]], p[[2]], p[[3]]]]["Matrix"]]], 4, 1, False},
     "ccx" -> {Function[p, "X"], 0, 2, False},
     "toffoli" -> {Function[p, "X"], 0, 2, False},
     "ccz" -> {Function[p, "Z"], 0, 2, False},
     "cswap" -> {Function[p, "SWAP"], 0, 1, False},
     "fredkin" -> {Function[p, "SWAP"], 0, 1, False}
 |>
+
+
+(* The QF elements of a standard gate called by its OpenQASM name on the given wires: the one
+   gate table both readers use (this importer and the qiskit circuit decoder). A Failure when the
+   name or the parameter count is not the table's. *)
+qasmGateNames[] := Keys[$qasmGateTable]
+
+qasmGateElements[name_String, params_List, wires_List] :=
+    Catch[qasmBuildGate[name, params, List /@ wires, {}, False, 1, <|"gateDefs" -> <||>|>, name], $qasmTag]
 
 
 (* ---- the importer (PackageScope entry used by QuantumQASM[src_String]) ---- *)
@@ -371,32 +403,25 @@ qasmDropInitialResets[elements_List] := Replace[Reap[
    rest, so an uncontrolled gphase stays a 0-qudit GlobalPhase and a controlled one is a
    genuine operator on the control qubits. *)
 qasmGPhase[stmt_String, state_] := Module[{
-    mods, rest, nc1 = 0, nc0 = 0, invQ = False, powK = 1, m, theta, qargStr, wires, w1, w0, host, gate, restCtrl1, restCtrl0
+    mods, rest, invQ, powK, call, theta, wires, signs, w1, w0, host, gate, restCtrl1, restCtrl0
 },
     {mods, rest} = qasmStripModifiers[stmt];
-    Scan[
-        Replace[#, {
-            "inv" :> (invQ = ! invQ),
-            "ctrl"[k_] :> (nc1 += k),
-            "negctrl"[k_] :> (nc0 += k),
-            "pow"[k_] :> (powK *= k)
-        }] &,
-        mods
-    ];
-    m = StringCases[rest, RegularExpression["gphase\\s*\\(([^)]*)\\)\\s*([\\s\\S]*)$"] :> {"$1", "$2"}];
-    If[m === {}, qasmThrow["Syntax", "Malformed gphase: `1`.", {stmt}]];
-    theta = powK * qasmAngle[m[[1, 1]]];
+    invQ = OddQ[Count[mods, "inv"]];
+    powK = Times @@ Cases[mods, "pow"[k_] :> k];
+    signs = qasmControlSigns[mods];
+    call = qasmSplitCall[rest];
+    If[MissingQ[call] || call[[2]] === "", qasmThrow["Syntax", "Malformed gphase: `1`.", {stmt}]];
+    theta = powK * qasmAngle[call[[2]]];
     If[invQ, theta = - theta];
-    If[ nc1 + nc0 == 0,
+    If[ signs === {},
         Return @ {"GlobalPhase"[theta]}
     ];
-    qargStr = StringTrim[m[[1, 2]]];
-    wires = Flatten[qasmResolveQ[#, state["regs"]] & /@ qasmSplitQargs[qargStr]];
-    If[ Length[wires] =!= nc1 + nc0,
-        qasmThrow["Arity", "Controlled gphase expects `1` control qubit(s), got `2`.", {nc1 + nc0, Length[wires]}]
+    wires = Flatten[qasmResolveQ[#, state["regs"]] & /@ qasmSplitQargs[call[[3]]]];
+    If[ Length[wires] =!= Length[signs],
+        qasmThrow["Arity", "Controlled gphase expects `1` control qubit(s), got `2`.", {Length[signs], Length[wires]}]
     ];
-    w1 = wires[[1 ;; nc1]];
-    w0 = wires[[nc1 + 1 ;; nc1 + nc0]];
+    w1 = Pick[wires, signs, 1];
+    w0 = Pick[wires, signs, 0];
     (* host gate carries the phase on |1> (positive control) or |0> (negative control) *)
     If[ w1 =!= {},
         host = Last[w1]; gate = {{1, 0}, {0, Exp[I theta]}}; restCtrl1 = Most[w1]; restCtrl0 = w0,
@@ -439,25 +464,16 @@ qasmGateDef[stmt_String, state_] := Module[{m, nm, paramStr, qubitStr, body, fpa
 
 (* -- gate application: strip modifiers, resolve name/params/qubits -- *)
 
-qasmGateApply[stmt_String, state_] := Module[{mods, rest, nc1 = 0, nc0 = 0, invQ = False, powK = 1, m, nm, paramStr, qargStr, params, qargs, wires},
+qasmGateApply[stmt_String, state_] := Module[{mods, rest, invQ, powK, call, nm, params, qargs, wires},
     {mods, rest} = qasmStripModifiers[stmt];
-    Scan[
-        Replace[#, {
-            "inv" :> (invQ = ! invQ),
-            "ctrl"[k_] :> (nc1 += k),
-            "negctrl"[k_] :> (nc0 += k),
-            "pow"[k_] :> (powK *= k)
-        }] &,
-        mods
-    ];
-    m = StringCases[rest, RegularExpression["^([A-Za-z_][A-Za-z0-9_]*)\\s*(\\(([^)]*)\\))?\\s*([\\s\\S]*)$"] :> {"$1", "$3", "$4"}];
-    If[m === {}, qasmThrow["Syntax", "Could not parse gate statement: `1`.", {stmt}]];
-    {nm, paramStr, qargStr} = m[[1]];
-    params = If[StringTrim[paramStr] === "", {}, qasmAngles[paramStr]];
-    qargs = qasmSplitQargs[qargStr];
+    invQ = OddQ[Count[mods, "inv"]];
+    powK = Times @@ Cases[mods, "pow"[k_] :> k];
+    call = qasmSplitCall[rest];
+    If[MissingQ[call], qasmThrow["Syntax", "Could not parse gate statement: `1`.", {stmt}]];
+    {nm, params, qargs} = {call[[1]], If[StringTrim[call[[2]]] === "", {}, qasmAngles[call[[2]]]], qasmSplitQargs[call[[3]]]};
     If[qargs === {}, qasmThrow["Syntax", "Gate `1` has no qubit arguments.", {nm}]];
     wires = qasmResolveQ[#, state["regs"]] & /@ qargs;
-    qasmBuildGate[nm, params, wires, nc1, nc0, invQ, powK, state, stmt]
+    qasmBuildGate[nm, params, wires, qasmControlSigns[mods], invQ, powK, state, stmt]
 ]
 
 
@@ -489,11 +505,41 @@ qasmParseModifier[modStr_String] := Module[{s = StringTrim[modStr]},
 
 (* build the QF element(s) for a gate, given resolved per-arg wire lists and modifiers *)
 
-qasmBuildGate[nm_String, params_, wires_, nc1_, nc0_, invQ_, powK_, state_, stmt_] := Module[{
-    gateDef, spec, baseBuilder, np, namedNc, namedDag, lens, nBroad, flatWires, totalCtrl, ctrl1, ctrl0, targets, shortcut, op
+qasmBuildGate[nm_String, params_, wires_, signs_List, invQ_, powK_, state_, stmt_] := Module[{
+    gateDef, spec, baseBuilder, np, namedNc, namedDag, lens, nBroad, flatWires, nMod, ctrl1, ctrl0, targets, base, op
 },
+    (* register broadcast: expand element-wise over multi-wire args *)
+    lens = Length /@ wires;
+    nBroad = Max[lens];
+    If[ nBroad > 1,
+        If[ ! AllTrue[lens, # == 1 || # == nBroad &],
+            qasmThrow["Arity", "Mismatched register sizes in broadcast of gate `1`.", {nm}]
+        ];
+        Return @ Flatten @ Table[
+            qasmBuildGate[nm, params, Map[If[Length[#] == 1, #, {#[[i]]}] &, wires], signs, invQ, powK, state, stmt],
+            {i, nBroad}
+        ]
+    ];
+    flatWires = Flatten[wires];
+    nMod = Length[signs];
+    If[ Length[flatWires] < nMod + 1,
+        qasmThrow["Arity", "Gate `1` applied to too few qubits.", {nm}]
+    ];
+    (* modifier controls take the first wires, in the order the modifiers are written *)
+    ctrl1 = Pick[flatWires[[;; nMod]], signs, 1];
+    ctrl0 = Pick[flatWires[[;; nMod]], signs, 0];
+
     gateDef = Lookup[state["gateDefs"], nm, Missing[]];
-    If[ ! MissingQ[gateDef], Return @ qasmBuildUserGate[nm, gateDef, params, wires, state]];
+    If[ ! MissingQ[gateDef],
+        (* with no modifier the gate stays a labeled subcircuit; a modifier acts on its operator *)
+        Return @ If[ nMod == 0 && ! invQ && powK == 1,
+            qasmBuildUserGate[nm, gateDef, params, {flatWires}, state],
+            qasmApplyModifiers[
+                QuantumOperator @ First @ qasmBuildUserGate[nm, gateDef, params, {flatWires[[nMod + 1 ;;]]}, state],
+                ctrl1, ctrl0, flatWires[[nMod + 1 ;;]], invQ, powK, nm
+            ]
+        ]
+    ];
 
     spec = qasmGateSpec[nm];
     If[ MissingQ[spec],
@@ -503,41 +549,36 @@ qasmBuildGate[nm_String, params_, wires_, nc1_, nc0_, invQ_, powK_, state_, stmt
     If[ Length[params] =!= np,
         qasmThrow["Arity", "Gate `1` expects `2` parameter(s), got `3`.", {nm, np, Length[params]}]
     ];
-
-    (* register broadcast: expand element-wise over multi-wire args *)
-    lens = Length /@ wires;
-    nBroad = Max[lens];
-    If[ nBroad > 1,
-        If[ ! AllTrue[lens, # == 1 || # == nBroad &],
-            qasmThrow["Arity", "Mismatched register sizes in broadcast of gate `1`.", {nm}]
-        ];
-        Return @ Flatten @ Table[
-            qasmBuildGate[nm, params, Map[If[Length[#] == 1, #, {#[[i]]}] &, wires], nc1, nc0, invQ, powK, state, stmt],
-            {i, nBroad}
-        ]
-    ];
-
-    flatWires = Flatten[wires];
-    totalCtrl = nc1 + nc0 + namedNc;
-    If[ Length[flatWires] < totalCtrl + 1,
+    If[ Length[flatWires] < nMod + namedNc + 1,
         qasmThrow["Arity", "Gate `1` applied to too few qubits.", {nm}]
     ];
-    ctrl1 = Join[flatWires[[1 ;; nc1]], flatWires[[nc1 + nc0 + 1 ;; nc1 + nc0 + namedNc]]];
-    ctrl0 = flatWires[[nc1 + 1 ;; nc1 + nc0]];
-    targets = flatWires[[totalCtrl + 1 ;;]];
-    shortcut = baseBuilder[params];
+    (* a named controlled gate (cx, ccx, cu, ...) has positive controls after the modifier ones *)
+    ctrl1 = Join[ctrl1, flatWires[[nMod + 1 ;; nMod + namedNc]]];
+    targets = flatWires[[nMod + namedNc + 1 ;;]];
+    base = baseBuilder[params];
     op = If[ ctrl1 === {} && ctrl0 === {},
-        QuantumOperator[shortcut, targets],
-        QuantumOperator["C"[shortcut, ctrl1, ctrl0], targets]
+        QuantumOperator[base, targets],
+        QuantumOperator["C"[base, ctrl1, ctrl0], targets]
     ];
     If[Xor[invQ, namedDag], op = op["Dagger"]];
-    Which[
-        powK == 1, {op},
-        IntegerQ[powK] && powK >= 1, ConstantArray[op, powK],
-        IntegerQ[powK] && powK < 0, ConstantArray[op["Dagger"], -powK],
-        powK == 0, {},
-        True, qasmThrow["Unsupported", "Non-integer pow(`1`) is not supported for gate `2`.", {powK, nm}]
-    ]
+    qasmPower[op, powK, nm]
+]
+
+(* a user-defined gate under modifiers: inv, then the controls, then pow *)
+qasmApplyModifiers[base_, ctrl1_, ctrl0_, targets_, invQ_, powK_, nm_] := Module[{op = base},
+    If[invQ, op = op["Dagger"]];
+    If[ ctrl1 =!= {} || ctrl0 =!= {},
+        op = QuantumOperator["C"[op, ctrl1, ctrl0]]
+    ];
+    qasmPower[op, powK, nm]
+]
+
+qasmPower[op_, powK_, nm_] := Which[
+    powK == 1, {op},
+    IntegerQ[powK] && powK >= 1, ConstantArray[op, powK],
+    IntegerQ[powK] && powK < 0, ConstantArray[op["Dagger"], -powK],
+    powK == 0, {},
+    True, qasmThrow["Unsupported", "Non-integer pow(`1`) is not supported for gate `2`.", {powK, nm}]
 ]
 
 

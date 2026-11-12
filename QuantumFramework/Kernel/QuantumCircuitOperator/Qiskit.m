@@ -8,54 +8,15 @@ PackageScope["QuantumCircuitOperatorToQiskit"]
 PackageScope["qiskitQASM"]
 PackageScope["qiskitPrimitiveSubmit"]
 PackageScope["qiskitReorderByQubit"]
-PackageScope["qiskitControlledOperator"]
-PackageScope["qiskitNamedOperator"]
+PackageScope["$qiskitVirtualCircuitPython"]
 
 
-(* Build a named QuantumOperator in call form, e.g. qiskitNamedOperator["RX", {0.7}, {1}] gives
-   QuantumOperator["RX"[0.7], {1}]. The qiskit -> QF decoder must emit the call form "Name"[args];
-   the list form {"Name", args} is no longer read as a named operator and decays to a Label -> None
-   state. wolframclient cannot serialize a String-headed expression (a string in head position
-   becomes a Symbol), so the head is reattached here via Apply. *)
-qiskitNamedOperator[name_String, args_List, order_List] := QuantumOperator[Apply[name, args], order]
-
-
-(* Build a controlled QuantumOperator from the data a qiskit controlled gate carries: the
-   (already 1-indexed) control qubit order and a ctrl_state integer whose bits select, MSB first
-   over controlOrder, which controls are active on |1> vs |0> (the same IntegerDigits partition
-   the named "C"[\[Ellipsis], ctrl_Integer, \[Ellipsis]] constructor uses). The explicit control1 /
-   control0 lists are handed to the "C"[base, control1, control0] call form directly: Splice does
-   not expand inside a String-headed "C"[\[Ellipsis]], so the integer-ctrl constructor itself fails
-   when base is a QuantumOperator. *)
-qiskitControlledOperator[base_, ctrl_Integer, controlOrder_List] := Block[{
-    bits = IntegerDigits[ctrl, 2, Length[controlOrder]]
-},
-    QuantumOperator["C"[base, Pick[controlOrder, bits, 1], Pick[controlOrder, bits, 0]]]
-]
-
-
-
+(* The qiskit name of a gate shortcut (QuantumShortcut's output for a unitary operator). The
+   circuit reaches this only through circuitInstructions, which has already turned measurements,
+   resets, injections and permutations into gates, resets and computational measurements. *)
 shortcutToGate = Replace[
     {
         "R"[angle_, {name_ -> order_ ? orderQ}] :> shortcutToGate["R"[angle, name]] -> order,
-        ("M" -> target_ ? orderQ) :> {"Measure", target},
-        ("M"[args___] -> target_ ? orderQ) :> Splice @ Append[shortcutToGate /@ QuantumShortcut[QuantumOperator[Inverse[QuantumBasis[args]["Matrix"]]]], {"Measure", target}],
-        (* a reset to a pure state discards the wires and injects the state there: the same gates
-           as the state-injection operator QuantumOperator[state, {order, {}}] (a reset, then the
-           preparation of state when it is not |0...0>). A reset to a mixed, symbolic or non-qubit
-           state has no such gate sequence. *)
-        ("Reset"[state_] -> order_ ? orderQ) :> Which[
-            ! QuantumStateQ[state],
-                Splice[shortcutToGate /@ QuantumShortcut[QuantumOperator[state, {order, {}}]]],
-            ! AllTrue[state["Dimensions"], # == 2 &],
-                Failure["Qiskit", <|"MessageTemplate" -> "A reset to a state that is not a qubit state has no qiskit gate sequence."|>],
-            ! state["NumericQ"],
-                Failure["Qiskit", <|"MessageTemplate" -> "A reset to a symbolic state has no qiskit gate sequence; give the state numeric amplitudes."|>],
-            ! state["PureStateQ"],
-                Failure["Qiskit", <|"MessageTemplate" -> "A reset to a mixed state has no qiskit gate sequence."|>],
-            True,
-                Splice[shortcutToGate /@ QuantumShortcut[QuantumOperator[state, {order, {}}]]]
-        ],
         (name_ -> (order_ ? orderQ)) :> With[{shortcut = shortcutToGate[name]}, If[shortcut === Nothing, Nothing, shortcut -> order]],
         "I" -> Nothing,
         "X" | "NOT" -> "XGate",
@@ -69,7 +30,6 @@ shortcutToGate = Replace[
         "Diagonal"[x_] :> If[ListQ[x], {"Diagonal", NumericArray @ N[x]}, {"GlobalPhaseGate", Chop[N[Arg[x]]]}],
         "U2"[a_, b_] :> {"U2Gate", N[a], N[b]},
         "U"[a_, b_, c_] :> {"U3Gate", N[a], N[b], N[c]},
-        "Permutation"[perm_] :> {"PermutationGate", PermutationList[perm] - 1},
         "GlobalPhase"[phase_] :> {"GlobalPhaseGate", Chop[Re[N[phase]]]},
         "R"[angle_, "X"] :> {"RXGate", N[angle]},
         "R"[angle_, "Y"] :> {"RYGate", N[angle]},
@@ -78,42 +38,34 @@ shortcutToGate = Replace[
         "PhaseShift"[k_] :> {"PhaseGate", N[Sign[k] 2 Pi / 2 ^ Abs[k]]},
         "C"[name_, controls___] :> {"Control", shortcutToGate[name], controls},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
-        barrier : "Barrier" | "Barrier"[___] :> "Barrier",
         "Delay"[delay_] :> {"Delay", delay},
-        (name_ -> (order : {_, {}})) :> shortcutToGate[
-            Labeled[
-                If[MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..], QuantumState, QuantumOperator][name]["StateMatrix"] -> order, name
-            ]
-        ],
-        Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> If[
-            order[[2]] === {},
-            With[{state = QuantumOperator[arr, order]["State"]},
-                Splice @ {
-                    "Reset" -> order[[1]],
-                    (* |0...0> needs nothing after the reset *)
-                    If[ TrueQ[Chop[Norm[N @ Normal[state["StateVector"]] - UnitVector[state["Dimension"], 1]]] == 0],
-                        Nothing,
-                        Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[QuantumCircuitOperator[state], order[[1]]]["Flatten"]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
-                    ]
-                }
-            ],
-            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal64"], ToString[label], order}
-        ],
-        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal64"], ToString[shortcut], op["Order"]}]
+        (* a gate given by its matrix: the matrix and its wires both from the sorted operator *)
+        Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :>
+            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal64"], ToString[label], order},
+        shortcut_ :> With[{op = QuantumOperator[shortcut]["Sort"]},
+            {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal64"], ToString[shortcut], op["Order"]}
+        ]
     }
 ]
 
+qiskitGates[{"Gate", qo_}] := shortcutToGate /@ QuantumShortcut[qo]
+qiskitGates[{"Reset", w_}] := {"Reset" -> {w}}
+qiskitGates[{"Measure", w_, k_}] := {{"Measure", w, k}}
+qiskitGates[{"Barrier", wires_}] := {"Barrier" -> wires}
+
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
-    gates = Confirm @* shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
-    arity = {qco["Max"], Replace[qco["TargetArity"], Except[_Integer] -> Nothing]}
+    instructions = Confirm @ circuitInstructions[qco], gates, arity
 },
+    gates = Catenate[qiskitGates /@ instructions];
+    ConfirmAssert[FreeQ[gates, _Failure]];
+    arity = {qco["Max"], Count[instructions, {"Measure", __}]};
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl
 from wolframclient.language.expression import WLFunction
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.gate import Gate
-from qiskit.circuit import Delay
+from qiskit.circuit import Delay, Measure
 from qiskit.circuit.library import *
 
 import pickle
@@ -123,18 +75,18 @@ circuit = QuantumCircuit(
 )
 
 def make_gate(gate_spec):
-    order = target = []
+    order = []
     if type(gate_spec) == WLFunction and gate_spec.head == wl.Rule:
-        gate, order, target = make_gate(gate_spec[0])
+        gate, order = make_gate(gate_spec[0])
         order = list(gate_spec[1])
-        return gate, order, target
+        return gate, order
     elif isinstance(gate_spec, tuple):
         name, *args = gate_spec
     else:
         name = gate_spec
         args = []
     if name == 'Control':
-        base_gate, base_order, base_target = make_gate(args[0])
+        base_gate, base_order = make_gate(args[0])
         size1 = len(args[1])
         size0 = len(args[2])
         gate = base_gate.control(size1 + size0, ctrl_state='0' * size0 + '1' * size1)
@@ -147,43 +99,42 @@ def make_gate(gate_spec):
     elif name == 'Unitary':
         gate = UnitaryGate(args[0], label=args[1], check_input=False)
         assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
+        # QF writes the matrix with its first wire most significant, qiskit with its first qubit least
         order = list(args[2][0])[::-1]
     elif name == 'Barrier':
-        # a bare barrier (no explicit qubits) spans the whole circuit; emitting a
-        # zero-qubit Barrier(0) drops the barrier and dumps as a meaningless 'barrier ;'
+        # a bare barrier (no explicit qubits) spans the whole circuit
         if len(order) == 0:
             order = list(range(1, circuit.num_qubits + 1))
         gate = Barrier(len(order))
     elif name == 'Delay':
         gate = Delay(args[0])
-    elif name == 'Measure':
-        target = order = list(args[0])
-        gate = Measure()
     else:
         gate = getattr(qiskit.circuit.library, name)(*args)
-    return gate, order, target
+    return gate, order
 
-def add_gate(circuit, gate_spec, c):
-    gate, order, target = make_gate(gate_spec)
-    for q in range(len(order)):
-        order[q] -= 1
+def add_gate(circuit, gate_spec):
+    if isinstance(gate_spec, tuple) and gate_spec[0] == 'Measure':
+        circuit.append(Measure(), [gate_spec[1] - 1], [gate_spec[2]])
+        return
+    gate, order = make_gate(gate_spec)
+    order = [o - 1 for o in order]
+    # an uncontrolled global phase belongs to the circuit, not to an instruction (OpenQASM 2 has
+    # no zero-qubit gate, and qiskit cannot read back its own OpenQASM 3 for one)
     if gate.name == 'global_phase':
-        order = []
-    if len(target) > 0:
-        for i, t in enumerate(target):
-            circuit.append(gate, [t], (i + c, ))
+        circuit.global_phase += gate.params[0]
+        return
+    if gate.name == 'barrier':
+        if len(order) == 0:
+            order = list(range(circuit.num_qubits))
+        gate = Barrier(len(order))
+    if gate.name == 'reset':
+        for o in order:
+            circuit.append(gate, (o, ))
     else:
-        if gate.name == 'reset':
-            for o in order:
-                circuit.append(gate, (o, ))
-        else:
-            circuit.append(gate, tuple(order))
-    return c + len(target)
-
-c = 0
+        circuit.append(gate, tuple(order))
 
 for gate_spec in <* gates *>:
-    c = add_gate(circuit, gate_spec, c)
+    add_gate(circuit, gate_spec)
 
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
     "]
@@ -261,103 +212,187 @@ qc_QiskitCircuit["Clbits"] := Block[{
     PythonEvaluate[Context[$pythonBytes], "
 import pickle
 qc = pickle.loads(<* $pythonBytes *>)
-[clbit.index for clbit in qc.clbits]
+[qc.find_bit(clbit).index for clbit in qc.clbits]
 "]
 ]
 
-qc_QiskitCircuit["QuantumCircuit" | "QuantumCircuitOperator"] := Block[{
-    $pythonBytes = qc["Bytes"]
+
+(* A transpiled circuit acts on physical qubits and records, in its layout, where each virtual
+   qubit started (initial layout) and where it ended (final permutation). qf_virtual_circuit
+   rewrites it on the virtual qubits: qubit v of the result is qubit v of the circuit before
+   transpiling, and SWAP gates appended at the end bring each qubit back to its own wire. A
+   physical qubit the layout adds (an ancilla) is kept only when a gate uses it. With basis_gates
+   the SWAPs are written in those gates, without optimization (which would remove them again).
+   Every reader of a transpiled circuit goes through this one function: the gate-set QASM export,
+   the decoder to QF and the "Matrix" property. *)
+$qiskitVirtualCircuitPython = "
+def qf_virtual_circuit(circ, basis_gates=None):
+    from qiskit import QuantumCircuit, QuantumRegister, transpile
+    lay = getattr(circ, 'layout', None)
+    if lay is None:
+        return circ
+    init = list(lay.initial_index_layout(filter_ancillas=False))
+    n = len(list(lay.initial_index_layout(filter_ancillas=True)))
+    used = set()
+    for inst in circ.data:
+        used.update(circ.find_bit(q).index for q in inst.qubits)
+    phys_to_virt = {}
+    size = n
+    for v, p in enumerate(init):
+        if v < n:
+            phys_to_virt[p] = v
+    for v, p in enumerate(init):
+        if v >= n and p in used:
+            phys_to_virt[p] = size
+            size += 1
+    out = QuantumCircuit(QuantumRegister(size, 'q'), *circ.cregs)
+    out.global_phase = circ.global_phase
+    for inst in circ.data:
+        out.append(inst.operation, [phys_to_virt[circ.find_bit(q).index] for q in inst.qubits], [circ.find_bit(c).index for c in inst.clbits])
+    final = list(lay.final_index_layout(filter_ancillas=True))
+    # where[v]: the wire now holding virtual qubit v; held[w]: the virtual qubit on wire w
+    where = [phys_to_virt[p] for p in final]
+    if where != list(range(n)):
+        held = [None] * size
+        for v, w in enumerate(where):
+            held[w] = v
+        back = QuantumCircuit(size)
+        for v in range(n):
+            w = where[v]
+            if w != v:
+                back.swap(v, w)
+                u = held[v]
+                held[w], held[v] = u, v
+                where[v] = v
+                if u is not None:
+                    where[u] = w
+        if basis_gates is not None:
+            back = transpile(back, basis_gates=basis_gates, optimization_level=0)
+        out.compose(back, qubits=list(range(size)), inplace=True)
+    return out
+";
+
+
+(* The decoder from qiskit to QF. Python only describes each instruction (its name, parameters,
+   qubits and classical bits, and for a gate outside the gate table its controls, definition or
+   matrix); the QF circuit is built here, from the gate table the OpenQASM importer uses. *)
+$qiskitDescribePython = "
+import numpy as np
+from qiskit.circuit import ParameterExpression, ControlledGate
+
+def qf_param(x):
+    if isinstance(x, ParameterExpression):
+        try:
+            return float(x)
+        except Exception:
+            return wl.ToExpression(str(x))
+    if isinstance(x, (int, float, complex)):
+        return x
+    return None
+
+def qf_describe(op, qs, cs, known):
+    d = {'name': op.name, 'qubits': qs, 'clbits': cs}
+    if getattr(op, 'condition', None) is not None:
+        d['conditioned'] = True
+    params = [qf_param(x) for x in getattr(op, 'params', [])]
+    if all(p is not None for p in params):
+        d['params'] = params
+    if op.name in known or op.name in ('measure', 'reset', 'barrier', 'delay', 'global_phase') or op.name.startswith('save_'):
+        return d
+    if isinstance(op, ControlledGate) and op.base_gate is not None:
+        k = op.num_ctrl_qubits
+        d['ctrl_bits'] = [(op.ctrl_state >> i) & 1 for i in range(k)]
+        d['base'] = qf_describe(op.base_gate, qs[k:], [], known)
+        return d
+    if op.name != 'unitary' and getattr(op, 'definition', None) is not None:
+        sub = op.definition
+        d['sub'] = [qf_describe(i.operation, [qs[sub.find_bit(q).index] for q in i.qubits], [cs[sub.find_bit(c).index] for c in i.clbits], known) for i in sub.data]
+        d['sub_phase'] = qf_param(sub.global_phase)
+        return d
+    try:
+        m = np.asarray(op.to_matrix(), dtype=complex)
+        d['re'] = m.real.tolist()
+        d['im'] = m.imag.tolist()
+    except Exception:
+        pass
+    return d
+
+def qf_describe_circuit(circ, known):
+    return {
+        'num_qubits': circ.num_qubits,
+        'global_phase': qf_param(circ.global_phase),
+        'instructions': [qf_describe(i.operation, [circ.find_bit(q).index + 1 for q in i.qubits], [circ.find_bit(c).index for c in i.clbits], known) for i in circ.data]
+    }
+";
+
+(* an angle qiskit holds as a float is read back as a rational multiple of Pi when it is one to
+   machine precision (pi/2, 3 pi/4, ...), otherwise kept as the float *)
+qiskitParameter[x_Real] := With[{r = Rationalize[x / Pi, 10 ^ -12]}, If[Denominator[r] <= 64, r Pi, x]]
+qiskitParameter[x_] := x
+
+qiskitElements[d_Association] := Enclose @ With[{
+    name = d["name"], qs = d["qubits"], params = qiskitParameter /@ Lookup[d, "params", {}]
 },
-    PythonEvaluate[Context[$pythonBytes], "
+    Which[
+        KeyExistsQ[d, "conditioned"],
+            Confirm @ Failure["Qiskit", <|"MessageTemplate" -> "The classically controlled operation `1` has no QF circuit element.", "MessageParameters" -> {name}|>],
+        name === "measure", {QuantumMeasurementOperator[qs]},
+        name === "reset", {"Reset" -> qs},
+        name === "barrier", {"Barrier"[qs]},
+        name === "delay" || StringStartsQ[name, "save_"], {},
+        name === "global_phase", {QuantumOperator["GlobalPhase"[First[params]]]},
+        MemberQ[qasmGateNames[], name] && KeyExistsQ[d, "params"],
+            ConfirmBy[qasmGateElements[name, params, qs], ListQ],
+        KeyExistsQ[d, "base"],
+            With[{
+                base = QuantumOperator @ QuantumCircuitOperator[Confirm @ qiskitElements[d["base"]]],
+                ctrls = qs[[;; Length[d["ctrl_bits"]]]]
+            },
+                {QuantumOperator["C"[base, Pick[ctrls, d["ctrl_bits"], 1], Pick[ctrls, d["ctrl_bits"], 0]]]}
+            ],
+        KeyExistsQ[d, "sub"],
+            {QuantumCircuitOperator[
+                Join[
+                    Catenate[Confirm @ qiskitElements[#] & /@ d["sub"]],
+                    If[TrueQ[Chop[N[Lookup[d, "sub_phase", 0]]] == 0], {}, {QuantumOperator["GlobalPhase"[qiskitParameter @ d["sub_phase"]]]}]
+                ],
+                name
+            ]},
+        KeyExistsQ[d, "re"],
+            (* qiskit writes a gate's matrix with its first qubit least significant *)
+            {QuantumOperator[d["re"] + I d["im"], Reverse[qs], "Label" -> name]},
+        True,
+            Confirm @ Failure["Qiskit", <|"MessageTemplate" -> "The qiskit operation `1` has no QF circuit element.", "MessageParameters" -> {name}|>]
+    ]
+]
+
+qc_QiskitCircuit["QuantumCircuit" | "QuantumCircuitOperator"] := Enclose @ Block[{
+    $pythonBytes = qc["Bytes"], $known = qasmGateNames[], desc
+},
+    desc = ConfirmBy[PythonEvaluate[Context[$pythonBytes], $qiskitVirtualCircuitPython <> $qiskitDescribePython <> "
 import pickle
 from wolframclient.language import wl
-from math import pi
-from qiskit.circuit import ParameterExpression
-
-qc = pickle.loads(<* $pythonBytes *>)
-
-def reverse_binary(n, width):
-    b = '{:0{width}b}'.format(n, width=width)
-    return int(b[::-1], 2)
-
-def gate_to_QuantumOperator(gate, order):
-    xs = []
-    if len(gate.params) > 0:
-        for x in gate.params:
-            if isinstance(x, float):
-                xs.append(wl.Wolfram.QuantumFramework.PackageScope.TranscendentalRecognize(x))
-            elif isinstance(x, ParameterExpression):
-                xs.append(wl.ToExpression(str(x)))
-            else:
-                xs.append(x)
-    if gate.name == 'x':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('NOT', order)
-    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap']:
-        return wl.Wolfram.QuantumFramework.QuantumOperator(gate.name.upper(), order)
-    elif gate.name == 'sx':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('V', order)
-    elif gate.name == 'sxdg':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('V', order)('Dagger')
-    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz']:
-        return wl.Wolfram.QuantumFramework.PackageScope.qiskitNamedOperator(gate.name.upper(), xs, order)
-    elif gate.name == 'tdg':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
-    elif gate.name == 'sdg':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger')
-    elif gate.name == 'unitary':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.name if gate.name else None))
-    elif gate.name == 'measure':
-        return wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order)
-    elif gate.name == 'reset':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('Reset', order)
-    elif gate.name == 'barrier':
-        return 'Barrier'
-    elif gate.name == 'save_statevector':
-        return wl.Nothing
-    elif hasattr(gate, 'num_ctrl_qubits'):
-        base = gate_to_QuantumOperator(gate.base_gate, order[gate.num_ctrl_qubits:])
-        return wl.Wolfram.QuantumFramework.PackageScope.qiskitControlledOperator(base, reverse_binary(gate.ctrl_state, gate.num_ctrl_qubits), order[:gate.num_ctrl_qubits])
-    else:
-        from qiskit.quantum_info import Operator
-        return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.name if gate.name else None))
-
-def qc_to_QuantumCircuitOperator(qc, label=None):
-    ops = []
-    for gate, qubits, clbits in qc:
-        order = []
-        for q in qubits:
-            size = 0
-            for r in qc.qubits:
-                if r._register.name == q._register.name:
-                    order.append(size + q._index + 1)
-                    break
-                else:
-                    size = r._index + 1
-        try: 
-            if isinstance(gate, qiskit.qasm2.parse._DefinedGate):
-                sub_qc = QuantumCircuit(max(order), gate.num_clbits)
-                sub_qc.append(gate, [o - 1 for o in order])
-                ops.append(qc_to_QuantumCircuitOperator(sub_qc.decompose(), gate.name))
-            else:
-                ops.append(gate_to_QuantumOperator(gate, order))
-        except:
-            ops.append(gate_to_QuantumOperator(gate, order))
-    return wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops, label if label else None)
-
-qc_to_QuantumCircuitOperator(qc)
-"]
+qf_describe_circuit(qf_virtual_circuit(pickle.loads(<* $pythonBytes *>)), set(<* $known *>))
+"], AssociationQ];
+    QuantumCircuitOperator[
+        Join[
+            Catenate[Confirm @ qiskitElements[#] & /@ desc["instructions"]],
+            If[TrueQ[Chop[N[desc["global_phase"]]] == 0], {}, {QuantumOperator["GlobalPhase"[qiskitParameter @ desc["global_phase"]]]}]
+        ]
+    ]
 ]
 
 QiskitCircuit /: QuantumCircuitOperator[qc_QiskitCircuit] := qc["QuantumCircuitOperator"]
 
 
+(* the circuit's operator on its virtual qubits (final measurements removed) *)
 qiskitMatrix[qc_QiskitCircuit] := Block[{$pythonBytes = qc["Bytes"]},
-    PythonEvaluate[Context[$pythonBytes], "
+    PythonEvaluate[Context[$pythonBytes], $qiskitVirtualCircuitPython <> "
 from qiskit.quantum_info import Operator
 
 import pickle
 
-qc = pickle.loads(<* $pythonBytes *>)
+qc = qf_virtual_circuit(pickle.loads(<* $pythonBytes *>))
 qc.remove_final_measurements()
 Operator(qc).data
 "]
@@ -467,13 +502,9 @@ backend = GenericBackendV2(num_qubits=int(backend_name) if backend_name is not N
     _,
 "
 from qiskit_aer import AerSimulator
+# the simulation method only; qiskitApply adds the save instruction to its own copy of the circuit
 if qc.num_clbits == 0:
-    if <* $matrixQ *>:
-        method = 'density_matrix'
-        qc.save_density_matrix()
-    else:
-        method = 'statevector'
-        qc.save_statevector()
+    method = 'density_matrix' if <* $matrixQ *> else 'statevector'
 else:
     method = None
 
@@ -519,7 +550,7 @@ qiskitCountsToMeasurement[result_Association] := qiskitMeasurementFromBitCounts 
 Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
-    $state = Replace[qs, {Automatic -> Null, _ :> If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]]}],
+    $state = Replace[qs, {Automatic -> Null, _ :> If[qs["Dimension"] == 1, Null, NumericArray[Normal @ N @ qs["Reverse"]["StateVector"], "ComplexReal64"]]}],
     $shots = OptionValue["Shots"],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
     $validate = TrueQ[OptionValue["Validate"]],
@@ -548,6 +579,12 @@ state = <* $state *>
 if state is not None:
     circuit.initialize(state)
 circuit = circuit.compose(qc)
+
+if isinstance(backend, AerSimulator) and circuit.num_clbits == 0:
+    if <* $matrixQ *>:
+        circuit.save_density_matrix()
+    else:
+        circuit.save_statevector()
 
 if not isinstance(backend, AerSimulator) and clbits == 0:
     circuit.measure_all()

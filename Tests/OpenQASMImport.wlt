@@ -541,21 +541,22 @@ VerificationTest[
     TestID -> "emit-tensor-power-rotations-roundtrip"
 ]
 
-(* an OpenQASM angle is a number, and a permutation that also relabels wires is not lowered to
-   swaps: both are reported as gates the emitter cannot serialize, not written as WL text or as
-   an empty program *)
+(* an OpenQASM angle is a number, and an operator that moves a qubit to another wire has no gate:
+   both are reported as gates the emitter cannot serialize, not written as WL text or as an empty
+   program. A relabeling of wires among themselves is a permutation, written as SWAPs (its channel
+   is checked in QiskitChannels.wlt). *)
 VerificationTest[
     {
         QuantumQASM[QuantumCircuitOperator[{QuantumOperator["C"[QuantumOperator["RZ"[\[Theta]], {2}], {1}, {}]]}]]["NonNativeGates"],
         QuantumQASM[QuantumCircuitOperator[{QuantumOperator["RZ"[\[Theta]], {1, 2}]}]]["NonNativeGates"],
-        QuantumQASM[QuantumCircuitOperator[{QuantumOperator["Permutation"[], {1, 2, 3} -> {3, 1, 2}]}]]["NonNativeGates"],
-        QuantumQASM[QuantumCircuitOperator[{QuantumOperator[{{0, 1}, {1, 0}}, {{2}, {1}}, "Label" -> "relabel"]}]]["NonNativeGates"]
+        FailureQ @ QuantumQASM[QuantumCircuitOperator[{QuantumOperator[{{0, 1}, {1, 0}}, {{2}, {1}}, "Label" -> "relabel"]}]],
+        StringCount[QuantumQASM[QuantumCircuitOperator[{QuantumOperator["Permutation"[], {1, 2, 3} -> {3, 1, 2}]}]], "swap"]
     },
     {
         {"Subscript[C, Subscript[R, Z][\[Theta]]][{1}, {}]"},
         {"Superscript[Subscript[R, Z][\[Theta]], CircleTimes[2]]"},
-        {"\[Pi][1, 2, 3]"},
-        {"relabel"}
+        True,
+        2
     },
     TestID -> "emit-symbolic-and-relabeling-fail-cleanly"
 ]
