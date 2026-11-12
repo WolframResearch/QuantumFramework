@@ -12,6 +12,8 @@ PackageExport["BosonicExpSimplify"]
 
 PackageExport["BosonicExpBraid"]
 
+PackageScope["ncPolynomial"]
+
 
 ladderVars[lv_] := {lv["Creators"], lv["Annihilators"]}
 
