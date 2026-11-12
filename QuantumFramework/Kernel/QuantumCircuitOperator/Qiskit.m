@@ -40,6 +40,14 @@ shortcutToGate = Replace[
         "R"[angle_, {name_ -> order_ ? orderQ}] :> shortcutToGate["R"[angle, name]] -> order,
         ("M" -> target_ ? orderQ) :> {"Measure", target},
         ("M"[args___] -> target_ ? orderQ) :> Splice @ Append[shortcutToGate /@ QuantumShortcut[QuantumOperator[Inverse[QuantumBasis[args]["Matrix"]]]], {"Measure", target}],
+        (* a reset to a pure state discards the wires and injects the state there: the same gates
+           as the state-injection operator QuantumOperator[state, {order, {}}] (a reset, then the
+           preparation of state when it is not |0...0>). A reset to a mixed state has no such
+           gate sequence. *)
+        ("Reset"[state_] -> order_ ? orderQ) :> If[ QuantumStateQ[state] && ! state["PureStateQ"],
+            Failure["Qiskit", <|"MessageTemplate" -> "A reset to a mixed state has no qiskit gate sequence."|>],
+            Splice[shortcutToGate /@ QuantumShortcut[QuantumOperator[state, {order, {}}]]]
+        ],
         (name_ -> (order_ ? orderQ)) :> With[{shortcut = shortcutToGate[name]}, If[shortcut === Nothing, Nothing, shortcut -> order]],
         "I" -> Nothing,
         "X" | "NOT" -> "XGate",
@@ -61,7 +69,6 @@ shortcutToGate = Replace[
         "P"[phase_] :> {"PhaseGate", N[phase]},
         "PhaseShift"[k_] :> {"PhaseGate", N[Sign[k] 2 Pi / 2 ^ Abs[k]]},
         "C"[name_, controls___] :> {"Control", shortcutToGate[name], controls},
-        "Reset"[state_] :> Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"]]],
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier : "Barrier" | "Barrier"[___] :> "Barrier",
         "Delay"[delay_] :> {"Delay", delay},

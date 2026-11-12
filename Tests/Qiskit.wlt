@@ -738,4 +738,97 @@ qtest[iv["estimator", <|"ResilienceLevel" -> 1|>], Null, "ibmopt-estimator-resil
 (* empty options are trivially valid *)
 qtest[iv["sampler", <||>], Null, "ibmopt-empty-valid"]
 
+(* Mid-circuit reset. "Reset" -> w, "Reset"["0"] -> w and "Reset"[QuantumState["0"]] -> w each export
+   to one qiskit reset, and the native OpenQASM emitter writes the same lines as the state injection
+   QuantumOperator[QuantumState["0"], {{w}, {}}], which discards wire w and leaves |0> there. A reset to
+   another state is a reset followed by that state's preparation. *)
+
+resetSpellings = <|
+    "bare" -> "Reset",
+    "string" -> "Reset"["0"],
+    "state" -> "Reset"[QuantumState["0"]]
+|>;
+resetCircuit[r_] := QuantumCircuitOperator[{"H" -> 1, r -> 1, "M" -> 1}];
+resetInjection = QuantumCircuitOperator[{"H" -> 1, QuantumOperator[QuantumState["0"], {{1}, {}}], "M" -> 1}];
+
+KeyValueMap[
+    Function[{name, r},
+        qtest[
+            Lookup[Normal @ resetCircuit[r]["Qiskit"]["Eval", "count_ops"], {"h", "reset", "measure"}],
+            {1, 1, 1},
+            "reset-qiskit-" <> name
+        ];
+        VerificationTest[QuantumQASM[resetCircuit[r]], QuantumQASM[resetInjection], TestID -> "reset-qasm-native-" <> name];
+        qtest[
+            StringCount[QuantumQASM[resetCircuit[r], {"x", "sx", "rz", "cz"}], "reset q[0];"],
+            1,
+            "reset-qasm-transpiled-" <> name
+        ]
+    ],
+    resetSpellings
+];
+
+VerificationTest[
+    StringCount[QuantumQASM[resetInjection], "reset q[0];"],
+    1,
+    TestID -> "reset-qasm-native-single-reset"
+]
+
+(* a reset to |+> is a reset followed by the preparation of |+> *)
+qtest[
+    Lookup[Normal @ resetCircuit["Reset"["+"]]["Qiskit"]["Eval", "count_ops"], {"h", "reset", "measure"}],
+    {2, 1, 1},
+    "reset-qiskit-plus-prepares-state"
+]
+
+VerificationTest[
+    QuantumQASM[resetCircuit["Reset"["+"]]],
+    QuantumQASM[QuantumCircuitOperator[{"H" -> 1, QuantumOperator[QuantumState["+"], {{1}, {}}], "M" -> 1}]],
+    TestID -> "reset-qasm-native-plus"
+]
+
+(* a reset on a higher wire acts on that wire alone. The wire is flipped to |1> before the reset, so a
+   missing reset shows. The native emitter writes the same lines as the state injection on that wire;
+   the exported qiskit circuit, simulated by qiskit as a density matrix (the OpenQASM importer reads
+   reset as nothing, so reading the export back cannot see it), gives the simulator's probabilities.
+   An H after a reset to |+> turns it into |0>, while without the reset it would turn H|1> = |-> into
+   |1>, so a missing reset shows in the computational-basis probabilities. *)
+afterReset["+", w_] := {"H" -> w};
+afterReset[_, _] := {};
+resetOnWire[s_, w_] := QuantumCircuitOperator[Join[{"H" -> 1, "X" -> w, "Reset"[s] -> w}, afterReset[s, w], {"M" -> {1, w}}]];
+injectOnWire[s_, w_] := QuantumCircuitOperator[Join[{"H" -> 1, "X" -> w, QuantumOperator[QuantumState[s], {{w}, {}}]}, afterReset[s, w], {"M" -> {1, w}}]];
+
+qiskitProbabilities[qc_QiskitCircuit, wires_List] := Block[{pb = qc["Bytes"], pq = wires - 1},
+    pe[Context[pb], "
+import pickle
+from qiskit.quantum_info import DensityMatrix
+c = pickle.loads(<* pb *>)
+c.remove_final_measurements()
+[float(x) for x in DensityMatrix(c).probabilities(list(reversed(<* pq *>)))]
+"]
+];
+
+Map[
+    Function[{sw},
+        VerificationTest[
+            QuantumQASM[resetOnWire @@ sw],
+            QuantumQASM[injectOnWire @@ sw],
+            TestID -> "reset-qasm-native-wire-" <> sw[[1]] <> "-" <> ToString[sw[[2]]]
+        ];
+        qtest[
+            Chop[qiskitProbabilities[(resetOnWire @@ sw)["Qiskit"], {1, sw[[2]]}] - N[(resetOnWire @@ sw)[]["ProbabilitiesList"]], 10^-10],
+            {0, 0, 0, 0},
+            "reset-qiskit-wire-" <> sw[[1]] <> "-" <> ToString[sw[[2]]]
+        ]
+    ],
+    {{"0", 2}, {"1", 2}, {"1", 3}, {"+", 2}}
+];
+
+(* a reset to a mixed state has no gate sequence: both routes fail rather than reset to |0> *)
+resetMixed = QuantumCircuitOperator[{"H" -> 1, QuantumOperator["Reset"[QuantumState[{{1/2, 0}, {0, 1/2}}, "Label" -> "mx"]], {1}], "M" -> 1}];
+
+VerificationTest[FailureQ[QuantumQASM[resetMixed]], True, TestID -> "reset-qasm-native-mixed-fails"]
+
+qtest[FailureQ[resetMixed["Qiskit"]], True, "reset-qiskit-mixed-fails"]
+
 EndTestSection[]

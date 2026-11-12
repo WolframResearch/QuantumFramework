@@ -444,6 +444,18 @@ QuantumCircuitOperatorProp[qco_, "ZXTensorNetwork", opts : OptionsPattern[ZXTens
    through to the gate emitter, which reports it as non-serializable. *)
 qasmStateInjectionQ[op_] := MatchQ[op, _QuantumOperator] && op["InputDimension"] == 1 && op["OutputDimension"] >= 2
 
+(* "Reset"[state] on wires w discards w and leaves state there, which is the state injection
+   QuantumOperator[state, {w, {}}] when state is pure; a reset to a mixed state has no OpenQASM
+   gate sequence and becomes the "// Unimplemented" marker *)
+qasmResetQ[op_] := MatchQ[op, _QuantumOperator] && MatchQ[op["Label"], "Reset"[_]] && op["OutputOrder"] === op["InputOrder"]
+
+qasmResetLines[op_] := With[{state = resetState[op]},
+    If[ state["PureStateQ"],
+        qasmStatePrepLines[QuantumOperator[state, {op["OutputOrder"], {}}]],
+        {qasmUnimplemented[op["Label"]]}
+    ]
+]
+
 qasmZeroStateQ[state_] := With[{v = Normal[state["StateVector"]]},
     TrueQ[Chop[Norm[v - UnitVector[Length[v], 1]]] == 0]
 ]
@@ -535,6 +547,8 @@ qasmEmitCircuit[qco_] := Enclose @ Module[{lines, failure},
                     ],
                     qasmStateInjectionQ[op],
                     {Join[acc, qasmStatePrepLines[op]], clbit},
+                    qasmResetQ[op],
+                    {Join[acc, qasmResetLines[op]], clbit},
                     True,
                     {Append[acc, ConfirmBy[qasmGateLines[op], StringQ]], clbit}
                 ]
