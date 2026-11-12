@@ -884,8 +884,19 @@ QuantumOperator["Discard"[args__ : 4], opts___] := QuantumOperator[QuantumOperat
 
 QuantumOperator["Trace"[args__ : 2], opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator["Cap"[basis]]["Unbend"], opts, "Label" -> "Trace"]]
 
+(* A reset of n wires to a one-qudit state resets each of them to that state. *)
+QuantumOperator["Reset"[args___ : "0"], order_ ? orderQ, opts___] /; Length[order] > 1 && QuantumState[args]["Qudits"] == 1 :=
+    QuantumOperator["Reset"[QuantumTensorProduct[ConstantArray[QuantumState[args], Length[order]]]], order, opts]
+
+(* rho -> Tr[rho] state: the trace runs over each qudit of the state separately, so the operator
+   has as many input qudits as output qudits. The label stays "Reset"[...] even for an unlabeled
+   state, so the operator is still recognized as a reset. *)
 QuantumOperator["Reset"[args___ : "0"], opts___] := With[{state = QuantumState[args]},
-    QuantumOperator[QuantumOperator[state] @ QuantumOperator["Trace"[state["Dimension"]]], opts, "Label" -> If[state["Label"] === None, None, "Reset"[state["Label"]]]]
+    QuantumOperator[
+        QuantumOperator[state] @ QuantumTensorProduct[MapIndexed[QuantumOperator[QuantumOperator["Trace"[#1]], {{}, #2}] &, state["Dimensions"]]],
+        opts,
+        "Label" -> "Reset"[state["Label"]]
+    ]
 ]
 
 QuantumOperator["Measurement"[args__ : "I"], opts___] := QuantumOperator[QuantumMeasurementOperator[args]["DiscardExtraQudits"], opts]

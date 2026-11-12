@@ -42,11 +42,19 @@ shortcutToGate = Replace[
         ("M"[args___] -> target_ ? orderQ) :> Splice @ Append[shortcutToGate /@ QuantumShortcut[QuantumOperator[Inverse[QuantumBasis[args]["Matrix"]]]], {"Measure", target}],
         (* a reset to a pure state discards the wires and injects the state there: the same gates
            as the state-injection operator QuantumOperator[state, {order, {}}] (a reset, then the
-           preparation of state when it is not |0...0>). A reset to a mixed state has no such
-           gate sequence. *)
-        ("Reset"[state_] -> order_ ? orderQ) :> If[ QuantumStateQ[state] && ! state["PureStateQ"],
-            Failure["Qiskit", <|"MessageTemplate" -> "A reset to a mixed state has no qiskit gate sequence."|>],
-            Splice[shortcutToGate /@ QuantumShortcut[QuantumOperator[state, {order, {}}]]]
+           preparation of state when it is not |0...0>). A reset to a mixed, symbolic or non-qubit
+           state has no such gate sequence. *)
+        ("Reset"[state_] -> order_ ? orderQ) :> Which[
+            ! QuantumStateQ[state],
+                Splice[shortcutToGate /@ QuantumShortcut[QuantumOperator[state, {order, {}}]]],
+            ! AllTrue[state["Dimensions"], # == 2 &],
+                Failure["Qiskit", <|"MessageTemplate" -> "A reset to a state that is not a qubit state has no qiskit gate sequence."|>],
+            ! state["NumericQ"],
+                Failure["Qiskit", <|"MessageTemplate" -> "A reset to a symbolic state has no qiskit gate sequence; give the state numeric amplitudes."|>],
+            ! state["PureStateQ"],
+                Failure["Qiskit", <|"MessageTemplate" -> "A reset to a mixed state has no qiskit gate sequence."|>],
+            True,
+                Splice[shortcutToGate /@ QuantumShortcut[QuantumOperator[state, {order, {}}]]]
         ],
         (name_ -> (order_ ? orderQ)) :> With[{shortcut = shortcutToGate[name]}, If[shortcut === Nothing, Nothing, shortcut -> order]],
         "I" -> Nothing,
@@ -82,7 +90,8 @@ shortcutToGate = Replace[
             With[{state = QuantumOperator[arr, order]["State"]},
                 Splice @ {
                     "Reset" -> order[[1]],
-                    If[ MatchQ[order[[1]], {_}] && state == QuantumState[1],
+                    (* |0...0> needs nothing after the reset *)
+                    If[ TrueQ[Chop[Norm[N @ Normal[state["StateVector"]] - UnitVector[state["Dimension"], 1]]] == 0],
                         Nothing,
                         Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[QuantumCircuitOperator[state], order[[1]]]["Flatten"]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
                     ]

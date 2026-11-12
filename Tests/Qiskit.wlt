@@ -831,4 +831,126 @@ VerificationTest[FailureQ[QuantumQASM[resetMixed]], True, TestID -> "reset-qasm-
 
 qtest[FailureQ[resetMixed["Qiskit"]], True, "reset-qiskit-mixed-fails"]
 
+(* a reset of several wires: "Reset" -> {1, 2} resets each wire to |0>, "Reset"[s] -> w with an
+   n-qubit state s resets the n wires to s. The operator has one input qudit per output qudit, the
+   simulation discards what the wires held, and both export routes agree with it. *)
+
+VerificationTest[
+    QuantumOperator["Reset"["00"], {1, 2}]["Dimensions"],
+    {2, 2, 2, 2},
+    TestID -> "reset-two-qubit-state-shape"
+]
+
+VerificationTest[
+    QuantumOperator["Reset", {1, 2}]["Dimensions"],
+    {2, 2, 2, 2},
+    TestID -> "reset-two-wires-shape"
+]
+
+resetMulti = <|
+    "bare" -> QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "X" -> 3, "Reset" -> {1, 2}, "M" -> {1, 2, 3}}],
+    "00" -> QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "Reset"["00"] -> {1, 2}, "M" -> {1, 2}}],
+    "11" -> QuantumCircuitOperator[{"H" -> 1, "X" -> 2, "Reset"["11"] -> {2, 3}, "M" -> {1, 2, 3}}],
+    "PhiPlus" -> QuantumCircuitOperator[{"X" -> 2, "Reset"[QuantumState["PhiPlus"]] -> {2, 3}, "M" -> {1, 2, 3}}]
+|>;
+
+VerificationTest[
+    #[]["ProbabilitiesList"] & /@ Values[resetMulti],
+    {{0, 1, 0, 0, 0, 0, 0, 0}, {1, 0, 0, 0}, {0, 0, 0, 1/2, 0, 0, 0, 1/2}, {1/2, 0, 0, 1/2, 0, 0, 0, 0}},
+    TestID -> "reset-multi-simulation"
+]
+
+KeyValueMap[
+    Function[{name, qc},
+        VerificationTest[StringCount[QuantumQASM[qc], "reset q["], 2, TestID -> "reset-multi-qasm-native-" <> name];
+        qtest[
+            (* every circuit here measures wires 1 .. k, the wires its probabilities run over *)
+            Chop[qiskitProbabilities[qc["Qiskit"], Range[Log2[Length[qc[]["ProbabilitiesList"]]]]] - N[qc[]["ProbabilitiesList"]], 10^-10],
+            ConstantArray[0, Length[qc[]["ProbabilitiesList"]]],
+            "reset-multi-qiskit-" <> name
+        ]
+    ],
+    resetMulti
+];
+
+(* a reset to |0...0> on several wires needs no preparation gates after the resets *)
+qtest[
+    Lookup[Normal @ resetMulti["00"]["Qiskit"]["Eval", "count_ops"], {"h", "reset"}, 0],
+    {1, 2},
+    "reset-multi-zero-no-preparation"
+]
+
+(* a reset to an unlabeled state is still a reset: the native emitter writes the same lines as
+   the injection of that state *)
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "X" -> 2, "Reset"[QuantumState[{0, 1}]] -> 2, "M" -> {1, 2}}]],
+    QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "X" -> 2, QuantumOperator[QuantumState[{0, 1}], {{2}, {}}], "M" -> {1, 2}}]],
+    TestID -> "reset-unlabeled-qasm-native"
+]
+
+(* a reset to a multi-qubit state on wires listed out of order puts each qubit of the state on
+   the wire in the same position: "Reset"["01"] -> {2, 1} leaves wire 2 in |0> and wire 1 in |1>.
+   The native OpenQASM text, read back, and the qiskit export both give the simulation. *)
+resetReversed = QuantumCircuitOperator[{"X" -> 1, "Reset"[QuantumState[{0, Sqrt[3]/2, 1/2, 0}]] -> {3, 1}, "M" -> {1, 2, 3}}];
+
+VerificationTest[
+    QuantumCircuitOperator[{"Reset"["01"] -> {2, 1}, "M" -> {1, 2}}][]["ProbabilitiesList"],
+    {0, 0, 1, 0},
+    TestID -> "reset-reversed-wires-simulation"
+]
+
+VerificationTest[
+    Chop[N[QuantumQASM[QuantumQASM[resetReversed]][]["ProbabilitiesList"] - resetReversed[]["ProbabilitiesList"]], 10^-10],
+    ConstantArray[0, 8],
+    TestID -> "reset-reversed-wires-qasm-native"
+]
+
+qtest[
+    Chop[qiskitProbabilities[resetReversed["Qiskit"], {1, 2, 3}] - N[resetReversed[]["ProbabilitiesList"]], 10^-10],
+    ConstantArray[0, 8],
+    "reset-reversed-wires-qiskit"
+]
+
+(* three wires out of order: the i-th qubit of the state lands on the i-th listed wire, and the
+   rotations after the reset make the result depend on the relative phases *)
+resetReversed3 = QuantumCircuitOperator[{
+    "X" -> 1, "H" -> 2,
+    "Reset"[QuantumState[{1, 0, 0, I, 0, 0, 2, 0} / Sqrt[6]]] -> {2, 3, 1},
+    "H" -> 1, "RX"[0.7] -> 2, "H" -> 3,
+    "M" -> {1, 2, 3}
+}];
+
+qtest[
+    Chop[qiskitProbabilities[resetReversed3["Qiskit"], {1, 2, 3}] - N[resetReversed3[]["ProbabilitiesList"]], 10^-10],
+    ConstantArray[0, 8],
+    "reset-reversed-three-wires-qiskit"
+]
+
+VerificationTest[
+    Chop[N[QuantumQASM[QuantumQASM[resetReversed3]][]["ProbabilitiesList"] - resetReversed3[]["ProbabilitiesList"]], 10^-10],
+    ConstantArray[0, 8],
+    TestID -> "reset-reversed-three-wires-qasm-native"
+]
+
+(* a reset with no qiskit gate sequence fails, naming the reason, rather than export a wrong circuit *)
+resetFailureMessage[r_] := Replace[QuantumCircuitOperator[{r -> 1}]["Qiskit"], {f_Failure :> f["Message"], other_ :> other}];
+
+VerificationTest[
+    StringContainsQ[resetFailureMessage["Reset"[QuantumState[{0, 1, 0}]]], "not a qubit state"],
+    True,
+    TestID -> "reset-qutrit-qiskit-fails"
+]
+
+VerificationTest[
+    StringContainsQ[resetFailureMessage["Reset"[QuantumState[{Cos[t], Sin[t]}]]], "symbolic state"],
+    True,
+    TestID -> "reset-symbolic-qiskit-fails"
+]
+
+VerificationTest[
+    StringContainsQ[resetFailureMessage["Reset"[QuantumState[{{1/2, 0}, {0, 1/2}}]]], "mixed state"],
+    True,
+    TestID -> "reset-mixed-qiskit-message"
+]
+
 EndTestSection[]
