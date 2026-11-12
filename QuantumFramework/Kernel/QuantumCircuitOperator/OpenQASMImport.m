@@ -222,7 +222,7 @@ ImportOpenQASM[src0_String] := Catch[
                 statements
             ]
         ][[2]];
-        elements = If[elements === {}, {}, First[elements]];
+        elements = qasmDropInitialResets[If[elements === {}, {}, First[elements]]];
         qc = Quiet @ Check[QuantumCircuitOperator[elements], $Failed];
         If[ ! MatchQ[qc, _QuantumCircuitOperator],
             qasmThrow["Assembly", "Parsed statements did not assemble into a valid circuit."]
@@ -335,15 +335,35 @@ qasmBarrier[stmt_String, state_] := Module[{argStr, wires},
     If[wires === {}, {}, {"Barrier"[wires]}]
 ]
 
-qasmReset[stmt_String, state_] := Module[{argStr, wires},
-    (* OpenQASM `reset` returns a qubit to |0>. A QF circuit has no per-wire reset-to-|0>
-       primitive and already treats any wire with no explicit initial state as |0> (the
-       register), so a reset is the identity at circuit start and is dropped. Operands are
-       still resolved so an out-of-range or undeclared qubit is reported. *)
-    argStr = StringTrim @ StringReplace[stmt, RegularExpression["^reset\\b"] -> ""];
-    wires = Flatten[qasmResolveQ[#, state["regs"]] & /@ qasmSplitQargs[argStr]];
-    {}
+(* OpenQASM `reset` discards a qubit and leaves it in |0>: one "Reset" -> {w} per operand wire.
+   A reset on a wire that no earlier element has touched leaves the wire as it was (every QF wire
+   starts in |0>), so qasmDropInitialResets removes it after the whole program is read. *)
+qasmReset[stmt_String, state_] := With[{
+    wires = Flatten[qasmResolveQ[#, state["regs"]] & /@ qasmSplitQargs[StringTrim @ StringReplace[stmt, RegularExpression["^reset\\b"] -> ""]]]
+},
+    Map["Reset" -> {#} &, wires]
 ]
+
+(* the wires a circuit element acts on: a gate or subcircuit through its orders, a measurement
+   through its wire list; a barrier and a global phase act on no state *)
+qasmElementWires[obj : _QuantumOperator | _QuantumCircuitOperator | _QuantumMeasurementOperator] :=
+    Union @ Cases[{obj["InputOrder"], obj["OutputOrder"]}, _Integer, Infinity]
+qasmElementWires[(_ -> order_)] := Union @ Cases[{order}, _Integer, Infinity]
+qasmElementWires[wires_List] := Union @ Cases[wires, _Integer, Infinity]
+qasmElementWires[_] := {}
+
+qasmDropInitialResets[elements_List] := Replace[Reap[
+    Fold[
+        Function[{used, el},
+            If[ MatchQ[el, "Reset" -> {w_Integer} /; ! MemberQ[used, w]],
+                used,
+                Sow[el]; Union[used, qasmElementWires[el]]
+            ]
+        ],
+        {},
+        elements
+    ]
+][[2]], {{kept_List} :> kept, {} -> {}}]
 
 (* gphase(theta) is a global phase E^(I theta). With ctrl / negctrl modifiers it becomes a
    phase applied only on the control-active configuration: a multi-controlled phase. It is
