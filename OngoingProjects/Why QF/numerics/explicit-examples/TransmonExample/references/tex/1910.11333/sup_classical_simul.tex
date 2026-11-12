@@ -1,0 +1,674 @@
+\section{Classical simulations}\label{sec:classical_sim}
+
+
+\subsection{Local Schr\"{o}dinger and Schr\"{o}dinger-Feynman simulators}
+\label{subsec:sa_sfa}
+We have developed two quantum circuit simulators: qsim and qsimh. The first simulator, qsim, is a Schr\"{o}dinger full state vector simulator. It computes all $2^n$ amplitudes, where $n$ is the number of qubits. Essentially, the simulator performs matrix-vector multiplications repeatedly. One matrix-vector multiplication corresponds to applying one gate. For a 2-qubit gate acting on qubits {\tt q1} and {\tt q2} ({\tt q1} $<$ {\tt q2}), it can be depicted schematically by the following pseudocode.
+
+\begin{verbatim}
+#iterate over all values of qubits q > q2
+for (int i = 0; i < 2^n; i += 2 * 2^q2) {
+  #iterate values for q1 < q < q2
+  for (int j = 0; j < 2^q2; j += 2 * 2^q1) {
+    #iterate values for q < q1
+    for (int k = 0; k < 2^q1; k += 1) {
+      #apply gate for fixed values 
+      #for all q not in [q1,q2]
+      int l = i + j + k;
+
+      float v0[4]; #gate input
+      float v1[4]; #gate output
+
+      #copy input
+      v0[0] = v[l];
+      v0[1] = v[l + 2^q1];
+      v0[2] = v[l + 2^q2];
+      v0[3] = v[l + 2^q1 + 2^q2];
+
+      #apply gate
+      for (r = 0; r < 4; r += 1) {
+        v1[r] = 0;
+        for (s = 0; s < 4; s += 1) {
+          v1[r] += U[r][s] * v0[s];
+        }
+      }
+
+      #copy output
+      v[l] = v1[0];
+      v[l + 2^q1] = v1[1];
+      v[l + 2^q2] = v1[2];
+      v[l + 2^q1 + 2^q2] = v1[3];
+    }
+  }
+}
+\end{verbatim}
+Here {\tt U} is a 4x4 gate matrix and {\tt v} is the full state vector. To make the simulator faster, we use gate fusion \cite{smelyanskiy2016qhipster}, single precision arithmetic, AVX/FMA instructions for vectorization, and OpenMP for multi-threading. We are able to simulate 38-qubit circuits on a single Google cloud node that has 3844 GB memory and four CPUs with 20 cores each (n1-ultramem-160). The run times for different circuit sizes at depth 14 are listed in Table \ref{table:qsimruntimes}.
+
+\begin{table}
+\begin{tabular}{| r | r |}
+\hline
+qubits, $n$ & run time in seconds \\
+\hline
+32 & 111 \\
+\hline
+34 & 473 \\
+\hline
+36 & 1954 \\
+\hline
+38 & 8213 \\
+\hline
+\end{tabular}
+\label{table:qsimruntimes}
+\caption{Circuit simulation run times using qsim on a single Google cloud node (n1-ultramem-160).}
+\end{table}
+
+The second simulator, qsimh, is a hybrid Schr\"{o}dinger-Feynman algorithm (SFA) simulator \cite{markov_quantum_2018}. We cut the lattice into two parts and use the Schmidt decomposition for the 2-qubit gates on the cut. If the Schmidt rank of each gate is $r$ and the number of gates on the cut is $g$ then there are $r^g$ paths, corresponding to all the possible choices of Schmidt terms for each 2-qubit gate across the cut. To obtain fidelity equal to unity, we need to simulate all the $r^g$ paths and sum the results. The total run time is proportional to $(2^{n_1}+2^{n_2})r^g$, where $n_1$ and $n_2$ are the qubit numbers in the first and second parts. Each part is simulated by qsim using the Schr\"odinger algorithm. Path simulations are independent of each other and can be trivially parallelized to run on supercomputers or in data centers. Note that one can run simulations with fidelity $F < 1$ just by summing over a fraction $F$ of all the paths (see Ref.~\cite{markov_quantum_2018} and Sec.~\ref{subsec:sim_target_fidelity}). In order to speed up the computation, we save a copy of the state after the first $p$ 2-qubit gates across the cut, so the remaining $r^{g-p}$ paths can be computed without re-starting the simulation from the beginning. We call the specific choice of Schmidt terms for the first $p$ gates in the cut a {\it prefix}.
+
+\subsection{Feynman simulator}
+\label{subsec:fa}
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{7-8} \cline{9-10}
+\multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} &  & \multicolumn{2}{c|}{\textbf{PFlop/s*}} & \multicolumn{2}{c|}{\textbf{efficiency (\%)}} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{}\tabularnewline
+\hline 
+\textbf{qubits} & \textbf{cycles} & \textbf{$\xebfidelity$} (\%) & \textbf{$N_s$} & \textbf{nodes} & \textbf{runtime} & \textbf{peak} & \textbf{sust.} & \textbf{peak} & \textbf{sust.} & \textbf{power (MW)} & \textbf{energy (MWh)}\tabularnewline
+
+\hline 
+\hline 
+\multirow{7}{*}{53} & \multirow{3}{*}{12} & 0.5 & 1M & \multirow{7}{*}{4550} & 1.29 hours & \multirow{3}{*}{235.2} & \multirow{3}{*}{111.7} & \multirow{3}{*}{57.4} & \multirow{3}{*}{27.3} & \multirow{3}{*}{5.73} & 8.21 \tabularnewline
+\cline{3-4} \cline{6-6} \cline{12-12}
+ &  & 1.4 & 0.5M &  & 1.81 hours** &  &  &  &  &  & 11.2** \tabularnewline
+\cline{3-4} \cline{6-6} \cline{12-12}
+ &  & 1.4 & 3M &  & 10.8 hours** &  &  &  &  &  & 62.7** \tabularnewline
+\cline{2-2} \cline{3-4} \cline{6-6} \cline{7-11} \cline{12-12}
+ & \multirow{4}{*}{14} & $2.22\times 10^{-6}$ & 1M &  & 0.72 hours & \multirow{4}{*}{347.5} & \multirow{4}{*}{252.3} & \multirow{4}{*}{84.8} & \multirow{4}{*}{61.6} & \multirow{4}{*}{7.25} & 6.11 \tabularnewline
+\cline{3-4} \cline{6-6} \cline{12-12}
+ &  & 0.5 & 1M &  & 67.7 days** &  &  &  &  &  & $1.18 \times 10^{4}$** \tabularnewline
+\cline{3-4} \cline{6-6} \cline{12-12}
+ &  & 1.0 & 0.5M &  & 67.7 days** &  &  &  &  &  & $1.18 \times 10^{4}$** \tabularnewline
+\cline{3-4} \cline{6-6} \cline{12-12}
+ &  & 1.0 & 3M &  & 1.11 years** &  &  &  &  &  & $7.07 \times 10^{4}$** \tabularnewline
+\hline 
+\end{tabular}
+\caption{\label{table:qflex_runs} \textbf{Runtimes, efficiency and energy consumption for the simulation of random circuit sampling of $N_s$ bitstrings from Sycamore with fidelity $\mathcal{F}$ using qFlex on Summit}. Simulations used 4550 nodes out of 4608, which represents about $99\%$ of Summit. Single batches of $64$ amplitudes were computed on each MPI task using a socket with three GPUs (two sockets per node); given that one of the 9100 MPI tasks acts as master, 9099 batches of amplitudes were computed. For the circuit with 12 cycles, $144/256$ paths for these batches were computed in 1.29 hours, which leads to the sampling of about 1M bitstrings with fidelity $\mathcal{F}\approx 0.5\%$ (see Ref.~\cite{villalonga2019flexible} for details on the sampling procedure); runtimes and energy consumption for other sample sizes and fidelities are extrapolated linearly in $N_s$ and $\mathcal{F}$ from this run. At 14 cycles, $128/524288$ paths were computed in 0.72 hours, which leads to the sampling of about 1M bitstrings with fidelity $2.22\times 10^{-6}$. In this case, one would need to consider 288101 paths on all 9099 batches in order to sample about 1M (0.5M) bitstrings with fidelity $\mathcal{F}\approx 0.5\%$ (1.0\%). By extrapolation, we estimate that such computations would take 1625 hours (68 days). For $N_s=$3M bitstrings and $\mathcal{F}\approx1.0\%$, extrapolation gives us an estimated runtime of 1.1 years. Performance is higher for the simulation with 14 cycles, due to higher arithmetic intensity tensor contractions. Power consumption is also larger in this case. Job, MPI, and TAL-SH library initialization and shutdown times, as well as initial and final IO times are not considered in the runtime, but they are in the total energy consumption. *Single precision. **Extrapolated from the simulation with a fractional fidelity.}
+\end{table*}
+
+
+\begin{figure*}
+\includegraphics[width=0.66\columnwidth]{figures/sup_classical_simul/qflex_q53d12.pdf}
+\includegraphics[width=0.66\columnwidth]{figures/sup_classical_simul/qflex_q53d12_iswap2cphase_everywhere.pdf}
+\includegraphics[width=0.66\columnwidth]{figures/sup_classical_simul/qflex_q53d12_iswap2cphase_everywhere_cuts.pdf}
+\includegraphics[width=0.66\columnwidth]{figures/sup_classical_simul/qflex_q53d14.pdf}
+\includegraphics[width=0.66\columnwidth]{figures/sup_classical_simul/qflex_q53d14_iswap2cphase_everywhere.pdf}
+\includegraphics[width=0.66\columnwidth]{figures/sup_classical_simul/qflex_q53d14_iswap2cphase_everywhere_cuts.pdf}
+\caption{\label{fig:qflex_bond_dimensions} \textbf{Logarithm base 2 of the bond (index) dimensions of the tensor network to contract for the simulation of sampling from Sycamore with 12 cycles (top) and 14 cycles (bottom) using qFlex}. The left plots represent the tensor network given by the circuit. The middle plots represent the tensor network obtained from a circuit where fSim gates have been transformed, when possible (see main text). The right plots represent the tensor network after the gate transformations and cuts (gray bonds) have been applied; the $\log_2$ of the bond dimensions of the indexes cut are written explicitly. For 12 cycles, there are $2^5\times2^1\times2^2 = 2^8 = 256$ cut instances (paths); for 14 cycles, there are $2^7\times2^7\times2^5 = 2^{19} = 524288$ cut instances.}
+\end{figure*}
+
+
+\begin{figure*}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_1.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_2.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_3.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_4.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_5.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_6.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_7.pdf}
+\includegraphics[width=0.49\columnwidth]{figures/sup_classical_simul/qflex_contraction_ordering_8.pdf}
+\caption{\label{fig:qflex_ordering} \textbf{TN contraction ordering for the computation of a batch of amplitudes for the simulation of Sycamore with 12 and 14 cycles.} Dotted qubits are used for fast sampling; the output index is left open. Three indexes are cut, with remaining bond dimensions given in Fig.~\ref{fig:qflex_bond_dimensions}, and all possible cut instances are labelled by variables $\alpha$, $\beta$, and $\gamma$ (panel 1). Tensors $A$, $B$, and $C$ are independent of cut instances, and so are contracted only once (panels 2 and 3) and reused several times. Given a particular instance of $\alpha$ and $\beta$, tensors $D$ (panels 3 and 4) and subsequently $E$ (panels 5 and 6) are contracted; tensor $E$ will be reused in the inner loop. For each instance of $\gamma$ (inner loop), tensor $F$ is contracted (panels 7 and 8), which gives the contribution to the batch of amplitudes (open indexes on $C$ and specified output bits otherwise) from a particular $(\alpha, \beta, \gamma)$ instance (path). The sequence of tensor contractions leading to building a tensor are enumerated, where each tensor is contracted to the one formed previously. For simplicity, the contraction of two single-qubit tensors onto a pair before being contracted with others (\emph{e.g.}, tensor 10 in the yellow sequence of panel 5) is not shown on a separate panel; these pairs of tensors are computed first and are reused for all cut instances.}  
+\end{figure*}
+
+qFlex was introduced in Ref.~\cite{villalonga2019flexible} and later adapted to GPU architectures in Ref.~\cite{villalonga2019establishing} to allow efficient computation on Summit, currently the world's Top-1 supercomputer. qFlex is open source and available at \url{https://github.com/ngnrsaa/qflex}.
+Given a random quantum circuit, qFlex computes output bitstring amplitudes by adding all the Feynman path contributions via tensor network (TN) contractions \cite{MS08, Boi17}, and so it follows what we call a Feynman approach (FA) to circuit sampling. TN simulators are known to outperform all other methods for circuits with low depth or a large number of qubits (\emph{e.g.}, Ref.~\cite{villalonga2019establishing} successfully simulates 121 qubits at low depth using this technique), as well as for small sample sizes ($N_s$), since simulation cost scales linearly with $N_s$.
+
+TN simulators compute one amplitude (or a few amplitudes; see below) per contraction of the entire network. In order to sample bitstrings for a given circuit, a set of random output bitstrings is chosen before the computation starts. Then, the amplitudes for these bitstrings are computed and either accepted or rejected using
+\emph{frugal rejection sampling}~\cite{markov_quantum_2018}. This ensures that the selected subset of bitstrings is indistinguishable from bitstrings sampled from a quantum computer. The cost of the TN simulation is therefore linear in the number of output bitstrings. This makes TN methods more competitive for small sets of output bitstrings.
+
+The optimization of qFlex considers a large number of factors
+to achieve the best time-to-solution on current supercomputers, an approach that often
+diverges from purely theoretical considerations on the complexity of TN contractions.
+More precisely, qFlex implements several features such as:
+\begin{itemize}
+    \item \textbf{Avoidance of distributed tensor contractions:} by ``cutting'' the TN (slicing some indexes), the contraction of the TN is decomposed into many \emph{paths} that can be contracted locally and independently, therefore avoiding internode communication, which is the main cause for the slowdown of distributed tensor contractions.
+    \item \textbf{Contraction orderings for high arithmetic intensity:} TN contraction orderings are chosen so that the expensive part of the computation consists of a small number of tensor contractions with high arithmetic intensity. This lowers the time-to-solution.
+    \item \textbf{Highly efficient tensor contractions on GPU:} the back-end TAL-SH library~\cite{lyakh_tal_sh} provides fully asynchronous execution of tensor operations on GPU and fast tensor transposition, allowing out-of-core tensor contractions for instances that exceed GPU memory. This achieves very high efficiency (see Table~\ref{table:qflex_runs}) on high arithmetic intensity contractions.
+\end{itemize}
+
+In addition, qFlex implements two techniques in order to lower the cost of the simulation:
+\begin{itemize}
+    \item \textbf{Noisy simulation:} the cost of a simulation of fidelity $\mathcal{F}<1$ ($\mathcal{F}\approx 5\times10^{-3}$ in practice) is lowered by a factor
+    $1/\mathcal{F}$, \emph{i.e.}, is linear in $\mathcal{F}$~\cite{markov_quantum_2018,villalonga2019flexible}.
+    \item \textbf{Fast sampling technique:} the overhead in applying the frugal rejection sampling mentioned above is removed by this technique, giving an order of magnitude speedup~\cite{villalonga2019flexible}. This involves the computation of the amplitudes of a few correlated bitstrings (\emph{batch}) per circuit TN contraction.
+\end{itemize}
+
+As shown in Table~\ref{table:qflex_runs}, qFlex is successful in simulating Sycamore with 12 cycles on Summit, sampling 1M bitstrings with fidelity close to $0.5\%$ in 1.29 hours. At 14 cycles, we perform a partial simulation and extrapolate the simulation time for the sampling of 1M bitstrings with fidelity close to $0.5\%$ using Summit, giving an estimated 68 days to complete the task. Sampling 3M bitstrings at 14 cycles with fidelity close to $1.0\%$ (average experimentally realized fidelity) would take an estimated 1.1 years to complete. Other estimates for different sample sizes and fidelities can be found in Table~\ref{table:qflex_runs}. At 16 cycles and beyond, however, the enormous amount of Feynman paths required so that the computation does not exceed the 512 GB of RAM of each Summit node makes the computation impractical.\\
+
+The contraction of the TNs involved in the computation of amplitudes from Sycamore using qFlex is preceded by a simplification of the circuits, which allows us to decrease the bond (index) dimension of some of the indexes of the TN. This comes from the realization that ${\rm fSim(\theta=\pi/2, \phi)} = -i\cdot[{\rm R_z (-\pi/2) \otimes R_z(-\pi/2)}]\cdot{\rm cphase(\pi+\phi)}\cdot{\rm SWAP}$ (see Sections~\ref{sec:calib_metro}~and~\ref{subsec:quantum_gates}); note that the ${\rm SWAP}$ gate can be applied either at the beginning or at the end of the sequence. We apply this transformation to all ${\rm fSim}$ gates at the beginning (end) of the circuit that affect qubits that are not affected by any other two-qubit gate before (after) in the circuit. The ${\rm SWAP}$ is then applied to the input (output) qubits and their respective one-qubit gates trivially, and the bond dimension remaining from this gate is 2, corresponding to the ${\rm cphase}$ gate, as opposed to the bond dimension 4 of the original ${\rm fSim}$ gate. Note that in practice this identity is only approximate, since $\theta\approx \pi/2$; we find that transforming all gates described above causes a drop in fidelity to about $95\%$.
+
+After the above simplification is applied, we proceed to cut (slice) some of the indexes of the TN (see Ref.~\cite{villalonga2019flexible} for details). The size of the slice of the index involved in each cut (the effective bond dimension of the index) is variable, and is chosen differently for different number of cycles on the circuit. Cutting indexes decomposes the contraction of the TN into several simpler contractions, whose results are summed after computing them independently on different nodes of the supercomputer.
+
+Fig.~\ref{fig:qflex_bond_dimensions} shows the bond dimensions of the TN corresponding to the circuits with 12 and 14 cycles simulated. We can see the decrease in bond dimension after the ${\rm fSim}$ simplification is applied, as well as the remaining bond dimension on the indexes cut for each case.
+
+Finally, we contract the tensor network corresponding to the computation of a set of amplitudes (for fast sampling) for a particular batch of output bitstrings. The contraction ordering, which is chosen (together with the size and position of the cuts) in order to minimize the time-to-solution of the computation (which involves a careful consideration of the memory resources used and the efficiency achieved on the GPUs) is shown in Fig.~\ref{fig:qflex_ordering}. The computation can be summarized in the following pseudo-code, where $\alpha$, $\beta$, and $\gamma$ are variables that denote the different instances of the cuts:
+\begin{verbatim}
+# Qubits on C are used for fast sampling.
+# size_of_batch amps. per circuit contraction.
+size_of_batch = 2^num_qubits(C)
+
+# Placeholder for all amplitudes in the batch.
+batch_of_amplitudes = zeros(size_of_batch)
+
+# Start contracting...
+contract(A)  # Panel 2
+contract(B)  # Panel 2
+contract(C)  # Panel 2
+
+# alpha labels instances of 1st cut
+for each alpha {
+
+    # beta labels instances of 2nd cut
+    for each beta {
+        contract(D)  # Panels 3 & 4
+        contract(E)  # Panels 5 & 6
+        
+        # gamma labels instances of 3rd cut
+        for each gamma {
+            contract(F)  # Panels 7 & 8
+            
+            # Add contribution from this
+            # path (alpha, beta, gamma).
+            batch_of_amplitudes += F
+        }
+    }
+}
+\end{verbatim}
+Dotted qubits on Fig.~\ref{fig:qflex_ordering} denote the region used for fast sampling, where output indexes are left open. The circuit TN contraction leads to the computation of $64$ amplitudes of correlated bitstrings (tensor $F$). Note that computing only a fraction $\mathcal{F}$ of the paths results in amplitudes with a fidelity roughly equal to $\mathcal{F}$. Computing a set of perfect fidelity batches of amplitudes, where the number of batches is smaller than the number of bitstrings to sample also provides a similar fidelity $\mathcal{F}$ in the sampling task, where $\mathcal{F}$ is equal to the ratio of the number of batches to the number of bitstrings in the sample. A hybrid approach (fraction of batches, each only with a fraction of paths), which we use in practice, also provides a similar sampling fidelity. See Refs.~\cite{markov_quantum_2018, villalonga2019flexible} and Section~\ref{subsec:sa_sfa} for more details.
+
+A new feature of qFlex, implemented for this work, is the possibility to perform out-of-core tensor contractions (of tensors that exceed GPU memory) over more than one GPU on the same node. Although the arithmetic intensity requirements to achieve high efficiency are now higher (about an arithmetic intensity of 3000 for an efficiency close to $90\%$ over three GPUs, as opposed to 1000 for a similar efficiency using a single GPU), the fact that a large part of a node is performing a single TN contraction lets us work with larger tensors, which implies reducing the number of cuts, as well as increasing the bond dimension of each cut; this, in turn, achieves better overall time-to-solution for sampling than simulations based on TNs with smaller tensors and with a lower memory footprint during their contraction (which could perhaps show a higher GPU efficiency due to the simultaneous use of each GPU for independent TNs). It is worth noting that the TN contraction ordering presented in Fig.~\ref{fig:qflex_ordering} provides us with the best time-to-solution after considering several possibilities for the simulation of sampling from Sycamore using qFlex for both 12 and 14 cycles. This is generally not the case, since different numbers of cycles generate different TNs, which generally have different contraction schemes for best simulation time-to-solution.\\
+
+Sampling of random circuits on Sycamore is difficult to simulate with TN simulators at 16 cycles and beyond.  Indeed, FA simulators suffer from an exponential scaling of runtime with circuit depth. For qFlex, this is manifested in the large size of the tensors involved in the circuit TN contraction (this size grows exponentially with the number of cycles of the circuit), which require a large number of cuts in order not to exceed the RAM of a computation node, and which in turn generates an impractical number of Feynman paths. For other simulators, such as the one presented in Ref.~\cite{chen2018classical}, the number of projected variables is expected to be so large that the computation time (which increases exponentially with the number of projected variables) on a state-of-the-art supercomputer makes the computation impractical; see Section~\ref{subsec:treewidth} for a detailed analysis. For TN-based simulators that attempt the circuit contraction distributed over several nodes (without cuts)~\cite{guo2019general}, we expect the size of the largest tensor encountered during the TN contraction (which grows exponentially with depth) to exceed the RAM available on any current supercomputer. Not having enough memory for a simulation is the problem that led to developing FA simulators in the first place, for circuits of close to 50 qubits and beyond, for which the Schr\"odinger simulator (see Section~\ref{subsec:sa_simulator}) requires more memory to store the wave function than available. FA simulators give best performance as compared to other methods in situations with a large number of qubits and low depth. For circuits where both the number of qubits and the number of cycles are considered large enough to make the computation expensive, and contribute equally in doing so (formally, each linear dimension of the qubit grid is comparable to the time dimension), like the supremacy circuits considered in this work, we expect SFA of Section~\ref{subsec:sa_sfa} to be the leading approach for sampling from a random circuit, given a large enough sample size ($\sim$~1M in this work); note the linear dependence of the runtime of FA with sample size, which is absent for SFA.
+
+\subsection{Supercomputer Schr\"odinger simulator}
+\label{subsec:sa_simulator}
+%%%SB note: this text is from Kristel Michielsen. Changes here need to be synced with her. 
+
+
+We also performed supercomputer Schr\"odinger simulations in the  J\"ulich Supercomputing Centre.
+For a comprehensive description of the universal quantum computer simulators
+JUQCS-E and JUQCS-A, see Refs.~\cite{RAED07x} and \cite{RAED19a}.
+
+For a given quantum circuit $U$ designed to generate a random state,
+JUQCS-E~\cite{RAED19a} executes $U$ and computes (in double precision floating point) the probability distribution $p_U(j)$
+for each output or bitstring $j\in\{0,\ldots,D-1\}$, where $D=2^n$, $n$ denoting the number of qubits.
+JUQCS-E can also compute (in double precision floating point) the corresponding distribution function
+$P_U(k)=\sum_{j=0}^k p_U(j)$ and sample bitstrings from it.
+We denote by ${\cal U}$ the set of $m$ states generated by executing the circuit $U$.
+A new feature of JUQCS-E, not documented in Ref.~\onlinecite{RAED19a},
+allows the user to specify a set ${\cal Q}$ of $M$ bitstrings
+for which JUQCS-E calculates $p_U(j)$ for all $j\in{\cal Q}$ and saves them in a file.
+
+Similarly, for the same circuit $U$, JUQCS-A~\cite{RAED19a} computes (with adaptive two-byte encoding)
+the probability distribution $p_A(j)$ for each bitstring $j\in\{0,\ldots,D-1\}$.
+Although numerical experiments  with Shor's algorithm for up to 48 qubits indicate that
+the results produced by JUQCS-A are sufficiently accurate,
+there is, in general, no guarantee that $p_A(j)\approx p_U(j)$.
+In this sense, JUQCS-A can be viewed as an approximate simulator of a quantum computing device.
+
+In principle, sampling states with probabilities $p_A(j)$ requires the knowledge of the
+distribution function $P_A(k)=\sum_{j=0}^k p_A(j)$.
+If $D$ is large, and $p_A(j)\approx {O}(1/D)$, as in the case of random states, computing
+$P_A(k)$ requires the sum over $j$ to be performed with sufficiently high precision.
+For instance, if $D=2^{39}$, $p_A(j)\approx{O}(10^{-12})$ and
+even with double precision arithmetic ($\approx 16$ digits), adding
+$D=2^{39}$ small numbers requires some care. Note that in practice, each MPI process
+only calculates a partial sum, which helps to reduce the loss of significant digits.
+JUQCS-A can compute $P_A(k)$ in double precision and sample bitstrings from it.
+We denote by ${\cal A}$ the set of $M$ bitstrings generated by JUQCS-A after executing the circuit $U$.
+Activating this feature requires additional memory, effectively reducing the maximum number of qubits that
+can be simulated by three.
+This reduction of the maximum number of qubits might be avoided as follows.
+In the case at hand, we know that all $p_A(j)\approx {O}(1/D)$.
+Then, since $p_A(j)$ is known, one might as well sample the states from a uniform distribution,
+list the weight $w_A(j)=N p_A(j)$ for each generated state $j$
+and use these weights to compute averages.
+We do not pursue this possibility here because for the present purpose,
+it is essential to be able to compute $p_U(j)$ and therefore,
+the maximum number of qubits that can be studied is limited
+by the amount of memory that JUQCS-E, not JUQCS-A, needs to perform the simulation.
+
+For an XEB comparison, the quantities of interest are
+\begin{eqnarray}
+\alpha_{U,U}&\equiv&\log D +\gamma + \sum_{j=0}^{D-1} p_U(j) \log p_U(j),
+\label{alpha0}
+\\
+\alpha_{A,U}&\equiv&\log D +\gamma + \sum_{j=0}^{D-1} p_A(j) \log p_U(j),
+\\
+\alpha_{A,A}&\equiv&\log D +\gamma + \sum_{j=0}^{D-1} p_A(j) \log p_A(j),
+\\
+\alpha_{{\cal X},U}&\equiv&\log D +\gamma + \frac{1}{M}\sum_{j\in{\cal X}} \log p_U(j),
+\label{alpha1}
+\end{eqnarray}
+where ${\cal X}$ is one of the four sets ${\cal U}$, ${\cal A}$,
+${\cal M}$ (a collection of bitstrings generated by the experiment), or
+${\cal C}$ (obtained by generating bistrings distributed uniformly).
+If M is sufficiently large ($M=500000$ in the case at hand), we may expect that
+$\alpha_{{\cal U},U}\approx \alpha_{U,U}$ and
+$\alpha_{{\cal A},U}\approx \alpha_{A,U}$.
+
+In addition to the cross entropies Eqs.~(\ref{alpha0})--(\ref{alpha1}), we also
+compute the linear cross entropies
+\begin{eqnarray}
+\widehat\alpha_{U,U}&\equiv&\sum_{j=0}^{D-1} p_U(j) (D p_U(j) -1),
+\label{alpha2}
+\\
+\widehat\alpha_{A,U}&\equiv& \sum_{j=0}^{D-1} p_A(j) (D p_U(j)-1),
+\\
+\widehat\alpha_{A,A}&\equiv&\sum_{j=0}^{D-1} p_A(j) (D p_A(j)-1),
+\\
+\widehat\alpha_{{\cal X},U}&\equiv& \frac{1}{M}\sum_{j\in{\cal X}} (D p_U(j)-1).
+\label{alpha3}
+\end{eqnarray}
+
+
+Table~\ref{tab1} presents simulation results
+for the $\alpha$'s defined by Eqs.~(\ref{alpha0})--(\ref{alpha1}) and
+for the $\widehat\alpha$'s defined by Eqs.~(\ref{alpha2})--(\ref{alpha3}),
+obtained by running JUQCS-E and JUQCS-A on the supercomputers at the J\"ulich Supercomputer Centre.
+For testing quantum supremacy using these machines, the maximum number of qubits that a
+universal quantum computer simulator can handle is 43 (45 on the Sunway TaihuLight at Wuxi China~\cite{RAED19a}).
+
+The fact that in all cases, $\alpha_{U,U}\approx\alpha_{A,A}\approx 1$ supports
+the hypothesis that the circuit $U$, executed by either JUQCS-E or JUQCS-A, produces a Porter-Thomas distribution.
+The fact that in all cases, $\alpha_{{\cal U},U}\approx1$ supports the
+theoretical result
+that replacing the sum over all states by the sum over $M=500000$ states
+yields an accurate estimate of the former (see Section \ref{sec:xeb_theory}).
+Although $\alpha_{A,A}\approx 1$ in all cases, using the sample ${\cal A}$
+generated by JUQCS-A to compute $\alpha_{{\cal A},U}$
+shows an increasing deviation from one, the deviation becoming larger as the number of qubits increases.
+In combination with the observation that $\alpha_{A,A}\approx 1$, this suggests that
+JUQCS-A produces a random state, albeit not the same state as JUQCS-E.
+Taking into account that JUQCS-A stores the coefficients of each of the basis states
+as two single-byte numbers and not as two double precision floating point numbers (as JUQCS-E does), this is hardly a surprise.
+
+From Table~\ref{tab1} it is clear that
+the simulation results for  $\alpha_{{\cal X},U}$ and $\widehat\alpha_{{\cal X},U}$
+where ${\cal X}={\cal A},{\cal M},{\cal C}$ are consistent.
+The full XEB fidelity estimates $\alpha_{{\cal M},U}$ and $\widehat\alpha_{{\cal M},U}$, that is the values computed
+with the bitstrings produced by the experiment, are close to the
+fidelity estimates of the probabilistic model, patch XEB, and elided
+XEB, as seen in Fig.~4(a) of the main text. 
+
+\begin{table*}[htbp]
+\caption{
+Simulation results for various $\alpha$'s as defined by Eqs.~(\ref{alpha0})--(\ref{alpha1}), obtained
+by JUQCS-E and JUQCS-A.
+The results for the $\widehat\alpha$'s defined by Eqs.~(\ref{alpha2})--(\ref{alpha3}) are given in parenthesis.
+The set of bitstrings ${\cal M}$ has been obtained from experiments.
+In the first column, the number in parenthesis is the circuit identification number.
+Horizontal lines indicate that data is not available (and would require additional simulation runs to obtain it).
+}
+\begin{ruledtabular}
+\begin{tabular}{ccccccc}
+qubits &
+$\alpha_{U,U}        $ &
+$\alpha_{A,A}        $ &
+$\alpha_{{\cal U},U} $ &
+$\alpha_{{\cal A},U}\;(\widehat\alpha_{{\cal A},U}) $ &
+$\alpha_{{\cal M},U}\;(\widehat\alpha_{{\cal M},U}) $ &
+$\alpha_{{\cal C},U}\;(\widehat\alpha_{{\cal C},U}) $ \\
+\hline\noalign{\smallskip}
+30 & $1.0000$ &  $1.0000$ & $0.9997$ &   $0.8824\;(0.8826)$ &  $0.0708\;(0.0711)$ & $+0.0026\;(+0.0017)$ \\
+39(0) & $1.0000$ &  $1.0000$ & $0.9992$ &   $0.4746\;(0.4762)$ &  $0.0281\;(0.0261)$ & $-0.0003\;(-0.0011)$ \\
+39(1) & $1.0000$ &  $1.0000$ & $1.0002$ &   $\mbox{-----};(\mbox{-----})$ &  $0.0350\;(0.0362)$ & $\mbox{-----};(\mbox{-----})$ \\
+39(2) & $1.0000$ &  $1.0000$ & $0.9996$ &   $\mbox{-----};(\mbox{-----})$ &  $0.0351\;(0.0332)$ & $\mbox{-----};(\mbox{-----})$ \\
+39(3) & $1.0000$ &  $1.0000$ & $0.9999$ &   $\mbox{-----};(\mbox{-----})$ &  $0.0375\;(0.0355)$ & $\mbox{-----};(\mbox{-----})$ \\
+42(0) & $1.0000$ &  $1.0001$ & $0.9998$ &   $0.4264\;(0.4268)$ &  $0.0287\;(0.0258)$ & $-0.0024\;(-0.0001)$ \\
+42(1) & $1.0000$ &  $1.0000$ & $1.0027$ &   $\mbox{-----};(\mbox{-----})$ &  $0.0254\;(0.0273)$ & $\mbox{-----};(\mbox{-----})$ \\
+43(0) & $1.0000$ &  $1.0001$ & $1.0013$ &   $0.3807\;(0.3784)$ &  $0.0182\;(0.0177)$ & $-0.0010\;(-0.0003)$ \\
+43(1) & $1.0000$ &  $1.0000$ & $\mbox{-----}$ &   $\mbox{-----};(\mbox{-----})$ &  $0.0217\;(0.0204)$ & $\mbox{-----};(\mbox{-----})$ \\
+\end{tabular}
+\end{ruledtabular}
+\label{tab1}
+\end{table*}
+
+For reference, in Tables~\ref{SUPER} and \ref{TIMING} we present some technical information about the supercomputer
+systems used to perform the simulations reported in this appendix and give some indication of the computer resources
+used.
+
+\begin{table*}[htbp]
+\caption{Specification of the computer systems at the J\"ulich Supercomputing Centre used to
+perform all simulations reported in this appendix.
+The row ``maximum \# qubits'' gives the maximum number of qubits $n$ that JUQCS-E (JUQCS-A) can simulate
+on a specific computer.
+}
+\begin{center}
+\begin{ruledtabular}
+\begin{tabular}{cccccc}
+ Supercomputer                       & JURECA-CLUSTER~\cite{JURECA}        & JURECA-BOOSTER~\cite{JURECA}             & JUWELS~\cite{JUWELS}           \\
+\hline\noalign{\vskip 4pt}
+ CPU                                 & Intel Xeon            & Intel Xeon Phi 7250-F      & Dual Intel Xeon  \\
+                                     & E5-2680 v3 Haswell    & Knights Landing            &  Platinum 8168   \\
+\hline\noalign{\vskip 4pt}
+ Peak performance                    & 1.8 PFlop/s    & 5 PFlop/s              & 10.4 PFlops/s  \\
+ Clock frequency                     & 2.5 GHz        & 1.4 GHz                & 2.7 GHz        \\
+ Memory/node                         & 128 GB         & 96 GB + 16 GB (MCDRAM) & 96 GB          \\
+ \# cores/node                       & $2\times12$    & 64                     & $2\times24$    \\
+ \# threads/core used                & 1              & 1                      & 3              \\
+ maximum \# nodes used               & 256            & 512                    & 2048           \\
+ maximum  \# MPI processes used      & 4096           & 32768                  & 32768          \\
+ maximum \# qubits                   & 40 (43)        & 41 (44)                & 43 (46)        \\
+\end{tabular}
+\end{ruledtabular}
+\label{SUPER}
+\end{center}
+\end{table*}
+
+
+\begin{table*}[htbp]
+\caption{Representative elapsed times and number of MPI processes used to perform simulations
+with JUQCS-E and JUQCS-A on the supercomputer indicated.
+Note that the elapsed times may fluctuate significantly depending on the load of the machine/network.
+}
+\begin{center}
+\begin{ruledtabular}
+\begin{tabular}{ccc|cccc|ccc}
+\multicolumn{3}{c|}{} & \multicolumn{4}{c|}{JUQCS-E} & \multicolumn{3}{c}{JUQCS-A} \\
+qubits & gates & & Supercomputer & MPI processes & Elapsed time & & Supercomputer & MPI processes & Elapsed time \\
+\hline\noalign{\vskip 4pt}
+30 & 614 & & BOOSTER &     128 &  0:02:28 & &  CLUSTER &    128  & 0:05:23 \\
+39 & 802 & & CLUSTER &    4096 &  0:42:51 & &  CLUSTER &   4096  & 1:38:42 \\
+42 & 864 & & JUWELS  &   16384 &  0:51:16 & &  JUWELS  &  8192   & 2:15:48 \\
+43 & 886 & & JUWELS  &   32768 &  1:01:53 & &  JUWELS &  32768  &1:32:19 \\
+\end{tabular}
+\end{ruledtabular}
+\label{TIMING}
+\end{center}
+\end{table*}
+
+
+\subsection{Simulation of random circuit sampling with a target fidelity}
+\label{subsec:sim_target_fidelity}
+
+A classical simulator can leverage the fact that experimental sampling from random circuits occurs at low fidelity $\xebfidelity$ by considering only a small fraction of the Feynman paths (see Secs. \ref{subsec:sa_sfa} and \ref{subsec:fa}) involved in the simulation~\cite{markov_quantum_2018}, which provides speedups of at least a factor of $1/\xebfidelity$. This is done by Schmidt decomposing a few two-qubit gates in the circuit and counting only a fraction of their contributing terms (\emph{paths}). A key assumption here is that the different paths result in orthogonal output states, as was studied in Ref.~\cite{markov_quantum_2018} and later in Ref.~\cite{villalonga2019flexible}. In what follows, we argue that, provided the generation of paths through decomposing gates, the Schmidt decomposition is indeed the optimal approach to achieving the largest speedup, \emph{i.e.}, that the fidelity kept by considering only a fraction of paths is largest when keeping the paths with the largest Schmidt coefficient. This is different from proving the optimality of the Schmidt decomposition of a single gate, since here we refer to the fidelity of the entire output state, and decomposed gates are embedded in a much larger circuit. In addition, we show that, for the two-qubit gates used in this work, the speedup is very close to linear in $\xebfidelity$ (and not much larger), since their Schmidt spectrum is close to flat. We close this section by relating the present discussion to Section~\ref{sec:wedge_formation}, where the formation of simplifiable gate patterns in some two-qubit gate tilings of the circuit is introduced.
+
+In summary, this section provides a method to simulate approximate sampling with a classical computational cost proportional to $\xebfidelity$. Sec.~\ref{sec:complexity} argues, based on complexity theory, that this scaling is optimal. We note that Refs~\cite{kalai2014gaussian,bremner2017achieving,yung2017can} propose an alternative method to approximately sample the output distribution at low fidelity. In essence, this method relies on the observation that, for some noise models, the high weight Fourier components of the noisy output distribution decay exponentially to 0. Then this method proposes to estimate low weight Fourier components with an additive error which is polynomial in the computational cost. Nevertheless, Ref.~\cite{boixo2017fourier} shows that all Fourier components of the output distribution of random circuits are exponentially small, and therefore they can not be estimated in polynomial time with this method. The conclusion is then that the noisy output distribution can be approximated by sampling bitstrings uniformly at random, the distribution for which all Fourier components are 0. This is consistent with Ref.~\cite{boixo2018characterizing} and Secs.~\ref{sec:xeb_theory} and~\ref{sec:error_model}, but it will produce a sample with $\xebfidelity =0$, while the output of the experimental samples at 53 qubits and $m=20$ still has $\xebfidelity \ge 0.1\%$
+
+\subsubsection{Optimality of the Schmidt decomposition for gates embedded in a random circuit}
+
+Consider a two-qubit gate $V_{ab}$ acting on qubits $a$ and $b$. We would like to replace it by a tensor product operator $M_a \otimes N_b$. The final state of the ideal circuit is 
+\begin{equation}
+| \psi \rangle := U_2 V_{ab} U_1 |0^n \rangle 
+\end{equation}
+where $U_1 (U_2)$ is a unitary composed by all the gates applied before (after) $V_{ab}$. The final normalized state of the circuit with the replacement by $M_a \otimes N_b$ is 
+\begin{equation}
+| \phi_{M, N} \rangle := U_2 (M_a \otimes N_b)  U_1 |0^n \rangle / \Vert  U_2 (M_a \otimes N_b)  U_1 |0^n \rangle \Vert.
+\end{equation}
+
+We would like to find $M, N$ which maximize the fidelity of the two states, given by 
+\begin{equation} \label{overlap}
+\langle \psi | \phi_{M, N} \rangle =  \langle  0^n | U_{1}^{\cal y} V_{ab}^{\cal y}  |\beta \rangle / \sqrt{  \langle  \beta | \beta \rangle }   \text{,}
+\end{equation}
+where
+\begin{equation}
+| \beta \rangle \equiv  (M_a \otimes N_b)  U_{1} |0^n \rangle 
+\end{equation}
+
+As the overlap is invariant if we multiply $(M_a \otimes N_b)$ by a constant, we fix the normalization $\text{tr}[(M_a \otimes N_b)^{\cal y}(M_a \otimes N_b)] = 1$.
+
+We now make the assumption that the circuit is random (or sufficiently scrambling) and that the $V_{ab}$ is a gate placed sufficiently in the middle of the computation that the reduced density matrix of qubits $a$ and $b$ of $U_{1} |0^n \rangle$ shows maximal mixing between the two. In more detail, let 
+\begin{equation} \label{boundonHSdistance}
+\varepsilon := \left \Vert \text{tr}_{\backslash (a, b)}(U_1 | 0^n \rangle  \langle 0^n | U_1^{\cal y} ) - \frac{I}{4} \right \Vert_2,
+\end{equation}
+with $\Vert X \Vert_2 := \text{tr} (X^{\cal y}X)^{1/2}$ the Hilbert-Schmidt norm and $\text{tr}_{\backslash (a, b)}$ the partial trace of all qubits except $a$ and $b$. 
+
+Using Eq. (\ref{boundonHSdistance}) and Eq.~(\ref{overlap}), we find
+
+\begin{eqnarray} 
+\langle \psi | \phi_{M, N} \rangle &=& \text{tr}( \text{tr}_{\backslash (a, b)}(U_1 | 0^n \rangle  \langle 0^n | U_1^{\cal y} ) V_{ab}^{\cal y} (M_a \otimes N_b))  \\
+&=& \frac{1}{4} \text{tr}[ V_{ab}^{\cal y}  (M_a \otimes N_b) ]  \pm \Vert (M_a \otimes N_b) \Vert_2 \Vert V_{ab} \Vert_2 \varepsilon. \nonumber
+\end{eqnarray}
+As $\Vert (M_a \otimes N_b) \Vert_2 = 1$ and $\Vert V_{ab} \Vert_2 = 2$, we find 
+\begin{eqnarray} \label{overlap_epsilon}
+\langle \psi | \phi_{M, N} \rangle = \frac{1}{4} \text{tr}[ V_{ab}^{\cal y}  (M_a \otimes N_b) ]  \pm 2 \varepsilon.
+\end{eqnarray}
+
+
+Refs. \cite{nahum2018operator, von2018operator} proved that for a random circuit $U_1$ of depth $D$ in one dimension, $\varepsilon  \leq  (4/5)^D$. In two dimensions we expect $\varepsilon$ to go to zero even faster with depth, so we can ignore the second term of Eq.~(\ref{overlap_epsilon}) for sufficiently large depth.
+
+We now want to find $M_a$, $N_b$ which are optimal for
+\begin{equation}  \label{optimization33}
+\max_{M_a, N_b : \Vert M_a \Vert_2 = \Vert N_b \Vert_2 } \text{tr}[ V_{ab}^{\cal y}  (M_a \otimes N_b) ] \text{.}
+\end{equation}
+At this point, we have reduced the problem to finding the optimal decomposition of the gate as a standalone operator.
+
+Consider the operator Schmidt decomposition of $V_{ab}$:
+\begin{equation}
+V_{ab} = \sum_{i} \lambda_i R_{a, i} \otimes S_{b, i},
+\end{equation}
+where $R_{a, i}$ ($S_{b, i}$) are orthonormal set of operators in the Hilbert-Schmidt inner product, i.e. $\text{tr}(R_{a, i}^{\cal y} R_{a, j}) = \text{tr}(S_{a, i}^{\cal y} S_{b, j}) =  \delta_{ij}$. The Schmidt singular values $\lambda_1 \geq \lambda_2 \geq \ldots$ are in decreasing order. Then it follows that the solution of Eq.~(\ref{optimization33}) is $\lambda_1$, with optimal solution $M_a = R_{a, 1}$ and $N_b = S_{b, 1}$. Indeed we can write Eq.~(\ref{optimization33}) as 
+\begin{equation}
+\max_{ |x \rangle, |y \rangle  }   \langle x |  \overline{V} |y \rangle
+\end{equation}
+where the maximum is over all unit vectors $|x \rangle, |y \rangle$ in $(\mathbb{C}^2)^{\otimes 2}$ and $\overline{V}$ is the matrix 
+\begin{equation}
+\overline{V} := \sum_i \lambda_i (R_{a, i} \otimes I)|\Phi \rangle \langle \Phi | (S_{b, i}^{\cal y} \otimes I)
+\end{equation}
+with $| \Phi \rangle = \sum_{i} |i \rangle \otimes |i \rangle$. This can be verified using the fact that any unit vector $| x \rangle$ in $(\mathbb{C}^d)^{\otimes 2}$ can be written as $|x\rangle = (L \otimes I) |\Phi \rangle$ for a matrix $L$ acting on $(\mathbb{C}^d)$ s.t. $\Vert L \Vert_2 = 1$. The result follows by noting that $\lambda_i $ are the singular values of $\overline{V}$. 
+
+The argument above easily generalizes to the problem of finding the optimal operator of Schmidt rank $k$ for replacing the unitary gate. In that case the optimal choice is $\sum_{i=1}^k \lambda_i R_{a, i} \otimes S_{b, i}$.\\
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.5cm]{figures/sup_classical_simul/p_delta_theta.pdf}
+    \caption{\textbf{Probability distribution of the deviations $|\delta_\theta|$ from $\theta\approx \pi/2$ for $\rm fSim$ gates.} The magnitude of $\delta_\theta$ is directly related to the runtime speedup low fidelity classical sampling can take from exploiting the existence of paths with large Schmidt coefficients. In practice, $|\delta_\theta|\approx 0.05$ radians on average, which imposes a bound of less than an order of magnitude on this potential speedup for the circuits, gates, and simulation techniques considered in this work.}
+    \label{fig:p_delta_theta}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.5cm]{figures/sup_classical_simul/schmidt_speedups.pdf}
+    \caption{\textbf{Classical speedup given by the imbalance in the Schmidt coefficients of the gates decomposed.} The speedup is computed by comparison with the case where $\theta=\pi/2$ exactly. The classical simulation has a target fidelity $\mathcal{F}$, and $g$ {\rm fSim} gates are decomposed. For simplicity, we assume $\theta = \pi/2 + \delta_\theta$ is the same for all gates, as well as $\phi=\pi/6$. \emph{Left:} speedup at different target fidelities for fixed $g=35$. Note that the speedup decreases with $\mathcal{F}$; this is due to the fact that at very low fidelity, considering a few paths with very high weight might be enough to achieve the target fidelity, while for larger values of $\mathcal{F}$, paths with a smaller weight have to be considered, and so a larger number of them is needed per fractional fidelity increase. \emph{Right:} speedup for fixed fidelity $\mathcal{F}=0.001$ for different values of $g$. As expected, the speedup is greater as $g$ increases, since the weight of the highest contributing paths increases exponentially with $g$. The largest speedup is achieved at large $g$ and small $\mathcal{F}$. For $g=35$ and $\mathcal{F}\gtrapprox 0.001$, we find speedups well below an order of magnitude, given that $|\delta_\theta|\approx 0.05$ radians in practice (shaded area); this case is representative of our simulation of Sycamore with $m=20$ (see Section~\ref{subsec:sa_sfa}) targeting the fidelity measured experimentally.}
+    \label{fig:schmidt_speedups}
+\end{figure}
+
+\subsubsection{Classical speedup for imbalanced gates}
+
+We now want to analyze the Schmidt spectrum of the two-qubit gates used in this work. The $\rm fSim(\theta, \phi)$ gate is introduced in Section~\ref{subsec:quantum_gates}. This gate, which is presented in matrix form in Eq.~(\ref{eq:fsim}), has the following Schmidt singular values:
+\begin{align}
+  \label{eq:singular_values}
+  \lambda_1 &= \sqrt{1 + 2 \cdot |\cos(\phi/2) \cos \theta| + \cos^2 \theta} \\ 
+  \lambda_2 = \lambda_3 &= \sin \theta \\
+  \lambda_4 &= \sqrt{1 - 2 \cdot |\cos(\phi/2) \cos \theta| + \cos^2 \theta} \;,
+\end{align}
+where normalization is chosen so that $\sum_i^4 \lambda_i^2 = 4$. In practice, we have $\theta\approx \pi/2$ and $\phi\approx \pi/6$, and so we obtain $\lambda_i\approx 1$, $\forall i\in \{1, 2, 3, 4\}$, which gives a flat spectrum.
+
+In the case that $\theta=\pi/2\pm\delta_\theta$, the spectrum becomes imbalanced, as expected. When considering the decomposition of a number $g$ of $\rm fSim(\pi/2\pm\delta_\theta, \phi\approx \pi/6)$ gates, the set of weights of all paths is equal to the outer product of all sets of Schmidt coefficients (one per gate). Achieving a fidelity $\xebfidelity>0$ implies (in the optimal case) including the largest contributing paths, and so the advantage one can get from this is upper bounded by the magnitude of the largest weight, which is equal to $\prod^g_{\alpha=1} \lambda^2_{\alpha, max}$, where $\alpha$ labels the gates decomposed and $\lambda_{\alpha, max}$ is the largest Schmidt coefficient for gate $\alpha$. In practice, $|\delta_\theta|$ has values of around 0.05 radians (see Fig.~\ref{fig:p_delta_theta}). The geometric mean of $\lambda_{max}$ is about 1.047, which gives an upper bound of $1.047^{2g}$ to the speedup discussed here. For the largest value of $g$ considered in this work, \emph{i.e.}, the decomposition of $g=35$ gates using the SFA simulator (Section~\ref{subsec:sa_sfa}) on a circuit of $m=20$ cycles, we obtain a value of $1.047^{2\times35}=25.4$. Note that the speedup obtained in practice (as compared to runtimes over circuits with perfectly flat gate Schmidt decompositions) for fidelities of the order of $0.1\%$ and larger is expected to be far smaller than this value, given that one has to consider a large number of paths, from which only an exponentially small number will have a weight close to 25.4.
+
+We can get a better estimate for the speedup achieved in practice, beyond the upper bound of about a factor of 25 that decomposing $g=35$ gates with typical parameters would give. For simplicity, let us assume that all $g$ gates have the same values of $\theta$ and $\phi$. Then the weight of each path arising from this decomposition can be written as $W_{i} = W_{(a, b, c)} = \lambda_1^{2a}\lambda_2^{2b}\lambda_3^{2c}$, where $a+b+c=g$, and that the number of paths for each choice of $(a, b, c)$ is equal to $\#(a, b, c) = \sum_{k=0}^{b} {\rm multinomial}(a, b-k, k, c) = 2^b \times {\rm multinomial}(a, b, c)$. After sorting all $4^g$ weights (and paths) by decreasing value, given a target fidelity, $\mathcal{F}$, one now has to consider the first $S$ paths (\emph{i.e.}, those with the largest weight), up to the point where the sum of their weights $\sum_{i=1}^S \frac{W_i}{4^g}$ matches the target fidelity. The normalization factor $4^g$ guarantees that if one were to consider all paths, the fidelity would be unity, as expected. Compared to the case where we consider a number $\mathcal{F}\times 4^g$ of paths, as for a flat Schmidt spectrum, this provides a speedup equal to $\frac{S}{\mathcal{F}\times 4^g}$. We show the speedup achieved this way in Fig.~\ref{fig:schmidt_speedups}. For the case where we would achieve the largest speedup in the simulations considered in this work, namely the simulation of Sycamore at $m=20$ cycles and a fidelity $\mathcal{F}\approx 0.2\%$ with $g=35$ gates decomposed (see Section~\ref{subsec:cost_estimation}), we estimate that the speedup obtained this way would be well below an order of magnitude, since $|\delta_\theta|$ typically takes values of about $0.05$ radians.
+
+\subsubsection{Verifiable and supremacy circuits}
+\label{subsec:verifiable_and_supremacy}
+
+So far we have considered the decomposition of gates one by one, \emph{i.e.}, where the total number of paths is equal to the product of the Schmidt rank of all gates decomposed. However, by fusing gates together in a larger unitary, one can provide some speedup to the classical simulation of the sampling task.
+
+The rationale here comes from the realization that a unitary that involves a number of qubits $q$ cannot have a rank larger than $4^{\min(q_l, q_r)}$ when Schmidt decomposed  over two subsets of qubits of size $q_l$ and $q_r$, with $q_l+q_r=q$. Therefore one might reduce exponentially the number of paths by fusing gates such that the resulting unitary reaches on either side ($l$ or $r$) a number of qubits that is smaller than the product of the ranks of the fused gates to be decomposed. This is at the heart of the formation of \emph{wedges} of Section~\ref{sec:wedge_formation}. These wedges denote particular sequences of consecutive two-qubit gates that only act upon three qubits. Fusing these two-qubit gates together generates 4 paths, as opposed to a naive count of $4^2$ paths if one decomposes each gate separately. Each wedge identified across a circuit cut provides a speedup by a factor of $4$.
+
+In this work, we define two classes of circuits: \emph{verifiable} and \emph{supremacy} circuits. Verifiable circuits present a large number of wedges across the partition used with the SFA simulator (Section~\ref{subsec:sa_sfa}) and are therefore classically simulatable in a reasonable amount of time. These circuits were used to perform full XEB over the entire device up to depth $m=14$ (see Fig.~4a of the main article and Sections~\ref{sec:circuits}~and~ \ref{sec:large_scale_xeb}), which involves perfect fidelity computations. On the other hand, supremacy circuits are designed so that the presence of wedges and similar sequences is mitigated, therefore avoiding the possibility of exploiting this classical speedup.
+
+It is natural to apply the ideas presented here beyond \emph{wedges}. It is also easy to look for similar structures in the circuits algorithmically. This way, we find that for the supremacy circuits there is a small number of such sequences. On the sequence of cycles DCD (see Fig.~\ref{fig:gate_patterns}), three two-qubit gates are applied on qubits 16, 47, and 51 (see Fig.~\ref{fig:qubit_order} for numbering). These three gates can be fused in one. Then, if the two gates between qubits 47 and 51 are decomposed (as is done with the SFA simulations of Section~\ref{subsec:sa_sfa} used in Fig.~4 of the main article), this technique provides a speedup of a factor of 4. The sequence of layouts DCD appears twice for circuits of $m=20$, which provides a total speedup of $4^2=16$ in the simulation of the supremacy circuits. This particular decomposition is currently not implemented, and the estimated timings of Section~\ref{subsec:sa_sfa} and Fig.~4 of the main article do not take it into account.
+
+Beyond this, one has to go to groups of several cycles of the circuit (more than two) in order to identify regions where the fusion of several gates provides any advantage of this kind. In our circuits, the resulting unitaries act upon a large number of qubits, which makes explicitly building the unitary impractical.\
+
+
+\subsection{Treewidth upper bounds and variable elimination algorithms}
+\label{subsec:treewidth}
+We explained in Section~\ref{subsec:fa} that the Feynman method to compute individual amplitudes of the output of a quantum circuit can be implemented as a tensor network when quantum gates are interpreted as tensors. All indexes of the tensor network have dimension two because indexes correspond to qubits.
+Similarly, Ref.~\cite{Boi17} showed that a quantum circuit can be mapped directly to an undirected graphical model. In the undirected graphical model, vertices or variables correspond to tensor indexes, and cliques correspond to tensors. Individual amplitudes can be computed using a variable elimination algorithm on the undirected graphical model, which is similar to a tensor contraction on a tensor network. The variable elimination algorithm depends on the ordering in which variables are eliminated or contracted. If we define the \emph{contraction width} of an ordering to be the rank of the largest tensor formed along the contraction, the \emph{treewidth} of the undirected graph is equal to the minimum contraction width over all orderings. Therefore, the complexity of a tensor network contraction grows in the optimal case exponentially with the treewidth, and the treewdith can be used to study the complexity of Feynman methods for simulating quantum circuits~\cite{MS08}. Ref.~\cite{Boi17} showed that for diagonal gates the undirected graphical model is simpler, potentially lowering its treewidth, and hence improving the complexity. This simplification is not achievable in the tensor network view without including hyperedges, \emph{i.e.}, edges attached to more than two tensors. Ref.~~\cite{Boi17} also introduced the use of {\tt QuickBB} to find a heuristic contraction ordering~\cite{gogate2004complete}. If allowed to run for long enough, {\tt QuickBB} finds the optimal ordering, together with the treewidth of the graph. However, note that obtaining the treewidth of a graph is an NP-hard problem, and so in practice a suboptimal solution is considered for the simulations described here.\\
+
+Once the width of a contraction is large enough, the largest tensor it generates is beyond the memory resources available. This constraint was overcome in Ref.~\cite{chen2018classical} by \emph{projecting} a subset of $p$ variables or vertices in the undirected graphical model into each possible bistring of 0 and 1 values. This generates $2^p$ similar subgraphs, each of which can be contracted with lower complexity and independently from each other, making the computation embarrassingly parallelizable. Choosing the subset of variables that, after projection, optimally decreases the treewidth of the resulting subgraph is also NP-hard. However, Ref.~\cite{chen2018classical} developed a heuristic approach that works well in practice. The algorithm proceeds as follows:
+
+\begin{enumerate}
+    \item Run {\tt QuickBB} for $S$ seconds on the initial graph. This gives a heuristic contraction ordering, as well as an upper bound for the treewidth.
+    \item For each variable, estimate the cost of contracting the subgraph after projection. The estimate is done with the ordering inherited from the previous step.
+    \item Choose to project the variable which results in the minimum contraction cost. 
+    \item Repeat steps 2 and 3 until the cost is within reasonable resources.
+    \item Once all variables have been chosen and projected, run {\tt QuickBB} for $S$ seconds on the resulting subgraph to try to improve the contraction ordering inherited from step 1 and lower the contraction cost.
+\end{enumerate}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.\columnwidth]{figures/sup_classical_simul/projections.pdf}
+    \includegraphics[width=1.\columnwidth]{figures/sup_classical_simul/runtimes.pdf}
+    \caption{\textbf{Contraction widths and estimated runtimes for classical sampling using the variable elimination algorithm with projected variables of Ref.~\cite{chen2018classical} for Sycamore supremacy circuits.} \emph{Top:} contraction width as a function of the number of variables projected using the algorithm of Ref.~\cite{chen2018classical}. We project enough variables in order to decrease the width to 28 or lower. Note that often the second {\tt QuickBB} run does not decrease the treewidth (and might even increase it), in which case the resulting contraction ordering it is ignored. \emph{Bottom:} estimated runtimes for the classical sampling of 1M bitstrings from the supremacy circuits with fidelity $0.5\%$ using the contraction ordering found by {\tt QuickBB} at the end of the projection procedure shown in the top panel. The red data point shows the estimated runtime for a verifiable circuit; note that the heuristic algorithm analyzed here provides some speedup in this case. Our time estimates assume the use of fast sampling, although it is so far unclear whether this technique can be adapted to the algorithm described here. Failure to do so would result in a slowdown of about an order of magnitude.}
+    \label{fig:projection}
+\end{figure}
+
+In the top panel of Fig.~\ref{fig:projection} we show the contraction width as a function of the number of variables that are projected for the supremacy circuits used in this paper. In order to decrease the contraction width to 28 or below (a tensor with 28 binary indexes consumes 2 GB of memory using single precision complex numbers), we need to project between 8 and 63 variables, depending on the depth of the circuits. In addition, we report the result of the projection procedure on the Bristlecone circuits considered in Refs.~\cite{villalonga2019flexible,zhang2019alibaba} and available at \url{https://github.com/sboixo/GRCS} for depths (1+32+1) and (1+40+1), since these cases were benchmarked in Ref.~\cite{zhang2019alibaba}. We obtain a contraction width equal to 28 after 10 projections for Bristlecone at depth (1+32+1), and width 26 after 22 projections for Bristlecone at depth (1+40+1), consistent with the results in  Ref.~\cite{zhang2019alibaba}. Even though Ref.~\cite{chen2018classical} uses $S=60$, we run {\tt QuickBB} for 1800 seconds (30 minutes) every time, in order to decrease the contraction width of the Bristlecone simulations to values that match the memory requirements reported in Ref.~\cite{zhang2019alibaba}. Note that Ref.~\cite{zhang2019alibaba} neither reports the value of $S$ used nor the contraction widths found; however, with $S=1800$ we are able to match the scaling of time complexity reported, as is explained below.
+
+To estimate the runtime of the computation of a single amplitude using this algorithm on the circuits presented in this work, we use the following scaling formula:
+\begin{align}
+    T_{\text{VE}} = C_{\text{VE}}^{-1} \cdot 2^p \cdot (\text{cost after } p \text{ projections}) / n_{\text{cores}}\text{,}
+\end{align}
+where VE refers to the variable elimination algorithm with projections described in this section, $C_{\text{VE}}$ is a constant factor, $p$ is the number of variables projected, and $n_{\text{cores}}$ is the number of cores used in the computation. The cost of the full contraction of each subgraph is estimated as the sum of $2^\text{rank}$, where the rank refers to the number of variables involved in each individual contraction along the full contraction of the subgraph. We obtain the value of $C_{\text{VE}}$ from the runtimes reported in Ref.~\cite{chen2018classical}, which shows that a single amplitude of Bristlecone at depth (1+32+1) takes 0.43 seconds to compute on 127,512 CPU cores with 10 projected variables, and at depth (1+40+1) it takes 580.7 seconds with 22 projected variables using the same number of cores. We use the benchmark at depth (1+32+1) because it provides the largest value for $C_{\text{VE}}$ (lowest time estimates), which is equal to 52.7 MHz; the benchmark at depth (1+40+1) gives $C_{\text{VE}} = 51.6$ MHz. In order to sample 1M bitstrings from a random circuit with fidelity $0.5\%$, we need to compute 5000 amplitudes. 
+
+We present our estimates for Sycamore supremacy circuits in the bottom panel of Fig.~\ref{fig:projection}. Note that depth (1+40+1) in Refs.~\cite{chen2018classical,zhang2019alibaba} is equivalent to m=20 cycles here because of the denser layout of two-qubit gates. Furthermore, computation times reported previously are for circuit variations less complex than for Sycamore, arising from changes in complexity such as {\rm CZ} vs. {\rm fSim} gates and differing patterns; with this change of gates, depth (1+40+1) in Refs.~\cite{chen2018classical,zhang2019alibaba} is actually equivalent to m=10 cycles here. Finally, note that we present optimistic estimates, since we are assuming that the fast sampling technique discussed in Section~\ref{subsec:fa} is applicable here. To the best of our knowledge, it is not known how to apply this technique for the heuristic variable elimination algorithm discussed here; in the absence of an implementation of this technique, in order to successfully apply rejection sampling we would instead need to compute a few independent amplitudes per sampled bitstring, which would increase the estimated times by about an order of magnitude (see Section~\ref{subsec:fa} and Refs.~\cite{markov_quantum_2018,chen2019quantum} for more details). According to our estimates, sampling from supremacy circuits at $m=16$ and beyond is out of reach for this algorithm. Interestingly, we find some speedup for the simulation of verifiable circuits, as is shown in Fig.~\ref{fig:projection} for $m=16$ (red data point).\\
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.\columnwidth]{figures/sup_classical_simul/gates.pdf}
+    \includegraphics[width=0.9\columnwidth]{figures/sup_classical_simul/variables.pdf}
+    \caption{\textbf{Circuit with Sycamore gates (top) and its corresponding undirected graphical model (bottom).} Each non-diagonal single-qubit gate introduces a new vertex or variable. Note that, even though two-qubit gates are generally represented by a clique with four vertices or variables, Sycamore gates can be simplified as a cphase followed by a SWAP. The cphase is represented as an edge between two existing variables. The SWAP, however, provides more complexity to the graph as it swaps the corresponding variables.}
+    \label{fig:variable_graph}
+\end{figure}
+
+Finally, note that the undirected graphical model derived from the supremacy circuits can take advantage of the structure of the Sycamore gates ({\rm fSim} plus single-qubit ${\rm R_z}$ rotations). Due to the fact that ${\rm fSim(\theta\approx\pi/2, \phi)} \approx -i\cdot[{\rm R_z (-\pi/2) \otimes R_z(-\pi/2)}]\cdot{\rm cphase(\pi+\phi)}\cdot{\rm SWAP}$, the Sycamore gate corresponds to a subgraph of only two variables, which explicitly represents the diagonal {\rm cphase} and the logical {\rm SWAP}. This simplification, used in our estimates, results in an undirected graphical model that is simpler than that one generated by arbitrary two-qubit gates. See Fig.~\ref{fig:variable_graph} for an example.
+
+
+\subsection{Computational cost estimation for the sampling task}
+\label{subsec:cost_estimation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.5cm]{figures/sup_classical_simul/q53d20_job_times_n1standard2_t2_prefix30.pdf}
+    \caption{Qsimh execution time for a 53 qubit circuit with 20 cycles for the first 1000 prefix values.  The average job time $\avg{t_\text{prefix}}$ is calculated to be 246 seconds.}
+    \label{fig:gcp_simulation_distribution}
+\end{figure}
+We find that the most efficient simulator for our hardest circuits is the SFA simulator (see Sec. \ref{subsec:sa_sfa}). In order to estimate the computational cost associated with simulating a 53 qubit circuit with 20 cycles, where no gates are elided on the cut, we use a Google cloud cluster composed of 1000 machines with 2 vCPUs and 7.5 GB of RAM each (n1-standard-2).  We use n1-standard-2 because this is the smallest non-custom machine with sufficient RAM for simulating the two halves of the circuit.  In 20 cycles, the circuit contains 35 gates across the cut.  All cross gates have a Schmidt rank of 4 except for the last four gates which can be simplified to $\rm cphase$ with a Schmidt rank of 2.  To obtain a perfect fidelity simulation we would need to simulate all $4^{31} \times 2^{4}$ paths.   We configure qsimh according to Ref.~\cite{markov_quantum_2018} to have a prefix of  30 cross gates, thus requiring $4^{30}$ separate qsimh runs. The first 1000 paths of the required $4^{30}$ were used for timing purposes.  In Figure~\ref{fig:gcp_simulation_distribution} we plot the distribution of simulation times with qsimh consuming two hyperthreads.  The average job time is 246 seconds resulting in a calculated $1.6\times10^{14}$ core hours for a simulation of the circuit with 0.002 fidelity \cite{Note1}. Extrapolated run times for other circuits with 53 qubits are shown in Table \ref{table:qsimhruntimes}. To calculate a total cost for the largest circuit we multiply the Google Cloud preemptible n1-standard-2 price in zone us-central-1 of \$0.02 per hour, 246 seconds average run time, 0.002 target fidelity, and $4^{30}$ qsimh runs.  This results in an estimated cost of 3.1 trillion USD. For perfect fidelity simulations (necessary for XEB), an extrapolation to a fidelity value of 100\% gives a good estimate of the run time. We believe these estimates are a lower bound on costs and simulation time due to the fact that these calculations are likely to compete with each other if they are run on the same nodes.
+
+As a final remark, note that a hypothetical implementation of the decomposition discussed at the end of Section~\ref{subsec:verifiable_and_supremacy} could decrease the computation time presented here by a factor of 16.
+
+\begin{table}
+\begin{tabular}{| r | r | r | r | r |}
+\hline
+qubits, $n$ & cycles, $m$ & total \#paths & fidelity & run time \\
+\hline
+53 & 12 & $4^{17} 2^4$ & 1.4\% & 2 hours \\
+\hline
+53 & 14 & $4^{21} 2^4$ & 0.9\% & 2 weeks \\
+\hline
+53 & 16 & $4^{25} 2^3$ & 0.6\% & 4 years \\
+\hline
+53 & 18 & $4^{28} 2^3$ & 0.4\% & 175 years \\
+\hline
+53 & 20 & $4^{31} 2^4$ & 0.2\% & 10000 years \\
+\hline
+\end{tabular}
+\label{table:qsimhruntimes}
+\caption{Approximate qsimh run times using one million CPU cores extrapolated from the average simulation run time for 1000 simulation paths on one CPU core.}
+\end{table}
+
+
+\subsection{Understanding the scaling with width and depth of the computational cost of verification}
+\label{subsec:scaling}
+
+
+\subsubsection{Runtime scaling formulas}
+\label{subsec:scaling_formulas}
+
+Here we study the scaling of the runtime of the classical computation of exact amplitudes from the output wave function of a circuit with $m$ cycles and $n$ qubits on Sycamore, assuming a supercomputer with 1M cores. This computation is needed in order to perform XEB on the circuits run. We consider two algorithms: a distributed Schr\"odinger algorithm (SA)~\cite{RAED07x,RAED19a} (see Section~\ref{subsec:sa_simulator}) and a hybrid Schr\"odinger-Feynman algorithm (SFA)~\cite{markov_quantum_2018} that splits the circuit in two patches and time evolves each of them for all Feynman paths connecting both patches (see Section~\ref{subsec:sa_sfa}). The latter is embarrassingly parallelizable. Note that these scaling formulas provide rough estimates presented with the intent of building intuition on the scaling of runtimes with the width and depth of the circuits, and that the finite size effects of the circuits can give discrepancies of an order of magnitude or more for the circuit sizes considered in this work.\\
+
+For SA, the runtime is directly proportional to the size of the wave function on $n$ qubits. This is equal to $2^n$. In addition, the runtime is proportional to the number of gates applied, which scales linearly with $n$ and $m$. For this reason, we propose the scaling:
+\begin{align}
+\label{eq:scaling_sa}
+    T_{\text{SA}} = C_{\text{SA}}^{-1} \cdot m n \cdot 2^{n} \text{,}
+\end{align}
+where the constant $C_{\text{SA}}$ is fit to runtimes observed experimentally when running on a supercomputer, and scaled to 1M cores.
+\\
+
+For SFA the runtime is proportional to the number of paths connecting both patches, as well as to the time taken to simulate each pair of patches. When using the \emph{supremacy} two-qubit gate layouts (ABCDCDAB\ldots), each {\rm fSim} gate bridging between the two patches (cross-gates) generates a factor of 4 in the number of paths. The number of cross-gates scales with $\sqrt{n}$ (we assume a two-dimensional grid) and with $m$. The time taken to simulate each patch is proportional to $2^{n/2}$, where $n/2$ estimates the number of qubits per patch, and the exponential dependence comes from a linear scaling of the runtime with the size of the wave function over that patch. The runtime therefore scales as:
+\begin{align}
+\label{eq:scaling_sfa_supremacy}
+    T_{\text{SFA, supremacy}} = C_{\text{SFA}}^{-1} \cdot 2 \cdot 2^{n \over 2} \cdot 4^{B \cdot m \sqrt{n}} \text{,}
+\end{align}
+where the extra factor of two accounts for the fact that, for every path, two patches have to be simulated. The constant $C_{\text{SFA}}$, with units of frequency, is the effective frequency with which 1M cores simulate paths and is fit from experimentally observed runtime. The constant $B$ accounts for the average number of cross-gates observed per cycle, which depends on the two-dimensional grid considered and on the two-qubit gate layouts used. For Sycamore, with the supremacy layouts, we find 35 cross-gates for $n=53$ and $m=20$, which gives $B=0.24\approx 1/4$.
+
+For SFA, using the \emph{verifiable} two-qubit gate layouts (EFGHEFGH\ldots), the main difference with the supremacy circuits case is the fact that most of the cross-gates can be fused in pairs, forming three-qubit gates we refer to as \emph{wedges} (see Sec.~\ref{sec:wedge_formation} and \ref{subsec:verifiable_and_supremacy}). Each cross-wedge generates only 4 paths, as opposed to the $4^2$ paths the two independent {\rm fSim} gates would have generated. Since every 4 cycles provide 7 cross-gates, and from those 7 gates, 6 are converted into 3 wedges, we count only $4^4$ paths, as opposed to a naive count of $4^7$ for those 4 cycles. In turn, the exponent in the last factor of Eq.~\ref{eq:scaling_sfa_supremacy} is corrected by the fraction $4 \over 7$. This results in:
+\begin{align}
+\label{eq:scaling_sfa_verifiable}
+    T_{\text{SFA, verifiable}} = C_{\text{SFA}}^{-1} \cdot 2 \cdot 2^{n \over 2} \cdot 4^{{4\over 7} B \cdot m \sqrt{n}} \text{.}
+\end{align}
+
+
+\subsubsection{Assumptions and corrections}
+\label{subsec:assumptions}
+
+There are several assumptions considered in Section~\ref{subsec:scaling_formulas} and other details that can either (1) contribute to a somewhat large discrepancy between the runtimes predicted by the scaling formulas and the actual runtimes potentially measured experimentally, or (2) be ignored with no significant impact on the accuracy of the predictions. Here we discuss the ones we consider most relevant.\\
+
+Concerning SA, the algorithm is benchmarked in practice on up to 100K cores. Since this is a distributed algorithm, the scaling with number of cores is not ideal and therefore the constant $C_{\text{SA}}$ can only be estimated roughly. We assume perfect scaling in our estimates for runtime on 1M cores, \emph{i.e.}, the runtime on 1M cores is the one on 100K cores divided by 10; this is of course an optimistic estimate, and runtimes should be expected to be larger.
+
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=7.0in]{figures/sup_classical_simul/computational_cost_crop.pdf}
+    \caption{\textbf{Scaling of the computational cost of XEB using SA and SFA.} \textbf{a,} For a Schr\"{o}dinger algorithm, the limitation is RAM size, shown as vertical dashed line for the Summit supercomputer.  Circles indicate full circuits with $n=12$ to 43 qubits that are benchmarked in Fig.~4a of the main paper \cite{arute2019}.  53 qubits would exceed the RAM of any current supercomputer, and is shown as a star.  \textbf{b,} For the hybrid Schr\"{o}dinger-Feynman algorithm, which is more memory efficient, the computation time scales exponentially in depth. XEB on full verifiable circuits was done at depth $m=14$ (circle). \textbf{c,} XEB on full supremacy circuits is out of reach within reasonable time resources for $m=12$, 14, 16 (stars), and beyond. XEB on patch and elided supremacy circuits was done at $m=14$, 16, 18, and 20.}
+    \label{fig:scaling}
+\end{figure*}
+
+For memory requirement estimates, we assume a 2 byte encoding of complex numbers. Beyond about 49 qubits there is not enough RAM on any existing supercomputer to store the wave function. In those cases, runtimes are given for the unrealistic, hypothetical case that one \emph{can} store the wave function.\\
+
+SFA is embarrassingly parallelizable, and so it does not suffer from non-ideal scaling. However, there are other factors to take into account. First, we have written no explicit dependence of the time to simulate patches of the circuit with $m$; the number of cycles $m$ only plays a role when counting the number of paths to be considered. SFA stores several copies of the state of a patch after its evolution at different depths, iterating over paths over several nested loops. For this reason, most of the time is spent iterating over the inner-most loop, which accounts for the last few gates of the circuit and is similar in cost for all depths. This implies that the amortized time per path is considered approximately equal for all depths and the direct $m$ dependence was correctly ignored.
+
+A factor contributing to the discrepancy between the predicted runtimes of the scaling formulas of Section~\ref{subsec:scaling_formulas} and those expected in practice is due to finite size effects. While these scaling formulas consider the average number of cross-gates encountered per cycle, different cycles have layouts that contribute a few more (or less) gates than others. Since the runtime dependency is exponential in the number of gates, this might cause discrepancies of around an order of magnitude. Furthermore, for verifiable circuits, wedges form over groups of two cycles; this coarse graining exacerbates finite size effects. For the sake of simplicity in the scaling formulas, we do not perform any corrections to include these factors. However, in order to mitigate the propagation of finite size effect errors, we consider different constants $C_{\text{SFA, supremacy}}$ and $C_{\text{SFA, verifiable}}$, that we fit independently.
+
+Finally, we refer to runtimes of our simulations on a hypothetical supercomputer with 1M cores. While this is a realistic size for a Top-5 supercomputer currently, a core-hour can vary significantly between different CPU types. Again, we only intend to provide rough estimates in order to build intuition on the dependence of runtimes with circuit width and depth.
+
+
+\subsubsection{Fitting constants}
+\label{subsec:fitting}
+
+In the case of SA, we fit the constant $C_{\text{SA}}$ with a runtime of 0.1 hours for the simulation with $n=43$ and $m=14$. This runtime is obtained by assuming ideal scaling when extrapolating a runtime of 1 hour on nearly 100K nodes ($2^{15}$ MPI processes, 3 cores per process), as reported in Sec.~\ref{subsec:sa_simulator}. This gives a value of
+\begin{align}
+\label{eq:fit_sa}
+    C_{\text{SA}} = 0.015 \times 10^{6} \text{ GHz.}
+\end{align}
+\\
+
+For SFA, we consider $B=1/4$ for simplicity. In order to fit $C_{\text{SFA}}$, we consider a runtime of 5 hours and 4 years for the case with $n=53$ and $m=14$ for verifiable and supremacy circuits, respectively (see Fig.~4 of the main text). This gives:
+\begin{align}
+\label{eq:fit_sfa}
+    C_{\text{SFA, verifiable}} = 0.0062 \times 10^{6} \text{ GHz} \nonumber \\
+    C_{\text{SFA, supremacy}} = 3.3 \times 10^{6} \text{ GHz.}
+\end{align}
+As discussed above, these fits provide times estimated for a supercomputer with 1M cores. Contour plots showing the dependency of runtime with $n$ and $m$ are presented in Fig.~\ref{fig:scaling}. 
+
+
+\subsubsection{Memory usage scaling}
+\label{subsec:memory}
+
+Let us conclude with a discussion of the memory footprint of both algorithms. For these estimates, we assume a 2-byte encoding of complex numbers, as opposed to 8 bytes (single precision) or 16 bytes (double precision). This results in a lower bound for the memory usage of these two algorithms. These estimates need an extra factor of 4 (8) when using single (double) precision. SA stores the wave function of the state on all qubits. For this reason, it needs $2^n \times 2 = 2^{n+1}$ bytes. SFA simulates the wave function of both halves of the system ($n/2$ qubits) per path, one at a time. This requires $2^{n\over 2} \cdot 2$ bytes per path. In practice, the use of checkpoints implies the need to store more than one wave function per path; for simplicity, and in the same optimistic spirit of other assumptions, we ignore this fact. If 1M cores are used and each path is simulated using a single core, the total memory footprint is estimated to be $10^{6} \times 2^{{n\over 2} + 1}$ bytes. State-of-the-art supercomputers have less than 3~PB of memory.
+
+
+\subsection{Energy advantage for quantum computing}
+\label{sec:energy_advantage}
+
+With the end of Dennard scaling for CMOS circuits, gains in computing energy efficiency have slowed significantly \cite{koomey2016}.  As a result, today's high performance computing centers are usually constrained by available energy supplies rather than hardware costs. For example, the Summit supercomputer at Oak Ridge National Laboratory has a total power capacity of 14 MW available to achieve a design specification of 200 Pflop/s double-precision performance.  We took detailed energy measurements with qFlex running on Summit. The energy consumption grows exponentially with the circuit depth, as illustrated in Table~\ref{table:qflex_runs}.
+
+For a superconducting quantum computer, the two primary sources of energy consumption are: 
+\begin{enumerate}
+\item \textbf{A dilution refrigerator:} our refrigerator has a direct power consumption of $\sim$10~kW, dominated by the mechanical compressor driving the 3~K cooling stage.  The power required to provide chilled water cooling for the compressor and pumps associated with the refrigerator can be an additional 10~kW or more.
+\item \textbf{Supporting electronics:} these include microwave electronics, ADCs, DACs, clocks, classical computers, and oscilloscopes that are directly associated with a quantum processor in the refrigerator.  The average power consumption of supporting electronics was nearly 3~kW for the experiments in this paper.
+\end{enumerate}
+
+We estimate the total average power consumption of our apparatus under worst-case conditions for chilled water production to be 26~kW.  This power does not change appreciably between idle and running states of the quantum processor, and it is also independent of the circuit depth.  This means that the energy consumed during the 200~s required to acquire 1M samples in our experiment is $\sim5\times10^6$~J ($\sim1$~kWh).  As compared to the qFlex classical simulation on Summit, we require roughly 7 orders of magnitude less energy to perform the same computation (see Table~\ref{table:qflex_runs}).  Furthermore, the data acquisition time is currently dominated by control hardware communications, leading to a quantum processor duty cycle as low as 2\%.  This means there is significant potential to increase our energy efficiency further.

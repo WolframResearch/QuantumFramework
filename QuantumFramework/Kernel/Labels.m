@@ -7,6 +7,7 @@ PackageScope["expandLabel"]
 PackageScope["collectLabel"]
 PackageScope["labelList"]
 PackageScope["sortLabel"]
+PackageScope["resetState"]
 
 
 
@@ -76,14 +77,32 @@ sortLabel[label_, order_] := collectLabel @ With[{subLabels = labelList[label]},
 ]
 
 
+(* The state a "Reset"[...] operator leaves on its wires, with its qudits in the order of
+   qo["Sort"]["OutputOrder"] (increasing wires), the same order qo["Matrix"] uses. Applied to no
+   input, an operator on wires {w} gives a state on wires 1..w, so the sorted operator is first
+   moved onto wires 1..k for its k wires. A pure state is returned as its vector, a mixed one as
+   is; either carries the label the reset names, so a circuit rebuilt from its shortcut keeps a
+   named reset. *)
+resetState[qo_QuantumOperator] := With[{
+    state = QuantumOperator[qo["Sort"], Range[Length[qo["OutputOrder"]]]][],
+    label = Replace[qo["Label"], {"Reset"[l_] :> l, _ -> None}]
+},
+    QuantumState[
+        If[state["PureStateQ"], QuantumState[state["StateVector"], state["OutputDimensions"]], state],
+        "Label" -> label
+    ]
+]
+
 Options[QuantumShortcut] = {"Decompose" -> True}
 
+(* An operator given by its data (a reset's state, or a matrix) is passed on with the wires of
+   qo["Sort"], whose order the data is written in. *)
 QuantumShortcut[qo_QuantumOperator, OptionsPattern[]] := Replace[
     QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
     {
-        {"Reset" -> order_} :> {"Reset"[qo[]] -> order},
+        {"Reset" -> _} :> {"Reset"[resetState[qo]] -> qo["Sort"]["OutputOrder"]},
         _Missing /; TrueQ[OptionValue["Decompose"]] && qo["VectorQ"] && qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] && MatchQ[qo["Order"], {{_}, {_}}] :> QuantumShortcut[qo["ZYZ"]],
-        _Missing :> {Labeled[qo["Matrix"] -> qo["Order"], qo["Label"]]}
+        _Missing :> With[{sorted = qo["Sort"]}, {Labeled[sorted["StateMatrix"] -> sorted["Order"], qo["Label"]]}]
     }
 ]
 

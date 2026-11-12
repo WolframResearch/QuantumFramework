@@ -1,0 +1,501 @@
+\documentclass[%
+ reprint,
+%superscriptaddress,
+%groupedaddress,
+%unsortedaddress,
+%runinaddress,
+%frontmatterverbose, 
+%preprint,
+%preprintnumbers,
+%nofootinbib,
+%nobibnotes,
+%bibnotes,
+ amsmath,amssymb,
+ aps,
+%pra,
+%prb,
+%rmp,
+%prstab,
+%prstper,
+%floatfix,
+]{revtex4-2}
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage{braket}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage[inline]{enumitem}
+\setlist{nosep}
+\usepackage{amsmath,amssymb,amsfonts}
+
+\newcommand{\ER}[1]{\textcolor{red}{#1}}
+\newcommand{\ERnote}[1]{\textcolor{green}{#1}}
+
+\newif\ifoutline
+\outlinefalse  % outline
+
+\newcommand{\outline}[1]{
+    \ifoutline #1 \fi
+}
+\begin{document}
+\preprint{APS/123-QED}
+\title{Magic state cultivation on a superconducting quantum processor}
+\date{\today}
+\begin{abstract}
+Fault-tolerant quantum computing requires a universal gate set, but the necessary non-Clifford gates represent a significant resource cost for most quantum error correction architectures. Magic state cultivation offers an efficient alternative to resource-intensive distillation protocols; however, testing the proposal’s assumptions represents a challenging departure from quantum memory experiments. We present an experimental study of magic state cultivation on a superconducting quantum processor. We implement cultivation, including code-switching into a surface code, and develop a fault-tolerant measurement protocol to bound the magic state fidelity. Cultivation reduces the error by a factor of 40, with a state fidelity of 0.9999(1) (retaining 8\% of attempts). Our results experimentally establish magic state cultivation as a viable solution to one of quantum computing's most significant challenges.
+\end{abstract}
+\maketitle
+\onecolumngrid
+\begin{flushleft}
+{\small
+\renewcommand{\author}[2]{#1$^\textrm{\scriptsize #2}$}
+\renewcommand{\affiliation}[2]{$^\textrm{\scriptsize #1}$ #2 \\}
+
+\newcommand{\xGoogle}{\affiliation{1}{Google Research}}
+\newcommand{\xcorrespondemma}{\affiliation{*}{Corresponding author: emmarosenfeld@google.com}}
+\newcommand{\xcorrespondksatz}{\affiliation{**}{Corresponding author: ksatz@google.com}}
+\newcommand{\xNASA}
+{\affiliation{2}{QuAIL, NASA Ames Research Center, Mountain View, CA, USA}}
+\newcommand{\xUMass}{\affiliation{3}{Department of Electrical and Computer Engineering, University of Massachusetts, Amherst, MA}}
+\newcommand{\xUConnStorrs}{\affiliation{4}{Department of Physics, University of Connecticut, Storrs, CT}}
+\newcommand{\xAuburnECE}{\affiliation{5}{Department of Electrical and Computer Engineering, Auburn University, Auburn, AL}}
+\newcommand{\xUCSB}{\affiliation{6}{Department of Physics, University of California, Santa Barbara, CA}}
+
+\newcommand{\Google}{1}
+\newcommand{\NASA}{2}
+\newcommand{\UMass}{3}
+\newcommand{\UConnStorrs}{4}
+\newcommand{\AuburnECE}{5}
+\newcommand{\UCSB}{6}
+\newcommand{\correspondemma}{*}
+\newcommand{\correspondksatz}{**}
+
+\author{E. Rosenfeld}{\Google,\! \correspondemma},
+\author{C. Gidney}{\Google},
+\author{G. Roberts}{\Google},
+\author{A. Morvan}{\Google},
+\author{N. Lacroix}{\Google},
+\author{D. Kafri}{\Google},
+\author{J. Marshall}{\NASA},
+\author{M. Li}{\Google},
+\author{V. Sivak}{\Google},
+\author{D. Abanin}{\Google},
+\author{A. Abbas}{\Google},
+\author{R. Acharya}{\Google},
+\author{L. Aghababaie~Beni}{\Google},
+\author{G. Aigeldinger}{\Google},
+\author{R. Alcaraz}{\Google},
+\author{S. Alcaraz}{\Google},
+\author{T. I.~Andersen}{\Google},
+\author{M. Ansmann}{\Google},
+\author{F. Arute}{\Google},
+\author{K. Arya}{\Google},
+\author{W. Askew}{\Google},
+\author{N. Astrakhantsev}{\Google},
+\author{J. Atalaya}{\Google},
+\author{R. Babbush}{\Google},
+\author{B. Ballard}{\Google},
+\author{J. C.~Bardin}{\Google,\! \UMass},
+\author{H. Bates}{\Google},
+\author{A. Bengtsson}{\Google},
+\author{M. Bigdeli~Karimi}{\Google},
+\author{A. Bilmes}{\Google},
+\author{S. Bilodeau}{\Google},
+\author{F. Borjans}{\Google},
+\author{J. Bovaird}{\Google},
+\author{D. Bowers}{\Google},
+\author{L. Brill}{\Google},
+\author{P. Brooks}{\Google},
+\author{M. Broughton}{\Google},
+\author{D. A.~Browne}{\Google},
+\author{B. Buchea}{\Google},
+\author{B. B.~Buckley}{\Google},
+\author{T. Burger}{\Google},
+\author{B. Burkett}{\Google},
+\author{N. Bushnell}{\Google},
+\author{J. Busnaina}{\Google},
+\author{A. Cabrera}{\Google},
+\author{J. Campero}{\Google},
+\author{H.-S. Chang}{\Google},
+\author{S. Chen}{\Google},
+\author{Z. Chen}{\Google},
+\author{B. Chiaro}{\Google},
+\author{L.-Y. Chih}{\Google},
+\author{A. Y.~Cleland}{\Google},
+\author{B. Cochrane}{\Google},
+\author{M. Cockrell}{\Google},
+\author{J. Cogan}{\Google},
+\author{P. Conner}{\Google},
+\author{H. Cook}{\Google},
+\author{R. G.~Cortiñas}{\Google},
+\author{W. Courtney}{\Google},
+\author{A. L.~Crook}{\Google},
+\author{B. Curtin}{\Google},
+\author{M. Damyanov}{\Google},
+\author{S. Das}{\Google},
+\author{D. M.~Debroy}{\Google},
+\author{S. Demura}{\Google},
+\author{P. Donohoe}{\Google},
+\author{I. Drozdov}{\Google,\! \UConnStorrs},
+\author{A. Dunsworth}{\Google},
+\author{V. Ehimhen}{\Google},
+\author{A. Eickbusch}{\Google},
+\author{A. Moshe Elbag}{\Google},
+\author{L. Ella}{\Google},
+\author{M. Elzouka}{\Google},
+\author{D. Enriquez}{\Google},
+\author{C. Erickson}{\Google},
+\author{L. Faoro}{\Google},
+\author{V. S.~Ferreira}{\Google},
+\author{M. Flores}{\Google},
+\author{L. Flores~Burgos}{\Google},
+\author{S. Fontes}{\Google},
+\author{E. Forati}{\Google},
+\author{J. Ford}{\Google},
+\author{B. Foxen}{\Google},
+\author{M. Fukami}{\Google},
+\author{A. Wing Lun Fung}{\Google},
+\author{L. Fuste}{\Google},
+\author{S. Ganjam}{\Google},
+\author{G. Garcia}{\Google},
+\author{C. Garrick}{\Google},
+\author{R. Gasca}{\Google},
+\author{H. Gehring}{\Google},
+\author{R. Geiger}{\Google},
+\author{É. Genois}{\Google},
+\author{W. Giang}{\Google},
+\author{D. Gilboa}{\Google},
+\author{J. E.~Goeders}{\Google},
+\author{E. C.~Gonzales}{\Google},
+\author{R. Gosula}{\Google},
+\author{S. J.~de~Graaf}{\Google},
+\author{A. Grajales~Dau}{\Google},
+\author{D. Graumann}{\Google},
+\author{J. Grebel}{\Google},
+\author{A. Greene}{\Google},
+\author{J. A.~Gross}{\Google},
+\author{J. Guerrero}{\Google},
+\author{L. Le~Guevel}{\Google},
+\author{T. Ha}{\Google},
+\author{S. Habegger}{\Google},
+\author{T. Hadick}{\Google},
+\author{A. Hadjikhani}{\Google},
+\author{M. C.~Hamilton}{\Google,\! \AuburnECE},
+\author{M. Hansen}{\Google},
+\author{M. P.~Harrigan}{\Google},
+\author{S. D.~Harrington}{\Google},
+\author{J. Hartshorn}{\Google},
+\author{S. Heslin}{\Google},
+\author{P. Heu}{\Google},
+\author{O. Higgott}{\Google},
+\author{R. Hiltermann}{\Google},
+\author{J. Hilton}{\Google},
+\author{H.-Y. Huang}{\Google},
+\author{M. Hucka}{\Google},
+\author{C. Hudspeth}{\Google},
+\author{A. Huff}{\Google},
+\author{W. J.~Huggins}{\Google},
+\author{L. B.~Ioffe}{\Google},
+\author{E. Jeffrey}{\Google},
+\author{S. Jevons}{\Google},
+\author{Z. Jiang}{\Google},
+\author{X. Jin}{\Google},
+\author{C. Joshi}{\Google},
+\author{P. Juhas}{\Google},
+\author{A. Kabel}{\Google},
+\author{H. Kang}{\Google},
+\author{K. Kang}{\Google},
+\author{A. H.~Karamlou}{\Google},
+\author{R. Kaufman}{\Google},
+\author{K. Kechedzhi}{\Google},
+\author{T. Khattar}{\Google},
+\author{M. Khezri}{\Google},
+\author{S. Kim}{\Google},
+\author{P. V.~Klimov}{\Google},
+\author{C. M.~Knaut}{\Google},
+\author{B. Kobrin}{\Google},
+\author{A. N.~Korotkov}{\Google},
+\author{F. Kostritsa}{\Google},
+\author{J. M. Kreikebaum}{\Google},
+\author{R. Kudo}{\Google},
+\author{B. Kueffler}{\Google},
+\author{A. Kumar}{\Google},
+\author{V. D.~Kurilovich}{\Google},
+\author{V. Kutsko}{\Google},
+\author{T. Lange-Dei}{\Google},
+\author{B. W.~Langley}{\Google},
+\author{P. Laptev}{\Google},
+\author{K.-M. Lau}{\Google},
+\author{E. Leavell}{\Google},
+\author{J. Ledford}{\Google},
+\author{J. Lee}{\Google},
+\author{K. Lee}{\Google},
+\author{B. J.~Lester}{\Google},
+\author{W. Leung}{\Google},
+\author{L. Li}{\Google},
+\author{W. Yan Li}{\Google},
+\author{A. T.~Lill}{\Google},
+\author{W. P.~Livingston}{\Google},
+\author{M. T.~Lloyd}{\Google},
+\author{A. Locharla}{\Google},
+\author{L. De~Lorenzo}{\Google},
+\author{E. Lucero}{\Google},
+\author{D. Lundahl}{\Google},
+\author{A. Lunt}{\Google},
+\author{S. Madhuk}{\Google},
+\author{A. Maiti}{\Google},
+\author{A. Maloney}{\Google},
+\author{S. Mandrà}{\Google},
+\author{L. S.~Martin}{\Google},
+\author{O. Martin}{\Google},
+\author{E. Mascot}{\Google},
+\author{P. Masih~Das}{\Google},
+\author{D. Maslov}{\Google},
+\author{M. Mathews}{\Google},
+\author{C. Maxfield}{\Google},
+\author{J. R.~McClean}{\Google},
+\author{M. McEwen}{\Google},
+\author{S. Meeks}{\Google},
+\author{A. Megrant}{\Google},
+\author{K. C.~Miao}{\Google},
+\author{Z. K.~Minev}{\Google},
+\author{R. Molavi}{\Google},
+\author{S. Molina}{\Google},
+\author{S. Montazeri}{\Google},
+\author{C. Neill}{\Google},
+\author{M. Newman}{\Google},
+\author{A. Nguyen}{\Google},
+\author{M. Nguyen}{\Google},
+\author{C.-H. Ni}{\Google},
+\author{M. Yuezhen Niu}{\Google},
+\author{N. Noll}{\Google},
+\author{L. Oas}{\Google},
+\author{W. D.~Oliver}{\Google},
+\author{R. Orosco}{\Google},
+\author{K. Ottosson}{\Google},
+\author{A. Pagano}{\Google},
+\author{A. Di~Paolo}{\Google},
+\author{S. Peek}{\Google},
+\author{D. Peterson}{\Google},
+\author{A. Pizzuto}{\Google},
+\author{E. Portoles}{\Google},
+\author{R. Potter}{\Google},
+\author{O. Pritchard}{\Google},
+\author{M. Qian}{\Google},
+\author{C. Quintana}{\Google},
+\author{G. Ramachandran}{\Google},
+\author{A. Ranadive}{\Google},
+\author{M. J.~Reagor}{\Google},
+\author{R. Resnick}{\Google},
+\author{D. M.~Rhodes}{\Google},
+\author{D. Riley}{\Google},
+\author{R. Rodriguez}{\Google},
+\author{E. Ropes}{\Google},
+\author{L. B.~De~Rose}{\Google},
+\author{E. Rosenberg}{\Google},
+\author{D. Rosenstock}{\Google},
+\author{E. Rossi}{\Google},
+\author{P. Roushan}{\Google},
+\author{D. A.~Rower}{\Google},
+\author{R. Salazar}{\Google},
+\author{K. Sankaragomathi}{\Google},
+\author{M. Can Sarihan}{\Google},
+\author{M. Schaefer}{\Google,\! \UCSB},
+\author{S. Schroeder}{\Google},
+\author{H. F.~Schurkus}{\Google},
+\author{A. Shahingohar}{\Google},
+\author{M. J.~Shearn}{\Google},
+\author{A. Shorter}{\Google},
+\author{N. Shutty}{\Google},
+\author{V. Shvarts}{\Google},
+\author{S. Small}{\Google},
+\author{W.~C. Smith}{\Google},
+\author{D. A.~Sobel}{\Google},
+\author{B. Spells}{\Google},
+\author{S. Springer}{\Google},
+\author{G. Sterling}{\Google},
+\author{J. Suchard}{\Google},
+\author{A. Szasz}{\Google},
+\author{A. Sztein}{\Google},
+\author{M. Taylor}{\Google},
+\author{J. Priyanka Thiruraman}{\Google},
+\author{D. Thor}{\Google},
+\author{D. Timucin}{\Google},
+\author{E. Tomita}{\Google},
+\author{A. Torres}{\Google},
+\author{M.~M. Torunbalci}{\Google},
+\author{H. Tran}{\Google},
+\author{A. Vaishnav}{\Google},
+\author{J. Vargas}{\Google},
+\author{S. Vdovichev}{\Google},
+\author{G. Vidal}{\Google},
+\author{B. Villalonga}{\Google},
+\author{C. Vollgraff~Heidweiller}{\Google},
+\author{M. Voorhees}{\Google},
+\author{S. Waltman}{\Google},
+\author{J. Waltz}{\Google},
+\author{S. X.~Wang}{\Google},
+\author{D. Wang}{\Google},
+\author{B. Ware}{\Google},
+\author{J. D.~Watson}{\Google},
+\author{Y. Wei}{\Google},
+\author{T. Weidel}{\Google},
+\author{T. White}{\Google},
+\author{K. Wong}{\Google},
+\author{B. W.~K.~Woo}{\Google},
+\author{C. J.~Wood}{\Google},
+\author{M. Woodson}{\Google},
+\author{C. Xing}{\Google},
+\author{Z.~J. Yao}{\Google},
+\author{P. Yeh}{\Google},
+\author{B. Ying}{\Google},
+\author{J. Yoo}{\Google},
+\author{N. Yosri}{\Google},
+\author{E. Young}{\Google},
+\author{G. Young}{\Google},
+\author{A. Zalcman}{\Google},
+\author{R. Zhang}{\Google},
+\author{Y. Zhang}{\Google},
+\author{N. Zhu}{\Google},
+\author{N. Zobrist}{\Google},
+\author{Z. Zou}{\Google},
+\author{H. Neven}{\Google},
+\author{S. Boixo}{\Google},
+\author{C. Jones}{\Google},
+\author{J. Kelly}{\Google},
+\author{A. Bourassa}{\Google},
+\author{K. J.~Satzinger}{\Google\! \correspondksatz}
+\bigskip
+
+\xGoogle
+\xNASA
+\xUMass
+\xUConnStorrs
+\xAuburnECE
+\xUCSB
+\xcorrespondemma
+\xcorrespondksatz
+}
+\end{flushleft}
+
+
+\clearpage
+\twocolumngrid
+\section{Introduction}
+
+Non-Clifford gates are required for universal, fault-tolerant quantum computing \cite{gidney_magic_2024, bravyi_universal_2005, kubica_universal_2015, postler_demonstration_2022, dasu_breaking_2025, gupta_encoding_2024, bluvstein_architectural_2025} and indispensable for beyond-classical computation \cite{abanin_observation_2025, morvan_phase_2024, ebadi_quantum_2022}. The 2D surface \cite{bravyi_universal_2005, acharya_quantum_2025, fowler_surface_2012, eickbusch_demonstration_2025, debroy_luci_2025} and color codes \cite{bombin_gauge_2015, lacroix_scaling_2025, lee_low-overhead_2025, gidney_new_2023, kubica_universal_2015} are favorable for their planar geometry and high thresholds, but non-Clifford gates are not native. Generally, the proposed approach to implementing non-Clifford gates is to create magic states with ultra-high fidelity, then consume these states in gate teleportation \cite{rodriguez_experimental_2025, dasu_breaking_2025, daguerre_experimental_2025, gupta_encoding_2024, ye_logical_2023}. For factoring an RSA2048 key, magic state infidelities of $\sim 10^{-10}$ are required \cite{gidney_how_2025}, while infidelities between $\sim 10^{-6}$ and $ 10^{-8}$ are needed for some quantum simulations and optimization \cite{low_fast_2025, babbush_grand_2025, khattar_verifiable_2025, kan_resource-optimized_2025}. To create these ultra-high fidelity magic states, costly magic state distillation would be necessary, setting a substantial resource bottleneck for running quantum algorithms \cite{babbush_grand_2025, dalzell_quantum_2025}. 
+During computation, magic states are consumed as-needed, so multiple factories can provide magic states asynchronously, allowing for error $\textit{detection}$ techniques for their generation.
+
+Magic state cultivation \cite{gidney_magic_2024} is a recent proposal which promises to reduce this overhead, using fault-tolerant measurements of the logical state combined with post selection on the desired result. In magic state cultivation, a magic state is created in a single logical qubit with much higher fidelity than state injection protocols, which can then reduce the required rounds of magic state distillation or even eliminate it altogether \cite{chen_efficient_2025, hirano_efficient_2025, heusen_efficient_2025, vaknin_efficient_2025, gidney_magic_2024}. Its discovery has already substantially reduced estimates of the resource cost for running quantum applications \cite{gidney_magic_2024, gidney_how_2025, lee_low-overhead_2025}. 
+
+\begin{figure*}[htbp]\label{fig1}
+    \centering
+    \includegraphics[width=0.67\textwidth]{figures/fig1.pdf}
+    \caption{\textbf{Fundamentals of magic state cultivation.}
+    \textbf{A}, We begin cultivation in a distance-3 color code (data qubits in yellow, helper qubits in red, blue, and green) \cite{lacroix_scaling_2025}. The color code patch sits a larger grid of transmon qubits \cite{koch_charge-insensitive_2007} of a Willow processor \cite{acharya_quantum_2025}. A state injection protocol prepares a noisy logical state $\rho$, including the color code stabilizers. 
+    \textbf{B}, High-level circuit for cultivation, where we projectively measure the operator $\hat{H}_L$ on an input state $\rho_\textrm{in}$~\cite{chamberland_very_2020, gidney_magic_2024}. Quantum gates map the operator $\hat{H}_L$ into an $X$-basis measurement on the helper qubit, where post selecting for a $+1$ measurement results in a higher fidelity magic state $|\psi\rangle = |T\rangle$, projected along the desired axis.
+    \textbf{C}, Detailed circuit for cultivation. Colored rings around qubits represent quantum operators (cyan: $\hat{H}$, red: $\hat{X}$) that are transformed by the quantum gates. The logical observable ($\hat{H}_L$ in step 1) is folded down to a single measurement (step 7), while flag detectors check for errors (flags, step 13). 
+    The circuit reverses (steps 8-13) to recover the color code stabilizers.
+    }
+    \label{fig:fig1}
+\end{figure*}
+
+In this work, we present an experimental study of magic state cultivation, first implementing the protocol, then developing and executing a novel, fault-tolerant measurement scheme to characterize the refined magic state. We observe roughly a 40-fold improvement in state infidelity, relative to state-injection, corresponding to an upper bound of $1(1)\times 10^{-4}$ error, after discarding instances with detected errors in logical state preparation and measurement. About 8\% of data is retained in this case, which includes two extra rounds of cultivation and three quantum error correction (QEC) cycles. This state-of-the-art fidelity is similar to recent demonstrations in trapped ions \cite{dasu_breaking_2025, daguerre_experimental_2025}, while retaining the faster speeds afforded by superconducting circuits. Finally, to adapt our cultivated magic states into a resource for our quantum computer, we graft a magic state into a distance-5 surface code. Code-switching the state from a color code to a surface code tests the cultivation protocol beyond the practical computational limits of previous theory work \cite{gidney_magic_2024}, which simulates Clifford circuits at code distances larger than three. More importantly, grafting also begins the experimental treatment of transferring high-fidelity magic states into larger codes \cite{pogorelov_experimental_2024, butt_fault-tolerant_2024} and establishes the viability of using cultivated magic states in leading QEC architectures.
+
+In short, magic state cultivation comprises a fault-tolerant measurement of the logical qubit along the $X = Z$, $Y = 0$ coordinates of the Bloch sphere, and post selection on the desired value. First, a noisy magic state is initialized using an injection procotol without fault-tolerance (Fig.~\ref{fig:fig1}(a), see [SI] for details), which simultaneously prepares the code stabilizers. Then, the state cultivation step projects the qubit onto the magic state axis, using phase kickback with helper qubits (Fig. 1(b), see [SI] for details). 
+
+The phase kickback measurement constitutes a measurement of the logical Hadamard operator $\hat{H}_L$, to refine its eigenstates (i.e., a magic state). Specifically, the $\hat{H}_L$ gate is decomposed transversally onto each physical qubit as $\hat{H} = \hat{T}^\dagger \hat{X} \hat{T}$, where $\hat{T} \equiv e^{-i \pi \hat{\sigma}_y / 8}$ and $\hat{T}^\dagger$ are applied non-conditionally, leaving the conditional $\hat{X}_L$ measurement as the main task. To support this, the protocol starts in a low-distance color code (Fig.~\ref{fig:fig1}(a)), in which all the logical single-qubit gates are transversal: they can be performed by acting the operation on all physical qubits independently, limiting the spread of errors and making the $\hat{H}_L$ measurement more efficient. The logical observable component is ``folded" down to a single physical qubit for measurement (Fig.~\ref{fig:fig1}(c), purple lines). 
+
+Subsequently, the entire process is time-reversed, which brings three advantages: the color-code stabilizers are returned back to their values at the start of the circuit, maintaining compatibility with any previous or subsequent QEC cycles, the logical observable is measured again, and the helper qubits become additional error detectors (Fig.~\ref{fig:fig1}(c), orange lines). If any detection events are registered, including a measurement of the wrong magic state, the attempt is aborted and restarted. If all checks pass, the refined magic state is then transferred into a larger code which can maintain the high state fidelity with a low logical error idling rate. In particular, the state can be ``grafted" into a surface code, favorable because of its high threshold, matching-based decoders, and well-studied dropout schemes \cite{bravyi_universal_2005, acharya_quantum_2025, fowler_surface_2012, eickbusch_demonstration_2025, debroy_luci_2025}.
+
+Here, we study the state injection, the cultivation (i.e. phase-kickback) step, and grafting to a surface code, using a Willow processor with qubits arranged in a square lattice (Fig.~\ref{fig:fig1}(b), see [SI] for specifications). We implement the superdense color code cycle, adapted to experimental constraints following Ref.~\cite{lacroix_scaling_2025}. Throughout this work, we fine-tune our control calibration using reinforcement learning \cite{sivak_reinforcement_2025}, optimizing our control parameters by minimizing the number of error detection events in the QEC circuit. We inject the logical qubit into the $X/Z$ plane and cultivate the state $\ket{T} \equiv e^{-i \pi \hat{\sigma}_y / 8} \ket{0}$ specifically (differing from the standard $e^{-i \pi \hat{\sigma}_z/8} \ket{+}$ state by a transversal $\hat{H}_{ZY}$). This allows for tomography measurements in the $X$ and $Z$ basis, which correspond to the stabilizers of the color code, reducing the likelihood of state mis-characterization from coherent noise (see [SI] for details). During logical state tomography, the same calibration parameters are used for both axis measurements.
+
+\section{Cultivating a magic state}
+
+We begin by comparing the logical state components before and after the cultivation step, characterized with logical state tomography (Fig.~\ref{fig:fig2}(a)). For state injection, we design a circuit which efficiently expands an arbitrary state of a single physical qubit into the logical qubit in a distance-3 color code, while also preparing all six color code stabilizers [SI]. 
+\begin{figure*}[htbp]
+\centering\includegraphics[width=0.67\textwidth]{figures/fig2.pdf}
+    \caption{\textbf{Cultivating a magic state.}
+    \textbf{A}, Circuit for (b, c, d). A state $\ket{\theta} \equiv e^{-i \theta \hat{\sigma}_y  /2} \ket{0}$ is first injected into the $X/Z$ plane (left Bloch sphere, red arrow). Then the cultivation circuit projects the state to the $X=Z$ line (right Bloch sphere, red arrow), and reduces the state error (red clouds).
+    \textbf{B}, Resulting tomography measurements. Red crosses, without state cultivation. Cyan diamonds: with cultivation, we observe that the state is collapsed to the magic state axis (grey dashed line). Grey circles: state vector simulations, assuming a depolarizing noise model following SI1000 \cite{gidney_fault-tolerant_2021, marshall_incoherent_2025} with noise strength $p = 3.0 \times 10^{-3}$.
+    \textbf{C}, Same data as in B, focused on the $\ket{T}$ state region. The cultivated state reaches closer to the desired $\ket{T}$ state (gold star) than the injected state (red curve, fit to an ellipse), which we attribute to state refinement from the cultivation step. Error bars are one standard deviation, assuming a Gaussian approximation of the binomial distribution.
+    \textbf{D}, Data retainment rates, averaged over the $X$ and $Z$ tomography measurements. Cultivation adds a filter for the $\ket{T}$ state, so the retainment rates of the cultivation data and simulation show a sinusoidal dependence on $\theta$, maximized at $\theta = \pi/4$.}
+    \label{fig:fig2}
+\end{figure*} 
+We sweep over the full range of polar $\theta$ values to understand the dependence of each circuit's behavior on an arbitrary logical state $\ket{\theta} \equiv e^{-i \theta \hat{\sigma}_y/2} \ket{0}$ (in practice, to prepare $\ket{T}$, we would always set $\theta = \pi/4$). As expected, the logical state traverses the logical Bloch sphere as we vary $\theta$ (Fig.~\ref{fig:fig2}(b), red crosses). 
+
+Motivated by the broader context of implementing magic state factories described above, we use post selection to only retain the shots of the data in which no events were observed in all of the circuit detectors. For the injection case (Fig.~\ref{fig:fig2}(b)), we retain 76(3)\% of the data (Fig.~\ref{fig:fig2}(d), red crosses), largely independent of $\theta$ because the detectors are independent of the logical qubit state. 
+
+Next, we include the cultivation step to our circuit (Fig.~\ref{fig:fig2}(a)). We observe that the logical components follow the logical $X = Z$ line, even for $\theta \neq \pi/4$, because our $\hat{H}_L$ eigenvalue measurement for cultivation is projective. Moreover, the state components we measure are closer to $\ket{T}$ with cultivation (Fig.~\ref{fig:fig2}(c), cyan diamonds), than without it (Fig.~\ref{fig:fig2}(c), red line, elliptical fit to the injection data). We attribute this improvement to the refinement of the logical state performed by the cultivation step. 
+
+We again post select the data for no detection events, including the phase-kickback measurement, which filters the injected logical state for the desired $\ket{T}$ state.
+As expected, the data retainment rate is maximized at $\theta = \pi/4$, when encoding the state that cultivation screens for. Conversely, at the orthogonal state $\theta = 5\pi/4$, very little data is retained as cultivation removes most of it, the remainder of which we attribute to gate errors. Both the data retainment rate and state tomography curves are in approximate agreement with state vector simulations including a simple depolarizing SI1000 noise model \cite{gidney_fault-tolerant_2021} with a noise strength $p = 3.0 \times 10^{-3}$ (see [SI] for details).
+
+We do not report a state fidelity at this stage. Foremost, a large number of measurements ($\sim 10^8$ shots) would be required to resolve errors of $\sim 10^{-4}$ within the projection noise.  Also, post selected transversal tomography can overestimate the logical state purity in the presence of coherent noise (see SI). For example, there exist pure states which appear with a Bloch vector norm greater than one, even with perfect measurement and unlimited statistics [SI]. While Pauli twirling of the noise may render the estimated state physical, in practice, twirling must be approximated. 
+
+By definition, the cultivation circuit consists of a fault-tolerant measurement along the magic state axis. To precisely measure an upper bound on the $\ket{T}$ state error in a single, self-consistent measurement, we use cultivation itself as a  measurement device in a ``kickback tomography" (KT) approach. The circuit is shown in Fig. 3(a). First, state injection, a QEC cycle, and a first cultivation round prepares a magic state for characterization. Then, the subsequent rounds of cultivation and QEC cycles enact a fault-tolerant measurement along the $\ket{T}$ axis component to upper-bound the prepared state infidelity. 
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.67\textwidth]{figures/fig3.pdf}
+    \caption{\textbf{Kickback tomography (KT).} 
+    \textbf{A}, We prepare a $\ket{T}$ state (green box), then implement KT (brown box): subsequent rounds of cultivation self-consistently measure the $\ket{T}$ state in a single circuit that mitigates projection noise. The color code stabilizers are measured at the end for additional error detection (here we arbitrarily choose the $\hat{X}$ stabilizers).
+    \textbf{B}, Logical error of the entire circuit as a function of the injected angle $\theta$. Red crosses: state preparation with injection only. Cyan diamonds: adding cultivation to the state preparation step, the logical error at $\ket{T}$ improves by about a factor of 40. Grey circles: state vector simulation including an SI1000 depolarizing noise model \cite{gidney_fault-tolerant_2021} with noise strength $p = 2.3 \times 10^{-3}$. Blue circles: removing the QEC cycles from the circuit, the logical error worsens drastically, showing the significance of the underlying color code.
+    \textbf{C}, Additional data with more statistics, focused on the $\theta = \pi/4$ region of practical interest.
+    \textbf{D}, Postselection rate as function of the injected angle.}
+    \label{fig:fig3}
+\end{figure*}
+To maintain a fault distance of three, two cultivation circuits and idling circuits are needed for tomography. Intuitively, the final cultivation round acts as a ``check" of the previous one, while the idling cycles provide opportunities for measurements of the color code stabilizers, maintaining fault tolerance. 
+
+The benefits of KT are twofold. First, since the measurements are along the desired state axis, it enables fidelity measurements in a single circuit, avoiding inconsistency issues discussed above in the presence of coherent noise. 
+Second, KT reduces the projection noise compared to standard tomography: measuring along the prepared state also results in measurement averages close to zero, reducing the variance in the binomial distribution. Using KT, we are able to resolve an upper bound of the $\ket{T}$ state error of $\epsilon \sim 10^{-4}$ within an uncertainty of $\sigma \sim \epsilon$ using $\mathcal{O}(10^4)$ measurements, as opposed to $\mathcal{O}(10^8)$ as required for standard tomography. This difference enables rapid infidelity estimates in practice. 
+
+We start by validating KT as a metrology tool, by studying the logical error of the circuit when injecting an arbitrary state on the $X/Z$ plane, removing the cultivation round, but still measuring the $\ket{T}$ component using KT. We again sweep the injected polar angle $\theta$ and measure the logical error of the total circuit and the postselection rate (Fig.~\ref{fig:fig3}(b, d), red crosses), again filtering the data for no detection events in the entire circuit. As expected, the logical error probability is sinusoidal with $\theta$, minimized when at $\theta=\pi/4$ (corresponding to $\ket{T}$), and maximized at the orthogonal state with $\theta = 5\pi/4$. Without cultivation, any error on the physical qubit used for state injection will result in a logical error. Subsequently, the logical error probability when injecting $\theta = \pi/4$ is $4.4(2) \times 10^{-3}$, similar to our physical qubit gate errors [SI]. The postselection rate is constant with $\theta$, since the detectors in this circuit do not depend on the logical qubit state.
+
+Adding cultivation to the state preparation circuit, we observe an improvement on the logical error probability by about a factor of 40. Close to the $\ket{T}$ state injection at $\theta = \pi/4$, the logical error probability of the full circuit hovers between $1 \times 10^{-4}$ and $2 \times 10^{-4}$ (Fig.~\ref{fig:fig3}(b, c), cyan diamonds). This error probability is well below the error of each of the 216 physical two-qubit gates in the circuit, as well as its 54 measurements [SI].
+Filtering for any detection events in the entire circuit, the data retainment rate is maximized again at 8\% at $\theta = \pi/4$, and minimized at $\theta = 5\pi/4$ (Fig.~\ref{fig:fig3}(d)). These results are in agreement with state vector simulations of the circuit, as shown in Fig.~\ref{fig:fig3}(b, c), grey dots, which simulate the cultivation circuit with a simple SI1000 depolarizing noise model \cite{gidney_fault-tolerant_2021} with a noise strength $p = 2.3 \times 10^{-3}$. The difference in the device noise strength $p$ compared to that of Fig.~\ref{fig:fig2} is likely due to changes in optimal qubit frequencies and the distinct control calibrations, while device drift results in logical error variation on the order of $1 \times 10^{-4}$ over about an hour [SI].
+
+The cultivation circuit does not perform a measurement of the color code stabilizers. Therefore, when we remove the QEC cycles, we remove the quantum error detection framework that upholds the fault distance of magic state cultivation. In particular, with only one opportunity for stabilizer measurements (at the very end), there are single error events that can cause a logical error. In this case, removing the QEC cycles makes the error about 100 times worse (blue dots, Fig.~\ref{fig:fig3}(b)). 
+The color code is effective: \textit{adding} four QEC cycles, each with 30 two-qubit gates and 6 measurements, improves logical performance by about a factor of 100. 
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.67\textwidth]{figures/fig4.pdf}
+    \caption{\textbf{Grafting from a color code to a surface code.}
+    \textbf{A}, We prepare a state in our distance-3 color code (left qubit layout) and then expand to a larger code using additional qubits in an extension cycle (central qubit layout). The extension cycle also changes the pairs of data and measure qubits we exchange (black arrows), for compatibility between our $d=3$ color code geometry and the stabilizers in \cite{gidney_magic_2024}. For a total of $N$ cycles in the larger grid, we subsequently run $N-1$ cycles in the grafted code, at which point all the surface code stabilizers are prepared (right-most qubit layout). The state is then characterized with logical state tomography. 
+    \textbf{B}, Logical tomography results. Red crosses: the injection-only state preparation results traverse a circle, as expected. Grey points: state vector simulations of the injection-only circuit, over all 54 qubits. Cyan and dark cyan diamonds: adding cultivation to state preparation, the states are projected toward the $Z=X$ line (see [SI] for simulations), for $N=2$ and $N=3$.
+    \textbf{C}, Data retainment rate as a function of $\theta$. See text for details on post selection.} 
+    \label{fig:fig4}
+\end{figure*}
+
+\section{Grafting to a surface code}
+The surface code boasts a high threshold, matchable decoders, and well-developed dropout approaches \cite{bravyi_universal_2005, acharya_quantum_2025, fowler_surface_2012, eickbusch_demonstration_2025, debroy_luci_2025}, but the color code supports cultivation through its transversal single-qubit Clifford gates \cite{gidney_magic_2024}. We demonstrate end-to-end compatibility of our magic states with the surface code, by grafting our magic states into a distance-5 encoding compatible with the surface code for subsequent lattice surgery (Fig.~\ref{fig:fig4}(b)) \cite{gidney_magic_2024, butt_fault-tolerant_2024, heusen_efficient_2025, pogorelov_experimental_2024}. In a small code, the high error per QEC cycle following cultivation engulfs any magic state fidelity improvements from cultivation \cite{gidney_magic_2024}, so the state must escape into a larger code. 
+
+We transition from the color code into the larger grafted code in two steps (Fig.~\ref{fig:fig4}(a), see [SI] for the full circuit). First, a single cycle shifts our original color code to an alternate geometry compatible with the surface code stabilizers described in \cite{gidney_magic_2024}, while simultaneously preparing the stabilizers in the surface code region (Fig.~\ref{fig:fig4}(a), QEC cycle (extend)). The data qubits introduced in the surface code region are initialized into the basis that maximizes the number of detectors in this initial cycle, as shown in the central qubit layout. To idle in the larger grid for a total of $N$ cycles, we then run $N-1$ cycles in this grafted code. In implementation, $d-1$ cycles would be needed before switching to a matchable code, beyond the scope of this work.
+
+For consistency with Figs.~\ref{fig:fig2} and \ref{fig:fig3}, we post select for no detection events on the state preparation detectors before grafting. The grafted code is not matchable, as it contains stabilizers similar to the color code as well as surface code (Fig.~\ref{fig:fig4}(a), qubit grids), so we decode the resulting data with Tesseract, a most likely error decoder using the $A^*$ search technique \cite{beni_tesseract_2025}. 
+
+We demonstrate grafting by characterizing the logical qubit components in the grafted code, with and without cultivation as part of the state preparation step (Fig.~\ref{fig:fig4}(a), green box). We begin by injecting $\ket{\theta}$, running one extension cycle and one cycle in the grafted code, and finally performing tomography. Sweeping $\theta$, we observe a circle on the logical Bloch sphere in the $XZ$ plane, as expected (Fig.~\ref{fig:fig4}(b), red crosses). State vector simulations across all 54 qubits, again using SI1000 \cite{gidney_fault-tolerant_2021} with $p = 2.3 \times 10^{-3}$, are shown in Fig.~\ref{fig:fig4}(b, c), grey points (see [SI] for simulation details). The difference between the experiment and simulation may be due to population leakage, which is not included in our noise model [SI], or from the variability in physical qubit performance. 
+
+Next, we graft a cultivated magic state into the surface code, by adding the cultivation step before grafting (Fig.~\ref{fig:fig4}(b, c), cyan diamonds). These results test magic state cultivation beyond the Pauli approximations of \cite{gidney_magic_2024} and confirm that cultivated magic states may be transferred to larger codes. The state becomes compressed along the $\ket{T}$ axis, similar to Fig.~\ref{fig:fig2} (see [SI] for simulations). In this case, the data does not extend past the origin of the Bloch sphere towards the orthogonal state. We attribute this to the different logical error mechanisms that can occur when the circuit structure is changed, and the effect is reproduced in simulations [SI]. The spread from the $Z=X$ may be due to time-correlated phase noise in the circuit, and is a topic for future study.
+As expected, the distance to the surface of the Bloch sphere at the $\ket{T}$ state is about the same as the injection-only case, since both are limited by the idle error in the $d=5$ grafted code (for a full memory experiment in this code, see [SI]).
+ 
+Adding a cycle of the grafted code (Fig.~\ref{fig:fig4}(c), dark cyan diamonds) moves the state closer to the origin of the Bloch sphere, because of the finite error per cycle. While the data retainment rate should be independent of $N$ for our post selection strategy (see [SI] for simulations), we observe a ~10\% difference in data retainment rates around $\theta = \pi/4$ for the $N = 2$ and $N = 3$ experiments. This difference could be due to flux transients in our circuit, or drift in the optimal calibration parameters over time (see [SI]). Overall, our grafting results show a proof-of-principle demonstration of non-Clifford state escape into an advantageous code.
+
+\section{Conclusion and outlook}
+Our experiment establishes magic state cultivation as a low-cost technique for generating high-fidelity magic states. Looking ahead, as the processor noise strength $p$ \cite{gidney_fault-tolerant_2021} improves, the magic state infidelity should drastically scale as $p^3$. For example, improving the noise strength by a factor of two should result in $\ket{T}$ state infidelity upper bounds of $\sim 2 \times 10^{-5}$ [SI], approaching relevance for some applications \cite{babbush_grand_2025, khattar_verifiable_2025, kan_resource-optimized_2025, low_fast_2025} while using only a distance-3 code for the cultivation step. Beyond device and logical state performance improvements, future directions include real-time implementation of $\ket{T}$ gates, grafting into larger distances to support high state fidelites, further study into decoders for the grafted code \cite{beni_tesseract_2025, bausch_learning_2024}, and implementation of a matchable code following grafting as in \cite{gidney_magic_2024}. 
+
+Our results also highlight that experimental quantum error correction research has utility for understanding logical circuits. While standard logical state tomography confirms that cultivation entails a strong, projective measurement of $\hat{H}$, we find that to quantify our state performance rigorously, we need to develop and implement additional quantum error correction techniques. Specifically, by using the fault tolerance of the cultivation step and stabilizer checks in the superdense color code cycle, we can arrive at a precise lower bound on the magic state fidelity. Moreover, a standard approximation in QEC theoretical studies is to replace non-Clifford states with Pauli states, for computational speed. Our work demonstrates that experimental QEC research can study these assumptions, as exemplified by grafting magic states into the $d=5$ surface code, extending beyond the simulations of \cite{gidney_magic_2024}. Ultimately, these findings transform magic state cultivation from a theoretical study into an experimental reality, providing a practical route to universal logic in superconducting processors. 
+
+\textbf{Acknowledgments and contributions.} E.R. constructed the circuits, performed the experiments, simulations, and analyses. C.G. provided mentorship on circuit construction and the cultivation process. E.R. and C.G. designed the kickback tomography protocol and the injection circuit. K.J.S. conceived the study and directed the research. A.~Bourassa, G.R., N.L., and A.M. provided feedback and experimental support throughout the project.
+The Google Quantum AI team sponsored the project, designed and fabricated the device, built and maintained the cryogenic and control systems, provided software infrastructure, performed the initial bring up of the device, and provided relevant guidance.
+
+\textbf{Data availability.} Data is available at \href{https://doi.org/10.5281/zenodo.17872003
+}{https://doi.org/10.5281/zenodo.17872003}
+\bibliography{bib}
+\include{supplemental_material}
+
+\end{document}

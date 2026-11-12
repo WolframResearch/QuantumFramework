@@ -1136,11 +1136,12 @@ QuantumCircuitOperator::kaksymbolic = "KAK could not decompose `1` symbolically 
 
 QuantumOperatorProp[qo_, "KAK"] /; qo["Dimension"] == 16 && MatchQ[qo["Dimensions"], {2, 2, 2, 2}] :=
 Enclose @ Module[{
-    mat = Normal @ qo["MatrixRepresentation"], numericQ, vars, data, c, a, b, o1, o2, order,
+    mat = Normal @ qo["Sort"]["MatrixRepresentation"], numericQ, vars, data, c, a, b, o1, o2, order,
     gates, circuit, circMat, residualPhase
 },
     numericQ = MatrixQ[Quiet @ N @ mat, NumericQ];
-    order = qo["Order"][[1]];
+    (* the matrix and its wires both from the sorted operator *)
+    order = qo["Sort"]["Order"][[1]];
     {o1, o2} = order;
     If[ numericQ,
     (* ---- numeric path: "U"-angle gadgets, global phase recovered by projection ---- *)

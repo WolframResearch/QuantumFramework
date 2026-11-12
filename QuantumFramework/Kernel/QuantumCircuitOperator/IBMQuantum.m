@@ -378,6 +378,34 @@ ibmBitArraySamples[ba_] := Enclose @ Module[{val, numBits, bytes},
     {FromDigits[#, 256] & /@ Partition[bytes, Ceiling[numBits / 8]], numBits}
 ]
 
+(* A schema "v2.0" result (ibm_quantum_schemas executor QuantumProgramResultModel) stores each
+   classical register as a CompressedTensorModel: base64(zlib(raw bytes)), no .npy header, with
+   a bool array of shape {..., shots, creg_size} in C order, bit-packed eight per byte with the
+   first element in the least significant bit (numpy packbits, bitorder "little"). Column k of a
+   register is its classical bit k, the convention of qiskit_ibm_runtime's
+   BitArray.from_bool_array[..., order -> "little"], so bit k carries weight 2^k. *)
+ibmTensorSamples[t_Association] := Enclose @ Module[{shape, bytes, bits, numBits},
+    ConfirmAssert[t["dtype"] === "bool"];
+    shape = ConfirmMatch[t["shape"], {__Integer}];
+    numBits = Last[shape];
+    bytes = ConfirmBy[Developer`RawUncompress[Normal @ Confirm @ BaseDecode[ConfirmBy[t["data"], StringQ]]], ListQ];
+    bits = Take[Flatten[Reverse[IntegerDigits[bytes, 2, 8], 2]], Times @@ shape];
+    {Partition[bits, numBits] . (2 ^ Range[0, numBits - 1]), numBits}
+]
+
+(* Pack per-register {outcomes, width} pairs into one integer per shot, register k in the bits
+   above the registers before it. *)
+ibmPackRegisters[perReg_List] := With[{offsets = Most @ Prepend[Accumulate[perReg[[All, 2]]], 0]},
+    {Total @ MapThread[#1 * 2 ^ #2 &, {perReg[[All, 1]], offsets}], Total[perReg[[All, 2]]]}]
+
+(* Schema "v2.0": first program item -> its "results", one tensor per classical register, in
+   classical-register order. *)
+ibmSamples[res : KeyValuePattern["schema_version" -> "v2.0"]] := Enclose @ Module[{item, regs},
+    item = First @ ConfirmMatch[res["data"], {__Association}];
+    regs = ConfirmBy[item["results"], AssociationQ];
+    ibmPackRegisters[Confirm @ ibmTensorSamples[#] & /@ Values[regs]]
+]
+
 (* PrimitiveResult -> first PUB -> DataBin. Decode every classical register's BitArray and
    pack them into one integer per shot. "field_names" is in classical-register order, which is
    the classical-bit order qiskit assigns, so register k occupies the bits above the registers
@@ -385,15 +413,12 @@ ibmBitArraySamples[ba_] := Enclose @ Module[{val, numBits, bytes},
    classical-bit space as the "MeasuredQubits" map. A circuit with a single register (every
    circuit QuantumCircuitOperator submits, and measure_all jobs) reduces to that register's
    outcomes with offset 0. Returns {per-shot integer outcomes, total bit width}. *)
-ibmSamples[res_Association] := Enclose @ Module[{prim, pub, dataBin, names, perReg, widths, offsets},
+ibmSamples[res_Association] := Enclose @ Module[{prim, pub, dataBin, names},
     prim = ibmUnwrap[res];
     pub = ibmUnwrap @ First @ ConfirmMatch[prim["pub_results"], {__Association}];
     dataBin = ibmUnwrap[pub["data"]];
     names = ConfirmMatch[dataBin["field_names"], {__String}];
-    perReg = Confirm @ ibmBitArraySamples[dataBin["fields"][#]] & /@ names;
-    widths = perReg[[All, 2]];
-    offsets = Most @ Prepend[Accumulate[widths], 0];
-    {Total @ MapThread[#1 * 2 ^ #2 &, {perReg[[All, 1]], offsets}], Total[widths]}
+    ibmPackRegisters[Confirm @ ibmBitArraySamples[dataBin["fields"][#]] & /@ names]
 ]
 ibmSamples[_] := $Failed
 

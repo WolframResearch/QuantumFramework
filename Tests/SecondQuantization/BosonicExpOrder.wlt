@@ -463,30 +463,6 @@ VerificationTest[
     TestID -> "SqueezeOperatorPolarTruncated"
 ]
 
-(* Any single-mode exponent of degree two, e^{t(q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a)}, disentangles
-   in either order: the general one, the parabolic (a + a^dagger)^2 + mu a^dagger + nu a where 4pq = w^2 and
-   the coefficients are the l -> 0 limits, and a number term beside linear ones. An ordered product's
-   symbol (a^dagger -> x, a -> y) is the product of its factors' symbols, the middle one read through
-   e^{g N} = :e^{(e^g - 1) N}: and e^{g a a^dagger} = antinormal e^{(1 - e^-g) a a^dagger}; to order t^3 it
-   matches sum_k t^k/k! times the symbol of the ordered H^k. *)
-VerificationTest[
-    Module[{p, q, w, mu, nu, t, x, y, sym, fac},
-        With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
-            sym[e_] := e /. GeneralizedPower[NonCommutativeMultiply, o_, k_] :> o^k /. NonCommutativeMultiply -> Times /. {ad -> x, a -> y};
-            fac[n_, mid_][f_] := With[{e = Expand[Replace[f, {Times[c__, Power[b_, z_ /; ! FreeQ[z, n]]] :> Log[Times[c]] + z Log[b], Power[b_, z_] :> z Log[b]}]]},
-                Exp[sym[e - Coefficient[e, n] n] + mid[Coefficient[e, n]] x y]];
-            Table[
-                Simplify[Normal[Series[BosonicExpOrder[Exp[t h], $vA, "Ordering" -> o[[1]]] /. c_. NonCommutativeMultiply[f__] :> c Times @@ (fac[o[[2]], o[[3]]] /@ {f}), {t, 0, 3}]] -
-                    Sum[t^k/k! sym[o[[4]][If[k == 0, 1, NonCommutativeMultiply @@ ConstantArray[h, k]], $vA]], {k, 0, 3}]],
-                {h, {q a ** a + p ad ** ad + w ad ** a + mu ad + nu a, (a + ad) ** (a + ad) + mu ad + nu a, w ad ** a + mu ad + nu a}},
-                {o, {{"Normal", ad ** a, E^# - 1 &, BosonicNormalOrder}, {"Antinormal", a ** ad, 1 - E^-# &, BosonicAntinormalOrder}}}
-            ]
-        ]
-    ],
-    ConstantArray[0, {3, 2}],
-    TestID -> "DisentanglingQuadraticPlusLinear"
-]
-
 (* The root D^(-1/2) stays continuous where D crosses the negative real axis: for e^{-itH} with
    H = N + c a^dagger^2 + conj(c) a^2, c = 1/5 + i/10, D winds once per period 2 Pi/Omega, Omega = 2/Sqrt[5],
    and the vacuum element has one limit from both sides of the first crossing t = Pi Sqrt[5]/2. *)
@@ -904,6 +880,43 @@ VerificationTest[
     ],
     True,
     TestID -> "TwoModeRootContinuousAtMachineTime"
+]
+
+(* Coupled two-mode generators with linear terms through the multimode rule, hopping in normal order and
+   squeezing plus a constant in antinormal order: the symbol of the ordered form (a^dagger -> x, a -> y, the
+   number middle merged before it is read) equals the series of e^(t G) to t^2. *)
+VerificationTest[
+    Module[{ad = SuperDagger[\[FormalA]], bd = SuperDagger[\[FormalB]], a = \[FormalA], b = \[FormalB], deq, sym, series},
+        deq = # //. {ad -> x1, bd -> x2, a -> y1, b -> y2, GeneralizedPower[NonCommutativeMultiply, u_, k_] :> u^k, NonCommutativeMultiply -> Times} &;
+        sym[o_, ord_] := With[{nums = If[ord === "Normal", {ad ** a, bd ** b}, {a ** ad, b ** bd}]},
+            deq[(o /. {(NormalOrdered | AntinormalOrdered)[f_, _] :> deq[f],
+                    Power[base_, e_] /; ! FreeQ[e, Alternatives @@ nums] && FreeQ[Expand[e] /. Thread[nums -> 0], a | b] :> Inactive[Exp][Log[base] e]}) //.
+                Inactive[Exp][u_] Inactive[Exp][w_] :> Inactive[Exp][u + w] /.
+                Inactive[Exp][e_] :> With[{c = Coefficient[Expand[e], #] & /@ nums},
+                    Exp[If[ord === "Normal", E^c - 1, 1 - E^-c] . {x1 y1, x2 y2} + (Expand[e] /. Thread[nums -> 0])]]]];
+        series[g_, ord_] := 1 + Sum[t^j/j! deq[If[ord === "Normal", BosonicNormalOrder, BosonicAntinormalOrder][NonCommutativeMultiply @@ ConstantArray[g, j], $vAB]], {j, 2}];
+        Simplify[Normal[Series[sym[BosonicExpOrder[Exp[t #1], $vAB, "Ordering" -> #2], #2] - series[#1, #2], {t, 0, 2}]]] & @@@ {
+            {ad ** a/3 + (ad ** b + bd ** a)/7 + bd ** b/2 + ad/5 + b/6, "Normal"},
+            {ad ** bd/2 + a ** b/7 + ad/4 + b/9 + 3/7, "Antinormal"}}
+    ],
+    {0, 0},
+    TestID -> "TwoModeCoupledQuadraticAndLinearSeries"
+]
+
+(* A displaced two-mode squeezer, e^(r (a^dagger b^dagger - a b) + g a^dagger - conj(g) a), ordered with linear
+   terms on a coupled pair, realized on 16 levels per mode against MatrixExp of the generator on n_a, n_b <= 2. *)
+VerificationTest[
+    Module[{s = 16, am, bm, idx, gen},
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
+        gen = 0.3 (ConjugateTranspose[am] . ConjugateTranspose[bm] - am . bm) + (0.2 + 0.1 I) ConjugateTranspose[am] - (0.2 - 0.1 I) am;
+        Max[Abs[Normal[ToBosonicOperator[
+            BosonicExpOrder[Exp[r (SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]] - \[FormalA]**\[FormalB]) + g SuperDagger[\[FormalA]] - Conjugate[g] \[FormalA]],
+                $vAB, Assumptions -> r > 0] /. {r -> 0.3, g -> 0.2 + 0.1 I}, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] - MatrixExp[gen][[idx, idx]]]] < 10^-10
+    ],
+    True,
+    TestID -> "TwoModeDisplacedSqueezerMatchesMatrixExp"
 ]
 
 EndTestSection[]

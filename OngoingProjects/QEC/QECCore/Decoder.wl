@@ -54,7 +54,7 @@ QECDecoder::noprop = "`1` is not a property of QECDecoder. Use dec[\"Properties\
 QECDecoder::othercode = "The decoder was built for a different code; it can only score the code it decodes.";
 QECDecoder::detector = "A detector-model decoder reads detector patterns, not code-capacity syndromes. Its rate is QECDetectorModel[code, noise][\"LogicalErrorRate\"].";
 
-Options[QECDecoder] = {"DecoderReach" -> Automatic, "Rounds" -> Automatic, "Extraction" -> "BareAncilla"};
+Options[QECDecoder] = {"Method" -> Automatic, "DecoderReach" -> Automatic, "Rounds" -> Automatic, "Extraction" -> "BareAncilla"};
 
 decoderData[QECDecoder[d_Association]] := d
 
@@ -67,6 +67,11 @@ QECDecoder[QECCode[a_Association], opts : OptionsPattern[]] := With[
 ]
 
 QECDecoder[QECCode[a_Association], QECNoiseModel[noise_Association], opts : OptionsPattern[]] := Which[
+    OptionValue[QECDecoder, {opts}, "Method"] === "Matching" && noiseLevel[noise] === "CodeCapacity",
+        If[ codeMatching[a, noise] === $Failed,
+            $Failed,
+            QECDecoder[<|"Method" -> "Matching", "Code" -> a, "Noise" -> noise|>]
+        ],
     noiseLevel[noise] =!= "CodeCapacity",
         With[{r = OptionValue[QECDecoder, {opts}, "Rounds"], e = OptionValue[QECDecoder, {opts}, "Extraction"]},
             QECDecoder[
@@ -74,7 +79,8 @@ QECDecoder[QECCode[a_Association], QECNoiseModel[noise_Association], opts : Opti
                     QECDetectorModel[QECCode[a], QECNoiseModel[noise], "Extraction" -> e],
                     QECDetectorModel[QECCode[a], QECNoiseModel[noise], r, "Extraction" -> e]
                 ],
-                "DecoderReach" -> OptionValue[QECDecoder, {opts}, "DecoderReach"]
+                "DecoderReach" -> OptionValue[QECDecoder, {opts}, "DecoderReach"],
+                "Method" -> OptionValue[QECDecoder, {opts}, "Method"]
             ]
         ],
     ! exactEnumerableQ[a],
@@ -87,9 +93,15 @@ QECDecoder[QECCode[a_Association], QECNoiseModel[noise_Association], opts : Opti
 QECDecoder[code_QECCode, qc_Wolfram`QuantumFramework`QuantumChannel, opts : OptionsPattern[]] :=
     Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECDecoder[code, noise, opts], _ -> $Failed}]
 
-QECDecoder[QECDetectorModel[dem_Association], opts : OptionsPattern[]] := With[
-    {reach = decoderReachFor[dem["Code"], OptionValue[QECDecoder, {opts}, "DecoderReach"]]},
-    QECDecoder[<|"Method" -> "DetectorModel", "Code" -> dem["Code"], "Model" -> dem, "Reach" -> reach|>]
+QECDecoder[QECDetectorModel[dem_Association], opts : OptionsPattern[]] := If[
+    OptionValue[QECDecoder, {opts}, "Method"] === "Matching",
+    If[ codeGraphlikeQ[dem["Code"]],
+        QECDecoder[<|"Method" -> "Matching", "Code" -> dem["Code"], "Model" -> dem|>],
+        $Failed
+    ],
+    With[{reach = decoderReachFor[dem["Code"], OptionValue[QECDecoder, {opts}, "DecoderReach"]]},
+        QECDecoder[<|"Method" -> "DetectorModel", "Code" -> dem["Code"], "Model" -> dem, "Reach" -> reach|>]
+    ]
 ]
 
 QECDecoder[QECCode[a_Association], f : Except[_QECNoiseModel | _Wolfram`QuantumFramework`QuantumChannel | _Rule | _RuleDelayed | _String | _Integer | _List]] :=
@@ -103,7 +115,7 @@ QECDecoder[$Failed, ___] := $Failed
 (* ---- decoding ---- *)
 
 decoderSyndromeLength[d_Association] := If[
-    d["Method"] === "DetectorModel",
+    KeyExistsQ[d, "Model"],
     d["Model"]["Detectors"],
     codeStabilizerCount[d["Code"]]
 ]
@@ -137,6 +149,20 @@ decodeWith["DetectorModel", d_, syn_] := With[
     If[MissingQ[obs], obs, IntegerDigits[obs, 2, d["Model"]["Observables"]]]
 ]
 
+(* Matching answers in the decoder's own terms: a correction Pauli at code capacity,
+   the observables to flip for a detector model. *)
+decoderMatching[d_Association] := If[KeyExistsQ[d, "Model"], demMatching[d["Model"]], codeMatching[d["Code"], d["Noise"]]]
+
+decodeWith["Matching", d_, syn_] := With[
+    {r = matchingDecodeIndices[decoderMatching[d], Flatten @ Position[syn, 1]]},
+    Which[
+        MissingQ[r], r,
+        KeyExistsQ[d, "Model"], IntegerDigits[First[r], 2, d["Model"]["Observables"]],
+        True, With[{n = d["Code"]["Qubits"]},
+            pauliString[Append[If[Last[r] === 0, ConstantArray[0, 2 n], Last[r]], 0]]]
+    ]
+]
+
 decodeWith["Function", d_, syn_] := With[{n = d["Code"]["Qubits"], out = d["Function"][syn]},
     Which[
         MissingQ[out], out,
@@ -166,6 +192,14 @@ decoderTable[d_Association] := Switch[d["Method"],
         DeleteMissing @ AssociationMap[
             decodeWith["Function", d, #] &,
             Tuples[{0, 1}, codeStabilizerCount[d["Code"]]]
+        ],
+    (* a matching decoder has no table to read; it is written out only while 2^m is small *)
+    "Matching",
+        With[{m = decoderSyndromeLength[d]},
+            If[ m <= 16,
+                DeleteMissing @ AssociationMap[decodeWith["Matching", d, #] &, Tuples[{0, 1}, m]],
+                Missing["TooLarge", 2^m]
+            ]
         ]
 ]
 
@@ -173,6 +207,7 @@ decoderTable[d_Association] := Switch[d["Method"],
    syndrome the decoder does not answer is absent, which the rate counts as a failure,
    exactly as it does for the built-in table. *)
 decoderClassTable[d_Association] := Switch[d["Method"],
+    "Matching", matchingLookup[codeMatching[d["Code"], d["Noise"]]],
     "MaximumLikelihood", codeMaximumLikelihoodDecoder[d["Code"], d["Noise"]],
     "MinimumWeight", codeMinimumWeightDecoder[d["Code"], d["Reach"]],
     _, With[{table = decoderTable[d]},
@@ -188,7 +223,7 @@ decoderClassTable[d_Association] := Switch[d["Method"],
    code-capacity class table -- it decodes detectors, not syndromes -- and a decoder
    built for one code cannot score another. *)
 decoderFor[a_Association, noise_Association, QECDecoder[d_Association], reach_] := Which[
-    d["Method"] === "DetectorModel",
+    KeyExistsQ[d, "Model"],
         Message[QECDecoder::detector]; $Failed,
     d["Code"] =!= a,
         Message[QECDecoder::othercode]; $Failed,
@@ -199,7 +234,7 @@ decoderFor[a_Association, noise_Association, QECDecoder[d_Association], reach_] 
 
 (* ---- properties ---- *)
 
-$decoderProperties = {"Method", "Code", "Reach", "Noise", "DetectorModel", "Table", "Decode", "Properties"};
+$decoderProperties = {"Method", "Code", "Reach", "Noise", "DetectorModel", "Table", "Decode", "Graph", "Properties"};
 
 QECDecoder[_Association]["Properties"] := $decoderProperties
 QECDecoder[d_Association]["Method"] := d["Method"]
@@ -209,6 +244,9 @@ QECDecoder[d_Association]["Noise"] := If[KeyExistsQ[d, "Noise"], QECNoiseModel[d
 QECDecoder[d_Association]["DetectorModel"] := If[KeyExistsQ[d, "Model"], QECDetectorModel[d["Model"]], Missing["NotApplicable"]]
 QECDecoder[d_Association]["Table"] := decoderTable[d]
 QECDecoder[d_Association]["Decode", syn_] := decoderDecode[d, syn]
+(* The matching graph: detectors as vertices, the boundary as the last one, edges
+   weighted by log((1 - p) / p). *)
+QECDecoder[d_Association]["Graph"] := If[d["Method"] === "Matching", decoderMatching[d]["Graph"], Missing["NotApplicable"]]
 QECDecoder[d_Association][prop_String] := (Message[QECDecoder::noprop, prop]; Missing["NotFound", prop])
 
 

@@ -120,6 +120,36 @@ VerificationTest[
 
 (* ---- reset / barrier / gphase parse ---- *)
 
+(* a reset after a gate on its wire is kept: X, reset, X ends in |1>, and a reset of one half of a
+   Bell pair leaves the other half in an equal mixture *)
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[1] c;\nx q[1];\nreset q[1];\nx q[1];\nc[0] = measure q[1];"][]["ProbabilitiesList"],
+    {0, 1},
+    TestID -> "reset-mid-circuit-kept"
+]
+
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nh q[0];\ncx q[0], q[1];\nreset q[0];\nc[0] = measure q[0];\nc[1] = measure q[1];"][]["ProbabilitiesList"],
+    {1/2, 1/2, 0, 0},
+    TestID -> "reset-mid-circuit-bell-half"
+]
+
+(* a reset before any gate on its wire is dropped *)
+VerificationTest[
+    FreeQ[#["Label"] & /@ QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nreset q;\nh q[0];"]["Operators"], "Reset"[_]],
+    True,
+    TestID -> "reset-initial-dropped"
+]
+
+(* a circuit with a mid-circuit reset survives export and import *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{"H" -> 1, "X" -> 2, "Reset"["1"] -> 2, "M" -> {1, 2}}]},
+        Max[Abs[QuantumQASM[QuantumQASM[qc]][]["ProbabilitiesList"] - qc[]["ProbabilitiesList"]]] < 10^-10
+    ],
+    True,
+    TestID -> "reset-export-import-roundtrip"
+]
+
 VerificationTest[
     Head @ QuantumQASM["OPENQASM 3.0;\nqubit[2] q;\nh q[0];\nbarrier q;\nreset q[1];\ngphase(pi/4);"],
     QuantumCircuitOperator,
@@ -265,9 +295,8 @@ VerificationTest[
     TestID -> "stateprep-roundtrip-equivalent"
 ]
 
-(* OpenQASM `reset` is dropped on import (a QF wire with no initial state is already |0>):
-   the re-imported circuit carries no Reset element, so it does not accumulate the malformed
-   growing-dimension Reset[QuantumState[\[Ellipsis]]] artifacts that "Reset" -> wire produced *)
+(* An OpenQASM `reset` on a wire nothing has touched yet is dropped on import (a QF wire starts
+   in |0>): the re-imported state preparation carries no Reset element *)
 VerificationTest[
     FreeQ[QuantumQASM[QuantumQASM[QuantumCircuitOperator["CHSH"]]]["Elements"], Reset | "Reset"],
     True,
@@ -512,21 +541,22 @@ VerificationTest[
     TestID -> "emit-tensor-power-rotations-roundtrip"
 ]
 
-(* an OpenQASM angle is a number, and a permutation that also relabels wires is not lowered to
-   swaps: both are reported as gates the emitter cannot serialize, not written as WL text or as
-   an empty program *)
+(* an OpenQASM angle is a number, and an operator that moves a qubit to another wire has no gate:
+   both are reported as gates the emitter cannot serialize, not written as WL text or as an empty
+   program. A relabeling of wires among themselves is a permutation, written as SWAPs (its channel
+   is checked in QiskitChannels.wlt). *)
 VerificationTest[
     {
         QuantumQASM[QuantumCircuitOperator[{QuantumOperator["C"[QuantumOperator["RZ"[\[Theta]], {2}], {1}, {}]]}]]["NonNativeGates"],
         QuantumQASM[QuantumCircuitOperator[{QuantumOperator["RZ"[\[Theta]], {1, 2}]}]]["NonNativeGates"],
-        QuantumQASM[QuantumCircuitOperator[{QuantumOperator["Permutation"[], {1, 2, 3} -> {3, 1, 2}]}]]["NonNativeGates"],
-        QuantumQASM[QuantumCircuitOperator[{QuantumOperator[{{0, 1}, {1, 0}}, {{2}, {1}}, "Label" -> "relabel"]}]]["NonNativeGates"]
+        FailureQ @ QuantumQASM[QuantumCircuitOperator[{QuantumOperator[{{0, 1}, {1, 0}}, {{2}, {1}}, "Label" -> "relabel"]}]],
+        StringCount[QuantumQASM[QuantumCircuitOperator[{QuantumOperator["Permutation"[], {1, 2, 3} -> {3, 1, 2}]}]], "swap"]
     },
     {
         {"Subscript[C, Subscript[R, Z][\[Theta]]][{1}, {}]"},
         {"Superscript[Subscript[R, Z][\[Theta]], CircleTimes[2]]"},
-        {"\[Pi][1, 2, 3]"},
-        {"relabel"}
+        True,
+        2
     },
     TestID -> "emit-symbolic-and-relabeling-fail-cleanly"
 ]

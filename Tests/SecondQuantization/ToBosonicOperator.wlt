@@ -208,3 +208,74 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["ToBosonicOperator - ordered products"]
+
+$exactBlock[gen_, big_, modes_] :=
+    With[{a = N @ Normal[AnnihilationOperator[big]["Matrix"]]},
+        With[{ops = Table[Fold[KroneckerProduct, ReplacePart[ConstantArray[IdentityMatrix[big], modes], j -> a]], {j, modes}]},
+            With[{idx = If[modes === 1, Range[4], Flatten[Table[big i + j + 1, {i, 0, 2}, {j, 0, 2}]]]},
+                MatrixExp[gen[ops, ConjugateTranspose /@ ops]][[idx, idx]]
+            ]
+        ]
+    ];
+
+$block[op_, size_, modes_] :=
+    With[{idx = If[modes === 1, Range[4], Flatten[Table[size i + j + 1, {i, 0, 2}, {j, 0, 2}]]]},
+        N[Normal[op["Matrix"]]][[idx, idx]]
+    ];
+
+VerificationTest[
+    Max[Abs[N[Normal[ToBosonicOperator[BosonicExpOrder[Exp[1/2 SuperDagger[\[FormalA]] ** \[FormalA]], $v], $v, 6]["Matrix"]]] -
+        DiagonalMatrix[N[Exp[Range[0, 5]/2]]]]] < 10^-12,
+    True,
+    TestID -> "ToBosonicOperator-NormalOrderedNumberExponential"
+]
+
+VerificationTest[
+    Normal[ToBosonicOperator[NormalOrdered[Exp[-SuperDagger[\[FormalA]] ** \[FormalA]], $v], $v, 5]["Matrix"]],
+    Normal[SparseArray[{1, 1} -> 1, {5, 5}]],
+    TestID -> "ToBosonicOperator-NormalOrderedVacuumProjector"
+]
+
+VerificationTest[
+    Max[Abs[$block[ToBosonicOperator[BosonicExpOrder[Exp[0.1 SuperDagger[\[FormalA]] ** \[FormalA] ** SuperDagger[\[FormalA]]], $v], $v, 6], 6, 1] -
+        $exactBlock[0.1 #2[[1]] . #1[[1]] . #2[[1]] &, 40, 1]]] < 10^-12,
+    True,
+    TestID -> "ToBosonicOperator-NormalOrderedBlasiak"
+]
+
+VerificationTest[
+    Max[Abs[$block[ToBosonicOperator[BosonicExpOrder[Exp[0.3 (SuperDagger[\[FormalA]] ** \[FormalB] - SuperDagger[\[FormalB]] ** \[FormalA])], $vab], $vab, 6], 6, 2] -
+        $exactBlock[0.3 (#2[[1]] . #1[[2]] - #2[[2]] . #1[[1]]) &, 14, 2]]] < 10^-12,
+    True,
+    TestID -> "ToBosonicOperator-NormalOrderedBeamSplitter"
+]
+
+VerificationTest[
+    Max[Abs[$block[ToBosonicOperator[BosonicExpOrder[
+            Exp[0.2 SuperDagger[\[FormalA]] ** \[FormalB] + 0.1 SuperDagger[\[FormalA]] ** \[FormalA] + 0.05 SuperDagger[\[FormalB]] ** \[FormalA]], $vab], $vab, 6], 6, 2] -
+        $exactBlock[0.2 #2[[1]] . #1[[2]] + 0.1 #2[[1]] . #1[[1]] + 0.05 #2[[2]] . #1[[1]] &, 14, 2]]] < 10^-12,
+    True,
+    TestID -> "ToBosonicOperator-NormalOrderedPassiveMixing"
+]
+
+VerificationTest[
+    Max[Abs[$block[ToBosonicOperator[BosonicExpOrder[
+            Exp[0.1 (GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] - GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]) +
+                0.15 (SuperDagger[\[FormalA]] ** \[FormalB] - SuperDagger[\[FormalB]] ** \[FormalA])], $vab], $vab, 6], 6, 2] -
+        $exactBlock[0.1 (#2[[1]] . #2[[1]] - #1[[1]] . #1[[1]]) + 0.15 (#2[[1]] . #1[[2]] - #2[[2]] . #1[[1]]) &, 14, 2]]] < 10^-10,
+    True,
+    TestID -> "ToBosonicOperator-NormalOrderedSqueezeAndMixing"
+]
+
+VerificationTest[
+    Max[Abs[$block[ToBosonicOperator[BosonicExpOrder[Exp[0.3 (SuperDagger[\[FormalA]] ** \[FormalB] - SuperDagger[\[FormalB]] ** \[FormalA])], $vab,
+            "Ordering" -> "Antinormal"], $vab, 12], 12, 2] -
+        $exactBlock[0.3 (#2[[1]] . #1[[2]] - #2[[2]] . #1[[1]]) &, 14, 2]]] < 10^-8,
+    True,
+    TestID -> "ToBosonicOperator-AntinormalOrderedBeamSplitter"
+]
+
+EndTestSection[]

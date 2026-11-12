@@ -10,6 +10,7 @@ PackageScope[codeBasis]
 PackageScope[codeQubits]
 PackageScope[codeStabilizerCount]
 PackageScope[codeLogicalQubits]
+PackageScope[codeCheckOrder]
 PackageScope[codeVectors]
 PackageScope[fromVectors]
 
@@ -104,6 +105,15 @@ codeQubits[a_Association] := a["Qubits"]
 codeStabilizerCount[a_Association] := Length[a["CheckMatrix"]]
 codeLogicalQubits[a_Association] := a["Qubits"] - Length[a["CheckMatrix"]]
 
+(* The order in which the bare-ancilla circuit touches each generator's qubits.  It
+   is not part of the code -- any order gives the same stabilizer group -- but it
+   decides which pairs of data errors one ancilla fault leaves behind (the hook error
+   of Got26 sec. 12.1.1), so a family whose geometry fixes a good order carries it as
+   "CheckOrder"; any other code gets its supports in qubit order. *)
+codeCheckOrder[a_Association] := Lookup[a, "CheckOrder",
+    With[{n = a["Qubits"]}, Flatten[Position[BitOr[#[[1 ;; n]], #[[n + 1 ;; 2 n]]], 1]] & /@ a["CheckMatrix"]]
+]
+
 (* Generator rows in full Pauli-row form {x|z|e}. *)
 codeVectors[a_Association] := MapThread[Append, {a["CheckMatrix"], a["Phases"]}]
 
@@ -165,7 +175,7 @@ $codeDirectProperties = {
 
 $codeDerivedProperties = {
     "Parameters", "Distance", "MinimumWeightLogical", "LogicalOperators", "LogicalX", "LogicalZ",
-    "StandardForm", "CompletedGenerators", "SyndromeTable", "Decoder", "PerfectQ", "CSSQ", "SyndromeCircuit",
+    "StandardForm", "CompletedGenerators", "SyndromeTable", "Decoder", "PerfectQ", "CSSQ", "SyndromeCircuit", "CheckOrder",
     "EncodingGates", "EncodingCircuit", "EncodingCircuitValidQ", "PauliStabilizer", "State",
     "Encoder", "Codewords", "Codespace", "SyndromeMeasurement",
     "WeightEnumerator", "SignedWeightEnumerator", "DualWeightEnumerator"
@@ -228,6 +238,7 @@ QECCode[a_Association]["Decoder", maxWeight_Integer] := codeDecoderToWeight[a, m
 QECCode[a_Association]["PerfectQ"] := codePerfectQ[a]
 QECCode[a_Association]["CSSQ"] := codeCSSQ[a]
 
+QECCode[a_Association]["CheckOrder"] := codeCheckOrder[a]
 QECCode[a_Association]["SyndromeCircuit"] := QECSyndromeCircuit[QECCode[a]]
 QECCode[a_Association]["SyndromeCircuit", rounds_] := QECSyndromeCircuit[QECCode[a], rounds]
 
@@ -235,7 +246,15 @@ QECCode[a_Association]["EncodingGates"] := codeEncodingGates[a]
 QECCode[a_Association]["EncodingCircuit"] := Wolfram`QuantumFramework`QuantumCircuitOperator[codeEncodingGates[a]]
 QECCode[a_Association]["EncodingCircuitValidQ"] := codeEncodingValidQ[a]
 
-QECCode[a_Association]["PauliStabilizer"] := Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ codeVectors[a]]
+(* The engine holds states, and m < n generators do not fix one: they fix a
+   2^(n-m)-dimensional space.  So the code is handed over completed to n generators
+   (codeCompletedGenerators), which pins one fiducial codeword, as the tech note
+   describes.  Handing over the bare generators used to be accepted by the engine and
+   built a tableau whose measurements were wrong; since November 2026 the engine
+   refuses strings of rank below n, which is what exposed this. *)
+QECCode[a_Association]["PauliStabilizer"] := With[{gens = codeCompletedGenerators[a]},
+    If[gens === $Failed, $Failed, Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ gens]]
+]
 QECCode[a_Association]["State"] := QECCode[a]["PauliStabilizer"]["State"]
 
 QECCode[a_Association]["Syndrome", err_] := codeSyndrome[a, err]

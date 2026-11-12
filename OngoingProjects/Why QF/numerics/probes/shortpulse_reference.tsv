@@ -1,0 +1,4 @@
+# Wolfram Language 15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026), 2026-10-19 13:09
+case	variant	package	setting	observable	result	exact	abs_error	seconds	note
+4 transmon	windowed	reference	NDSolveValue, WorkingPrecision 40, MaxStepSize 1/20, pulse only	P0, P1, P2	0.0123766700394888217062, 0.987073888303981315334, 0.000549441656529862999199				largest change at WorkingPrecision 50, MaxStepSize 1/40: 5.28373366212188378003e-20; total probability - 1: 3.93594568370747732553e-20
+4 transmon	untruncated	reference	NDSolveValue, WorkingPrecision 40, MaxStepSize 1/20, pulse only	P0, P1, P2	0.0109248777634874047673, 0.989075103923125454316, 1.83133871409244541316e-8				largest change at WorkingPrecision 50, MaxStepSize 1/40: 5.1152532760012959134e-21; total probability - 1: 8.107709292211828212e-21

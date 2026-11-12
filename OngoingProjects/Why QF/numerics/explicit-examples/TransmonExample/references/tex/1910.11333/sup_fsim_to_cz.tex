@@ -1,0 +1,93 @@
+\section{Decomposing controlled-phase gates into Sycamore gates}
+
+\newcommand{\Syc}{\mbox{\small $\mathrm{Syc}$}}
+
+The Sycamore gate that we used to achieve quantum supremacy takes the form
+\begin{align}\label{cz_to_syc:eq:Sycamore_a}
+    \Syc(\theta, \phi) = e^{-i\theta(X\otimes X + Y\otimes Y)/2}\, e^{-i\phi(I-Z)\otimes (I-Z)/4}\,,
+\end{align}
+where the iSWAP angle $\theta \simeq \pi/2$ and the controlled-phase angle $\phi \simeq \pi/6$. The controlled-phase $\diag(1,1,1, e^{-i\phi})$ can be
+decomposed into
+\begin{align}
+&e^{-i\phi(I-Z)\otimes (I-Z)/4}\nonumber\\
+&\quad = e^{-i\phi/4}\, e^{i\phi (Z\otimes I + I\otimes Z)/4}\, e^{-i\phi Z\otimes Z/4}\,.
+\end{align}
+To simplify notations, we introduce the two-qubit gate
+\begin{align}\label{cz_to_syc:eq:Sycamore_b}
+    \Upsilon(\theta, \phi)&= e^{-i\theta(X\otimes X + Y\otimes Y)/2}\, e^{-i\phi Z\otimes Z/4}\nonumber\\[2pt] 
+    &= e^{i\phi/4}\, e^{-i\phi (Z\otimes I + I\otimes Z)/4}\: \Syc(\theta, \phi)
+    \,,
+\end{align}
+which is equivalent to the Sycamore gate up to single-qubit $Z$ rotations. The sign of the iSWAP angel $\theta$ in $\Upsilon(\theta, \phi)$ can be changed by the transformation,
+\begin{align}\label{cz_to_syc:eq:Sycamore_b}
+  Z_1\, \Upsilon(\theta, \phi)\, Z_1  = \Upsilon(-\theta, \phi) \,,
+\end{align}
+where $Z_1 = Z\otimes I$ ($Z_2 = I\otimes Z$ works equally well).  
+
+We show how to use two $\Upsilon(\theta, \phi)$ gates to synthesize one controlled-phase gate, e.g., the \CZ\ gate.  Multiplying two Sycamore gates with opposite iSWAP angles on both sides of the operator $X_1 = X\otimes I$, we have 
+\begin{align}
+ \Upsilon(-\theta, \phi)\, X_1\, \Upsilon(\theta, \phi)&= e^{i\theta Y\otimes Y /2}\, X_1\,e^{-i\theta Y\otimes Y /2}\nonumber\\
+ &= \cos\theta\, X_1 + \sin\theta\, Z\otimes Y\,.\label{cz_to_syc:eq:X_1_identity}
+\end{align}
+With the identity~\eqref{cz_to_syc:eq:X_1_identity}, we have
+\begin{widetext}
+\begin{align}
+ \Upsilon(-\theta, \phi)\, e^{i\alpha X_1}\, \Upsilon(\theta, \phi)
+ &= \cos\alpha\, \Big(\cos\frac{\phi}{2}\,I\otimes I -i\sin\frac{\phi}{2}\, Z\otimes Z\Big) + i\sin\alpha\, \Big(\cos\theta\, X\otimes I + \sin\theta\, Z\otimes Y\Big)\nonumber\\[3pt]
+ &= \Big(\cos\alpha\cos\frac{\phi}{2}\, I + i\sin\alpha\cos\theta\, X\Big) \otimes I - i Z\otimes \Big(\cos\alpha\sin\frac{\phi}{2}\, Z - \sin\alpha\sin\theta\, Y\Big)\,,\label{cz_to_syc:eq:composite_gate}
+\end{align}
+\end{widetext}
+where $0 \leq\alpha\leq \pi/2$ is to be determined.  The Schmidt rank of the unitary~\eqref{cz_to_syc:eq:composite_gate} is two, 
+\begin{align}
+  \Upsilon(-\theta, \phi)\, e^{i\alpha X_1}\, \Upsilon(\theta, \phi) =  \Gamma_1\otimes I -iZ\otimes \Gamma_2\,,
+\end{align}
+where the Schmidt operators are
+\begin{align}
+    &\Gamma_1(\alpha) = \cos\alpha\cos(\phi/2)\, I + i\sin\alpha\cos\theta\, X\,,\\[3pt]
+    &\Gamma_2(\alpha) = \cos\alpha\sin(\phi/2)\, Z - \sin\alpha\sin\theta\, Y\,.
+\end{align}
+As a result, this unitary is equivalent to a controlled-phase gate (also with Schmidt rank 2) up to some single-qubit unitaries.  The target controlled-phase gate 
+\begin{align}
+\diag\big(1,\, 1,\, 1,\, e^{-i\delta}\big) = e^{-i\delta(I-Z)\otimes (I-Z)/4} \,,
+\end{align}
+has two Schmidt coefficients $\cos(\delta/4)$ and $\sin(\delta/4)$, where $0\leq\delta\leq 2\pi$.  For example, we set the operator norm of $\Gamma_2$ to the second one
+\begin{align}
+\big\lvert\Gamma_2(\alpha)\big\rvert &= \sqrt{\big(\cos\alpha\sin(\phi/2)\big)^2 + \big(\sin\alpha\sin\theta\big)^2}\nonumber\\[3pt]
+&= \sin(\delta/4)\,.\label{cz_to_syc:eq:second_sch_coeff}
+\end{align}
+The free parameter $\alpha$ can therefore be determined
+\begin{align}\label{cz_to_syc:eq:alpha}
+\sin\alpha = \sqrt{\frac{\sin(\delta/4)^2 - \sin(\phi/2)^2}{\sin(\theta)^2-\sin(\phi/2)^2}}\;.
+\end{align}
+This equation has a solution if and only if one of the following two conditions is satisfied
+\begin{align}
+\lvert\sin\theta\rvert \leq \sin(\delta/4) \leq \lvert\sin(\phi/2)\rvert\,,\\[3pt]
+\lvert\sin(\phi/2)\rvert\leq \sin(\delta/4)  \leq \lvert\sin\theta\rvert \,.
+\end{align}
+One can implement a large class of controlled-phase gates with the typical values of $\theta$ and $\phi$ in the Sycamore gate, including the \CZ.
+
+To fix the local basis of the first qubit, we introduce two $X$ rotations
+\begin{gather}
+ e^{-i\xi X/2}\, \Gamma_1(\alpha)\, e^{-i\xi X/2} = \cos(\delta/4)\,I\,,\\[2pt]
+  e^{-i\xi X/2}\, Z\:  e^{-i\xi X/2}=  Z\,,
+\end{gather}
+where the $X$ rotation parameter is 
+\begin{align}
+ \xi = \arctan \bigg(\frac{\tan\alpha \cos\theta}{\cos(\phi/2)}\bigg) + \frac{\pi}{2}\, \Big(1-\sgn\big(\cos(\phi/2)\big)\Big)\,.
+\end{align}
+To fix the local basis of the second qubit, we also introduce two $X$ rotations
+\begin{align}
+ e^{i\eta X/2}\, \Gamma_2(\alpha)\, e^{-i\eta X/2}= \sin(\delta/4)\,Z\,,
+\end{align}
+where the $X$ rotation angle is
+\begin{align}
+\eta = \arctan \bigg(\frac{\tan\alpha \sin\theta}{\sin(\phi/2)}\bigg) + \frac{\pi}{2}\, \Big(1-\sgn\big(\sin(\phi/2)\big)\Big)\,.
+\end{align}
+Applying these local $X$ rotations before and after the gate sequence in Eq.~\eqref{cz_to_syc:eq:composite_gate}, we have
+\begin{align}
+ & e^{-i(\xi X_1 - \eta X_2)/2}\,\Upsilon(-\theta, \phi)\, e^{i\alpha X_1}\, \Upsilon(\theta, \phi)\, e^{-i(\xi X_1 + \eta X_2)/2}\nonumber\\[2pt]
+ & \quad= \cos(\delta/4)\: I \otimes I - i\sin(\delta/4)\, Z\otimes Z\,,\label{cz_to_syc:eq:final_decomposition}
+\end{align}
+which is the desired controlled-phase gate up to some single-qubit $Z$ rotations.  
+
+The target controlled-phase gate is the \CZ\ gate for $\delta = \pi$.  We have tested that the decomposition~\eqref{cz_to_syc:eq:final_decomposition} yields the \CZ\ gate for all 86 pairs of qubit-qubit interactions in our chip.

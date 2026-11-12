@@ -102,4 +102,40 @@ VerificationTest[
   TestID -> "IBMJob-malformed-results-nosamples"
 ];
 
+(* ============================================================================
+   Result schema "v2.0" (ibm_quantum_schemas executor QuantumProgramResultModel): each register
+   is a CompressedTensorModel, base64(zlib(bool array packed eight per byte, first element in
+   the least significant bit)), shape {shots, creg_size}, column k = classical bit k.
+   v2X1Z2 is a REAL ibm_fez payload (job dbqfceujjaos73ah7meg, 2 measured qubits, 4096 shots);
+   its expected histogram comes from an independent numpy decode (np.unpackbits, bitorder
+   "little"). v2a/v2b encode the same known two-register values as ba/bb above, built with
+   numpy packbits, bitorder "little", the encoder ibm_quantum_schemas uses.
+   ============================================================================ *)
+makeV2[regs_] := <|"schema_version" -> "v2.0", "semantic_role" -> "sampler-v2",
+  "data" -> {<|"results" -> regs, "metadata" -> <||>|>}, "metadata" -> <||>|>;
+v2X1Z2 = "eJwV07FL5UcQB/DVFRTcc4WrUoQnXBOI4OoIJzi6whVpXvBfyJ9gsD3QYCu8ImXyN0SPFGkER1bwEuc5gk0KwQPbB47OgUdc3fyu3GVhmO/3s8gcGrDFmmtrVoNKe9S+4yVwGULzFMZJScIjhBp62uwKS26N/sHzEm797YIUi2HPpXJdpJAv/4rx2Z2xj9i8yTOnxqU2rAr1zAwyqISicdfdKWxxO0fh09pSMnNDiFhH34tP+0B4wdGH4A0t/l59YrL8q4X5FKOGVvyzNMxhP7ryp5uOscVjPS+/hHQ4wqDW6CnnHR+jr96fqqBOoOs7HAGOvai2nWuXpeLlz5cfc/divcYs3Jh9wJoROF+3hPJ6d8YsRElaTy+gmA91zV8eucWKDmRvLj19AjmCnMZT3JAolFY5I8ec3R5KFnW5fha8Gnn4QDn79/FgpaZHZrvfTZ7WvqZf8+KD68NPtG9dPIat5MtQsiOnNjuGkzuZ7LLNdS0oTDU6XLJpawuuMMeuuPEnh4M+eNS2MDAKV1B1nmDM3uRF1gcrDn+4hxq383JGkThiLnKWChWTorm3Gb+sSqaFkEPjpbiS1uhV4UGI7r6awBZ4fcsbhtNNndFo1a1SYFgCKPm3k3pRbZWbq0ruu1H7keyubMZIWaxqYaxu/aYAO+wzphXZ7gNxSfOeOlCdDm6Gk05aDO+fcxX8ZpAG5e/sEN/5kvDm1ZtvS7qh4CsU+esav/r8JC+hOp0zLZ0IaTX4HOoBDxSKqyHEY7g7DY6w4UOlQ3euFgQZWuQyRwRd6kz+D1oHYTSZkk55xRguFXr/Jcx5yZFNojtaJk/zPk3Ukh/COr5NLnY3DNbmV9rk68XNCiH79LijMjv5sNXxhrl3BampuFidz/WYjeZdxbTXK5EXknOtH9h1awvTzGewYekOXma3w/54LjfaUzta0vQxUdCyPPSz5QtcKIhpvIUDdROdrWxxuNF9s6YfxnRd/M7LWsNlpSHdxdRxK8czvheHFSwDTcU0tuz9CXUzvaQUQyO1muTRFK2Nn8D/nvcHTQ==";
+jobV2 = makeJob[makeV2[<|"c" -> <|"data" -> v2X1Z2, "shape" -> {4096, 2}, "dtype" -> "bool"|>|>], {0, 1}];
+
+VerificationTest[
+  KeySort @ jobV2["Counts"],
+  <|{0, 0} -> 1881, {0, 1} -> 150, {1, 0} -> 136, {1, 1} -> 1929|>,
+  TestID -> "IBMJob-v2-real-2q-counts"
+];
+VerificationTest[ jobV2["NumBits"], 2, TestID -> "IBMJob-v2-real-2q-numbits" ];
+
+jobV2S = makeJob[makeV2[<|
+    "a" -> <|"data" -> "eJxjYPlg38DO0PKPAQAQEgM9", "shape" -> {8, 10}, "dtype" -> "bool"|>,
+    "b" -> <|"data" -> "eJx7wB4x4QcAB6ECyA==", "shape" -> {8, 5}, "dtype" -> "bool"|>|>], Range[0, 14]];
+
+VerificationTest[
+  jobV2S["Samples"],
+  {0, 31745, 2047, 16896, 5127, 8448, 3048, 31747},
+  TestID -> "IBMJob-v2-2register-packing"
+];
+VerificationTest[
+  makeJob[makeV2[<|"c" -> <|"data" -> "eJxjYPlg38DO0PKPAQAQEgM9", "shape" -> {8, 10}, "dtype" -> "f64"|>|>], Range[0, 9]]["Counts"],
+  Missing["NoSamples"],
+  TestID -> "IBMJob-v2-non-bool-nosamples"
+];
+
 EndTestSection[]

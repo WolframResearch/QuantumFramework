@@ -336,7 +336,10 @@ operationalChannelData[a_Association, spec_, opts : OptionsPattern[codeOperation
     ];
     reach = decoderReachFor[a, OptionValue[codeOperationalChannel, {opts}, "DecoderReach"]];
     decoder = decoderFor[a, noise, OptionValue[codeOperationalChannel, {opts}, "Decoder"], reach];
-    If[decoder === $Failed, $Failed, {noise, decoder}]
+    If[ decoder === $Failed,
+        $Failed,
+        {noise, decoderLookup[decoder, Keys[cosetProbabilities[a, noise]][[All, 1]]]}
+    ]
 ]
 
 QECCode[a_Association]["Encoder"] := If[denseAllowedQ[a, "Encoder"], codeEncoderOperator[a], $Failed]

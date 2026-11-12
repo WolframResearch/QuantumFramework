@@ -1,0 +1,19 @@
+\section{\label{architecture}Device design and architecture}
+The Sycamore device was designed with both the quantum supremacy experiment \cite{arute2019} and small noisy intermediate scale quantum (NISQ) applications in mind. The architecture is also suitable for initial experiments with quantum error correction based on the surface code.  While we are targeting 0.1\% error two-qubit gates for error correction, a quantum supremacy demonstration can be achieved with 0.3-0.6\% error rates. 
+
+For decoherence-dominated errors, a 0.1\% error means a factor of about 1000 between coherence and gate times.  For example, a 25 $\mu$s coherence time implies a 25 ns gate.  A key design objective in our architecture is achieving short two-qubit gate time, leading to the choice of tunable transmon qubits with direct, tunable coupling.
+
+A difficult challenge for achieving a high-performance two-qubit gate is designing a sufficiently strong coupling when the gate is active, which is needed for fast gates, while minimizing the coupling otherwise for low residual control errors. These two competing requirements are difficult to satisfy with a fixed-coupling architecture: our prior processors \cite{barends2014nine} used large qubit-qubit detuning ($\sim$1~ GHz) to turn off the effective interaction, requiring relatively high-amplitude precise flux pulses to tune the qubit frequencies to implement a CZ gate. In the Sycamore device, we use adjustable couplers \cite{charles_thesis} as a natural solution to this control problem, albeit at the cost of more wiring and control signals. This means that the qubits can idle at much smaller relative detuning. We chose a capacitor-coupled design \cite{charles_thesis, Yan-2018-MIT}, which is simpler to layout and scale, over the inductor-based coupler of previous gmon devices \cite{chen2014coupler, neill2018blueprint}. In Sycamore, the coupling $g$ is tunable from $5$ MHz to $-40$ MHz. The experiment uses `on' coupling of about $-20$ MHz.  
+
+By needing only small frequency excursions to perform a two-qubit gate, the tunable qubit can be operated much closer to its maximum frequency, thus greatly reducing flux sensitivity and dephasing from $1/f$ flux noise.  Additionally, the coupling can be turned off during measurement, reducing the effect of measurement crosstalk, a phenomenon that has shown to be somewhat difficult to understand and minimize \cite{khezri2015transitions}.  
+	
+The interaction Hamiltonian of a system of on-resonance transmons with adjustable coupling (truncated to the qubit levels) has the following approximate form,
+\begin{align}
+H_{\mathrm{int}}(t) \approx 
+\sum_{\left< i,j \right>} g_{ij}(t) \, 
+(\sigma_i^+ \sigma_j^- + \sigma_i^- \sigma_j^+) +
+\frac{g_{ij}^2(t)}{|\eta |}\, \sigma_i^z \sigma_j^z \, ,
+\end{align}
+where $g_{ij}$ is the nearest neighbor coupling, $\eta$ is the non-linearity of the qubits (roughly constant),  $i$ and $j$ index nearest-neighbor qubit pairs, and $\sigma^{\pm} = (\sigma^x \pm i \sigma^y)/2$.  We pulse the coupling in time to create coupling gates.
+
+Our two-qubit gate can be understood using Cartan decomposition \cite{tucci507171cartan}, which enables an arbitrary two-qubit gate to be decomposed into four single-qubit gates around a central two-qubit gate that can be described by a unitary matrix describing only XX, YY and ZZ interactions, with 3 parameters indicating their strengths.  For the physical interaction describing our hardware, we see a swapping interaction between the $|01\rangle$ and $|10\rangle$ qubits states, corresponding to an XX+YY interaction.  Interaction of the qubit $|11\rangle$ state with the $|2\rangle$ states of the data transmons produce a phase shift of that state, corresponding to a ZZ interaction.  By changing the qubit frequencies and coupling strength we can vary the magnitude of these interactions, giving net control of 2 out of the 3 possible parameters for an arbitrary gate.  

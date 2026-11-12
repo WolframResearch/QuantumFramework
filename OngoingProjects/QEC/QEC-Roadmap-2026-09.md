@@ -40,7 +40,7 @@ Two defects found while building on it, both worth knowing:
 ### The code layer (rebuilt, in `OngoingProjects/QEC/`)
 
 The layer is no longer a prototype. It is a functional-idiom package of 25 files with
-**720 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
+**790 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
 every exported name is prefixed `QEC`. Its public surface was redesigned after the API
 audit (`QEC-API-Redesign-Plan.md`, steps 0–7 done): a code now also presents itself as
 quantum operations (encoder, codewords, syndrome measurement, recovery, logical channel,
@@ -124,10 +124,9 @@ general case"*.
 |---|---|
 | Shor and Knill error correction — Shor being the one with no CSS restriction | sec. 12.2, 12.4 |
 | GPP, GCP, ECRP, ECCP as checkable properties | sec. 10.2 |
-| FT preparation of encoded states — including the ancillas Steane EC consumes | sec. 13.1 |
 | gate teleportation, Clifford hierarchy, magic states, distillation | ch. 13 |
-| adversarial noise, exRecs, benign/malignant sets, the \*-decoder | sec. 14.1–14.4 |
-| level reduction, the threshold theorem, pseudothresholds | sec. 14.6–14.7 |
+| the \*-decoder, and level reduction as a construction | sec. 14.4, 14.6 |
+| magic-state distillation; FT(C) with T gates (a conditional Clifford correction) | sec. 13.5 |
 | Solovay–Kitaev, short-range gates, slow measurement, leakage, biased and non-Markovian noise | ch. 15 |
 | surface and toric codes | ch. 17 |
 
@@ -136,9 +135,19 @@ an exact answer for whether the logical qubit survives; we can build the gadgets
 measurement fault tolerant, check that they are, hand one of them to the rate machinery and
 watch the exponent go from 1 to 2; we can say which gates a code performs transversally and
 which logical gate each one is; and we can assemble a whole circuit into `FT(C)` and price it
-in Def 10.6's own three overheads. What is still missing is the analysis on top — exRecs,
-benign and malignant fault sets, the rigorous threshold bound — and underneath it all the
-fault-tolerant preparation of the ancillas every gadget consumes.**
+in Def 10.6's own three overheads. Phase G (November 2026) added the analysis on top and the
+piece underneath: ancillas verified against a second copy (fig. 13.3), so that no single fault
+leaves more than one error; extended rectangles counted location by location, whose CNOT exRec
+matches the book's 263 CNOTs, 112 preparations, 112 measurements and 8 post-selections exactly;
+malignant pairs counted by trying every Pauli on every pair (Theorem 14.1 checked: no single
+location is malignant); and `QECThreshold[code, "Method" -> "Concatenation"]`, the rigorous lower
+bound — 1.46 × 10⁻⁵ for the 7-qubit protocol, against the book's 3.6 × 10⁻⁶ from bad sets and
+2.7 × 10⁻⁵ with malignant counting and a hand-optimised circuit. Then universality: the π/8
+gate by magic-state injection — the magic state prepared by the CSS encoder with a T on one wire
+(fig. 14.8b), tested with a cat state (fig. 14.9), injected (fig. 13.7), each step checked on state
+vectors — and its exRec, which bounds the universal protocol at 2.35 × 10⁻⁶ by bad sets, as the
+book does; and the overhead of concatenation, which reproduces table 14.1 exactly from the book's
+inputs. What is not built: magic-state distillation, and FT(C) with T gates in it.**
 
 ---
 
@@ -164,7 +173,7 @@ which needs fault-tolerant measurement, which needs verified cat states.
 | **D** | multi-block addressing: a logical qubit is a *block* | — | **done** |
 | **E** | transversal gates for the 7-qubit code | ch. 11, sec. 11.3 | **done** |
 | **F** | **`QECFaultTolerantCircuit[circuit, code]`** — the assembler | Def 10.6, ch. 14 | **done** |
-| **G** | exRecs, benign/malignant sets, the rigorous threshold bound | sec. 14.2–14.7 | next |
+| **G** | verified ancillas, exRecs, benign/malignant sets, the rigorous threshold bound | sec. 13.1, 14.2–14.7 | **done** (Clifford) |
 
 **What A, B and C delivered, in one number each.** The cat's check set is derived, not
 assumed: `m − 3` checks suffice, `m = 2` and `m = 3` need none, and the `m = 4` dangerous
@@ -331,7 +340,22 @@ rather than merely chargeable, and shortens the circuit. Note the current defaul
 `Idle -> 0` is optimistic rather than neutral: serial extraction is the arrangement with
 the *most* waiting.
 
-**(f) The families that scale (ch. 17).** `QECSurfaceCode[d]`, `QECToricCode[...]`,
+**(f) The families that scale (ch. 17).** **Surface and toric done (November 2026)** as
+`QECCode["Surface", d]` (rotated, `[[d², 1, d]]`) and `QECCode["Toric", L]` (`[[2L², 2, L]]`),
+parameters confirmed by the exact distance search up to `d = 5` / `L = 4`, circuits sampled by Stim
+(within 2.5σ on every detector) and decoded by PyMatching. Exact rates reach `d = 3` only. **The
+native matching decoder is done too**: `QECDecoder[..., "Method" -> "Matching"]` and
+`"Decoder" -> "Matching"`, exact minimum-weight perfect matching through `FindIndependentEdgeSet`,
+at code capacity and on a detector model (faults split into X and Z parts, then decomposed into
+edges, as Stim does for PyMatching). It reproduces PyMatching on the surface code at circuit level
+(`Z̄` 0.439 % against 0.443 %) and takes the surface code to `d = 7`, where the code-capacity
+bit-flip curves cross near the known 10.3 %. Finding that agreement also found that the surface
+code needed a CNOT order for its checks (`code["CheckOrder"]`) to keep hook errors off its logicals. What scales
+next was the family threshold, and **`QECThreshold` is done (November 2026)**: exact crossings where
+the rates are exact (the repetition code crosses at exactly 1/2), sampled pairwise crossings with
+error bars otherwise, the detector model built once per member with p symbolic. The surface code
+under bit flips gives 0.095 ± 0.006 from d = 3, 5, 7, against the known 10.3 %. Bivariate bicycle
+codes are still open. `QECSurfaceCode[d]`, `QECToricCode[...]`,
 `QECBivariateBicycleCode[...]`, returning the same code object so distance, decoding and
 rates work unchanged. Needed before any threshold estimate over a code *family*, and the
 natural consumer of the PyMatching path.
@@ -397,7 +421,7 @@ Two additions learned since:
    written about.
 4. **Then the scalable families (f)** and the empirical thresholds over a family that
    they enable.
-5. **Then phase G**: exRecs and malignant-set counting, and the rigorous threshold bound
+5. **Then phase G** (done, November 2026): exRecs and malignant-set counting, and the rigorous threshold bound
    — with the caveat that it will land 1–3 orders of magnitude below any simulated
    number, which is what the book's own figures show (`3.6 × 10⁻⁶` crude,
    `2.7 × 10⁻⁵` with careful counting, against `0.7%` simulated for the surface code).

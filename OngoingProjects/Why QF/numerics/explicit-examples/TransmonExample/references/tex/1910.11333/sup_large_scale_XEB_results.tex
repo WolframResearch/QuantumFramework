@@ -1,0 +1,266 @@
+\section{Large scale XEB results}\label{sec:large_scale_xeb}
+
+In Section \ref{sec:calib_metro}, we have detailed the device calibration processes used for individual components such as qubits, couplers, and coupled pairs of qubits. We have also introduced cross-entropy benchmarking (XEB) as a method that allows us to evaluate the performance of a quantum system. In this section, we describe how we use a few circuit variations to benchmark our Sycamore processor at a larger scale. In particular, we present a modular version of XEB with ``patch circuits" that does not require exponential classical computation resources for estimating XEB fidelities $\xebfidelity$ of larger systems. We also describe the effect of choice of unitary model on large-scale $\xebfidelity$, as well as how we use patch circuits to monitor the stability of the full system.
+
+\subsection{Limitations of full circuits}
+
+\begin{figure}
+\includegraphics{figures/sup_large_scale_XEB_results/qubit_order.pdf}
+\caption{\label{fig:qubit_order} \textbf{Qubit ordering for large-scale XEB experiments.} Illustration of the order in which qubits are added for large-scale experiments. The partition between left (black) and right (blue) qubits along the boundary (dashed red lines) is used in patch and elided circuits, as explained below.}
+\end{figure}
+
+We first discuss what we refer to as ``full circuits", where for a given set of qubits, all possible two-qubit gates participate in the circuit. With full circuits, we benchmarked the system as a function of size, where as discussed below the classical resources and techniques used to compute the $\xebfidelity$ is a function of the number of qubits. The order in which each qubit was added is labeled in Fig.~\ref{fig:qubit_order}. The rationale behind this ordering is explained in Section \ref{sec:circuits}. At each system size, we executed 10 randomly generated circuit instances on the processor and sampled output bitstrings 500k times for each circuit (unless otherwise specified). To minimize potential instance-to-instance fluctuations, we chose the gate sequences in a persistent, ``stable" manner: using a known seed for a random number generator, for each circuit, each time a new qubit is added, we maintain the same gateset for all the ``existing" qubits and new gates are only introduced to qubits and pairs associated with the added qubit (see Section \ref{sec:circuits} for details).
+
+Once a sufficient number of bitstrings are collected, $\xebfidelity$ can be calculated for each system size, following the method described in Section \ref{sec:xeb_theory}. As the system size increases, the computational complexity of XEB analysis grows exponentially, which can be qualitatively divided into three regimes. For system size from 12 to 37 qubits, XEB analysis was carried out by evolving the full quantum state (Schr\"odinger method) on a high-performance server (88 hyper-threads, 1.5TB memory in our case) using the ``qsim" program. At 38 qubits we used a n1-ultramem-160 VM in Google's cloud (160 hyperthreads, 3.8TB memory). Above 38 qubits, Google's large-scale cluster computing became necessary, and in addition a hybrid Schr\"{o}dinger-Feynman approach, the ``qsimh" program, was used to improve the efficiency: in this case, we break the system up into two patches, where each patch can be efficiently computed via the Schr\"{o}dinger method and then connected by a Feynman path-integral approach (see Section \ref{sec:classical_sim} for more details). Finally we used a Schr\"odinger algorithm in the J\"{u}lich supercomputer for some circuits up to 43 qubits. 
+
+In order to reduce the computational cost, we introduce two modified circuit types in the following sections. By using slightly simplified gate sequences, these two methods can provide good approximate predictions of system performance all the way out to the ``quantum supremacy" regime.
+
+\subsection{Patch circuits: a quick performance indicator for large systems}
+
+\begin{figure}
+\includegraphics{figures/sup_large_scale_XEB_results/patch_vs_full.pdf}
+\caption{\label{fig:patch_vs_full} \textbf{Comparison between XEB with patch circuits and full circuits.} Full vs.~patch circuit benchmarking up to 38 qubits with 14 cycles, showing close agreement to within the intrinsic fluctuations of the system. We plot the results for patch circuits out to 53 qubits.}
+\end{figure}
+
+The simplest approach to large-scale performance estimation is referred to as ``patch circuits," which predicts the performance of the full system by multiplying together the fidelities of non-interacting subsystems, or ``patches". In this work, we use two such subsystems, where each patch is roughly half the size of the full system. The two subsystems are run simultaneously, so that effects such as gate and measurement crosstalk between patches are included, but the two patches are analyzed separately when computing the fidelity. The two patches are defined by the gates removed along their boundary, as illustrated in Fig.~\ref{fig:qubit_order}. For sufficiently large systems, these removed two-qubit gates represent a small portion of the whole circuit. As a consequence, $\xebfidelity$ of the full system can be estimated as the product of the fidelities of the two subsystems; compared with full circuits, the main missing factor is the absence of entanglement between the two patches.
+
+We evaluate the efficacy of using patch circuits by comparing it against full circuits with the same set of qubits. The experimental results can be seen in Fig.~4a (main text), where we show fidelities measured by these two methods for systems from 12 qubits to 53 qubits, in an interleaved fashion. We re-plot this data here in Fig.~\ref{fig:patch_vs_full} as well. As expected, the fidelities obtained via patch XEB show a consistent exponential decay (up to fluctuations arising from qubit-dependent gate fidelities and a small amount of system fluctuations) as a function of system size. For every system size investigated, we found that patch and full XEB provide fidelities that are in good agreement with each other, with a typical deviation of $\sim$5\% of the fidelity itself (we attribute the worst-case disagreement of 10\% at 34 qubits due to a temporary system fluctuation in between the two datasets, which was also seen in interleaved measurement fidelity data). Theoretically, one would expect patch circuits to result in $\sim10$\% higher fidelity than full circuits due to the slightly reduced gate count. We find that patch circuits perform slightly worse than expected, which we believe is due to the fact that the two-qubit gate unitaries are optimized for full operation and not patch operation. In any case, agreement between patch and full circuits shows that patch circuits can be a good estimator for full circuits, which is quite remarkable given the drastic difference in entanglement generated by the two methods. These results give us a good preview of the system performance in all three regimes discussed earlier.
+
+The advantage of using patch circuits lies in its exponentially reduced computational cost, as it only requires calculating $\xebfidelity$ of subsystems at half the full size (or less if a larger number of smaller patches is used). This allows for quick estimates of large-scale system performance on a day-to-day basis, including for system and circuit sizes in the ``quantum supremacy" regime. As a consequence, we typically use patch circuits as a quick system performance indicator, which we use for rapid turnarounds between system calibration and performance evaluation, as well as for monitoring full system stability (see Section \ref{subsec:stability}). We also note that patch circuits can be used well beyond 50 qubits, and in fact can be extended to arbitrary numbers of qubits while keeping the analysis time at most linear in the number of qubits (or even constant if the patches can be analyzed in parallel), assuming that the patch size stays roughly constant and more non-interacting patches are added as the number of qubits grows.
+
+\subsection{Elided circuits: a more rigorous performance estimator for large systems}
+\label{subsec:performance_estimator_with_elided_circuits}
+
+\begin{figure}
+\includegraphics{figures/sup_large_scale_XEB_results/elided_vs_full.pdf}
+\caption{\label{fig:elided_vs_full} {\bf Comparison between XEB with elided circuits and full circuits.} Full vs. elided circuit benchmarking up to 38 qubits at 14 cycles, showing close agreement to within the intrinsic fluctuations of the system.}
+\end{figure}
+
+For a more rigorous prediction of full $\xebfidelity$, we introduce a more sophisticated approach referred to as ``elided circuits".  Similar to patch circuits, we partition a given set of qubits into two subsets separated by a boundary, but elide (remove) only a fraction of the two-qubit gates along this boundary during a few early cycles of the sequence (more specifically, we elide the earliest gates in time, meaning early layers will have none of their gates along the boundary while later layers will have all of their usual gates across the boundary). Accordingly, the two subsets of qubits are no longer isolated from each other and we cannot simply compute their fidelities separately and multiply. Rather, we must still compute the evolution of the full system. Given that a sufficient number of gates are elided, we can take advantage of the ``weak link" between patches with a hybrid analysis technique: we compute each patch via the Schr\"odinger method and then connect them with a Feynman path-integral approach (see Section \ref{sec:classical_sim} for more details on this ``qsimh" program).
+
+Compared with patch circuits, elided circuits more closely approach a description of the full system performance under a full circuit: in addition to capturing issues such as control and readout crosstalk, elided circuits allow entanglement to form between the two weakly connected subsystems. It covers essentially all the possible processes that occur in the full  circuit, and therefore can be used to predict system performance at a dramatically reduced computational cost, albeit significantly costlier than patch circuits.
+
+In order to validate the use of elided circuits as a system performance estimator, we evaluated its accuracy via a direct comparison with full circuits.  In Fig.~\ref{fig:elided_vs_full} we show two sets of fidelities from interleaved full and elided circuit experiments. For every system size investigated, using elided circuits yields a fidelity value that is in good agreement with the one obtained with the corresponding full circuits. The average ratio of elided circuit fidelity to full circuit fidelity over all verification circuits was found to be 1.01, with a standard deviation of $5\%$, dominated by system fluctuations. It is this agreement that certifies elided circuits as a precise predictor for full circuits (within a systematic relative uncertainty of $5\%$), which we rely on to extrapolate the system performance in the regimes where full circuit analysis is too expensive to perform (i.e., Fig.~4b of the main text).
+
+Compared with full circuits, elided circuits can result in a reduced amount of quantum entanglement in the system. The amount of reduced entanglement can be bounded from above by counting the number of iSWAP gates across the boundary: one iSWAP gate generates at most two units of bipartite entanglements (ebits). This upper bound translates directly into the exponential cost of a Schr\"odinger-Feynman simulation. For elided circuits with 50 qubits and 14 cycles, the full circuit has approximately 25 ebits of entanglement, while with 6 elisions the elided circuit has at most 12 ebits entanglement between the two patches. For the 53-qubit elided circuits used in the main paper \cite{arute2019}, there were enough iSWAPs across the boundary that the amount of entanglement between patches for full vs.~elided circuits should be close, giving us even more confidence in using elided circuits to predict the fidelity of the circuit used to claim quantum supremacy.
+
+\subsection{Choice of unitary model for two-qubit entangling gates}
+
+\begin{figure}
+\includegraphics{figures/sup_large_scale_XEB_results/choice_of_unitary_model.pdf}
+\caption{\label{fig:choice_of_unitary_model} \textbf{Effect of unitary model on full system fidelity.} \textbf{a,} Patch circuit fidelity versus number of qubits and choice of unitary model. \textbf{b,} Same but versus number of cycles and for the non-simplifiable supremacy circuits. Blue: patch XEB fidelities using the unitaries deduced from the best-fit fSim unitary from isolated pair XEB. Green: patch XEB fidelities using the unitaries deduced from the best-fit fSim unitary from per-layer simultaneous pair XEB. Orange: patch XEB fidelities using the unitaries deduced from the best-fit ``Sycamore unitary" ($\theta = \pi/2$, $\phi = \pi/6$) from per-layer simultaneous pair XEB. As expected, the best fidelities arise from fitting to the most general unitary in parallel operation, although the fidelities are high enough to achieve quantum supremacy with the Sycamore unitary model as well.}
+\end{figure}
+
+In Section \ref{sec:calib_metro}, we discussed how the two-qubit gate unitaries can be measured by two different approaches: isolated two-qubit XEB and per-layer simultaneous two-qubit XEB. These two methods resulted in two different unitary models when deducing the best-fit unitary. Since we must specify the two-qubit gate unitary matrices in order to compute $\xebfidelity$ of the larger system, a natural question is which unitary model should be used. To address this question, we point out that full XEB on the large system occurs in repeated cycles, where during each two-qubit gate layer, all the two-qubit gates in the same orientation take place at the same time (see Fig.~3 in the main text). As a consequence, the two-qubit gate layers during simultaneous pair XEB in Fig.~\ref{fig:per_layer_xeb} emulate the corresponding layer when running full XEB on a large system. Accordingly, learning the unitaries in parallel operation captures any small coherent modifications induced by the simultaneous application of the other two-qubit gates, such as flux control crosstalk and dispersive shifts from stray interactions. This is evident from the fact that by re-learning the two-qubit unitary parameters, the errors extracted from simultaneous pair XEB become purity-limited (see Fig.~\ref{fig:per_layer_xeb}). This correspondence assures us that unitary parameters extracted from simultaneous pair XEB provides a more accurate description of the full system when full XEB is performed. 
+
+In Fig.~\ref{fig:choice_of_unitary_model}, we show patch circuit fidelities at different system sizes, where the fidelity is evaluated using three different unitary models: the best-fit unitaries from isolated pair XEB, the best-fit unitaries from simultaneous pair XEB, and the best-fit ``Sycamore" unitaries from simultaneous pair XEB. The Sycamore unitaries are the unitaries obtained when keeping the swap angle fixed at $\theta = \pi/2$ and conditional phase fixed at $\phi = \pi/6$ for all qubits, and then fitting only for two single-qubit phase terms. For the purpose of benchmarking the system fidelity for the operations we performed, we have focused on using unitaries learned from simultaneous pair XEB, which provide the most accurate description of the system. The validity of this approach is experimentally verified\textemdash for the same gate sequences, using the simultaneous pair XEB unitaries leads to the best full-system fidelity values at every system size. This is direct evidence that the unitaries learned from simultaneous pair XEB form a more accurate description of the system than those from isolated pair XEB.
+
+On the other hand, in order to be useful for generic quantum algorithms, it will be desirable to use calibrated gatesets that are independent of the specific gate sequences used.  For this purpose, it is important to check the circuit fidelity under the other two unitary models, where the two-qubit gate unitaries were calibrated in more generic settings. One can see that fidelities calculated from these two unitary models still demonstrate nearly as good performance despite the addition of small coherent control errors. They differ from the fidelities using the simultaneous pair XEB unitaries by less than a factor of 2 at 50 qubits (fidelity goes from $9\times10^{-3}$ to $5\times10^{-3}$ at 50 qubits). This is remarkable since it suggests going from a 2-qubit setting to 50-qubit setting, our full system calibration precision degrades only by a factor of $<2$ despite the system size increasing by a factor of 25. This high precision in gate calibration gives us confidence to use our processors in NISQ algorithms.
+
+\subsection{Understanding system performance: error model prediction}\label{sec:error_model}
+
+\begin{figure}
+\includegraphics{figures/sup_large_scale_XEB_results/predictions.pdf}
+\caption{\label{fig:predictions} \textbf{Predicted vs.~measured large-scale XEB fidelity.} \textbf{a,} Data and two predictions for 14-cycle patch circuits vs.~number of qubits. Predictions are based on the product of single- and two-qubit gate entanglement fidelities under simultaneous operation. Blue curve contains measured fidelities. Orange is the prediction based only on gate errors during parallel operation, but without taking measurement error into account. Green is the same but multiplied by the measured readout fidelities. \textbf{b,} Same as the first panel, but vs.~number of cycles at a fixed number of qubits $n = 51$. Again, the prediction from simultaneous gate fidelities and measurement fidelity is a good prediction of the actual system performance.}
+\end{figure}
+
+In this section, we perform additional analysis to compare the measured fidelities to that predicted from the constituent gate and measurement errors.
+
+The most commonly used error model in quantum computing theory is the digital error model. Analogous to the independent noise model in classical information theory, the digital error model is based on the assumption that there are no space and time correlations between errors of quantum gates \cite{shor1995scheme, knill2008randomized, boixo2018characterizing}. If this assumption is valid, it should be possible to construct the fidelity  of a large quantum system from the fidelities of its constituent parts: single- and two-qubit gates, and measurement. It is important to point out that the gate fidelity metric that should be used here is the entanglement fidelity, $1 - e_P$ (see Section \ref{sec:computing_errors} for more details).
+This is the correct quantity to describe the fidelity of quantum operations since, in contrast to other metrics such as the commonly used average fidelity, it is independent of the dimension of the Hilbert space.
+
+In Fig.~\ref{fig:predictions}, we show fidelities as a function of both system size and number of cycles (circuit depth), measured with patch circuits. In each plot, we compare the measured fidelities to the predicted fidelities, which are calculated from a simple multiplication of individual gate entanglement fidelities as measured during simultaneous operation, along with the measurement fidelities obtained during simultaneous measurement. We note that the measured readout fidelities actually also automatically include the effect of state preparation errors as well. More explicitly, if a circuit contains the set of single-qubit gates $G_1$, the set of two-qubit gates $G_2$, and the set of qubits $Q$, then we approximate the fidelity $F$ as 
+\begin{equation}
+F = \prod_{g \in G_1} (1 - e_g) \prod_{g \in G_2} (1 - e_g) \prod_{q \in Q} (1 - {e_q}),
+\end{equation}
+where $e_g$ are the individual gate Pauli errors and $e_q$ are the state preparation and measurement errors of individual qubits. It is evident that there is a good agreement between the measured and predicted fidelities, with deviations of up to only ~10-20\%. Given that the sequence here involves tens of qubits and $\sim1000$ quantum gates, this level of agreement provides strong evidence to the validity of the digital error model.
+
+This conclusion can be further strengthened by the close agreement between the fidelities of full circuits, patch circuits, and elided circuits.  Even though these three methods differ only slightly in the gate sequence, they can result in systems with drastically different levels of computational complexity and entanglement between subsystems. The agreement between the fidelities measured by these different methods, as well as the agreement with the predicted fidelity from individual gates, gives compelling evidence confirming the assumptions made by the digital error model. Moreover, these assumptions remain valid even in the presence of quantum entanglement. 
+
+The validation of the digital error model has crucial consequences, in particular for quantum error correction. The absence of space or time correlations in quantum noise has been a commonly assumed property in quantum error correction since the very first paper on the topic \cite{shor1995scheme}. Our data is evidence that such a property is achievable with existing quantum processors. 
+
+\subsection{Distribution of bitstring probabilities}
+\label{subsec:xeb_distribution_and_ks_test}
+
+In Section~\ref{sec:xeb_theory}, we motivate two different estimates for fidelity $F$, one based on the cross entropy, Eq.~\eqref{eq:log_xeb_fidelity}, and the other based on linear cross entropy, Eq.~\eqref{eq:linear_xeb_fidelity}.  In this section, we examine the probabilities of sampled bitstrings and compare them against theoretical distributions. We use bitstring samples from non-supremacy region to demonstrate the analysis methodology, then apply it to the sample in the supremacy region.
+
+The theoretical PDF for the bitstring probability $p$ with linear XEB is
+$$
+P_l(x|F) = (F x + (1 - F)) e^{-x}
+$$
+where $x\equiv Dp$ is the probability $p$ scaled by the Hilbert space dimension $D$, and $F$ is the linear cross entropy fidelity. The PDF for $\log p$ is
+$$
+P_c(x|F) = (1 + F(e^x - 1)) e^{x - e^x}
+$$
+where $x\equiv \log(Dp)$ and $F$ is the cross entropy fidelity.
+
+From a set of bitstrings $\{q_i\}$, the fidelity is estimated from the ideal probabilities $\{p_i = p_s(q_i)\}$ as
+\begin{eqnarray}
+\hat F_l &=& \avg{D p} - 1, \\
+\hat F_c &=& \avg{\log(Dp)} + \gamma,
+\end{eqnarray}
+where $\gamma$ is the Euler-Mascheroni constant, see Sec.~\ref{sec:xeb_large}. 
+
+\begin{figure} \label{fig:experimental_distribution_of_Dp}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/dp_hist_uniform_vs_experimental_vs_ideal_q20_step.pdf}
+\caption{{\bf Histograms of ideal probabilities.} The ideal probability $p$ is calculated from the final state amplitudes of a (20-qubit 14-cycle) random circuit. The blue, orange, and green histogram is the ideal probabilities of bitstrings sampled uniformly at random, from the experiment, and ideal output, respectively.
+{\bf a,} The distribution of $D p$ and theoretical curves $P_l(x|F_l)$ normalized to histogram counts for $F_l = 0, \hat F_l, 1$, respectively. {\bf b,} The distribution of $\log(Dp)$ and theoretical curves $P_c(x|F_c)$ for $F_c = 0, \hat F_c, 1$, respectively.}
+\end{figure}
+
+Figure~\ref{fig:experimental_distribution_of_Dp} shows the distribution of $\{p_i\}$ from 0.5 million bitstrings obtained in an experiment with a 20-qubit 14-cycle random quantum circuit. For comparison, we produce 0.5 million bitstrings sampled uniformly at random and 0.5 million bitstrings sampled from the output distribution of the ideal circuit and show them in the same figure. The theoretical distribution curves are also shown, where the fidelity estimated from data is fed into the curve $P_l(x|\hat F)$ and $P_c(x|\hat F)$.
+
+\begin{figure} \label{fig:kolmogorov_distribution}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/kolmogorov_dist.pdf}
+\caption{{\bf The Kolmogorov distribution function.} This function is used to compute $p$-value from a given $D_{KS}$ and number of samples $N_s$.}
+\end{figure}
+
+\begin{figure} \label{fig:ks_test_d_and_p_values_20qubits}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/ks_test_d_and_p_values_20qubits.pdf}
+\caption{{\bf The Kolmogorov-Smirnov test results for each of 10 circuits for a (20-qubit 14-cycle) random circuit.}
+See text for the definition of $D_{KS}$ and $p$-value. The upper plot is for linear XEB, and the lower one is for log XEB.}
+\end{figure}
+
+We see good agreements between experiment and theory. To quantify the agreements, we use the Kolmogorov-Smirnov test~\cite{kolmogorov-smirnov-test} to characterize the goodness of fit of data $\{p_i\}$ to theoretical PDFs. First we compute the Kolmogorov-Smirnov statistics $D_{KS}$, that is, the distance between data and theory as the supremum of point-wise distances between the empirical cumulative distribution function of data $\text{ECDF}(p)$ and the theoretical cumulative distribution function $\text{CDF}(p)$:
+$$
+D_{KS} = \sup_{i} |\text{ECDF}(p_i) - \text{CDF}(p_i)|.
+$$
+We then convert the distance $D_{KS}$ to a $p$-value using the Kolmogorov distribution shown in Fig.~\ref{fig:kolmogorov_distribution}. The $p$-value is used for rejecting the null hypothesis that the data $\{p_i\}$ is consistent with the theoretical distribution. The whole Kolmogorov-Smirnov test is done using the scipy package~\cite{scipy} and checked against R package ks.test~\cite{R_package}. Both packages produce consistent results.
+
+We test the ideal probabilities of bitstrings observed in the experiment $\{p_i\}$ against 2 theoretical distributions, one with estimated fidelity $F = \hat F$ and one with fidelity $F = 0$. The Kolmogorov-Smirnov statistics $D_{KS}$ and the $p$-value of every circuit are shown in figure~\ref{fig:ks_test_d_and_p_values_20qubits}. Note that the $p$-values for $F=0$ are not shown because they are $\ll 10^{-20}$ due to the large $D_{KS} \approx 0.07$ with $N_s = 5\times 10^5$ points in the sample. That is evident from reading off Fig.~\ref{fig:kolmogorov_distribution}.
+
+We reject the null hypothesis that the experimental bitstrings are consistent with the uniform random distribution with very high confidence for this (20-qubit 14-cycle) random circuit.
+
+Now we turn our attention to the supremacy circuits.
+
+We use random circuits with gate elisions for checking the distributions because it is exponentially expensive to calculate the ideal theoretical probability of a bitstring without gate elisions. The effect on fidelity from gate elisions is well understood, see Sec.~\ref{subsec:performance_estimator_with_elided_circuits}. The gate elisions are chosen to minimize the effect while making the classical estimation feasible, see Sec.~\ref{subsubsection:gate_elision}. We sample $N_s = 3\times 10^6$ bitstrings $\{q_i | i = 1 ... N_s\}$ from each of 10 (53-qubit 20-cycle) random circuits, and compute the theoretical ideal probabilities of each bitstring $\{p_i | i = 1 ... N_s\}$.
+
+The distributions of $D p$ and $\log(Dp)$ from one such circuit along with the corresponding theoretical curves are shown in Fig.~\ref{fig:distribution_of_Dp}.
+
+\begin{figure} \label{fig:distribution_of_Dp}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/dp_hist_53qubits.pdf}
+\caption{{\bf Distribution of bitstring probabilities from a 53-qubit 20-cycle circuit.} We calculate the theoretical probabilities of experimentally-observed bitstrings. {\bf a,} The distribution of $D p$ and the theoretical curve $P_l(x|\hat F_l)$ normalized to histogram counts. {\bf b,} The distribution of $\log(Dp)$ with theoretical curve $P_c(x|\hat F_c)$.}
+\end{figure}
+
+We again use the Kolmogorov-Smirnov test to characterize the goodness of fit of data $\{p_i\}$ to theoretical PDFs with estimated fidelity $F=\hat F$ and zero fidelity $F = 0$. The Kolmogorov-Smirnov statistics $D_{KS}$ and the $p$-value of every circuit are shown in figure~\ref{fig:ks_test_d_and_p_values_53qubits}.
+
+\begin{figure} \label{fig:ks_test_d_and_p_values_53qubits}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/ks_test_d_and_p_values_53qubits.pdf}
+\caption{{\bf The Kolmogorov-Smirnov test results for random circuits with 53 qubits.}
+The upper plot is for linear XEB, and the lower one is for log XEB.}
+\end{figure}
+
+The $p$-value for the null hypothesis of zero fidelity is generally small for every circuit, with a maximum of 0.045 for circuit number 1. We say that the null hypothesis of zero fidelity is rejected better than a 95\% confidence level for each circuit. On the other hand, the $p$-value of null hypothesis of estimated fidelity $\hat F$ is generally large. The $p$-value is between 0.18 and 0.98 for linear XEB, and between 0.33 and 0.98 for log XEB. That indicates that the empirical cumulative distribution functions $\text{ECDF}(p_i)$  from data is quite consistent with the theoretical $\text{CDF}(p_i|\hat F)$.
+
+As will be seen in Fig.~\ref{fig:elided_stat_error} in section~\ref{subsec:xeb_stat_uncertainty} below, the fidelity of individual circuits are consistent with each other within the statistical uncertainties. Therefore it makes sense to do a Kolmogorov-Smirnov test on all samples combined, containing 30 million bitstrings. The estimated fidelities from the combined sample are $\hat F_l = 2.24\times 10^{-3}$ and $\hat F_c = 2.34\times 10^{-3}$, respectively. The $D_{KS}$ and $p$-values are listed in table~\ref{tab:ks_test_for_combined_samples}. The $p$-value for the null hypothesis of $F=0$ is very small: $p$-value = $3\times 10^{-24}$ from scipy, and $p$-value $< 2.2\times 10^{-16}$ from R. We note the more conservative value in the table. The null hypothesis of $F=0$ is rejected with much higher confidence levels than individual circuits.
+
+\begin{table}[] \label{tab:ks_test_for_combined_samples}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|} \hline
+  & \multicolumn{2}{c|}{$D_{KS}$} & \multicolumn{2}{c|}{$p$-value} \\ \hline
+           & $F=\hat F$ & $F=0$  & $F=\hat F$ & $F=0$ \\ \hline
+Linear XEB & $1.3\times 10^{-4}$  & $9.6\times 10^{-4}$ & 0.66 & $< 2.2\times 10^{-16}$ \\
+Log XEB & $9.5\times 10^{-5}$  & $9.6\times 10^{-4}$  & 0.95 & $< 2.2\times 10^{-16}$ \\ \hline
+\end{tabular}
+\caption{{\bf The Kolmogorov-Smirnov test results on combined samples}.}
+\end{table}
+
+\subsection{Statistical uncertainties of XEB measurements}
+\label{subsec:xeb_stat_uncertainty}
+
+In this section we check the statistical uncertainties of our fidelity estimates against theoretical predictions.
+
+The statistical uncertainties of $\hat{F}_l$ and $\hat{F}_c$ are estimated from data using the
+standard error-on-mean formula as
+\begin{eqnarray*} \label{eq:fidelity_stat_uncertainty}
+  \hat \sigma_{F_l} &=&  D \sqrt{\mbox{Var}(p) / N_s}, \\
+  \hat \sigma_{F_c} &=&  \sqrt{\mbox{Var}(\log p) / N_s},
+\end{eqnarray*}
+where $\mbox{Var}(x)$ is the variance estimator of sample $\{x_i\}$. Because the distribution of $p$ and $\log p$ have finite variances both experimentally and theoretically, we can use the bootstrap procedure~\cite{bootstrapping} to verify the estimate of statistical uncertainties.
+
+The fidelity distribution from 4000 bootstrap samples are shown in Fig.~\ref{fig:bootstrap_fidelity}. The distribution of $\hat{F}_l$ and $\hat{F}_c$ are each fit to a Gaussian distribution function using maximum likelihood.
+
+\begin{figure} \label{fig:bootstrap_fidelity}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/bootstrap_fit.pdf}
+\caption{Distribution of fidelity from 4000 bootstrap samples. {\bf a,} The distribution of bootstrap $\hat{F_l}$. The theoretical curve is a Gaussian fit normalized to histogram counts. {\bf b,} The distribution of bootstrap $\hat{F_c}$, with Gaussian fit.}
+\end{figure}
+
+The Kolmogorov-Smirnov test on the Gaussian fit produces $p$-values of 0.99 and 0.41 for
+$\hat{F}_l$ and $\hat{F}_c$ bootstrap distributions, respectively. It indicates that the central limit theorem is at work and the distributions are consistent with Gaussian distributions.
+
+The estimated statistical uncertainty, the standard deviation of the bootstrap distribution, and the $\sigma$ parameter of the Gaussian fit are compared against each other to verify that the statistical uncertainty estimate is minimally biased. For the example circuit used in the figures, the three parameters are 5.78, 5.78, 5.78 ($\times 10^{-3}$) for $\hat{\sigma}_{F_l}$, respectively. The same parameters for $\hat{\sigma}_{F_c}$ are 7.40, 7.46, 7.46 ($\times 10^{-3}$). The relative differences are less than 1\%, consistent with the expected agreement of parameters for 4000 bootstrap samples.
+
+We repeat the bootstrap procedure on all ten 53-qubit 20-cycle circuits with 2500 bootstrap resamples. The statistical uncertainty estimates are all within 3.1\% of the bootstrap standard deviation.
+
+The combined linear cross entropy fidelity and statistical uncertainty of 10 random circuits is calculated using inverse-variance weighting to be $\hat{F}_l = (2.24\pm 0.18) \times 10^{-3}$. The theoretical prediction of the statistical uncertainty, $\sqrt{(1 + 2 F - F^2) / N_s}$, is $1.8 \times 10^{-4}$, which agrees with the experimental estimate. As a comparison, the combined cross entropy fidelity is $\hat{F}_c = (2.34\pm 0.23)\times 10^{-3}$. The theoretical prediction of statistical uncertainty, $\sqrt{(\pi^2/6 - F^2) / N_s}$, is $2.3 \times 10^{-4}$, which agrees with the experimental estimate as well. Thus, the cross entropy fidelity and linear cross entropy fidelity estimators produce consistent results.  Furthermore,  the statistical uncertainty of the linear cross entropy estimator is smaller, as expected from its theoretical formula.
+
+In Fig.~\ref{fig:elided_stat_error}, we also show the linear XEB fidelities and $5\sigma$ statistical uncertainties of all 10 elided circuit instances for each circuit depth from Fig.~4b of the main text. Variations between the fidelities of different circuit instances are consistent with the expected statistical noise due to the finite number of samples. In the last panel, we also show the smaller statistical uncertainties of the fidelity averaged over the 10 circuit instances for each depth.
+
+\begin{figure*}
+\includegraphics[width=2.0\columnwidth]{figures/sup_large_scale_XEB_results/elided_statistical_error.pdf}
+\caption{\label{fig:elided_stat_error} Per-instance elided circuit fidelities and statistical uncertainties. XEB fidelities of all 10 elided circuit instances for each circuit depth from Fig.~4b of the main text. \textbf{a} to \textbf{e}, Here, each panel corresponds to a single circuit depth $m$. In these panels, $\pm 5\sigma$ statistical error bars, where $\sigma = 1/\sqrt{N_s}$, are shown for each of the individual circuit instance fidelities. Also shown is a band corresponding to $\pm\sigma$ for a single instance, but about the mean fidelity of the 10 instances, showing that the variations between circuits can be explained by statistical fluctuations from the finite number of samples. \textbf{f}, Fidelity averaged over all 10 circuits along with $\pm 5\sigma$ error bars are shown (the same quantity is plotted in Fig.~4b of the main text but on a log scale), where in this case $\sigma = 1/\sqrt{10 N_s}$. 
+Here, for all circuit depths, the mean fidelity is more than $5\sigma$ above 0.001.}
+\end{figure*}
+
+\subsection{System stability and systematic uncertainties}\label{subsec:stability}
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/drift_fidelity.pdf}
+
+\caption{\label{fig:patch_xeb_stability} Stability of repeated 53-qubit 16-cycle patch circuit benchmarking over 17.4 hours, without any system recalibration. Statistical error bars from the finite bitstring sample number are included. The intrinsic system fluctuations are likely dominated by a small number of TLSs moderately coupled to a few qubits at their idling and/or readout biases.}
+\end{figure}
+In addition to statistical errors, XEB fidelity is also subject to systematic drift as the system performance may fluctuate and/or degrade over time. To quantify these mechanisms, we performed a patch circuits time stability measurement on 53 qubits using a circuit of 16 cycles and 1 million bitstrings for 17.4 hours after calibration. In between these measurements, we measured the fidelity of other 53-qubit circuits with 16 to 20 cycles. The analyzed results are shown in Fig.~\ref{fig:patch_xeb_stability}. The statistical uncertainties of the fidelities are estimated to be $1.29\times 10^{-4}$, as indicated by the error bars.
+
+We repeated the stability measurements twice, with different circuits and on different days. Fig.~\ref{fig:patch_xeb_stability} shows the one that exhibits greater degradation as a conservative estimate of the effect. The measurement indicates a degradation of fidelity within the range of time. A linear fit with $F = p_0 + p_1 t$ results in estimated parameters $\hat{p}_0 = (5.51\pm0.055) \times 10^{-3}$, $\hat{p}_1 = (-6.87\pm0.64) \times 10^{-5}$, and a correlation coefficient of $\hat{p}_0$ and $\hat{p}_1$, $\rho$, to be -0.76. The $\chi^2$ per degree of freedom is $26.3/11$.
+
+The $p$-value for the $\chi^2$ for 11 degrees of freedom is 0.0058, indicating that it is not a very good fit.
+Because the correctness of the estimates of statistical uncertainties has been verified in Section~\ref{subsec:xeb_stat_uncertainty},
+this is attributed to systematic fluctuation in addition to degradation.
+It is supported by the larger variance of fidelity than the $1\sigma$ band in Fig.~\ref{fig:patch_xeb_stability}.
+
+The $1\sigma$ band depends on the statistical uncertainties of fidelities and the variance of time on the $x$-axis,
+but is independent of the variance of fidelity. To take the variance of fidelity into account,
+we use the variance of the residuals of the linear fit as an estimator of the variance of fidelity.
+The standard deviation of residuals is estimated to be $1.84\times 10^{-4}$,
+which is added to $\sigma_{p_0}$ in quadrature to be the total $\sigma_{p_0}$.
+The estimate is total $\sigma_{p_0} = 1.92\times 10^{-4}$, 3.5 times larger than the
+statistical-only $\sigma_{p_0}$ of $5.5\times 10^{-5}$.
+
+The uncertainty on a fidelity measured at time $t$ can be estimated by the standard error propagation, assuming that $t$ is uncorrelated with either $p_0$ or $p_1$.
+\begin{equation} \label{eq:drift_sigma_fidelity}
+\sigma_F = \left[ \sigma_{p_0}^2 + 2 t \sigma_{p_0} \sigma_{p_1} \rho +
+    \sigma_{p_1}^2 t^2 \right]^{1/2}
+\end{equation}
+The value of $\sigma_F$ as well as the ratio $\sigma_F/F$ in the range of measured fidelities monotonically decreases.
+We take $\max(\sigma_F / F)$ as the estimate of relative systematic uncertainty for fidelities measured
+in the same run. The value is found to be 4.4\% and is used in subsequent analysis.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=2.0\columnwidth]{figures/sup_large_scale_XEB_results/unstable_tls_stability.pdf}
+\caption{\label{fig:unstable_tls_stability} \textbf{Identifying sources of fluctuations with repetitive per-layer simultaneous pair XEB.}
+\textbf{a,} Per-pair ratio of worst fidelity to best fidelity measured via per-layer simultaneous pair XEB at a depth of 14 cycles over the course of 30 minutes. During this time, fluctuations were dominated by a single TLS. \textbf{b,} Measured qubit $T_1$ vs.~$f_{10}$ for Q\textsubscript{1,7} at two different times a few minutes apart (red vs.~blue points), showing an unstable TLS that was dominating the fluctuations in full system fidelity seen in \textbf{c,}. Moving Q\textsubscript{1,7} far from this TLS led to the stability seen in Fig.~\ref{fig:patch_xeb_stability}.}
+\end{figure*}
+
+The physical origin of the observed system fluctuations can be attributed to many possible channels: $1/f$ flux noise, qubit $T_1$ fluctuations, control signal drift, etc.  We speculate that the dominant mechanism is the moderate interaction between a small number of TLS’s and a few qubits at their idling and/or readout biases. In Fig.~\ref{fig:unstable_tls_stability}a, we show the result of measuring per-layer simultaneous pair XEB at a fixed depth of 14 cycles repeatedly over time. The quantity plotted is the ratio of the worst pair fidelity to best fidelity observed over the course of 30 minutes. This type of repetitive measurement allows us to pinpoint which pairs dominate the fluctuations in full system fidelity. Note that because we used fidelity at a fixed cycle depth rather than the one extracted from the exponential decay, these numbers contain the effect of fluctuating measurement fidelity as well. 
+
+As shown in Fig.~\ref{fig:unstable_tls_stability}a, the depth-14 fidelity of most pairs fluctuates downward by only $\sim$1\% at depth 14, which translates to either a $\sim$1\% fluctuation in measurement fidelity for a pair, or a $\sim$0.08\% fluctuation in the two-qubit gate fidelity for a pair. Before finding the unstable TLS defect in Fig.~\ref{fig:unstable_tls_stability}b, a single qubit dominated the fluctuations in full system fidelity seen in Fig.~\ref{fig:unstable_tls_stability}c. After we moved this problematic qubit far from the fluctuating TLS, the fluctuations in fidelity during the actual quantum supremacy experiment (Fig.~\ref{fig:patch_xeb_stability}) were dominated by a handful of pairs containing qubits in the ``degenerate" readout region (described in section \ref{sec:calib_metro}). For these qubits, due to constraints from readout crosstalk we had little freedom in what readout detunings we could choose, and so the best we could do was to put some qubits near defects or transmon-resonator transition modes during readout. We speculate that this is where the remaining dominant fluctuations originate.
+
+\subsection{The fidelity result and the null hypothesis on quantum supremacy}\label{subsec:final_fidelity}
+
+We use the mean fidelity of ten 53-qubit 20-cycle circuits as the final benchmark of the system. In section~\ref{subsec:xeb_stat_uncertainty} we estimated the fidelity and statistical uncertainty to be $(2.24\pm 0.18) \times 10^{-3}$ using the linear cross entropy. In section~\ref{subsec:stability} we estimated the relative systematic uncertainty due to drift to be 4.4\%. Combining these 2 estimations we arrive at the final fidelity as $(2.24 \pm 0.10(\mbox{syst.}) \pm 0.18 (\mbox{stat.})) \times 10^{-3}$. Fidelity estimates with statistical and systematic uncertainty for other quantum circuits are shown in Figure~\ref{fig:stat_and_syst_error}.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/sup_large_scale_XEB_results/stat_and_syst_error.pdf}
+\caption{\label{fig:stat_and_syst_error} Statistical and total uncertainty of fidelity estimates produced by the linear XEB and logarithmic XEB from ten random quantum circuits with 53 qubits and $m$ cycles. The inner error bars represent the statistical uncertainty discussed in section~\ref{subsec:xeb_stat_uncertainty}. The outer error bars represent the total uncertainty discussed in section~\ref{subsec:stability}.}
+\end{figure}
+
+As we show in section~\ref{sec:classical_sim}, a noisy sampling of a random quantum circuit at fidelity $F = 10^{-3}$ requires 5000 years with a classical computer with CPU power equivalent to 1 million cores, and it scales linearly with fidelity $F$. It takes a quantum computer less than an hour to complete the
+same noisy sampling. Therefore we form the null hypothesis that the fidelity of the quantum computer is $F \le 10^{-3}$, and the alternative hypothesis that $F > 10^{-3}$. If the alternative hypothesis is true, we can say that a classical computer can not perform the same noisy sampling task as the quantum computer.
+
+The total uncertainty on fidelity is estimated with addition in quadrature of systematic uncertainty and statistical uncertainty. The mean fidelity of 10 random
+circuits with 53 qubits and 20 cycles is $(2.24 \pm 0.21) \times 10^{-3}$. The
+null hypothesis is therefore rejected with a significance of $6\sigma$.
+
+While our analysis of the uncertainty in $\xebfidelity$ was computed from both statistical and systematic errors, some care should be taken in the consideration of systematic errors as they pertain to the claim of quantum supremacy. Systematic errors should be included if we wish to use the XEB fidelity value, for example comparing fidelities of patch, elided and full circuits. However for quantum supremacy, a false claim would arise if $\xebfidelity$ was zero, but we obtained a non-zero value because of a fluctuation.  Systematic fluctuations produce a change in magnitude of XEB, as seen in the data in this section, which is thus a multiplicative-type error that does not change the XEB fidelity value when it is zero.  A false positive is only produced by a additive-type statistical fluctuations and thus it is the only mechanism that should be considered when computing the uncertainty. Therefore, the $6\sigma$ significance of our claim should be considered as conservative.
+
+Some skeptics have warned that a quantum computer may not be possible \cite{Dyakonov18,Kalai19}, for example due to the fragility of quantum information at large qubit number and exponentially large Hilbert space.  The demonstration here of quantum behavior at $~10^{16}$ Hilbert space is strong confirmation that nothing unusual or unexpected happens to our current understanding of quantum mechanics at this scale.

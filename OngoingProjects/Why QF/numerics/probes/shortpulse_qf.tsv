@@ -1,0 +1,96 @@
+# Wolfram Language 15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026), QuantumFramework 2.1.3 at b672fd15, uncommitted kernel files: {M QuantumFramework/Kernel/QuantumEvolution.m M QuantumFramework/Kernel/QuantumState/Properties.m M QuantumFramework/Kernel/SecondQuantization/Interferometer.m}, Arrays 1.4.1, TensorNetworks 1.2.0, 2026-10-19 17:06
+case	variant	package	setting	observable	result	exact	abs_error	seconds	note
+1 docs	pulse 0.7<t<0.75	QF	default	<n>(1)	0.0010128185484856189	0.001012818573312044	2.4826425203822167e-11	0.012	restart times 3
+1 docs	pulse 0.7<t<0.75	QF	control: NDSolve defaults, restart events removed	<n>(1)	0.0010128184822146948	0.001012818573312044	9.109734928208768e-11	0.007	
+2a #1265	wait 0 (c_x)	QF	default	Pe(99.5)	0.9999999296423256	1.	7.035767435326079e-8	0.019	restart times 3
+2a #1265	wait 0 (c_x)	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.999999932676704	1.	6.732329604908216e-8	0.013000000000000001	
+2a #1265	wait 10	QF	default	Pe(99.5)	0.99999992966961	1.	7.033038995629681e-8	0.018000000000000002	restart times 5
+2a #1265	wait 10	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999327847121	1.	6.72152878911092e-8	0.013000000000000001	
+2a #1265	wait 20	QF	default	Pe(99.5)	0.9999999296905602	1.	7.030943982577753e-8	0.018000000000000002	restart times 5
+2a #1265	wait 20	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999328759979	1.	6.712400213437775e-8	0.013000000000000001	
+2a #1265	wait 23	QF	default	Pe(99.5)	0.9999999296960755	1.	7.03039244598358e-8	0.018000000000000002	restart times 5
+2a #1265	wait 23	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999312725681	1.	6.872743185670771e-8	0.013000000000000001	
+2a #1265	wait 23.0017	QF	default	Pe(99.5)	0.9999999308891722	1.	6.911082783833677e-8	0.018000000000000002	restart times 5
+2a #1265	wait 23.0017	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999312725786	1.	6.872742142061128e-8	0.013000000000000001	
+2a #1265	wait 23.0018 (BoxiLi threshold)	QF	default	Pe(99.5)	0.9999999308891725	1.	6.911082750526987e-8	0.019	restart times 5
+2a #1265	wait 23.0018 (BoxiLi threshold)	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999312725807	1.	6.872741931118753e-8	0.013000000000000001	
+2a #1265	wait 24	QF	default	Pe(99.5)	0.9999999296978537	1.	7.030214632663956e-8	0.018000000000000002	restart times 5
+2a #1265	wait 24	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999312796397	1.	6.872036029115236e-8	0.013000000000000001	
+2a #1265	wait 30	QF	default	Pe(99.5)	0.9999999297080172	1.	7.029198278996063e-8	0.02	restart times 5
+2a #1265	wait 30	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999313230528	1.	6.867694724022044e-8	0.013000000000000001	
+2a #1265	wait 40 (c_x_bug)	QF	default	Pe(99.5)	0.9999999293452606	1.	7.0654739392495e-8	0.018000000000000002	restart times 5
+2a #1265	wait 40 (c_x_bug)	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999341772079	1.	6.582279210576303e-8	0.013000000000000001	
+2a #1265	wait 40 (c_x_bug)	QF	diagnostic: MaxStepFraction -> 1	Pe(99.5)	0.9999999305837064	1.	6.941629360213142e-8	0.018000000000000002	
+2a #1265	wait 50	QF	default	Pe(99.5)	0.9999999293697279	1.	7.063027207543371e-8	0.018000000000000002	restart times 5
+2a #1265	wait 50	QF	control: NDSolve defaults, restart events removed	Pe(99.5)	0.9999999314790264	1.	6.852097356180309e-8	0.013000000000000001	
+2b #1945	tlist linspace(0,700,267)	QF	default	max_t |<sz> - exact|	2.0408059470122808e-7	0.	2.0408059470122808e-7	0.607	restart times 3
+2b #1945	tlist linspace(0,700,267)	QF	control: NDSolve defaults, restart events removed	max_t |<sz> - exact|	3.5819364473388404e-6	0.	3.5819364473388404e-6	0.009000000000000001	
+2b #1945	tlist linspace(0,700,268)	QF	default	max_t |<sz> - exact|	2.093692179072626e-7	0.	2.093692179072626e-7	0.61	restart times 3
+2b #1945	tlist linspace(0,700,268)	QF	control: NDSolve defaults, restart events removed	max_t |<sz> - exact|	3.5663693186416268e-6	0.	3.5663693186416268e-6	0.009000000000000001	
+2b #1945	tlist linspace(0,700,800)	QF	default	max_t |<sz> - exact|	2.092430364530884e-7	0.	2.092430364530884e-7	1.8	restart times 3
+2b #1945	tlist linspace(0,700,800)	QF	control: NDSolve defaults, restart events removed	max_t |<sz> - exact|	3.6452274047027444e-6	0.	3.6452274047027444e-6	0.012	
+2b #1945	tlist linspace(0,700,268)	QF	default, read via psi["StateVector"] /. t -> time	max_t |<sz> - exact|	9.736802868780165e20	0.	9.736802868780165e20	0.017	
+2d #2814 train	5 Gaussian pi/5, w 0.04	QF	default	P1(100)	0.9999999999966005	1.	3.3995029014022293e-12	0.021	restart times 25; `1` is too small to represent as a normalized machine number; precision may be lost.; Further output of `1` will be suppressed during this calculation.
+2d #2814 train	5 Gaussian pi/5, w 0.04	QF	control: NDSolve defaults, restart events removed	P1(100)	0.	1.	1.	0.009000000000000001	
+3 pi pulse	square Piecewise, w 1.0	QF	default	P1(100)	0.9999999999999998	1.	2.220446049250313e-16	0.014	restart times 3
+3 pi pulse	square Piecewise, w 1.0	QF	control: NDSolve defaults, restart events removed	P1(100)	0.9999999835800232	1.	1.6419976822668048e-8	0.008	
+3 pi pulse	square UnitStep, w 1.0	QF	default	P1(100)	0.9999999999999998	1.	2.220446049250313e-16	0.012	restart times 3
+3 pi pulse	square UnitStep, w 1.0	QF	control: NDSolve defaults, restart events removed	P1(100)	0.9999999835800232	1.	1.6419976822668048e-8	0.007	
+3 pi pulse	Gaussian sigma=w/4, w 1.0	QF	default	P1(100)	0.9999999999999484	1.	5.162537064506978e-14	0.011	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	Gaussian sigma=w/4, w 1.0	QF	control: NDSolve defaults, restart events removed	P1(100)	5.899886581070537e-42	1.	1.	0.006	
+3 pi pulse	sech tau=w/4, w 1.0	QF	default	P1(100)	0.9999999999996991	1.	3.008704396734174e-13	0.016	restart times 5
+3 pi pulse	sech tau=w/4, w 1.0	QF	control: NDSolve defaults, restart events removed	P1(100)	0.999999921322599	1.	7.86774010386182e-8	0.01	
+3 pi pulse	square Piecewise, w 0.1	QF	default	P1(100)	0.9999999999999998	1.	2.220446049250313e-16	0.013000000000000001	restart times 3
+3 pi pulse	square Piecewise, w 0.1	QF	control: NDSolve defaults, restart events removed	P1(100)	0.99999998633386	1.	1.366613999742583e-8	0.009000000000000001	
+3 pi pulse	square UnitStep, w 0.1	QF	default	P1(100)	0.9999999999999998	1.	2.220446049250313e-16	0.011	restart times 3
+3 pi pulse	square UnitStep, w 0.1	QF	control: NDSolve defaults, restart events removed	P1(100)	0.99999998633386	1.	1.366613999742583e-8	0.007	
+3 pi pulse	Gaussian sigma=w/4, w 0.1	QF	default	P1(100)	0.9999999999999744	1.	2.5646151868841116e-14	0.014	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	Gaussian sigma=w/4, w 0.1	QF	control: NDSolve defaults, restart events removed	P1(100)	0.	1.	1.	0.008	
+3 pi pulse	sech tau=w/4, w 0.1	QF	default	P1(100)	0.9999999999996639	1.	3.360645095540349e-13	0.016	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	sech tau=w/4, w 0.1	QF	control: NDSolve defaults, restart events removed	P1(100)	2.5464803798740458e-82	1.	1.	0.01	
+3 pi pulse	square Piecewise, w 0.01	QF	default	P1(100)	0.9999999999999998	1.	2.220446049250313e-16	0.013000000000000001	restart times 3
+3 pi pulse	square Piecewise, w 0.01	QF	control: NDSolve defaults, restart events removed	P1(100)	0.9999999863338607	1.	1.3666139331292015e-8	0.009000000000000001	
+3 pi pulse	square UnitStep, w 0.01	QF	default	P1(100)	0.9999999999999998	1.	2.220446049250313e-16	0.01	restart times 3
+3 pi pulse	square UnitStep, w 0.01	QF	control: NDSolve defaults, restart events removed	P1(100)	0.9999999863338607	1.	1.3666139331292015e-8	0.007	
+3 pi pulse	Gaussian sigma=w/4, w 0.01	QF	default	P1(100)	0.9999999999999645	1.	3.552713678800501e-14	0.012	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	Gaussian sigma=w/4, w 0.01	QF	control: NDSolve defaults, restart events removed	P1(100)	3.2475054435558483e-23	1.	1.	0.007	
+3 pi pulse	sech tau=w/4, w 0.01	QF	default	P1(100)	0.9999999999996725	1.	3.275157922644212e-13	0.016	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	sech tau=w/4, w 0.01	QF	control: NDSolve defaults, restart events removed	P1(100)	0.	1.	1.	0.01	
+3 pi pulse	square Piecewise, w 0.001	QF	default	P1(100)	0.9999999999999996	1.	4.440892098500626e-16	0.013000000000000001	restart times 3
+3 pi pulse	square Piecewise, w 0.001	QF	control: NDSolve defaults, restart events removed	P1(100)	0.9999999863338587	1.	1.366614132969346e-8	0.009000000000000001	
+3 pi pulse	square UnitStep, w 0.001	QF	default	P1(100)	0.9999999999999996	1.	4.440892098500626e-16	0.011	restart times 3
+3 pi pulse	square UnitStep, w 0.001	QF	control: NDSolve defaults, restart events removed	P1(100)	0.9999999863338587	1.	1.366614132969346e-8	0.007	
+3 pi pulse	Gaussian sigma=w/4, w 0.001	QF	default	P1(100)	0.9999999999999664	1.	3.3639757646142243e-14	0.012	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	Gaussian sigma=w/4, w 0.001	QF	control: NDSolve defaults, restart events removed	P1(100)	0.	1.	1.	0.007	
+3 pi pulse	sech tau=w/4, w 0.001	QF	default	P1(100)	0.999999999999734	1.	2.660094367001875e-13	0.016	restart times 5; `1` is too small to represent as a normalized machine number; precision may be lost.
+3 pi pulse	sech tau=w/4, w 0.001	QF	control: NDSolve defaults, restart events removed	P1(100)	7.527396416166378e-63	1.	1.	0.01	
+4 transmon	windowed, gap 0	QF	default	P1, P2	0.9870738853599457, 0.0005494514467576209			0.013000000000000001	restart times 1
+4 transmon	windowed, gap 0	QF	control: NDSolve defaults, restart events removed	P1, P2	0.9870738584184736, 0.0005494546995232263			0.009000000000000001	
+4 transmon	windowed, gap 0	QF	diagnostic: MaxStepFraction -> 1	P1, P2	0.9870738853599457, 0.0005494514467576209			0.013000000000000001	
+4 transmon	windowed, gap 100	QF	default	P1, P2	0.9870738829131661, 0.0005494516120319364			0.015	restart times 3
+4 transmon	windowed, gap 100	QF	control: NDSolve defaults, restart events removed	P1, P2	0.9870738588047461, 0.0005494549134911393			0.01	
+4 transmon	windowed, gap 1000	QF	default	P1, P2	0.9870738832584962, 0.0005494515443823628			0.015	restart times 3
+4 transmon	windowed, gap 1000	QF	control: NDSolve defaults, restart events removed	P1, P2	0.9870738588022107, 0.0005494549134967124			0.009000000000000001	
+4 transmon	windowed, gap 10000	QF	default	P1, P2	0.9870738829129696, 0.0005494516120550923			0.014	restart times 3
+4 transmon	windowed, gap 10000	QF	control: NDSolve defaults, restart events removed	P1, P2	0.9870738588019078, 0.0005494549135107167			0.009000000000000001	
+4 transmon	untruncated, gap 0	QF	default	P1, P2	0.9890751101691769, 1.80439638089255e-8			0.015	restart times 5
+4 transmon	untruncated, gap 0	QF	control: NDSolve defaults, restart events removed	P1, P2	0.9890750685115265, 1.8060685491611108e-8			0.009000000000000001	
+4 transmon	untruncated, gap 100	QF	default	P1, P2	0.9890751093139541, 1.804450281077318e-8			0.015	restart times 5
+4 transmon	untruncated, gap 100	QF	control: NDSolve defaults, restart events removed	P1, P2	0.9890750520692946, 1.8036301481855213e-8			0.009000000000000001	
+4 transmon	untruncated, gap 1000	QF	default	P1, P2	0.9890751086983466, 1.804065333417699e-8			0.015	restart times 5
+4 transmon	untruncated, gap 1000	QF	control: NDSolve defaults, restart events removed	P1, P2	2.129136840351014e-61, 1.198274757881752e-160			0.008	
+4 transmon	untruncated, gap 10000	QF	default	P1, P2	0.9890751088455878, 1.8033922556058908e-8			0.015	restart times 5
+4 transmon	untruncated, gap 10000	QF	control: NDSolve defaults, restart events removed	P1, P2	1.8066796387468702e-59, 0.			0.009000000000000001	
+5 square from t0, then Gaussian	Boole[t>=0] Boole[t<=1]	QF	default	P1(100)	0.9999999999998981	1.	1.0191847366058937e-13	0.016	restart times 6; `1` is too small to represent as a normalized machine number; precision may be lost.
+5 square from t0, then Gaussian	Boole[t>=0] Boole[t<=1]	QF	control: NDSolve defaults, restart events removed	P1(100)	0.4999999612737705	1.	0.5000000387262296	0.01	
+5 square from t0, then Gaussian	UnitStep[t] UnitStep[1-t]	QF	default	P1(100)	0.9999999999998712	1.	1.2878587085651816e-13	0.015	restart times 7; `1` is too small to represent as a normalized machine number; precision may be lost.
+5 square from t0, then Gaussian	UnitStep[t] UnitStep[1-t]	QF	control: NDSolve defaults, restart events removed	P1(100)	0.4999999612737705	1.	0.5000000387262296	0.009000000000000001	
+5 square from t0, then Gaussian	Boole[0<=t<=1]	QF	default	P1(100)	0.9999999999998981	1.	1.0191847366058937e-13	0.016	restart times 6; `1` is too small to represent as a normalized machine number; precision may be lost.
+5 square from t0, then Gaussian	Boole[0<=t<=1]	QF	control: NDSolve defaults, restart events removed	P1(100)	0.4999999612737705	1.	0.5000000387262296	0.01	
+2c #2552	index92	QF	default	|<0|psi(T)>|^2	2.816812864136087e-14	4.6360748830830623e-14	1.8192620189469752e-14	0.9390000000000001	restart times 0; `1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps; Further output of `1` will be suppressed during this calculation.
+2c #2552	index92	QF	control: NDSolve defaults, restart events removed	|<0|psi(T)>|^2	2.8168127321526784e-14	4.6360748830830623e-14	1.819262150930384e-14	0.93	`1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps
+2c #2552	index93	QF	default	|<0|psi(T)>|^2	6.692597008438395e-14	1.2878455556932898e-15	6.563812452869066e-14	0.888	restart times 0; `1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps
+2c #2552	index93	QF	control: NDSolve defaults, restart events removed	|<0|psi(T)>|^2	6.692595485356837e-14	1.2878455556932898e-15	6.563810929787508e-14	0.882	`1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps
+2c #2552	index93	QF	diagnostic: MaxStepFraction -> 1	|<0|psi(T)>|^2	2.3690200071380216e-13	1.2878455556932898e-15	2.356141551581089e-13	0.9570000000000001	`1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps
+2c #2552	index94	QF	default	|<0|psi(T)>|^2	7.208405862576456e-15	4.636074873521135e-14	3.915234287263489e-14	0.924	restart times 0; `1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps
+2c #2552	index94	QF	control: NDSolve defaults, restart events removed	|<0|psi(T)>|^2	7.208408324131976e-15	4.636074873521135e-14	3.915234041107937e-14	0.9440000000000001	`1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps

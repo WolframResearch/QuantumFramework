@@ -13,6 +13,24 @@ PackageScope[steaneInstructions]
 PackageScope[steaneRegions]
 PackageScope[steaneResidualWeights]
 PackageScope[correctionData]
+PackageScope[verifiedZeroInstructions]
+PackageScope[verifiedZeroPieces]
+PackageScope[verifiedPlusPieces]
+PackageScope[hadamardIsLogicalQ]
+PackageScope[piecesHeraldChecks]
+PackageScope[cssZeroInstructions]
+PackageScope[cssPlusInstructions]
+PackageScope[verifiedPlusInstructions]
+PackageScope[verificationChecks]
+PackageScope[ancillaWidth]
+PackageScope[steanePieces]
+PackageScope[gadgetLocationFaults]
+PackageScope[acceptedQ]
+PackageScope[steaneResidual]
+PackageScope[cssCorrection]
+PackageScope[cssCorrectionTable]
+PackageScope[correctionResidualWeights]
+PackageScope[$ancillaModes]
 
 
 (* ============================================================================ *)
@@ -61,6 +79,13 @@ PackageScope[correctionData]
 (* where a single ancilla error changing one bit of the error syndrome could    *)
 (* totally change the error we deduce."  A wrong syndrome bit here shifts the   *)
 (* answer by one qubit; there it can shift it to a different coset entirely.    *)
+(*                                                                              *)
+(* THE ANCILLA, TWO WAYS.  "Ancilla" -> "Verified" prepares each ancilla block  *)
+(* fault-tolerantly (sec. 13.1.2-13.1.3, fig. 13.3): two copies are encoded by  *)
+(* the non-fault-tolerant encoder, the one kept is compared against the other   *)
+(* through a transversal CNOT, and the run is kept only if the comparison sees  *)
+(* nothing.  "Ancilla" -> "Encoder", the default, is the bare encoder, and for  *)
+(* it the paragraph below still holds.                                          *)
 (*                                                                              *)
 (* THE OPEN ASSUMPTION.  The ancilla states are prepared here by the code's own *)
 (* encoder, which is the non-fault-tolerant Procedure 6.6 construction, so this *)
@@ -209,30 +234,276 @@ steaneResidualWeights[instr_List, nq_Integer, n_Integer, region_List] :=
     ]
 
 
+(* ---- verified ancillas (Got26 sec. 13.1.2-13.1.3, fig. 13.3) ---- *)
+
+(* VERIFYING |0_L>.  Encode it twice, CNOT the kept copy into the checker
+   transversally, and measure the checker in Z.  Bit flips on the kept copy are
+   copied into the checker, so a bit flip that one fault in the kept copy's
+   encoder spread over several qubits shows up in the checker's outcomes; a fault
+   in the checker's encoder shows up there too.  Either way the run is discarded.
+   What the comparison does NOT look at is phase errors, which flow the other
+   way, from the checker into the kept copy.  For the 7-qubit code that is fine,
+   and the book says why: the Hamming code is perfect, so every phase-error
+   syndrome is that of a single phase error, and on |0_L> a logical phase error
+   is no error at all.  For another code it may not be, which is why the claim is
+   checked by enumeration ("ResidualWeights") rather than assumed.
+
+   WHAT "SEES NOTHING" MEANS.  The checker's outcomes are a random codeword, not
+   zeros, so the test is a set of parities: the checker's Z-type checks and its
+   logical Z, read off the n outcomes.  The heralds are those n outcomes and
+   "HeraldChecks" says which parities of them must vanish.
+
+   VERIFYING |+_L>.  When the transversal H is the logical H -- the 7-qubit code,
+   any self-dual CSS code -- the book's way is cheapest: verify a |0_L> and apply
+   H to every qubit.  Otherwise the dual construction: encode |+_L> twice, CNOT
+   from the checker into the kept copy so phase errors are copied out, and read
+   the checker in X. *)
+
+$ancillaModes = {"Encoder", "Verified"};
+
+(* The verified gadget prepares all four of its ancilla blocks -- a kept copy and a
+   checker for each half -- side by side, so that they are ready together and the
+   data waits for none of them: four blocks of workspace, against one for the bare
+   encoder, which reuses its block between the halves. *)
+ancillaWidth[a_Association, "Encoder"] := a["Qubits"]
+ancillaWidth[a_Association, "Verified"] := 4 a["Qubits"]
+
+(* THE CSS ENCODER of fig. 14.8a, for any CSS code.  |0_L> is the uniform
+   superposition over the X-type checks applied to |0...0>: |0...0> is already
+   fixed by every Z-type check and by the logical Z's, and each X-type check is
+   added by a Hadamard on one qubit of its support -- a pivot no other check uses,
+   found by row-reducing the X part -- and CNOTs from that pivot onto the rest of
+   the support.  For the 7-qubit code: 3 Hadamards and 9 CNOTs, the book's count,
+   against the 25 gates of the general stabilizer encoder of Procedure 6.6.  |+_L>
+   is the same construction for the dual: Hadamards on the non-pivots of the
+   row-reduced Z part, CNOTs from them onto the pivot. *)
+cssZeroInstructions[a_Association, offset_Integer] := With[{n = a["Qubits"]}, With[
+    {xs = Select[a["CheckMatrix"], Total[#[[n + 1 ;; 2 n]]] === 0 &][[All, 1 ;; n]]},
+    If[ xs === {}, {},
+        With[{basis = gf2Basis[xs]},
+            Join[
+                Table[{"H", offset + piv}, {piv, basis[[2]]}],
+                cnotLayers @ Catenate @ MapThread[
+                    Function[{row, piv}, Table[{"CNOT", offset + piv, offset + j}, {j, DeleteCases[Flatten[Position[row, 1]], piv]}]],
+                    basis
+                ]
+            ]
+        ]
+    ]
+]]
+
+cssPlusInstructions[a_Association, offset_Integer] := With[{n = a["Qubits"]}, With[
+    {zs = Select[a["CheckMatrix"], Total[#[[1 ;; n]]] === 0 &][[All, n + 1 ;; 2 n]]},
+    If[ zs === {}, Table[{"H", offset + q}, {q, n}],
+        With[{basis = gf2Basis[zs]},
+            Join[
+                Table[{"H", offset + q}, {q, Complement[Range[n], basis[[2]]]}],
+                cnotLayers @ Catenate @ MapThread[
+                    Function[{row, piv}, Table[{"CNOT", offset + j, offset + piv}, {j, DeleteCases[Flatten[Position[row, 1]], piv]}]],
+                    basis
+                ]
+            ]
+        ]
+    ]
+]]
+
+(* The CNOTs of the encoder all commute -- each copies a pivot that nothing else
+   writes to -- so they can go in any order, and the order is chosen to pack them
+   into few time steps: greedily, each layer takes every remaining CNOT whose two
+   qubits the layer has not used yet.  For the 7-qubit code that is three layers of
+   three, the book's fig. 14.8a, and fewer layers is fewer waits. *)
+cnotLayers[cnots_List] := Module[{left = cnots, out = {}, used, layer},
+    While[left =!= {},
+        used = {}; layer = {};
+        Do[
+            If[ ! IntersectingQ[Rest[g], used], AppendTo[layer, g]; used = Join[used, Rest[g]]],
+            {g, left}
+        ];
+        out = Join[out, layer];
+        left = Complement[left, layer]
+    ];
+    out
+]
+
+hadamardIsLogicalQ[a_Association] := hadamardIsLogicalQ[a] =
+    TrueQ[transversalValidQ[a, "H", 1]] && transversalName[transversalLogicalAction[a, "H", 1], 1] === "H"
+
+(* The parities a clean comparison leaves at zero, as rows over the checker's n
+   outcomes: for a Z readout, the supports of the Z-type checks and of the logical
+   Z operators; for an X readout, the same with X. *)
+verificationChecks[a_Association, "Z"] := With[{n = a["Qubits"], mat = a["CheckMatrix"]},
+    Join[
+        Select[mat, Total[#[[1 ;; n]]] === 0 &][[All, n + 1 ;; 2 n]],
+        codeLogicalVectors[a]["Z"][[All, n + 1 ;; 2 n]]
+    ]
+]
+verificationChecks[a_Association, "X"] := With[{n = a["Qubits"], mat = a["CheckMatrix"]},
+    Join[
+        Select[mat, Total[#[[n + 1 ;; 2 n]]] === 0 &][[All, 1 ;; n]],
+        codeLogicalVectors[a]["X"][[All, 1 ;; n]]
+    ]
+]
+
+(* Each piece is {region, instructions, checks}: the checks are the rows above,
+   or None for a piece with no herald. *)
+verifiedZeroPieces[a_Association, keep_Integer, check_Integer] := With[{n = a["Qubits"]},
+    {
+        {"Preparation", Join[
+            Table[{"R", keep + q}, {q, n}], Table[{"R", check + q}, {q, n}],
+            cssZeroInstructions[a, keep], cssZeroInstructions[a, check]], None},
+        {"Verification", Join[
+            Table[{"CNOT", keep + q, check + q}, {q, n}],
+            Table[{"MH", check + q}, {q, n}]], verificationChecks[a, "Z"]}
+    }
+]
+
+verifiedPlusPieces[a_Association, keep_Integer, check_Integer] := With[{n = a["Qubits"]},
+    If[ hadamardIsLogicalQ[a],
+        Append[verifiedZeroPieces[a, keep, check], {"Preparation", Table[{"H", keep + q}, {q, n}], None}],
+        {
+            {"Preparation", Join[
+                Table[{"R", keep + q}, {q, n}], Table[{"R", check + q}, {q, n}],
+                cssPlusInstructions[a, keep], cssPlusInstructions[a, check]], None},
+            {"Verification", Join[
+                Table[{"CNOT", check + q, keep + q}, {q, n}],
+                Table[{"H", check + q}, {q, n}],
+                Table[{"MH", check + q}, {q, n}]], verificationChecks[a, "X"]}
+        }
+    ]
+]
+
+verifiedZeroInstructions[a_Association, keep_Integer, check_Integer] := Catenate[verifiedZeroPieces[a, keep, check][[All, 2]]]
+verifiedPlusInstructions[a_Association, keep_Integer, check_Integer] := Catenate[verifiedPlusPieces[a, keep, check][[All, 2]]]
+
+(* The whole gadget as pieces, in order: the region each instruction belongs to
+   and the herald checks are read off this, never matched out of the list. *)
+steanePieces[a_Association, offset_Integer, order_String, "Encoder"] := With[{n = a["Qubits"]},
+    With[{
+        bit = {
+            {"Preparation", Join[Table[{"R", offset + q}, {q, n}], codeEncodedPlusInstructions[a, offset]], None},
+            {"Interaction", Join[Table[{"CNOT", q, offset + q}, {q, n}], Table[{"M", offset + q}, {q, n}]], None}},
+        phase = {
+            {"Preparation", Join[Table[{"R", offset + q}, {q, n}], codeEncodedZeroInstructions[a, offset]], None},
+            {"Interaction", Join[Table[{"CNOT", offset + q, q}, {q, n}], Table[{"H", offset + q}, {q, n}],
+                Table[{"M", offset + q}, {q, n}]], None}}},
+        If[order === "BitFlipFirst", Join[bit, phase], Join[phase, bit]]
+    ]
+]
+
+steanePieces[a_Association, offset_Integer, order_String, "Verified"] := With[{n = a["Qubits"], po = offset + 2 a["Qubits"]},
+    With[{
+        bit = Append[verifiedPlusPieces[a, offset, offset + n],
+            {"Interaction", Join[Table[{"CNOT", q, offset + q}, {q, n}], Table[{"M", offset + q}, {q, n}]], None}],
+        phase = Append[verifiedZeroPieces[a, po, po + n],
+            {"Interaction", Join[Table[{"CNOT", po + q, q}, {q, n}], Table[{"H", po + q}, {q, n}],
+                Table[{"M", po + q}, {q, n}]], None}]},
+        If[order === "BitFlipFirst", Join[bit, phase], Join[phase, bit]]
+    ]
+]
+
+(* Region -> instruction indices, and the herald checks as {herald positions,
+   rows}, both from the pieces. *)
+(* Index 0 goes with the interaction, as in steaneRegions: a fault there is the
+   error already on the data when the gadget starts. *)
+piecesRegions[pieces_List] := With[{edges = Prepend[Accumulate[Length /@ pieces[[All, 2]]], 0]},
+    MapAt[Prepend[#, 0] &, Merge[Table[pieces[[j, 1]] -> Range[edges[[j]] + 1, edges[[j + 1]]], {j, Length[pieces]}], Catenate], "Interaction"]
+]
+
+piecesHeraldChecks[pieces_List] := Module[{h = 0, out = {}},
+    Do[
+        With[{k = Count[piece[[2]], {"MH", _}]},
+            If[piece[[3]] =!= None, AppendTo[out, {Range[h + 1, h + k], piece[[3]]}]];
+            h += k
+        ],
+        {piece, pieces}
+    ];
+    out
+]
+
+(* A run is kept when every herald check reads zero. *)
+acceptedQ[heralds_List, checks_List] := AllTrue[checks, Function[c, AllTrue[Mod[c[[2]] . heralds[[c[[1]]]], 2], # === 0 &]]]
+
+
+(* ---- what a single fault leaves behind, with the correction applied ---- *)
+
+(* Every location of an instruction list and the faults each can carry: the
+   detector model's own enumeration, with every rate set to one, grouped by
+   location -- a reset, a measurement, a one- or two-qubit gate, or a wait. *)
+gadgetLocationFaults[instr_List, nq_Integer] := With[
+    {rates = <|"OneQubit" -> 1, "TwoQubit" -> 1, "Measurement" -> 1, "Reset" -> 1, "Idle" -> 1|>},
+    GroupBy[Join[circuitMechanisms[instr, rates], idleMechanisms[instr, nq, rates]], #["Location"] &, #[[All, "Faults"]] &]
+]
+
+(* The residual a fault leaves on the data block once the gadget's own correction
+   is applied: the frame on the data, times the X correction read from the
+   bit-flip half's outcomes and the Z correction read from the phase half's, each
+   the lightest error of its syndrome.  Its weight is taken modulo the stabilizer,
+   since the data block carries an unknown logical state and nothing else can be
+   divided out.  Missing when the heralds reject the run. *)
+steaneResidual[a_Association, instr_List, nq_Integer, checks_List, order_String, faults_List] := Module[
+    {n = a["Qubits"], run, rec, bitRec, phaseRec, x, z, cx, cz},
+    run = framePropagate[instr, nq, faults];
+    If[! acceptedQ[run["Heralds"], checks], Return[Missing["Rejected"]]];
+    rec = run["Record"];
+    {bitRec, phaseRec} = If[order === "BitFlipFirst", {rec[[1 ;; n]], rec[[n + 1 ;; 2 n]]}, {rec[[n + 1 ;; 2 n]], rec[[1 ;; n]]}];
+    {x, z} = run["Frame"][[All, 1 ;; n]];
+    cx = cssCorrection[a, "X", Mod[verificationChecks[a, "Z"][[1 ;; -1 - codeLogicalQubits[a]]] . bitRec, 2]];
+    cz = cssCorrection[a, "Z", Mod[verificationChecks[a, "X"][[1 ;; -1 - codeLogicalQubits[a]]] . phaseRec, 2]];
+    reducedWeight[a, BitXor[x, cx], BitXor[z, cz]]
+]
+
+(* The lightest X (or Z) error with a given syndrome under the Z-type (X-type)
+   checks, found by weight, up to the weight where the table is complete. *)
+cssCorrection[a_Association, letter_String, syn_List] := Lookup[cssCorrectionTable[a, letter], Key[syn], ConstantArray[0, a["Qubits"]]]
+
+cssCorrectionTable[a_Association, letter_String] := cssCorrectionTable[a, letter] = Module[
+    {n = a["Qubits"], checks = verificationChecks[a, If[letter === "X", "Z", "X"]][[1 ;; -1 - codeLogicalQubits[a]]], table = <||>},
+    Do[
+        With[{e = ReplacePart[ConstantArray[0, n], Thread[sub -> 1]]},
+            With[{syn = Mod[checks . e, 2]}, If[! KeyExistsQ[table, syn], table[syn] = e]]
+        ],
+        {w, 0, n}, {sub, Subsets[Range[n], {w}]}
+    ];
+    table
+]
+
+reducedWeight[a_Association, x_List, z_List] := With[{n = a["Qubits"], group = codeStabilizerGroup[a]},
+    Min[Total[BitOr[BitXor[x, #[[1 ;; n]]], BitXor[z, #[[n + 1 ;; 2 n]]]]] & /@ group]
+]
+
 (* ---- construction ---- *)
 
-Options[QECErrorCorrection] = {"Order" -> "BitFlipFirst"};
+Options[QECErrorCorrection] = {"Order" -> "BitFlipFirst", "Ancilla" -> "Encoder"};
+
+QECErrorCorrection::ancilla = "\"Ancilla\" must be one of `2`; got `1`.";
 
 QECErrorCorrection[code_QECCode, opts : OptionsPattern[]] :=
     QECErrorCorrection[code, code["Qubits"], opts]
 
 QECErrorCorrection[code_QECCode, offset_Integer, opts : OptionsPattern[]] := Module[
-    {a = First[code], n = code["Qubits"], order},
+    {a = First[code], n = code["Qubits"], order, mode, pieces},
     order = OptionValue["Order"];
+    mode = OptionValue["Ancilla"];
     Which[
         ! codeCSSQ[a],
             Message[QECErrorCorrection::css]; $Failed,
         ! MemberQ[{"BitFlipFirst", "PhaseFirst"}, order],
             Message[QECErrorCorrection::order, order]; $Failed,
+        ! MemberQ[$ancillaModes, mode],
+            Message[QECErrorCorrection::ancilla, mode, $ancillaModes]; $Failed,
         True,
+            pieces = steanePieces[a, offset, order, mode];
             QECErrorCorrection[<|
                 "Code" -> a,
                 "DataQubits" -> n,
                 "Offset" -> offset,
-                "AncillaQubits" -> Range[offset + 1, offset + n],
+                "AncillaQubits" -> Range[offset + 1, offset + ancillaWidth[a, mode]],
                 "Order" -> order,
-                "Qubits" -> offset + n,
-                "Instructions" -> steaneInstructions[a, offset, order]
+                "Ancilla" -> mode,
+                "Qubits" -> offset + ancillaWidth[a, mode],
+                "Instructions" -> Catenate[pieces[[All, 2]]],
+                "RegionIndices" -> piecesRegions[pieces],
+                "HeraldChecks" -> piecesHeraldChecks[pieces]
             |>]
     ]
 ]
@@ -246,7 +517,8 @@ $correctionProperties = {
     "QuantumCircuitOperator", "Diagram",
     "BitFlipInstructions", "PhaseInstructions", "TransversalQ", "RepetitionsNeeded",
     "Regions", "DataWeights", "MaxDataWeight", "PreparationDataWeights",
-    "OpenAssumptions", "Properties"
+    "OpenAssumptions", "Ancilla", "HeraldChecks", "Verifications", "ResidualWeights", "MaxResidualWeight",
+    "Properties"
 };
 
 correctionData[QECErrorCorrection[a_Association]] := a
@@ -255,6 +527,45 @@ QECErrorCorrection[_Association]["Properties"] := $correctionProperties
 
 QECErrorCorrection[a_Association][prop : ("Instructions" | "DataQubits" |
     "AncillaQubits" | "Offset" | "Order" | "Qubits")] := a[prop]
+
+QECErrorCorrection[a_Association]["Ancilla"] := Lookup[a, "Ancilla", "Encoder"]
+QECErrorCorrection[a_Association]["HeraldChecks"] := Lookup[a, "HeraldChecks", {}]
+QECErrorCorrection[a_Association]["Verifications"] := Length[Lookup[a, "HeraldChecks", {}]]
+
+(* The measured claim, region by region: the reduced weight each single fault
+   leaves on the data after the gadget's own correction, over the runs the heralds
+   accept.  With the bare encoder a fault in the preparation can leave a weight-2
+   residual; verified, none does.  This is the property chapter 13 is for. *)
+QECErrorCorrection[a_Association]["ResidualWeights"] := correctionResidualWeights[a]
+
+QECErrorCorrection[a_Association]["MaxResidualWeight"] := Max[Values[correctionResidualWeights[a]]]
+
+correctionResidualWeights[a_Association] := correctionResidualWeights[a] = Module[
+    {instr = a["Instructions"], nq = a["Qubits"], regions, locs, checks},
+    regions = correctionRegions[a];
+    checks = Lookup[a, "HeraldChecks", {}];
+    locs = gadgetLocationFaults[instr, nq];
+    Association @ KeyValueMap[
+        Function[{region, idx},
+            region -> Union @ DeleteMissing @ Flatten @ KeyValueMap[
+                Function[{loc, faultChoices},
+                    If[ MemberQ[idx, loc[[2]]] && loc[[1]] =!= "Idle",
+                        steaneResidual[a["Code"], instr, nq, checks, a["Order"], #] & /@ faultChoices,
+                        {}
+                    ]
+                ],
+                locs
+            ]
+        ],
+        KeyDrop[regions, "Interaction"] ~Join~ KeyTake[regions, "Interaction"]
+    ] ~Join~ <|
+        (* waits are located by layer, not by instruction, so they get a row of their own *)
+        "Waits" -> Union @ DeleteMissing @ Flatten @ KeyValueMap[
+            Function[{loc, faultChoices},
+                If[loc[[1]] === "Idle", steaneResidual[a["Code"], instr, nq, checks, a["Order"], #] & /@ faultChoices, {}]],
+            locs]
+    |>
+]
 
 QECErrorCorrection[a_Association]["Code"] := QECCode[a["Code"]]
 QECErrorCorrection[a_Association]["Measurements"] := gadgetMeasurements[a["Instructions"]]
@@ -278,8 +589,10 @@ QECErrorCorrection[a_Association]["TransversalQ"] := With[
     AllTrue[
         Cases[a["Instructions"], {op_ /; MemberQ[$circuitTwoQubitOps, op], x_, y_} :> {x, y}],
         Function[pair,
+            (* the verified gadget keeps its phase-half ancilla two blocks further up the
+               workspace, so the position is read modulo the block *)
             With[{d = Select[pair, # <= n &], anc = Select[pair, # > off &]},
-                Length[d] === 0 || (Length[d] === 1 && Length[anc] === 1 && First[anc] - off === First[d])
+                Length[d] === 0 || (Length[d] === 1 && Length[anc] === 1 && Mod[First[anc] - off - 1, n] + 1 === First[d])
             ]
         ]
     ]
@@ -289,20 +602,29 @@ QECErrorCorrection[a_Association]["TransversalQ"] := With[
    the reason this gadget and not Shor EC fills Measurement.wl's slot. *)
 QECErrorCorrection[a_Association]["RepetitionsNeeded"] := 1
 
-QECErrorCorrection[a_Association]["Regions"] := steaneRegions[a["Code"], a["Order"]]
+(* the regions the gadget was built from: three for a verified one, two otherwise *)
+correctionRegions[a_Association] := Lookup[a, "RegionIndices", steaneRegions[a["Code"], a["Order"]]]
+
+QECErrorCorrection[a_Association]["Regions"] := correctionRegions[a]
 
 QECErrorCorrection[a_Association]["DataWeights"] := Sort @ steaneResidualWeights[
     a["Instructions"], a["Qubits"], a["DataQubits"],
-    steaneRegions[a["Code"], a["Order"]]["Interaction"]]
+    correctionRegions[a]["Interaction"]]
 
 QECErrorCorrection[a_Association]["MaxDataWeight"] := Max @ steaneResidualWeights[
     a["Instructions"], a["Qubits"], a["DataQubits"],
-    steaneRegions[a["Code"], a["Order"]]["Interaction"]]
+    correctionRegions[a]["Interaction"]]
 
 (* What the missing chapter-13 preparation costs, in the same units. *)
 QECErrorCorrection[a_Association]["PreparationDataWeights"] := Sort @ steaneResidualWeights[
     a["Instructions"], a["Qubits"], a["DataQubits"],
-    steaneRegions[a["Code"], a["Order"]]["Preparation"]]
+    correctionRegions[a]["Preparation"]]
+
+QECErrorCorrection[a_Association]["OpenAssumptions"] /; Lookup[a, "Ancilla", "Encoder"] === "Verified" := {
+    "Each ancilla is verified against a second copy and the run post-selected on the \
+comparison (Got26 fig. 13.3). The acceptance is part of the cost, and a protocol \
+that uses the gadget has to repeat a rejected preparation."
+}
 
 QECErrorCorrection[a_Association]["OpenAssumptions"] := {
     "The ancilla blocks are prepared by the code's own encoder, which is not fault \

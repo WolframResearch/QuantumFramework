@@ -73,3 +73,17 @@ QuantumFramework/Documentation/English/SearchIndex/
 
 # Local credentials (cloud account for submit.wls)
 .env
+
+# ParameterAssumptions: kernel copies, probes and run logs stay local; only top-level write-ups are tracked
+/OngoingProjects/ParameterAssumptions/*
+!/OngoingProjects/ParameterAssumptions/*.md
+
+# Why QF: batch sweep output and probe data stay local
+/OngoingProjects/Why QF/talks/QF-sweep/
+/OngoingProjects/Why QF/numerics/probes/shortpulse_data*/
+
+# Images in OngoingProjects stay local (already-tracked ones remain tracked)
+/OngoingProjects/**/*.png
+
+# Research behind the symbol-domains work stays local
+/OngoingProjects/SymbolicForQuantum/

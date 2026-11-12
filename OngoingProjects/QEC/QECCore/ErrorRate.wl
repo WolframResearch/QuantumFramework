@@ -18,6 +18,7 @@ PackageScope[decoderFor]
 PackageScope[decoderReachFor]
 PackageScope[exactLogicalErrorRate]
 PackageScope[sampledLogicalErrorRate]
+PackageScope[$QECDecoderProbeRate]
 PackageScope[rateReport]
 PackageScope[rateValue]
 
@@ -212,6 +213,8 @@ decoderReachFor[_Association, w_Integer ? Positive] := w
    the two answer different questions and a silent switch would make the number mean
    something the caller did not ask for. *)
 decoderFor[a_Association, noise_Association, spec_, reach_] := Switch[spec,
+    "Matching",
+        Replace[codeMatching[a, noise], m_Association :> matchingLookup[m]],
     "MaximumLikelihood",
         If[ exactEnumerableQ[a],
             codeMaximumLikelihoodDecoder[a, noise],
@@ -240,24 +243,28 @@ codeCosetRepresentatives[a_Association, noise_Association] := codeCosetRepresent
 
 (* Exact: sum, over syndromes, of the probability the decoder guessed the class
    wrong.  Every term is exact, so a symbolic rate gives a polynomial. *)
-exactLogicalErrorRate[a_Association, noise_Association, decoder_Association] :=
+exactLogicalErrorRate[a_Association, noise_Association, decoder_] := With[
+    {table = decoderLookup[decoder, Keys[cosetProbabilities[a, noise]][[All, 1]]]},
     Simplify @ Total @ KeyValueMap[
-        If[#1[[2]] === decoder[#1[[1]]], 0, #2] &,
+        If[#1[[2]] === Lookup[table, #1[[1]], -1], 0, #2] &,
         cosetProbabilities[a, noise]
     ]
+]
 
 (* Sampled: draw errors, label them, and count the ones whose class the decoder
    would have missed.  No per-trial GF(2) work -- the label already decides it. *)
-sampledLogicalErrorRate[a_Association, noise_Association, count_Integer, decoder_Association] := Module[
-    {rows, synKeys, classKeys},
+sampledLogicalErrorRate[a_Association, noise_Association, count_Integer, decoder_] := Module[
+    {rows, synKeys, classKeys, table},
 
     rows = noiseSampleRows[noise, a["Qubits"], count];
     {synKeys, classKeys} = codeLabelKeys[a, rows];
+    (* a matching decoder decodes only the syndromes the sample actually drew *)
+    table = decoderLookup[decoder, synKeys];
 
     (* A syndrome absent from the decoder is one it cannot correct, which is a failure;
        the -1 default never equals a real class key, so those draws count as such. *)
     N @ Divide[
-        Count[Transpose[{synKeys, classKeys}], {s_, c_} /; Lookup[decoder, s, -1] =!= c],
+        Count[Transpose[{synKeys, classKeys}], {s_, c_} /; Lookup[table, s, -1] =!= c],
         count
     ]
 ]
@@ -320,8 +327,9 @@ logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, ro
     If[ ! MemberQ[$codeExtractions, mode],
         Message[QECDetectorModel::extraction, mode, $codeExtractions]; Return[$Failed]
     ];
-    reach = decoderReachFor[a, reachSpec];
-    demRate[a, noise, roundsFor[a, roundSpec], count, reach, mode]
+    (* matching needs no table, so it needs no reach either *)
+    reach = If[matchingSpecQ[spec], 1, decoderReachFor[a, reachSpec]];
+    demRate[a, noise, roundsFor[a, roundSpec], count, reach, mode, spec]
 ]
 
 (* Code capacity has no circuit, so it has no extraction to choose; the option is
@@ -340,7 +348,7 @@ logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, _,
             Message[QECNoiseModel::rates, noise["Probabilities"]]; Return[$Failed]
     ];
 
-    reach = decoderReachFor[a, reachSpec];
+    reach = If[matchingSpecQ[spec], 1, decoderReachFor[a, reachSpec]];
     decoder = decoderFor[a, noise, spec, reach];
     If[decoder === $Failed, Return[$Failed]];
 

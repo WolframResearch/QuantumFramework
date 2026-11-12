@@ -1,0 +1,349 @@
+\section{XEB theory}\label{sec:xeb_theory}
+
+We use cross entropy benchmarking (XEB)~\cite{boixo2018characterizing,neill2018blueprint} to calibrate general single-
+and two-qubit gates, and also to estimate the fidelity of random
+quantum circuits with a large number of qubits. XEB is based on the
+observation that the measurement probabilities of a random quantum
+state have a similar pattern to laser ``speckles'', with
+some bitstrings more probable than others \cite{wootters1990random, emerson2005}. The same holds for
+the output state of random quantum circuits. As errors destroy the speckle
+pattern, this is enough to estimate the rate of errors and fidelity in an experiment. Crucially, XEB does not require the reconstruction of
+experimental output probabilities, which would need an exponential
+number of measurements for increasing number of qubits. Rather, we use
+numerical simulations to calculate the likelihood of a set of
+bitstrings obtained in an experiment according to the ideal expected
+probabilities. Below we describe the theory behind this technique in more
+detail.
+
+\subsection{XEB of a small number of qubits}\label{sec:sq}
+
+We first consider the use of XEB to obtain the error rate for single- and two-qubit gates. As explained above, for a two-qubit XEB estimation we use sequences of cycles, each cycle
+consisting of two sufficiently random single-qubit gates followed by the same two-qubit gate. 
+
+ The  density operator of the system after application of a random circuit $U$ with $m$ cycles  can be written as a sum of two  parts
+\begin{align}
+\rho_U  = \varepsilon_m \ket{\psi_U}\bra{\psi_U}    + (1- \varepsilon_m)\chi_U\;,\quad D=2^n\;.\label{eq:xeb_ru0}
+\end{align}
+Here  $\ket{\psi_U}=U \ket{\psi_0}$ is the ideal output state and $\chi_U$ is an operator with unit trace that along with $  \varepsilon_m$ describes the effect of errors. For a depolarizing channel model  $\chi_U=I/D$ and $\varepsilon_m$ has the meaning of the depolarization fidelity after $m$ cycles. Nevertheless, in the case of small number of qubits, the part of the operator $\chi_U$ has nonzero matrix elements between the states with no error and the states with the error. However, if we undo the evolution of each random circuit and average over an ensemble of circuits such cross-terms are  averaged out and we expect
+\begin{equation}
+\overline{U^{\dagger}\chi_U U}= \frac I D \;.\label{eq:chiu_avg}
+\end{equation}
+Here and below we use the horizontal bar on the top to denote averaging over the ensemble of random circuits.
+Because of this property it is possible to establish the connection between the quantity $\varepsilon_m$ and the depolarization fidelity after $m$ cycles.
+
+From Eqs.~\eqref{eq:xeb_ru0} and \eqref{eq:chiu_avg} we get
+\begin{align}
+  \overline{U^{\dagger}\rho_U U} &= \overline{\varepsilon_m} \ket{\psi_0}\bra{\psi_0} + (1-\overline{\varepsilon_m}) \frac I D \;.\label{eq:dcm}
+\end{align}
+This is a depolarizing channel. From this and the exponential decay of fidelity we get 
+\begin{equation}
+\overline{\varepsilon_m}=p_c^m\;,\label{eq:Fd}
+\end{equation}
+connecting $\overline{\varepsilon_m}$ to the depolarization fidelity $p_c$   per cycle.  
+
+The noise model (\ref{eq:xeb_ru0}) is very general in the context of random circuits. To
+ provide some insight about the origin of this model we consider a specific case with pure systematic error in the two-qubit gate. In this case the resulting pure state after the application of the random circuit $\tilde U$ with the error can be expanded  into the direction of the ideal state vector and the orthogonal direction
+ \begin{equation}
+   \tilde U\ket{\psi_0}=\xi_m\, \ket{\psi_U} +\sqrt{1-|\xi_m|^2}\ket{\varphi_{\tilde U}}\;,\label{eq:Psi-er}
+ \end{equation}
+ where 
+ \begin{equation}
+ \braket{\psi_U}{\varphi_{\tilde U}}=0,\quad \braket{\varphi_{\tilde U}}{\varphi_{\tilde U}}=1\;.\label{eq:cond}
+ \end{equation}
+ 
+ For the ensemble of random circuits $U$ the error vector  is distributed completely randomly in the  plane orthogonal to the ideal vector $U\ket{\psi_0}$ (see Fig.~\ref{fig:vector-error}).
+This condition of orthogonality is the only constraint on the vector $\ket{\varphi_{\tilde U}}$ that involves  $\ket{\psi_U}$.
+Therefore we expect
+\begin{align}
+  \overline{U^{\dagger}\ket{\varphi_{\tilde U}}\bra{\varphi_{\tilde U}} U} &= \frac 1 {D-1} (I - \ket{\psi_0}\bra{\psi_0})\;.\label{eq:xeb_uvu}
+ \end{align}
+ Also
+ \begin{align}
+   \overline{U^\dagger\left(\xi_m\sqrt{1-|\xi_m|^2}\, \ket{\psi_U}\bra{\varphi_{\tilde U}} +h.c\right)U} &= 0\;.
+\end{align}
+This gives  the connection between the error vector $\ket{\varphi_{\tilde U}}$ and the operator $\chi_U$ 
+
+ \begin{multline}
+ (1-\varepsilon_m)\chi_U-\frac{1-\varepsilon_m}{D} \ket{\psi_U}\bra{\psi_U} = 
+ (1-|\xi_m|^2)\ket{\varphi_{\tilde U}}\bra{\varphi_{\tilde U}}\\+\left(\xi_m\sqrt{1-|\xi_m|^2}\, \ket{\psi_U}\bra{\varphi_{\tilde U}} +h.c\right)\;.\label{eq:conn}
+ \end{multline}
+The resulting equation 
+ \begin{equation}
+    \overline{|\xi_m|^2}=\overline{\varepsilon_m}+\frac{1-\overline{\varepsilon_m}}{D}\label{eq:xeb_xi_eps}
+ \end{equation}
+is to be expected, because $|\xi_m|^2$ is the average state fidelity while $\overline{\varepsilon_m}$ is the depolarization fidelity (see Sec. \ref{sec:computing_errors}). Note that Eqs.~\eqref{eq:xeb_uvu}--\eqref{eq:xeb_xi_eps} lead to Eq.~\eqref{eq:dcm}. This result can also be derived assuming that single qubit gates  form a 2-design in the Hilbert space of each qubit. 
+
+\begin{figure}
+\includegraphics[scale=0.4]{figures/error-vector.pdf}
+\caption{\label{fig:vector-error}  \textbf{Cartoon: decomposition of the quantum state  into
+the vector aligned with the ideal quantum state and its orthogonal complement}}
+\end{figure}
+
+We demonstrate the above findings by numerically simulating  
+the random circuits for 2 qubits that contains single qubit gates randomly sampled from 
+Haar measure and ISWAP-like gate
+\begin{equation}
+ V(\theta) =  \left(
+\begin{array}{cccc}
+ 1 & 0 & 0 & 0 \\
+ 0 & \cos\theta  & -i \sin\theta & 0 \\
+ 0 & -i \sin\theta & \cos\theta & 0 \\
+ 0 & 0 & 0 & 1 \\
+\end{array}
+\right)\;.
+\end{equation}
+The systematic error $\Delta\theta=\theta-\pi/2$ corresponds to the deviation of the swap angle from $\pi/2$.
+Then assuming that the single qubit gates are error free the   depolarizing channel model gives the prediction for the depolarizing fidelity per cycle 
+\begin{align}
+    p_c &=\frac{| {\rm tr}(V(\theta)V^\dagger(\pi/2))|^2-1}{D^{2}-1}\nonumber\\
+    &=\frac{1}{15} (8 \cos (\Delta \theta )+2 \cos (2 \Delta \theta )+5)\;.\label{eq:pc}
+\end{align}
+As shown in  Fig.~\ref{fig:syst-er} the depolarizing fidelity $p_c^m$ for the circuit of depth $m$ based on Eq.~(\ref{eq:pc})  closely  matches the corresponding quantity obtained by the averaging of the squared overlap over the ensemble of random circuits (cf. (\ref{eq:xeb_xi_eps})
+\begin{equation}
+ \overline{\varepsilon_m}=   \frac{D\,\overline{|\xi_{m}|^{2}}-1}{D-1}\;.\label{eq:pc-num}
+\end{equation}
+
+\begin{figure}
+\includegraphics[scale=0.45]{figures/depol-fid.pdf}
+\caption{\label{fig:syst-er}  \textbf{Plots of the  circuit depolarizing fidelity {\it vs} the circuit depth.}
+Solid lines corresponds to the predictions from the depolarizing  channel model (\ref{eq:pc}) and
+points correspond to $\overline{\varepsilon_m}$ (\ref{eq:pc-num}) obtained by  the averaging of the squared overlap over the ensemble of random circuits. Different colored  pots correspond to different values of the swap error
+$\Delta\theta=$ 0.01(red), 0.02(blue), 0.03 (green), 0.04 (pink), 0.05 (black).}
+\end{figure}
+
+Returning to the generic case, property (\ref{eq:chiu_avg}) can be extended so that for any smooth function $f(u)$  the following relation holds
+\begin{align}
+\overline{\sum_{q\in\{0,1\}^n}f(p_s(q))\bra{q}\chi_U\ket{q}}&=\sum_{q\in\{0,1\}^n}\frac{\overline{f(p_s(q))}}{D}+\epsilon\;,\label{eq:corr}
+\end{align}
+where $\ket{q}$ is a computational basis state corresponding to bitstring $q$, and 
+$p_s(q)=\bra{q} U \rho_0 U^{\dagger}\ket{q}$ is the simulated (computed) ideal probability of
+$q$.    If the average is performed over a sample of random circuits of size $S$  then  the  correction is $\epsilon \in O(1/\sqrt S)$. We tested numerically for the case of $n=2$ that relation  (\ref{eq:corr}) holds even for purely systematic errors in the case of a sufficiently random set of single qubit gates. 
+
+We now make the critical step of estimating the parameter $p_c^m$ from a set of
+experimental realizations of random circuits with $m$ cycles. 
+We map each measured bitstring $q$ with a function $f(p_s(q))$ and then average this function over the measured bitstrings. The standard XEB \cite{boixo2018characterizing, neill2018blueprint} uses the natural logarithm, $f(p_s(q))=\log (p_s(q))$. In the main text we use the linear version of XEB, for which $f(p_s(q))=D p_s(q) - 1$. Both these functions give higher values to bitstrings with higher  simulated probabilities. Another closely related choice is the Heavy Output Generation test~\cite{aaronson2017complexity}, for which $f$ is a step-function.
+
+Under the model (\ref{eq:xeb_ru0}), in an experiment with ideal state preparation and measurement, we obtain the bitstring $q$ with
+probability
+\begin{align}
+    p_c^m \;p_s(q) + (1-p_c^m)\bra{q}\chi_U\ket{q}\;,\label{eq:xeb_dn}
+\end{align}For the linear XEB, the average value of $D p_s(q)
+- 1$ when sampling with probabilities given by Eq.~\eqref{eq:xeb_dn} is
+\begin{align}
+  \overline{\avg{  D p_s(q) - 1}} = p_c^m\left(D \sum_q  \overline{ p_s(q)^2}  -1\right)\;.\label{eq:xeb_le}
+\end{align}
+Similarly to Eq.~(\ref{eq:corr}), the horizontal bar denotes averaging over the random circuits.
+
+The sum on the right hand side of (\ref{eq:xeb_le}) goes over all bitstrings in the
+computational basis, and  can be obtained with numerical
+simulations.   It can also be found analytically assuming that the random circuit ensemble  approximates the Haar measure where for a given $q$ the quantity  $p_s(q)$ is distributed  with  the  beta distribution function $(D-1)(1-p_s)^{D-2}$. In this case the right hand side in  (\ref{eq:xeb_le}) equals $p_c^m(2D/(D+1)-1)$.
+
+The experimental average on the left hand side of (\ref{eq:xeb_le}) can be
+estimated with accuracy $1/\sqrt{S N_s}$ using $S$ random circuit realizations with
+$N_s$ samples each
+\begin{multline} \label{eq:xeb_exp}
+ \frac{1}{S N_s} \sum_{j=1}^{S}\sum_{i=1}^{N_s} \left( D p_s^j(q_{i,j}) -1\right) \\= \overline{\avg{  D p_s(q) - 1}} +
+ O\left( \frac{1} {\sqrt{S N_s}} \right)\;.
+\end{multline}
+This gives an estimate of $p_c^m$.
+
+This estimate can be justified using Bayes rule.
+The log-likelihood for a set of experimental measurements $\{q_{i,j}\}$ assuming that the experimental probabilities are given by Eq.~\eqref{eq:xeb_dn} is proportional to
+\begin{align}
+ \sum_{j=1}^{S} \sum_{i=1}^{N_s} \log\left(1 + p_c^m (D p_s^j(q_{i,j})-1)\right)\;,
+\end{align}
+where $p_s^j(q)$ is a simulated probability corresponding to the $j$-th circuit realization.
+We want to maximize the log-likelihood as a function of $p_c^m$. Taking the derivative with respect to $p_c^m$ and equating to $0$ we obtain
+\begin{align}
+ \sum_{j=1}^{S}\sum_{i=1}^{N_s} {D p_s^j(q_{i,j})-1 \over 1 + p_c^m (D p_s^j(q_{i,j})-1)} = 0\;,
+\end{align}
+For $p_c^m \ll 1$ it is easy to solve this equation and obtain the estimate
+\begin{align}
+  p_c^m \simeq {\sum_{j=1}^{S}\sum_{i=1}^{N_s} \(D p_s^j(q_{i,j})-1\) \over \sum_{j=1}^{S}\sum_{i=1}^{N_s} \(D p_s^j(q_{i,j})-1\)^2} \simeq {\overline{\avg{  D p_s(q) - 1}} \over  D \sum_q \overline{p_s(q)^2}  -1}\;.
+\end{align}
+
+
+In the spirit of the XEB method, we can use other functions $f(p_s(q))$ to estimate $p_c^m$. One alternative is derived from the log-likelihood of a sample $\{q_{i,j}\}$ with respect to the simulated (computed) ideal probabilities
+\begin{align}
+  \log  \Pi_{j=1}^{S} \Pi_{i=1}^{N_s} p_s^j(q_{i,j}) =\sum_{j=1}^{S}\sum_{i=1}^{N_s} \log p_s^j(q_{i,j})\;,
+\end{align}
+which converges to the cross entropy between experimental probabilities and simulated probabilities. The experimental average of the function $f(p_s(q))= \log p_s(q)$ under the probabilities from Eq.~\eqref{eq:xeb_dn} with additional averaging over random circuits is
+\begin{align}
+  \overline{\avg{\log p_s(q)}} &\simeq p_c^m \left(\sum_q  \overline{(p_s(q)-1/D)\log p_s(q)}\right) \nonumber \\
+  &+ \frac 1 D \sum_q \overline{\log p_s(q)}\;.\label{eq:xeb_xe}
+\end{align}
+As before, the sums on the right hand side  can be obtained with numerical simulations and the average value on the left hand side can be estimated  experimentally. This also gives an estimate of $p_c^m$.
+
+Both Eq.~\eqref{eq:xeb_le} and Eq.~\eqref{eq:xeb_xe} give a linear
+equation, from which we can obtain an estimate of the total
+polarization $p_c^m$ for an experimental implementation of one quantum
+circuit with $m$  cycles. We normally use mutiple circuits with the
+same number of cycles $m$ to estimate $p_c^m$, which we can do using
+the least squares method. Finally, we obtain an estimate of $p_c$ from a fit of the estimates $p_c^m$ as an exponential decay in $m$. This is standard in randomized
+benchmarking~\cite{magesan_characterizing_2012,magesan_robust_2011}. One advantage of this method is
+that it allows us to estimate the cycle polarization $p_c$ independently
+of the
+state preparation and measurement errors (SPAM).
+See also below. 
+
+
+\subsection{XEB of a large number of qubits}\label{sec:xeb_large}
+
+We now consider the case of a large number of qubits $n \gg 1$. We are typically interested in estimating the fidelity
+$F$ of each of a set of circuits with a given number of qubits
+and depth.
+As above, we write the output of an approximate implementation of the random quantum circuit $U$ as
+\begin{align}
+  \rho_U = F \ket{\psi_U} \bra{\psi_U} + (1-F) \chi_U\;,\label{eq:xeb_ru}
+\end{align}
+where $\ket{\psi_U}$ is the ideal output and $F = \bra{\psi_U} \rho_U
+\ket{\psi_U}$ is the fidelity. We do not necessarily assume $\chi_U = I /
+D$, and we will ignore the small difference, of
+order $2^{-n}$, $n \gg 1$, between the
+fidelity $F$ and the depolarization  fidelity  $p$.
+
+As for the case of small number of qubits $n$, we map each output bitstring $q$ with a
+function $f(p_s(q))$. Given that the values $\bra{q}
+\chi_U\ket{q}$ resulting from errors are typically uncorrelated with the
+chaotic ``speckles'' of $p_s(q)$, we make our main assumption
+\begin{align}
+  \sum_q   \bra{q} \chi_U\ket{q} f(p_s(q)) = \frac 1 D \sum_q
+  f(p_s(q)) +\epsilon\;.\label{eq:xeb_cm}
+\end{align}
+This equation is trivial if we assume a depolarizing model, $\chi_U
+= I/D$. More generally, it can be understood in the geometric context of concentration of
+measure~\cite{Popescu2006entanglement,bremner2009random,Gross2009most,mcclean2018barren}
+for high dimensional spaces, and from Levy's
+lemma~\cite{ledoux2005concentration} we expect a typical statistical
+fluctuation $\epsilon \in O(1/\sqrt
+D)$ with $D=2^n$. We will only require $\epsilon \ll F$. We check
+Eq.~\eqref{eq:xeb_cm} numerically for the output $\rho_e =
+\ket{\psi_e}\bra{\psi_e}$ where $\ket{\psi_e}$ is the wave function
+obtained after a single phase-flip or bit-flip
+error is added somewhere in the circuit, see Fig.~\ref{fig:xeb_puali_error} and Ref.~\cite{boixo2018characterizing}. We
+have also tested this assumption numerically comparing the fidelity
+with the XEB estimate for a pure state $\sqrt{F}\ket{\psi_U} +
+\sqrt{1-F}\ket{\psi_\perp}$, see also
+Ref.~\cite{markov_quantum_2018} and Section \ref{sec:classical_sim}.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/sup_xeb_theory/xeb_pauli_error.pdf}
+\caption{\label{fig:xeb_puali_error} Absolute value of the XEB fidelity between a random quantum circuit and the same circuit with a single Pauli error. Markers show the median over all possible positions in the circuit for both bit-flip and phase-flip errors. Error bars correspond to the first and third quartile. The dashed lines are the $1/\sqrt{D}$ theory prediction.}
+\end{figure}
+
+From Eqs.~\eqref{eq:xeb_ru} and \eqref{eq:xeb_cm} we obtain
+Eq.~\eqref{eq:xeb_le} for linear XEB, $f(p_s(q)) = D p_s(q)
+- 1$ ($\xebfidelity$ in the main text). We also obtain Eq.~\eqref{eq:xeb_xe} for XEB, $f(p_s(q))= \log
+p_s(q)$, with  $p_c^m$ replaced by fidelity $F$. As before,
+the sums on the right hand side  can be obtained with numerical simulations
+and the average value on the left hand side can be estimated
+experimentally with accuracy $1/\sqrt{N_s}$ using $N_s$ samples. This
+gives an estimate of $F$.
+
+In practice,  circuits of enough depth (as in the
+experiments reported here) exhibit the Porter-Thomas distribution for
+the measurement probabilities $p=\{p_s(q)\}$, that is
+\begin{align}\label{eq:porter_thomas}
+  \Pr(p) = D e^{-D p}\;.
+\end{align}
+In this case the linear cross entropy Eq.~\eqref{eq:xeb_le} gives
+\begin{align} \label{eq:linear_xeb_fidelity}
+  F =   \avg{  D p_s(q) - 1} \;.
+\end{align}
+The standard deviation of the estimate of $F$ with $N_s$ samples
+from the central limit theorem is $\sqrt{(1 + 2F -
+  F^2)/N_s}$.
+The cross entropy Eq.~\eqref{eq:xeb_xe} gives
+\begin{align} \label{eq:log_xeb_fidelity}
+  F =   \avg{  \log D p_s(q) } + \gamma \;,
+\end{align}
+where $\gamma$ is the Euler-Mascheroni constant $\approx$ 0.577. The standard deviation of the
+estimate of $F$ with $N_s$ samples is
+$\sqrt{(\pi^2/6 - F^2)/N_s}$. The logarithmic XEB has a smaller standard deviation for $F>0.32$ (it is the best estimate when $F\approx 1$), while for $F<0.32$ the linear XEB has a smaller standard deviation (it is the best estimate for $F \ll 1$, where it relates to the maximum likelihood estimator). See Fig.~\ref{fig:linear_xeb_vs_log_xeb} for comparison of the fidelity estimates produced by the linear and logarithmic XEB.
+
+We note in passing another example for an estimator of $F$ related to
+the HOG test~\cite{aaronson2017complexity} which counts the number of measured bitstrings
+with probabilities $p_s(q)$ greater than the median of the
+probabilities. The function $f(p_s(q))$ in this case returns 1 for
+$D p_s(q) \ge \log(2)$, and 0 in the other case. The fidelity estimator uses the following normalization
+\begin{align} \label{eq:hog_fidelity}
+  F =   \frac{1}{\log(2)} \avg{ 2 n_s(q) - 1} \;,
+\end{align}
+where $n_s(q)$ is defined to be 1 if $D p_s(q) \ge \log(2)$, and 0 otherwise. The standard deviation of this estimator is $\sqrt{ [\log ^{-2} (2)-F^2]/N_s}$, which is always larger than for the XEB. See Fig.~\ref{fig:linear_xeb_vs_hog} for comparison of the fidelity estimates produced by linear XEB and the HOG-based fidelity estimator. HOG test is also related to a definition of quantum volume~\cite{cross2018validating}. 
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/sup_xeb_theory/linear_xeb_vs_log_xeb.pdf}
+\caption{\label{fig:linear_xeb_vs_log_xeb} Comparison of fidelity estimates obtained using linear XEB, Eq.~\eqref{eq:linear_xeb_fidelity} and logarithmic XEB, Eq.~\eqref{eq:log_xeb_fidelity} from bitstrings observed in our experiment using elided circuits (see Section \ref{subsubsection:gate_elision}). Standard deviation smaller than markers.}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/sup_xeb_theory/linear_xeb_vs_hog.pdf}
+\caption{\label{fig:linear_xeb_vs_hog} Comparison of fidelity estimates obtained using linear XEB, Eq.~\eqref{eq:linear_xeb_fidelity} and normalized HOG score, Eq.~\eqref{eq:hog_fidelity} from bitstrings observed in our experiment using elided circuits (see Section \ref{subsubsection:gate_elision}). Standard deviation smaller than markers.}
+\end{figure}
+
+\subsection{Two limiting cases}\label{sec:limiting_cases}
+Here, we consider two special cases of Eq.~\eqref{eq:linear_xeb_fidelity} and the formula (1) in the main paper \cite{arute2019}. First, suppose bitstrings $q_i$ are sampled from the uniform distribution. In this case the sampling probability is $1/D$ for every bitstring and $\xebfidelity = 0$. Therefore, if the qubits are in the maximally mixed state, the estimator yields zero fidelity, as expected.
+
+Second, suppose that bitstrings are sampled from the theoretical output distribution of a random quantum circuit. Assume that the distribution has Porter-Thomas shape. By Eq.~\eqref{eq:porter_thomas}, the fraction of bitstrings with theoretical probability in $[p, p+dp]$ is
+
+\begin{equation}
+\Pr(p) \, dp = D e^{-Dp} dp
+\end{equation}
+and the total number of such bitstrings is
+
+\begin{equation}
+N(p) \, dp = D^2 e^{-Dp} \, dp.
+\end{equation}
+Therefore, the probability that a bitstring with probability in $[p, p+dp]$ is sampled equals
+
+\begin{equation}
+p \cdot N(p) \, dp = p D^2 e^{-Dp} \, dp = f(p) \, dp
+\end{equation}
+where $f(p)$ is the probability density function of the random variable defined as the ideal probability of a sampled bitstring, i.e. the random variable which is being averaged in the formula (1) of the main paper. Thus, the average probability of a sampled bitstring is
+
+\begin{align}
+\begin{split}
+\langle p_s(q)\rangle = \int_0^1p f(p) \, dp = \int_0^1 p^2 D^2 e^{-Dp} \, dp \\
+= \frac{2}{D}\left(1 - e^{-D} \left(\frac{D^2}{2} + D + 1\right)\right) \approx \frac{2}{D}.
+\end{split}
+\end{align}
+Substituting into equation (1) in the main paper yields $\xebfidelity = 1$. The general case of a depolarizing error can be obtained from the two limiting cases by convex combination.
+
+\subsection{Measurement errors}\label{sec:me}
+We now consider how measurement errors affect the estimation of
+fidelity.
+Let us assume uncorrelated classical measurement errors, so that
+if the ``actual'' measurement result of a qubit is 0, we can get 1 with
+probability $e_{m0}$, and similarly with probability $e_{m1}$
+we get 0 for actual result 1, i.e., $p(1|0)=e_{m0}$,
+$p(0|0)=1-e_{m0}$, $p(0|1)=e_{m1}$, $p(1|1)=1-e_{m1}$. In
+this case the probability to get measurement result $q=k_1 k_2 .. k_n$
+for actual result $q'=k_1' k_2' .. k_n'$ is the product of the
+corresponding factors. The probability of correct measurement result is then
+ \begin{align}
+ p_{\rm m} (q') &= (1-e_{m0})^{n-|q'|} (1-e_{m1})^{|q'|}  \nonumber \\&\approx (1-e_{m0})^{n/2} (1-e_{m1})^{n/2},
+    \label{meas-good}
+\end{align}
+where $|q'|$ is the number of 1s (Hamming distance from 00..0) in
+the initial bitstring $q'$, and in the second expression we approximated $|q'|$ with $n/2$ for large $n$. 
+
+
+Now let us make a natural assumption that if there was one or more
+measurement errors, $q'\to q$, then the resulting ideal probability
+$p_s(q)$ is uncorrelated with the
+actual ideal probability $p_s(q')$. Using this assumption we
+can write
+\begin{align}\label{eq:au}
+  F = F_U   p_{\rm m}
+\end{align}
+where  $F_U$ is the circuit fidelity and $F$ is the complete (effective) fidelity. The complete fidelity $F$ is estimated as
+before. The measurement fidelity $p_{\rm m}$ can be
+obtained independently. For instance, we can prepare a bistring $q$
+and measure immediately to obtain the probability of a correct  measurement result for $q$. We obtain $p_{\rm m}$ by repeating this for
+a set of random bitstrings. We can therefore obtain $F_U$ from
+Eq.~\eqref{eq:au}. As explained above, fitting the depolarization
+fidelity per cycle $p_c$ for different circuit depths $m$ is also a
+method to separate measurement errors.
+
+The state preparation errors can be treated similarly, assuming that a single error leads to uncorrelated resulting distribution $p_s(q)$, so that the measurement fidelity $p_{\rm m}$ in Eq.\ (\ref{eq:au}) is combined with a similar factor describing the state preparation fidelity.
+

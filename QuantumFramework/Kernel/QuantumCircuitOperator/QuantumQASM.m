@@ -36,7 +36,7 @@ qqasmTranspileBytes[bytes_ByteArray, opts_Association] := Enclose @ Block[{
     pythonOpts = opts
 },
     ConfirmBy[
-        PythonEvaluate[Context[pythonBytes], "
+        PythonEvaluate[Context[pythonBytes], $qiskitVirtualCircuitPython <> "
 import pickle, inspect, qiskit
 from qiskit import transpile, QuantumCircuit
 from qiskit.transpiler import CouplingMap, Target, InstructionProperties
@@ -106,16 +106,15 @@ else:
         if isinstance(kwargs.get('target'), dict):
             kwargs['target'] = build_target(kwargs['target'])
         out = transpile(circuit, **kwargs)
-        # A bare basis-gate translation (no routing target) still gets a TranspileLayout
-        # attached, which makes qasm3.dumps emit physical qubits ($0) with no qubit
-        # declaration: not portable, not re-importable. Rebuild a layout-free circuit so
-        # the dump uses the named register (compose carries global_phase and drops the
-        # layout). With a real coupling_map/target, the physical layout is meaningful and
-        # is kept.
+        # A translation with no device (no coupling map or target) still gets a layout: an
+        # initial placement of the qubits (InitialLayout) and a final permutation (swaps the
+        # transpiler removed). qasm3.dumps would write physical qubits ($0) with no declaration,
+        # and the layout would be lost. qf_virtual_circuit rewrites the circuit on its own
+        # qubits, with the final permutation undone by SWAPs in the same gates. With a device the
+        # physical qubits are the point and the circuit is kept as transpiled; its measurements
+        # still write the classical bits of the original circuit.
         if kwargs.get('coupling_map') is None and kwargs.get('target') is None and out.layout is not None:
-            clean = QuantumCircuit(*out.qregs, *out.cregs)
-            clean.compose(out, inplace=True)
-            out = clean
+            out = qf_virtual_circuit(out, kwargs.get('basis_gates'))
         if skipped_props:
             md = dict(out.metadata) if out.metadata else {}
             md['qualink_skipped_props'] = skipped_props

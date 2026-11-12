@@ -1,0 +1,76 @@
+\section{Quantifying errors}\label{sec:computing_errors}
+
+An important test for this experiment is predicting XEB fidelity $\xebfidelity$ based on simpler measurements of single- and two-qubit errors.  Here we review how this is calculated, illustrating important principles with the example of a single qubit.  The general theory is described at the end of this section.  
+
+First, we assume Pauli errors describe decoherence using a depolarizing model.  This model is used, for example, to compute thresholds and logical error rates for error correction.  The parameter describing decoherence in a single qubit is the Pauli error $e_P$, giving a probability $e_P/3$ for applying an erroneous X, Y, or Z gate to the qubit after the gate, corresponding to a bit and/or phase flip. 
+
+Second, the depolarization model is assumed to describe the system state using simple classical probability.  The probability of no error for many qubits and many operations, corresponding to no change to the system state, is then found by simply multiplying the probability of no error for each qubit gate.  This is a good assumption for RB and XEB since a bit- or phase-flip error effectively decorrelates the state.  The depolarization model assumes that when there is an error with probability $e_d$, the system state randomly splits to all qubits states, which has Hilbert space dimension $D=2^n$.  This is described by a change in density matrix $\rho \rightarrow (1-e_d)\rho + e_d\times \openone/D$.  Note the depolarization term has a small possibility of the state resetting back to its original state.  For a single qubit where $D=2$, this can be described using a Pauli-error type model as a probability $e_d/4$ applying a I, X, Y, or Z gate.  Comparing to the Pauli model, the error probability thus needs to be rescaled by $e_d = e_P/(1-1/D^2)$.  This gives a net polarization $p$ of the qubit state due to many Pauli errors as 
+\begin{equation}\label{eq:error_prod}
+p=\prod_i \left[1-e_P(i)/\left(1-1/D^2\right)\right]. 
+\end{equation} 
+
+Third, the effect of this depolarization has to be accounted for considering the measured signal.   The measured signal for randomized benchmarking is given by $RB = p(1-1/D) + 1/D$, which can be understood in a physical argument that a complete randomization of the state has a 1/D chance to give the correct final state.  A cross-entropy benchmarking measurement gives $\xebfidelity = p$.  A measurement of $p$, which can have offsets and prefactors in these formulas, also includes other scaling factors coming from state preparation and measurement errors.  All of these scaling issues are circumvented by applying gates in a repeated number of cycles $m$ such that $p=p_c^m$.  A measurement of the signal versus $m$ can then directly pull out the fractional polarization change per cycle, $p_c$, independent of these scale factors.  
+
+Fourth, from this polarization change we can then compute the Pauli error, which is the metric that should be reported since it is the fundamental error rate that is independent of $D$.  Unfortunately, a fidelity $1-e_P/(1+1/D)$ for RB is commonly reported, which has a $D$-dependent correction.  We recommend this practice be changed, but note that removing the $1/(1+1/D)$ factor decreases the reported fidelity value.  We also recommend reporting Pauli error, $e_P$ instead of entanglement fidelity $(1-e_P)$, since it is more intuitive to understand how close some quantity is to 0 than to 1. Table~\ref{table:error} summarizes the different error metrics and their relations.
+
+\begin{table*}[t]
+\caption{\label{table:error}
+ A “Rosetta stone” translation between error metrics. In single- and two-qubit RB or XEB experiments, we measure the per-gate (or per-cycle) depolarization decay constant $p$. The second column shows conversions from this rate to the various error metrics. The last two columns are representative comparisons for 0.1\% Pauli error. 
+}
+\begin{ruledtabular}
+\begin{tabular}{lcccc}
+\textrm{Error metric}&
+\textrm{Relation to depolarization decay constant $p$}&
+\textrm{n=1 (D=2)}&
+\textrm{n=2 (D=4)}\\
+\colrule
+Pauli error ($e_p$, $r_P$) ~\footnote{$1 - $ process fidelity, or $1 - $ entanglement fidelity}
+ & $(1 - p) (1 - 1 / D^2)$ & 0.1\% & 0.1\% \\
+Average error ($e_a$, $r$)
+ & $(1 - p) (1 - 1 / D) $ & 0.067\% & 0.08\%\\
+Depolarization error ($e_d$)
+ & $1 - p$ & 0.133\% & 0.107\% \\
+\end{tabular}
+\end{ruledtabular}
+\end{table*}
+
+This general model can also account for non-depolarizing errors such as energy decay, since quantum states in an algorithm typically average over the entire Bloch sphere (as in XEB), or for example when the algorithm purposely inserts spin-echoes.  Thus the average effect of energy decay effectively randomizes the state in a way compatible with Pauli errors.  For a gate of length $t_g$ with a qubit decay time $T_1$, averaging over the Bloch sphere (2 poles and 4 equator positions) gives (to first order) an average error probability $e_a = t_g/3T_1$.  Using Table~\ref{table:error}, this converts to a Pauli error $e_P=t_g/2T_1$.
+
+A detailed theory of the $D$ scaling factor is as follows.  In order to arrive at a first order estimate on how error rates accumulate on random quantum circuits, the errors can be modeled via the set of Kraus operators. The density matrix of the system $\rho$ after application of a gate is connected to the density matrix  $\rho_0$ before the gate as follows:
+\begin{equation}
+\rho=\Lambda(\rho_0)=\sum_{k=0}^{K} A_k \rho_0 A_k^\dagger,\quad \sum_{k} A_k^\dagger A_k=\openone.\label{eq:Kraus}
+\end{equation}
+For the  closed-system quantum evolution with unitary $U$ (no dephasing nor decay) the sum on the right hand side contains only one term with $k$=0 and  $A_0=U$. In general, Kraus operators describe the physical effects of many types of errors (control error, decoherence, etc.) that can explicitly depend on the gate.  Knowing the Kraus operators allows us to calculate the total  error budget as well as its individual components.
+
+Conventionally, circuit fidelities are reported as a metric of its quality. To make a connection to physically observable quantities, the average fidelity can be expressed in terms of Kraus operators. In the absence of leakage errors and cross-talk the average fidelity equals
+\begin{align}
+F=1-\frac{e_P}{1+1/D},\quad e_P=1-\frac{1}{D^2}\sum_{k=0}^{K} |\tr(U A_k^\dagger)|^2\label{eq:FA}
+\end{align}
+where $D=2^n$ is the dimension of the Hilbert space and the quantity $e_P$ plays a role of a Pauli error probability in the depolarizing channel model (see below).
+ 
+For random circuits the effects of errors can be described by a depolarizing channel model, with Kraus operators of the form
+\begin{align}
+A_{\bf k} &=\sqrt{\frac{ e_P}{D^2-1}} \,  P_{\bf k} U,\quad {\bf k} \neq {\bf 0},\label{eq:DPC}\\
+A_{\bf 0} &=\sqrt{1-e_P} \,  P_{\bf 0} U,\nonumber\\
+P_{\bf k} &=\sigma_{k_1}\otimes\sigma_{k_2}\ldots\otimes \sigma_{k_n}\nonumber
+\end{align}
+where $P_{\bf k}$ are strings of Pauli operators $\sigma_{k_j}$  for individual qubits for  $k_j=1,2,3$ and also identity matrices $\sigma_{0}$  in the qubit subspace for $k_j=0$.
+This form assumes that individual Pauli errors all happen with the same probability $e_P$.
+
+To make a connection to experimental measurements of the cross-entropy we substitute (\ref{eq:DPC}) into (\ref{eq:Kraus}) and obtain
+\begin{multline}%\nonumber
+\Lambda(\rho_0)=(1-e_P)U\rho_0 U^{-1}\\+\frac{e_P}{D-1/D}\left(\openone-\frac{ U \rho_0 U^{-1}}{D} \right).\label{eq:DP1}
+\end{multline}
+We compare this expression with the standard form of the depolarizing channel model 
+\begin{align}
+  \Lambda(\rho_0) = p U \rho_0 U^{-1} + (1-p) \frac \openone D\;,\label{eq:DP2}
+\end{align}
+expressed in terms of the depolarization fidelity parameter $p$. Note the difference between the expressions. On the one hand, in (\ref{eq:DP2}) the second term corresponds to full depolarization in all directions. On the other hand, in (\ref{eq:DP1}) the second term describes full depolarization in all directions except for the direction corresponding to the ideal quantum state.
+
+From (\ref{eq:DP1}), (\ref{eq:DP2}) one can establish the connection between the Pauli error rate and depolarizing fidelity parameter $p$
+\begin{equation}
+e_P=(1-p)(1-1/D^2) 
+\end{equation}
+
+We note that the explicit assumption of connecting Pauli errors to depolarization is needed for the small $D$ case, typically for single- and two-qubit error measurements.  Once we have measured the Pauli errors, then only a simple probabilistic calculation is needed to compute $\xebfidelity$ in the large $D$ case. 
+

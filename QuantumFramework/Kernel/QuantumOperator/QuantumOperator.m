@@ -35,6 +35,8 @@ QuantumOperator::invalidOutputOrder = "output order should be a list of distinct
 QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
 QuantumOperator::invalidArgs = "QuantumOperator constructor `1` did not match any rule"
 QuantumOperator::broadcast = "broadcasting a `1`-qudit operator over an order of length `2` would build a tensor power of dimension `3`, exceeding `4`; supply an operator and order of matching size"
+QuantumOperator::resetwires = "a reset to a `1`-qudit state needs `1` wires, which `2` does not give: list one wire per qudit of the state, or use a one-qudit state to reset each wire to it"
+
 QuantumOperator::rates = "the rates `1` do not fit the jump operators: give as many rates as there are jump operators, `2`, or a `2` by `2` rate matrix"
 
 

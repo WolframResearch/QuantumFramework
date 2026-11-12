@@ -1,0 +1,896 @@
+    % ****** Start of file apssamp.tex ******
+%
+%   This file is part of the APS files in the REVTeX 4.2 distribution.
+%   Version 4.2a of REVTeX, December 2014
+%
+%   Copyright (c) 2014 The American Physical Society.
+%
+%   See the REVTeX 4 README file for restrictions and more information.
+%
+% TeX'ing this file requires that you have AMS-LaTeX 2.0 installed
+% as well as the rest of the prerequisites for REVTeX 4.2
+%
+% See the REVTeX 4 README file
+% It also requires running BibTeX. The commands are as follows:
+%
+%  1)  latex apssamp.tex
+%  2)  bibtex apssamp
+%  3)  latex apssamp.tex
+%  4)  latex apssamp.tex
+%
+\documentclass[%
+ reprint,
+superscriptaddress,
+%groupedaddress,
+%unsortedaddress,
+%runinaddress,
+%frontmatterverbose, 
+%preprint,
+%preprintnumbers,
+%nofootinbib,
+%nobibnotes,
+%bibnotes,
+ amsmath,amssymb,
+%aps,
+ pra,
+%prb,
+%rmp,
+%prstab,
+%prstper,
+%floatfix,
+]{revtex4-2}
+
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\sgn}{sgn}
+
+\input{packages}
+\input{macros}
+\newcommand{\xebfidelity}{\mathcal{F}_{\text{XEB}}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\begin{document}
+
+\title{Supplementary information for\\ 
+``Quantum supremacy using a programmable superconducting processor" \cite{arute2019}}
+%\thanks{A footnote to the article title}%
+
+%\input{authors.tex}
+\author{Google AI Quantum and collaborators$^\dagger$}
+
+\date{\today}
+
+%\begin{abstract}
+%An article usually includes an abstract, a concise summary of the work
+%covered at length in the main body of the article. 
+%\begin{description}
+%\item[Usage]
+%Secondary publications and information retrieval purposes.
+%\item[Structure]
+%You may use the \texttt{description} environment to structure your abstract;
+%use the optional argument of the \verb+\item+ command to give the category of each item. 
+%\end{description}
+%\end{abstract}
+
+\maketitle
+
+\tableofcontents
+
+\input{sup_architecture.tex}
+\input{sup_fabrication.tex}
+\input{sup_control.tex}
+\input{sup_xeb_theory.tex}
+\input{sup_errors.tex}
+\input{sup_calib_metro.tex}
+\input{sup_circuits.tex}
+\input{sup_large_scale_XEB_results.tex}
+\input{sup_xeb_sensitivity.tex}
+\input{sup_classical_simul.tex}
+\input{sup_hardness_complexity.tex}
+
+\begin{acknowledgments}
+We acknowledge Georg Goerg for consultation on statistical analyses. This research used resources of the Oak Ridge Leadership Computing Facility, which is a DOE Office of Science User Facility supported under Contract DE-AC05-00OR22725.
+\end{acknowledgments}
+
+\vspace{1mm}
+\textbf{Correspondence and requests for materials}
+\small{should be addressed to John M. Martinis~(jmartinis@google.com).}
+
+\vspace{2mm}
+$^\dagger$ \small{ Frank Arute$^1$, Kunal Arya$^1$, Ryan Babbush$^1$, Dave Bacon$^1$, Joseph C. Bardin$^{1,2}$, 
+\altaffiliation[Also at ]{Department of Electrical and Computer Engineering, University of Massachusetts Amherst, Amherst, MA, 01003-9292}
+Rami Barends$^1$, Rupak Biswas$^3$, Sergio Boixo$^1$, Fernando G.S.L. Brandao$^{1,4}$,  
+\altaffiliation[Also at ]{Institute for Quantum Information and Matter, Caltech, Pasadena, CA, USA}
+David A. Buell$^1$, Brian Burkett$^1$, Yu Chen$^1$, Zijun Chen$^1$, Ben Chiaro$^5$, 
+Roberto Collins$^1$, William Courtney$^1$, Andrew Dunsworth$^1$, Edward Farhi$^1$, Brooks Foxen$^{1,5}$, Austin Fowler$^1$, Craig Gidney$^1$, Marissa Giustina$^1$, Rob Graff$^1$, Keith Guerin$^1$, Steve Habegger$^1$, Matthew P. Harrigan$^1$, Michael J. Hartmann$^{1,6}$, Alan Ho$^1$, Markus Hoffmann$^1$, Trent Huang$^1$, Travis S. Humble$^7$, Sergei V. Isakov$^1$, Evan Jeffrey$^1$, Zhang Jiang$^1$, Dvir Kafri$^1$, Kostyantyn Kechedzhi$^1$, Julian Kelly$^1$, Paul V. Klimov$^1$, Sergey Knysh$^1$, Alexander Korotkov$^{1,8}$, Fedor Kostritsa$^1$, David Landhuis$^1$, Mike Lindmark$^1$, Erik Lucero$^1$, Dmitry Lyakh$^{9}$,
+Salvatore Mandr\`{a}$^{3,10}$,
+Jarrod R. McClean$^1$, Matthew McEwen$^5$,Anthony Megrant$^1$, Xiao Mi$^1$,Kristel Michielsen$^{11,12}$, 
+Masoud Mohseni$^1$, Josh Mutus$^1$, Ofer Naaman$^1$, Matthew Neeley$^1$, Charles Neill$^1$, Murphy Yuezhen Niu$^1$, Eric Ostby$^1$, Andre Petukhov$^1$, John C. Platt$^1$, Chris Quintana$^1$, Eleanor G. Rieffel$^3$, Pedram Roushan$^1$, Nicholas C. Rubin$^1$, Daniel Sank$^1$, Kevin J.~Satzinger$^1$, Vadim Smelyanskiy$^1$, Kevin J.~Sung$^{1,13}$, Matthew D. Trevithick$^1$, Amit Vainsencher$^1$, Benjamin Villalonga$^{1,14}$, Theodore White$^1$, Z. Jamie Yao$^1$, Ping Yeh$^1$, Adam Zalcman$^1$, Hartmut Neven$^1$, John M. Martinis$^{1,5}$ 
+
+\noindent
+1. Google AI Quantum, Mountain View, CA, USA, \,\,
+2. Department of Electrical and Computer Engineering, University of Massachusetts Amherst, Amherst, MA, USA,\,\,
+3. Quantum Artificial Intelligence Lab. (QuAIL), NASA Ames Research Center, Moffett Field, USA,\,\,
+4. Institute for Quantum Information and Matter, Caltech, Pasadena, CA, USA,\,\,
+5. Department of Physics, University of California, Santa Barbara, CA, USA, \,\,
+6. Friedrich-Alexander University Erlangen-N\"{u}rnberg (FAU), Department of Physics, Erlangen, Germany,\,\,
+7. Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, TN, USA,\,\,
+8.  Department of Electrical and Computer Engineering, University of California, Riverside, CA, USA,\,\,
+9. Scientific Computing, Oak Ridge Leadership Computing, Oak Ridge National Laboratory, Oak Ridge, TN, USA
+10. Stinger Ghaffarian Technologies Inc., Greenbelt, MD, USA, \,\,
+11. Institute for Advanced Simulation, J\"{u}lich Supercomputing Centre, Forschungszentrum J\"{u}lich, J\"{u}lich, Germany,\,\,
+12. RWTH Aachen University, Aachen, Germany, \,\,
+13. Department of Electrical Engineering and Computer Science, University of Michigan, Ann Arbor, MI, USA,\,\,
+14. Department of Physics, University of Illinois at Urbana-Champaign, Urbana, IL, USA
+}
+
+\vspace{5mm}
+
+\section*{Erratum}
+The caption of Figure 4 in the main paper \cite{arute2019} incorrectly states that the error bars in the figure represent both statistical and systematic uncertainty. They represent the statistical uncertainty. See Figure~\ref{fig:stat_and_syst_error} for comparison of both types of uncertainty and discussion in Section~\ref{sec:large_scale_xeb} for details. Note that both types of uncertainty were accounted for in the analysis and all conclusions remain intact.
+
+\bibliographystyle{naturemag}
+
+\providecommand{\noopsort}[1]{}\providecommand{\singleletter}[1]{#1}
+\begin{thebibliography}{100}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\providecommand{\bibinfo}[2]{#2}
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem{arute2019}
+\bibinfo{author}{Arute, F.} \emph{et~al.}
+\newblock \bibinfo{title}{Quantum supremacy using a programmable superconducting processor}.
+\newblock \emph{\bibinfo{journal}{Nature}} \textbf{\bibinfo{volume}{574}},
+  \bibinfo{pages}{505} (\bibinfo{year}{2019}).
+\newblock \urlprefix\url{https://doi.org/10.1038/s41586-019-1666-5}
+
+\bibitem{barends2014nine}
+\bibinfo{author}{Barends, R.} \emph{et~al.}
+\newblock \bibinfo{title}{Superconducting quantum circuits at the surface code
+  threshold for fault tolerance}.
+\newblock \emph{\bibinfo{journal}{Nature}} \textbf{\bibinfo{volume}{508}},
+  \bibinfo{pages}{500} (\bibinfo{year}{2014}).
+
+\bibitem{charles_thesis}
+\bibinfo{author}{Neill, C.}
+\newblock \emph{\bibinfo{title}{A path towards quantum supremacy with
+  superconducting qubits}}.
+\newblock Ph.D. thesis, \bibinfo{school}{University of California, Santa
+  Barbara} (\bibinfo{year}{2017}).
+
+\bibitem{Yan-2018-MIT}
+\bibinfo{author}{Yan, F.} \emph{et~al.}
+\newblock \bibinfo{title}{Tunable coupling scheme for implementing
+  high-fidelity two-qubit gates}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Applied}}
+  \textbf{\bibinfo{volume}{10}}, \bibinfo{pages}{054062}
+  (\bibinfo{year}{2018}).
+
+\bibitem{chen2014coupler}
+\bibinfo{author}{Chen, Y.} \emph{et~al.}
+\newblock \bibinfo{title}{Qubit architecture with high coherence and fast
+  tunable coupling}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{113}}, \bibinfo{pages}{220502}
+  (\bibinfo{year}{2014}).
+
+\bibitem{neill2018blueprint}
+\bibinfo{author}{Neill, C.} \emph{et~al.}
+\newblock \bibinfo{title}{A blueprint for demonstrating quantum supremacy with
+  superconducting qubits}.
+\newblock \emph{\bibinfo{journal}{Science}} \textbf{\bibinfo{volume}{360}},
+  \bibinfo{pages}{195--199} (\bibinfo{year}{2018}).
+
+\bibitem{khezri2015transitions}
+\bibinfo{author}{Khezri, M.}, \bibinfo{author}{Dressel, J.} \&
+  \bibinfo{author}{Korotkov, A.~N.}
+\newblock \bibinfo{title}{Qubit measurement error from coupling with a detuned
+  neighbor in circuit {QED}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{92}},
+  \bibinfo{pages}{052306} (\bibinfo{year}{2015}).
+
+\bibitem{tucci507171cartan}
+\bibinfo{author}{Tucci, R.~R.}
+\newblock \bibinfo{title}{An introduction to {Cartan’s} {KAK} decomposition
+  for {QC} programmers.}
+\newblock \bibinfo{note}{Preprint at https://arxiv.org/abs/quant-ph/0507171
+  (2005)}.
+
+\bibitem{andrew_thesis}
+\bibinfo{author}{Dunsworth, A.}
+\newblock \emph{\bibinfo{title}{High fidelity entangling gates in
+  superconducting qubits}}.
+\newblock Ph.D. thesis, \bibinfo{school}{University of California, Santa
+  Barbara} (\bibinfo{year}{2018}).
+
+\bibitem{dunsworth2018method}
+\bibinfo{author}{Dunsworth, A.} \emph{et~al.}
+\newblock \bibinfo{title}{A method for building low loss multi-layer wiring for
+  superconducting microwave devices}.
+\newblock \emph{\bibinfo{journal}{Appl. Phys. Lett.}}
+  \textbf{\bibinfo{volume}{112}}, \bibinfo{pages}{063502}
+  (\bibinfo{year}{2018}).
+
+\bibitem{rosenberg20173bumps}
+\bibinfo{author}{Rosenberg, D.} \emph{et~al.}
+\newblock \bibinfo{title}{{3D} integrated superconducting qubits}.
+\newblock \emph{\bibinfo{journal}{npj Quantum Inf.}}
+  \textbf{\bibinfo{volume}{3}}, \bibinfo{pages}{42} (\bibinfo{year}{2017}).
+
+\bibitem{Foxen_2017}
+\bibinfo{author}{Foxen, B.} \emph{et~al.}
+\newblock \bibinfo{title}{Qubit compatible superconducting interconnects}.
+\newblock \emph{\bibinfo{journal}{Quantum Sci. Tech.}}
+  \textbf{\bibinfo{volume}{3}}, \bibinfo{pages}{014005} (\bibinfo{year}{2017}).
+
+\bibitem{foxen2018high_speed}
+\bibinfo{author}{Foxen, B.} \emph{et~al.}
+\newblock \bibinfo{title}{High speed flux sampling for tunable superconducting
+  qubits with an embedded cryogenic transducer}.
+\newblock \emph{\bibinfo{journal}{Supercond. Sci. Technol.}}
+  \textbf{\bibinfo{volume}{32}}, \bibinfo{pages}{015012}
+  (\bibinfo{year}{2018}).
+
+\bibitem{Blais2004CircuitQED}
+\bibinfo{author}{Blais, A.}, \bibinfo{author}{Huang, R.-S.},
+  \bibinfo{author}{Wallraff, A.}, \bibinfo{author}{Girvin, S.~M.} \&
+  \bibinfo{author}{Schoelkopf, R.~J.}
+\newblock \bibinfo{title}{Cavity quantum electrodynamics for superconducting
+  electrical circuits: An architecture for quantum computation}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{69}},
+  \bibinfo{pages}{062320} (\bibinfo{year}{2004}).
+
+\bibitem{Gambetta2006}
+\bibinfo{author}{Gambetta, J.} \emph{et~al.}
+\newblock \bibinfo{title}{Qubit-photon interactions in a cavity:
+  Measurement-induced dephasing and number splitting}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{74}},
+  \bibinfo{pages}{042318} (\bibinfo{year}{2006}).
+
+\bibitem{bultink2018general}
+\bibinfo{author}{Bultink, C.~C.} \emph{et~al.}
+\newblock \bibinfo{title}{General method for extracting the quantum efficiency
+  of dispersive qubit readout in circuit {QED}}.
+\newblock \emph{\bibinfo{journal}{Appl. Phys. Lett.}}
+  \textbf{\bibinfo{volume}{112}}, \bibinfo{pages}{092601}
+  (\bibinfo{year}{2018}).
+
+\bibitem{Sank2016Transitions}
+\bibinfo{author}{Sank, D.} \emph{et~al.}
+\newblock \bibinfo{title}{Measurement-induced state transitions in a
+  superconducting qubit: Beyond the rotating wave approximation}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{117}}, \bibinfo{pages}{190503}
+  (\bibinfo{year}{2016}).
+
+\bibitem{clerk2010intro}
+\bibinfo{author}{Clerk, A.~A.}, \bibinfo{author}{Devoret, M.~H.},
+  \bibinfo{author}{Girvin, S.~M.}, \bibinfo{author}{Marquardt, F.} \&
+  \bibinfo{author}{Schoelkopf, R.~J.}
+\newblock \bibinfo{title}{Introduction to quantum noise, measurement, and
+  amplification}.
+\newblock \emph{\bibinfo{journal}{Rev. Mod. Phys.}}
+  \textbf{\bibinfo{volume}{82}}, \bibinfo{pages}{1155--1208}
+  (\bibinfo{year}{2010}).
+
+\bibitem{caves1982Amplifiers}
+\bibinfo{author}{Caves, C.~M.}
+\newblock \bibinfo{title}{Quantum limits on noise in linear amplifiers}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. D}} \textbf{\bibinfo{volume}{26}},
+  \bibinfo{pages}{1817--1839} (\bibinfo{year}{1982}).
+
+\bibitem{Mutus2014IMPA}
+\bibinfo{author}{Mutus, J.~Y.} \emph{et~al.}
+\newblock \bibinfo{title}{Strong environmental coupling in a {Josephson}
+  parametric amplifier}.
+\newblock \emph{\bibinfo{journal}{Appl. Phys. Lett.}}
+  \textbf{\bibinfo{volume}{104}}, \bibinfo{pages}{263513}
+  (\bibinfo{year}{2014}).
+
+\bibitem{ryan2015tomography}
+\bibinfo{author}{Ryan, C.~A.} \emph{et~al.}
+\newblock \bibinfo{title}{Tomography via correlation of noisy measurement
+  records}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{91}},
+  \bibinfo{pages}{022118} (\bibinfo{year}{2015}).
+
+\bibitem{Jeffrey2014Fast}
+\bibinfo{author}{Jeffrey, E.} \emph{et~al.}
+\newblock \bibinfo{title}{Fast accurate state measurement with superconducting
+  qubits}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{112}}, \bibinfo{pages}{190504}
+  (\bibinfo{year}{2014}).
+
+\bibitem{Sank2015Noise}
+\bibinfo{author}{Sank, D.}
+\newblock \bibinfo{title}{What is the connection between analog signal to noise
+  ratio and signal to noise ratio in the {IQ} plane in a quadrature
+  demodulation system?}
+\newblock \bibinfo{howpublished}{Signal Processing Stack Exchange}.
+\newblock \bibinfo{note}{URL https://dsp.stackexchange.com/questions/24372
+  (2015)}.
+
+\bibitem{Reed2010Purcell}
+\bibinfo{author}{Reed, M.~D.} \emph{et~al.}
+\newblock \bibinfo{title}{Fast reset and suppressing spontaneous emission of a
+  superconducting qubit}.
+\newblock \emph{\bibinfo{journal}{Appl. Phys. Lett.}}
+  \textbf{\bibinfo{volume}{96}}, \bibinfo{pages}{203110}
+  (\bibinfo{year}{2010}).
+
+\bibitem{Sete2015Purcell}
+\bibinfo{author}{Sete, E.~A.}, \bibinfo{author}{Martinis, J.~M.} \&
+  \bibinfo{author}{Korotkov, A.~N.}
+\newblock \bibinfo{title}{Quantum theory of a bandpass purcell filter for qubit
+  readout}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{92}},
+  \bibinfo{pages}{012325} (\bibinfo{year}{2015}).
+
+\bibitem{chen2012mux}
+\bibinfo{author}{Chen, Y.} \emph{et~al.}
+\newblock \bibinfo{title}{Multiplexed dispersive readout of superconducting
+  phase qubits}.
+\newblock \emph{\bibinfo{journal}{Appl. Phys. Lett.}}
+  \textbf{\bibinfo{volume}{101}}, \bibinfo{pages}{182601}
+  (\bibinfo{year}{2012}).
+
+\bibitem{boixo2018characterizing}
+\bibinfo{author}{Boixo, S.} \emph{et~al.}
+\newblock \bibinfo{title}{Characterizing quantum supremacy in near-term
+  devices}.
+\newblock \emph{\bibinfo{journal}{Nat. Phys.}} \textbf{\bibinfo{volume}{14}},
+  \bibinfo{pages}{595} (\bibinfo{year}{2018}).
+
+\bibitem{wootters1990random}
+\bibinfo{author}{Wootters, W.~K.}
+\newblock \bibinfo{title}{Random quantum states}.
+\newblock \emph{\bibinfo{journal}{Found. Phys.}} \textbf{\bibinfo{volume}{20}},
+  \bibinfo{pages}{1365--1378} (\bibinfo{year}{1990}).
+
+\bibitem{emerson2005}
+\bibinfo{author}{Emerson, J.}, \bibinfo{author}{Livine, E.} \&
+  \bibinfo{author}{Lloyd, S.}
+\newblock \bibinfo{title}{Convergence conditions for random quantum circuits}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{72}},
+  \bibinfo{pages}{060302} (\bibinfo{year}{2005}).
+
+\bibitem{aaronson2017complexity}
+\bibinfo{author}{Aaronson, S.} \& \bibinfo{author}{Chen, L.}
+\newblock \bibinfo{title}{Complexity-theoretic foundations of quantum supremacy
+  experiments}.
+\newblock In \emph{\bibinfo{booktitle}{32nd Computational Complexity Conference
+  (CCC 2017)}} (\bibinfo{year}{2017}).
+
+\bibitem{magesan_characterizing_2012}
+\bibinfo{author}{Magesan, E.}, \bibinfo{author}{Gambetta, J.~M.} \&
+  \bibinfo{author}{Emerson, J.}
+\newblock \bibinfo{title}{Characterizing quantum gates via randomized
+  benchmarking}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{85}}
+  (\bibinfo{year}{2012}).
+
+\bibitem{magesan_robust_2011}
+\bibinfo{author}{Magesan, E.}, \bibinfo{author}{Gambetta, J.~M.} \&
+  \bibinfo{author}{Emerson, J.}
+\newblock \bibinfo{title}{Robust randomized benchmarking of quantum processes}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{106}} (\bibinfo{year}{2011}).
+
+\bibitem{Popescu2006entanglement}
+\bibinfo{author}{Popescu, S.}, \bibinfo{author}{Short, A.~J.} \&
+  \bibinfo{author}{Winter, A.}
+\newblock \bibinfo{title}{Entanglement and the foundations of statistical
+  mechanics}.
+\newblock \emph{\bibinfo{journal}{Nat. Phys.}} \textbf{\bibinfo{volume}{2}},
+  \bibinfo{pages}{754} (\bibinfo{year}{2006}).
+
+\bibitem{bremner2009random}
+\bibinfo{author}{Bremner, M.~J.}, \bibinfo{author}{Mora, C.} \&
+  \bibinfo{author}{Winter, A.}
+\newblock \bibinfo{title}{Are random pure states useful for quantum
+  computation?}
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{102}}, \bibinfo{pages}{190502}
+  (\bibinfo{year}{2009}).
+
+\bibitem{Gross2009most}
+\bibinfo{author}{Gross, D.}, \bibinfo{author}{Flammia, S.~T.} \&
+  \bibinfo{author}{Eisert, J.}
+\newblock \bibinfo{title}{Most quantum states are too entangled to be useful as
+  computational resources}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{102}}, \bibinfo{pages}{190501}
+  (\bibinfo{year}{2009}).
+
+\bibitem{mcclean2018barren}
+\bibinfo{author}{McClean, J.~R.}, \bibinfo{author}{Boixo, S.},
+  \bibinfo{author}{Smelyanskiy, V.~N.}, \bibinfo{author}{Babbush, R.} \&
+  \bibinfo{author}{Neven, H.}
+\newblock \bibinfo{title}{Barren plateaus in quantum neural network training
+  landscapes}.
+\newblock \emph{\bibinfo{journal}{Nat. Comm.}} \textbf{\bibinfo{volume}{9}},
+  \bibinfo{pages}{4812} (\bibinfo{year}{2018}).
+
+\bibitem{ledoux2005concentration}
+\bibinfo{author}{Ledoux, M.}
+\newblock \emph{\bibinfo{title}{The concentration of measure phenomenon}}.
+\newblock \bibinfo{number}{89} (\bibinfo{publisher}{American Mathematical
+  Society}, \bibinfo{year}{2005}).
+
+\bibitem{markov_quantum_2018}
+\bibinfo{author}{Markov, I.~L.}, \bibinfo{author}{Fatima, A.},
+  \bibinfo{author}{Isakov, S.~V.} \& \bibinfo{author}{Boixo, S.}
+\newblock \bibinfo{title}{Quantum supremacy is both closer and farther than it
+  appears.} \bibinfo{note}{Preprint at https://arxiv.org/pdf/1807.10749
+  (2018)}.
+
+\bibitem{cross2018validating}
+\bibinfo{author}{Cross, A.~W.}, \bibinfo{author}{Bishop, L.~S.},
+  \bibinfo{author}{Sheldon, S.}, \bibinfo{author}{Nation, P.~D.} \&
+  \bibinfo{author}{Gambetta, J.~M.}
+\newblock \bibinfo{title}{Validating quantum computers using randomized model
+  circuits}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}}
+  \textbf{\bibinfo{volume}{100}}, \bibinfo{pages}{032328}
+  (\bibinfo{year}{2019}).
+
+\bibitem{jkelly2018physical}
+\bibinfo{author}{Kelly, J.}, \bibinfo{author}{O'Malley, P.},
+  \bibinfo{author}{Neeley, M.}, \bibinfo{author}{Neven, H.} \&
+  \bibinfo{author}{Martinis, J.~M.}
+\newblock \bibinfo{title}{Physical qubit calibration on a directed acyclic
+  graph.} \bibinfo{note}{Preprint at https://arXiv.org/abs/1803.03226 (2019)}.
+
+\bibitem{Wallraff2004StrongCoupling}
+\bibinfo{author}{Wallraff, A.} \emph{et~al.}
+\newblock \bibinfo{title}{Strong coupling of a single photon to a
+  superconducting qubit using circuit quantum electrodynamics}.
+\newblock \emph{\bibinfo{journal}{Nature}} \textbf{\bibinfo{volume}{431}},
+  \bibinfo{pages}{162} (\bibinfo{year}{2004}).
+
+\bibitem{chen2018metrology}
+\bibinfo{author}{Chen, Z.}
+\newblock \emph{\bibinfo{title}{Metrology of quantum control and measurement in
+  superconducting qubits}}.
+\newblock Ph.D. thesis, \bibinfo{school}{University of California, Santa
+  Barbara} (\bibinfo{year}{2018}).
+
+\bibitem{chen2016measuring}
+\bibinfo{author}{Chen, Z.} \emph{et~al.}
+\newblock \bibinfo{title}{Measuring and suppressing quantum state leakage in a
+  superconducting qubit}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{116}}, \bibinfo{pages}{020501}
+  (\bibinfo{year}{2016}).
+
+\bibitem{paultls}
+\bibinfo{author}{Klimov, P.~V.} \emph{et~al.}
+\newblock \bibinfo{title}{Fluctuations of energy-relaxation times in
+  superconducting qubits}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{121}}, \bibinfo{pages}{090502}
+  (\bibinfo{year}{2018}).
+
+\bibitem{kelly2014optimal}
+\bibinfo{author}{Kelly, J.} \emph{et~al.}
+\newblock \bibinfo{title}{Optimal quantum control using randomized
+  benchmarking}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{112}}, \bibinfo{pages}{240504}
+  (\bibinfo{year}{2014}).
+
+\bibitem{bialczak2010quantum}
+\bibinfo{author}{Bialczak, R.~C.} \emph{et~al.}
+\newblock \bibinfo{title}{Quantum process tomography of a universal entangling
+  gate implemented with {Josephson} phase qubits}.
+\newblock \emph{\bibinfo{journal}{Nat. Phys.}} \textbf{\bibinfo{volume}{6}},
+  \bibinfo{pages}{409} (\bibinfo{year}{2010}).
+
+\bibitem{martinis2014fast}
+\bibinfo{author}{Martinis, J.~M.} \& \bibinfo{author}{Geller, M.~R.}
+\newblock \bibinfo{title}{Fast adiabatic qubit gates using only $\sigma_z$
+  control}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{90}},
+  \bibinfo{pages}{022307} (\bibinfo{year}{2014}).
+
+\bibitem{dicarlo2009cz}
+\bibinfo{author}{DiCarlo, L.} \emph{et~al.}
+\newblock \bibinfo{title}{Demonstration of two-qubit algorithms with a
+  superconducting quantum processor}.
+\newblock \emph{\bibinfo{journal}{Nature}} \textbf{\bibinfo{volume}{460}},
+  \bibinfo{pages}{240} (\bibinfo{year}{2009}).
+
+\bibitem{kivlichan2018quantum}
+\bibinfo{author}{Kivlichan, I.~D.} \emph{et~al.}
+\newblock \bibinfo{title}{Quantum simulation of electronic structure with
+  linear depth and connectivity}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{120}}, \bibinfo{pages}{110501}
+  (\bibinfo{year}{2018}).
+
+\bibitem{villalonga2019flexible}
+\bibinfo{author}{Villalonga, B.} \emph{et~al.}
+\newblock \bibinfo{title}{A flexible high-performance simulator for the
+  verification and benchmarking of quantum circuits implemented on real
+  hardware.}
+\newblock \emph{\bibinfo{journal}{npj Quantum Information}}
+  \textbf{\bibinfo{volume}{5}}, \bibinfo{pages}{1}
+  (\bibinfo{year}{2019}).
+ 
+\bibitem{jwallman2015estimating}
+\bibinfo{author}{Wallman, J.}, \bibinfo{author}{Granade, C.},
+  \bibinfo{author}{Harper, R.} \& \bibinfo{author}{Flammia, S.~T.}
+\newblock \bibinfo{title}{Estimating the coherence of noise}.
+\newblock \emph{\bibinfo{journal}{New J. Phys.}} \textbf{\bibinfo{volume}{17}},
+  \bibinfo{pages}{113020} (\bibinfo{year}{2015}).
+
+\bibitem{erhard2019characterizing}
+\bibinfo{author}{Erhard, A.} \emph{et~al.}
+\newblock \bibinfo{title}{Characterizing large-scale quantum computers via
+  cycle benchmarking.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1902.08543 (2019)}.
+
+\bibitem{johnson2012heralded}
+\bibinfo{author}{Johnson, J.~E.} \emph{et~al.}
+\newblock \bibinfo{title}{Heralded state preparation in a superconducting
+  qubit}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{109}}, \bibinfo{pages}{050506}
+  (\bibinfo{year}{2012}).
+
+\bibitem{dan_thesis}
+\bibinfo{author}{Sank, D.~T.}
+\newblock \emph{\bibinfo{title}{Fast, accurate state measurement in
+  superconducting qubits}}.
+\newblock Ph.D. thesis, \bibinfo{school}{University of California, Santa
+  Barbara} (\bibinfo{year}{2014}).
+
+\bibitem{SOM_csv}
+\bibinfo{note}{Experimental data repository}
+\newblock \urlprefix\url{https://doi.org/10.5061/dryad.k6t1rj8}
+
+\bibitem{babbush2018low}
+\bibinfo{author}{Babbush, R.} \emph{et~al.}
+\newblock \bibinfo{title}{Low-depth quantum simulation of materials}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. X}} \textbf{\bibinfo{volume}{8}},
+  \bibinfo{pages}{011044} (\bibinfo{year}{2018}).
+
+\bibitem{Boykin1999OnUniversal}
+\bibinfo{author}{Boykin, P.}, \bibinfo{author}{Mor, T.},
+  \bibinfo{author}{Pulver, M.}, \bibinfo{author}{Roychowdhury, V.} \&
+  \bibinfo{author}{Vatan, F.}
+\newblock \bibinfo{title}{On universal and fault-tolerant quantum computing}.
+\newblock \emph{\bibinfo{journal}{Proc. 40th Annual Symposium on Foundations of
+  Computer Science, IEEE Computer Society Press}}  (\bibinfo{year}{1999}).
+
+\bibitem{DiVincenzo1995Twobit}
+\bibinfo{author}{DiVincenzo, D.~P.}
+\newblock \bibinfo{title}{Two-bit gates are universal for quantum computation}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{51}},
+  \bibinfo{pages}{1015--1022} (\bibinfo{year}{1995}).
+
+\bibitem{shor1995scheme}
+\bibinfo{author}{Shor, P.~W.}
+\newblock \bibinfo{title}{Scheme for reducing decoherence in quantum computer
+  memory}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{52}},
+  \bibinfo{pages}{R2493(R)} (\bibinfo{year}{1995}).
+
+\bibitem{knill2008randomized}
+\bibinfo{author}{Knill, E.} \emph{et~al.}
+\newblock \bibinfo{title}{Randomized benchmarking of quantum gates}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. A}} \textbf{\bibinfo{volume}{77}},
+  \bibinfo{pages}{012307} (\bibinfo{year}{2008}).
+
+\bibitem{kolmogorov-smirnov-test}
+\bibinfo{author}{Lehmann, E.~L.} \& \bibinfo{author}{Romano, J.~P.}
+\newblock \emph{\bibinfo{title}{Testing Statistical Hypotheses}}
+  (\bibinfo{publisher}{Springer-Verlag New York}, \bibinfo{year}{2005}).
+
+\bibitem{scipy}
+\bibinfo{author}{Jones, E.}, \bibinfo{author}{Oliphant, T.},
+  \bibinfo{author}{Peterson, P.} \emph{et~al.}
+\newblock \bibinfo{title}{{SciPy}: Open source scientific tools for {Python}}
+  (\bibinfo{year}{2001}).
+\newblock \bibinfo{note}{URL http://www.scipy.org/ (2016)}.
+
+\bibitem{R_package}
+\bibinfo{author}{{R Core Team}}.
+\newblock \emph{\bibinfo{title}{R: A Language and Environment for Statistical
+  Computing}}.
+\newblock \bibinfo{organization}{R Foundation for Statistical Computing},
+  \bibinfo{address}{Vienna, Austria} (\bibinfo{year}{2017}).
+\newblock \bibinfo{note}{URL https://www.R-project.org/}
+
+\bibitem{bootstrapping}
+\bibinfo{author}{Efron, B.}
+\newblock \bibinfo{title}{Bootstrap methods: Another look at the jackknife}.
+\newblock \emph{\bibinfo{journal}{Ann. Stat.}} \textbf{\bibinfo{volume}{7}},
+  \bibinfo{pages}{1} (\bibinfo{year}{1979}).
+
+\bibitem{Dyakonov18}
+\bibinfo{author}{Dyakonov, M.}
+\newblock \bibinfo{title}{The case against quantum computing}.
+\newblock \emph{\bibinfo{journal}{IEEE Spectrum}} \textbf{\bibinfo{volume}{56}},
+\bibinfo{issue}{3},
+\bibinfo{pages}{24-29} (\bibinfo{year}{2019}).
+
+\bibitem{Kalai19}
+\bibinfo{author}{Kalai, G.}
+\newblock \bibinfo{title}{The argument against quantum computers.}
+  \bibinfo{note}{Preprint at https://arxiv.org/pdf/1908.02499 (2019).}
+
+\bibitem{smelyanskiy2016qhipster}
+\bibinfo{author}{Smelyanskiy, M.}, \bibinfo{author}{Sawaya, N.~P.} \&
+  \bibinfo{author}{Aspuru-Guzik, A.}
+\newblock \bibinfo{title}{{qHiPSTER}: the quantum high performance software
+  testing environment.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1601.07195 (2016)}.
+
+\bibitem{villalonga2019establishing}
+\bibinfo{author}{Villalonga, B.} \emph{et~al.}
+\newblock \bibinfo{title}{Establishing the quantum supremacy frontier with a
+  281 {P}flop/s simulation.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1905.00444 (2019).}
+
+\bibitem{MS08}
+\bibinfo{author}{Markov, I.~L.} \& \bibinfo{author}{Shi, Y.}
+\newblock \bibinfo{title}{Simulating quantum computation by contracting tensor
+  networks}.
+\newblock \emph{\bibinfo{journal}{SIAM J. Comput.}}
+  \textbf{\bibinfo{volume}{38}}, \bibinfo{pages}{963--981}
+  (\bibinfo{year}{2008}).
+
+\bibitem{Boi17}
+\bibinfo{author}{Boixo, S.}, \bibinfo{author}{Isakov, S.~V.},
+  \bibinfo{author}{Smelyanskiy, V.~N.} \& \bibinfo{author}{Neven, H.}
+\newblock \bibinfo{title}{Simulation of low-depth quantum circuits as complex
+  undirected graphical models.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1712.05384 (2017)}.
+
+\bibitem{lyakh_tal_sh}
+\bibinfo{author}{Lyakh, D.}
+\newblock \bibinfo{title}{Tensor algebra library routines for shared memory
+  systems}.
+\newblock \bibinfo{howpublished}{{URL https://github.com/DmitryLyakh/TAL\_SH
+  (2019)}}.
+
+\bibitem{chen2018classical}
+\bibinfo{author}{Chen, J.} \emph{et~al.}
+\newblock \bibinfo{title}{Classical simulation of intermediate-size quantum
+  circuits.} \bibinfo{note}{Preprint at https://arxiv.org/pdf/1805.01450
+  (2018)}.
+
+\bibitem{guo2019general}
+\bibinfo{author}{Guo, C.} \emph{et~al.}
+\newblock \bibinfo{title}{General-purpose quantum circuit simulator with
+  projected entangled-pair states and the quantum supremacy frontier.}
+  \bibinfo{note}{Preprint at https://arxiv.org/pdf/1905.08394 (2019)}.
+
+\bibitem{RAED07x}
+\bibinfo{author}{De~Raedt, K.} \emph{et~al.}
+\newblock \bibinfo{title}{Massively parallel quantum computer simulator}.
+\newblock \emph{\bibinfo{journal}{Comput. Phys. Commun.}}
+  \textbf{\bibinfo{volume}{176}}, \bibinfo{pages}{121--136}
+  (\bibinfo{year}{2007}).
+
+\bibitem{RAED19a}
+\bibinfo{author}{De~Raedt, H.} \emph{et~al.}
+\newblock \bibinfo{title}{Massively parallel quantum computer simulator, eleven
+  years later}.
+\newblock \emph{\bibinfo{journal}{Comput. Phys. Commun.}}
+  \textbf{\bibinfo{volume}{237}}, \bibinfo{pages}{47--61}
+  (\bibinfo{year}{2019}).
+
+\bibitem{JURECA}
+\bibinfo{author}{Krause, D.} \& \bibinfo{author}{Th{\"o}rnig, P.}
+\newblock \bibinfo{title}{Jureca: Modular supercomputer at {J}{\"u}lich
+  supercomputing centre}.
+\newblock \emph{\bibinfo{journal}{Journal of large-scale research facilities
+  JLSRF}} \textbf{\bibinfo{volume}{4}}, \bibinfo{pages}{132}
+  (\bibinfo{year}{2018}).
+
+\bibitem{JUWELS}
+\bibinfo{author}{Krause, D.}
+\newblock \bibinfo{title}{Juwels: Modular tier-0/1 supercomputer at the
+  {J}{\"u}lich supercomputing centre}.
+\newblock \emph{\bibinfo{journal}{Journal of large-scale research facilities
+  JLSRF}} \textbf{\bibinfo{volume}{5}}, \bibinfo{pages}{135}
+  (\bibinfo{year}{2019}).
+
+\bibitem{kalai2014gaussian}
+\bibinfo{author}{Kalai, G.} \& \bibinfo{author}{Kindler, G.}
+\newblock \bibinfo{title}{Gaussian noise sensitivity and bosonsampling}.
+\newblock \emph{\bibinfo{journal}{arXiv:1409.3093}}  (\bibinfo{year}{2014}).
+
+\bibitem{bremner2017achieving}
+\bibinfo{author}{Bremner, M.~J.}, \bibinfo{author}{Montanaro, A.} \&
+  \bibinfo{author}{Shepherd, D.~J.}
+\newblock \bibinfo{title}{Achieving quantum supremacy with sparse and noisy
+  commuting quantum computations}.
+\newblock \emph{\bibinfo{journal}{Quantum}} \textbf{\bibinfo{volume}{1}},
+  \bibinfo{pages}{8} (\bibinfo{year}{2017}).
+
+\bibitem{yung2017can}
+\bibinfo{author}{Yung, M.-H.} \& \bibinfo{author}{Gao, X.}
+\newblock \bibinfo{title}{Can chaotic quantum circuits maintain quantum
+  supremacy under noise?}
+\newblock \emph{\bibinfo{journal}{arXiv:1706.08913}}  (\bibinfo{year}{2017}).
+
+\bibitem{boixo2017fourier}
+\bibinfo{author}{Boixo, S.}, \bibinfo{author}{Smelyanskiy, V.~N.} \&
+  \bibinfo{author}{Neven, H.}
+\newblock \bibinfo{title}{Fourier analysis of sampling from noisy chaotic
+  quantum circuits}.
+\newblock \emph{\bibinfo{journal}{arXiv:1708.01875}}  (\bibinfo{year}{2017}).
+
+\bibitem{nahum2018operator}
+\bibinfo{author}{Nahum, A.}, \bibinfo{author}{Vijay, S.} \&
+  \bibinfo{author}{Haah, J.}
+\newblock \bibinfo{title}{Operator spreading in random unitary circuits}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. X}} \textbf{\bibinfo{volume}{8}},
+  \bibinfo{pages}{021014} (\bibinfo{year}{2018}).
+
+\bibitem{von2018operator}
+\bibinfo{author}{Von~Keyserlingk, C.}, \bibinfo{author}{Rakovszky, T.},
+  \bibinfo{author}{Pollmann, F.} \& \bibinfo{author}{Sondhi, S.~L.}
+\newblock \bibinfo{title}{Operator hydrodynamics, {OTOCs}, and entanglement
+  growth in systems without conservation laws}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. X}} \textbf{\bibinfo{volume}{8}},
+  \bibinfo{pages}{021013} (\bibinfo{year}{2018}).
+
+\bibitem{gogate2004complete}
+\bibinfo{author}{Gogate, V.} \& \bibinfo{author}{Dechter, R.}
+\newblock \bibinfo{title}{A complete anytime algorithm for treewidth}.
+\newblock In \emph{\bibinfo{booktitle}{Proceedings of the 20th Conference on
+  Uncertainty in Artificial Intelligence}}, \bibinfo{pages}{201--208}
+  (\bibinfo{year}{2004}).
+
+\bibitem{zhang2019alibaba}
+\bibinfo{author}{Zhang, F.} \emph{et~al.}
+\newblock \bibinfo{title}{Alibaba cloud quantum development kit: {L}arge-scale
+  classical simulation of quantum circuits.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1907.11217 (2019)}.
+
+\bibitem{chen2019quantum}
+\bibinfo{author}{Chen, M.-C.} \emph{et~al.}
+\newblock \bibinfo{title}{Quantum teleportation-inspired algorithm for sampling
+  large random quantum circuits.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1901.05003 (2019).}
+
+\bibitem{Note1}
+\bibinfo{note}{We assume 2 vCPUs per core}.
+
+\bibitem{koomey2016}
+\bibinfo{author}{Koomey, J.} \& \bibinfo{author}{Naffziger, S.}
+\newblock \bibinfo{title}{Energy efficiency of computing: What's next?}
+\newblock \emph{\bibinfo{journal}{Electronic Design.}} \bibinfo{note}{URL
+  https://www.electronicdesign.com/microprocessors/
+  energy-efficiency-computing-what-s-next (2016)}.
+
+\bibitem{preskill_2012}
+\bibinfo{author}{Preskill, J.}
+\newblock \bibinfo{title}{{Quantum computing and the entanglement frontier}}.
+\newblock \emph{\bibinfo{journal}{Rapporteur talk at the 25th Solvay Conference
+  on Physics, Brussels}}  (\bibinfo{year}{2012}).
+
+\bibitem{AA11}
+\bibinfo{author}{Aaronson, S.} \& \bibinfo{author}{Arkhipov, A.}
+\newblock \bibinfo{title}{The computational complexity of linear optics}.
+\newblock In \emph{\bibinfo{booktitle}{Proceedings of the Forty-third Annual
+  ACM Symposium on Theory of Computing}}, \bibinfo{pages}{333--342}
+  (\bibinfo{year}{2011}).
+
+\bibitem{BM16}
+\bibinfo{author}{Bremner, M.~J.}, \bibinfo{author}{Montanaro, A.} \&
+  \bibinfo{author}{Shepherd, D.~J.}
+\newblock \bibinfo{title}{Average-case complexity versus approximate simulation
+  of commuting quantum computations}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}}
+  \textbf{\bibinfo{volume}{117}}, \bibinfo{pages}{080501}
+  (\bibinfo{year}{2016}).
+
+\bibitem{Bou19}
+\bibinfo{author}{Bouland, A.}, \bibinfo{author}{Fefferman, B.},
+  \bibinfo{author}{Nirkhe, C.} \& \bibinfo{author}{Vazirani, U.}
+\newblock \bibinfo{title}{On the complexity and verification of quantum random
+  circuit sampling}.
+\newblock \emph{\bibinfo{journal}{Nat. Phys.}} \textbf{\bibinfo{volume}{15}},
+  \bibinfo{pages}{159} (\bibinfo{year}{2019}).
+
+\bibitem{movassagh2019cayley}
+\bibinfo{author}{Movassagh, R.}
+\newblock \bibinfo{title}{Cayley path and quantum computational supremacy: A
+  proof of average-case $\#\text{P}$-hardness of random circuit sampling with
+  quantified robustness.} \bibinfo{note}{Preprint at
+  https://arxiv.org/pdf/1909.06210 (2019)}.
+
+\bibitem{BJS10}
+\bibinfo{author}{Bremner, M.~J.}, \bibinfo{author}{Jozsa, R.} \&
+  \bibinfo{author}{Shepherd, D.~J.}
+\newblock \bibinfo{title}{Classical simulation of commuting quantum
+  computations implies collapse of the polynomial hierarchy}.
+\newblock \emph{\bibinfo{journal}{Proc. Royal Soc. A}}
+  \textbf{\bibinfo{volume}{467}}, \bibinfo{pages}{459--472}
+  (\bibinfo{year}{2010}).
+
+\bibitem{HM17}
+\bibinfo{author}{Harrow, A.~W.} \& \bibinfo{author}{Montanaro, A.}
+\newblock \bibinfo{title}{Quantum computational supremacy}.
+\newblock \emph{\bibinfo{journal}{Nature}} \textbf{\bibinfo{volume}{549}},
+  \bibinfo{pages}{203} (\bibinfo{year}{2017}).
+
+\bibitem{TD02}
+\bibinfo{author}{Terhal, B.~M.} \& \bibinfo{author}{DiVincenzo, D.~P.}
+\newblock \bibinfo{title}{Adaptive quantum computation, constant depth quantum
+  circuits and {Arthur}-{Merlin} games.}
+\newblock \emph{\bibinfo{journal}{Quant. Inf. Comp.}}
+  \textbf{\bibinfo{volume}{4}}, \bibinfo{pages}{134--145}
+  (\bibinfo{year}{2004}).
+
+\bibitem{HM18}
+\bibinfo{author}{Harrow, A.~W.} \& \bibinfo{author}{Mehraban, S.}
+\newblock \bibinfo{title}{Approximate unitary $t$-designs by short random
+  quantum circuits using nearest-neighbor and long-range gates.}
+  \bibinfo{note}{Preprint at https://arxiv.org/pdf/1809.06957 (2018)}.
+
+\bibitem{AB09}
+\bibinfo{author}{Arora, S.} \& \bibinfo{author}{Barak, B.}
+\newblock \emph{\bibinfo{title}{Computational complexity: a modern approach}}
+  (\bibinfo{publisher}{Cambridge University Press}, \bibinfo{year}{2009}).
+
+\bibitem{CNS18}
+\bibinfo{author}{Huang, C.}, \bibinfo{author}{Newman, M.} \&
+  \bibinfo{author}{Szegedy, M.}
+\newblock \bibinfo{title}{Explicit lower bounds on strong quantum simulation.}
+  \bibinfo{note}{Preprint at https://arxiv.org/pdf/1804.10368 (2018)}.
+
+\bibitem{Dal18}
+\bibinfo{author}{Dalzell, A.~M.}, \bibinfo{author}{Harrow, A.~W.},
+  \bibinfo{author}{Koh, D.~E.} \& \bibinfo{author}{La~Placa, R.~L.}
+\newblock \bibinfo{title}{How many qubits are needed for quantum computational
+  supremacy?} \bibinfo{note}{Preprint at https://arxiv.org/pdf/1805.05224.pdf
+  (2018)}.
+
+\bibitem{MS19}
+\bibinfo{author}{Morimae, T.} \& \bibinfo{author}{Tamaki, S.}
+\newblock \bibinfo{title}{Fine-grained quantum supremacy of the one-clean-qubit
+  model.} \bibinfo{note}{Preprint at https://arxiv.org/pdf/1901.01637 (2019)}.
+
+\bibitem{aaronson2014equivalence}
+\bibinfo{author}{Aaronson, S.}
+\newblock \bibinfo{title}{The equivalence of sampling and searching}.
+\newblock \emph{\bibinfo{journal}{Theory of Computing Systems}}
+  \textbf{\bibinfo{volume}{55}}, \bibinfo{pages}{281--298}
+  (\bibinfo{year}{2014}).
+
+\bibitem{Note2}
+\bibinfo{note}{The variational distance is defined as $d_{\protect \text{VD}}(p, q) := \frac{1}{2} \sum_x |p(x) - q(x)|$ where the sum is over all output bitstrings $x$.}
+
+\bibitem{Aa19}
+\bibinfo{author}{Aaronson, S.}
+\newblock \bibinfo{title}{Certifiable randomness from supremacy}.
+\newblock \emph{\bibinfo{journal}{Manuscript in preparation.}}
+  (\bibinfo{year}{2019}).
+
+\bibitem{calabro2009complexity}
+\bibinfo{author}{Calabro, C.}, \bibinfo{author}{Impagliazzo, R.} \&
+  \bibinfo{author}{Paturi, R.}
+\newblock \bibinfo{title}{The complexity of satisfiability of small depth
+  circuits}.
+\newblock In \emph{\bibinfo{booktitle}{International Workshop on Parameterized
+  and Exact Computation}}, \bibinfo{pages}{75--85}
+  (\bibinfo{organization}{Springer}, \bibinfo{year}{2009}).
+
+\bibitem{Note3}
+\bibinfo{note}{In terms of depth, the current construction gives a circuit $U$
+  on $n$ qubits of depth $n^{3k/2 + 5/2}$ for which it takes time $2^{(1 -
+  2/k)n}$ to estimate the transition probability to additive error
+  $2^{-(n+1)}$, assuming a form of SETH stating that it takes time no less than
+  $2^{(1 - 2/k)n}$ to solve $k$-SAT.}
+
+\end{thebibliography}
+
+
+\end{document}

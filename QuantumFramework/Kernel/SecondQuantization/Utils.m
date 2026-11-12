@@ -141,12 +141,25 @@ ToBosonicOperator::usage =
 
 ToBosonicOperator[expr_] := (Message[ToBosonicOperator::argr, ToBosonicOperator, 2]; $Failed)
 
+orderedPolynomial[(h : NormalOrdered | AntinormalOrdered)[f_, _], lv_, size_] :=
+    Module[{x, t, k = Length[lv["Annihilators"]], xs, p},
+        xs = Array[x, 2 k];
+        p = Normal @ Series[dequantize[f, Thread[lv["Generators"] -> t xs]], {t, 0, 2 k (size - 1)}] /. t -> 1;
+        If[ ! PolynomialQ[p, xs], Return[$Failed, Module]];
+        p = FromCoefficientRules[Select[CoefficientRules[p, xs], Max[First[#]] < size &], xs];
+        If[ h === NormalOrdered,
+            ncPolynomial[p, xs, lv["Generators"]],
+            ncPolynomial[p, RotateLeft[xs, k], Join[lv["Annihilators"], lv["Creators"]]]
+        ]
+    ]
+
 ToBosonicOperator[expr_, vars_, size : _Integer?Positive : $FockSize] :=
     With[{lv = ResolveLadderVariables[ToBosonicOperator, vars]},
         If[ lv === $Failed,
             $Failed,
-            With[{ops = Table[AnnihilationOperator[size, {k}], {k, Length[lv["Annihilators"]]}], g = Alternatives @@ lv["Generators"]},
-                expr /. GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n] /.
+            With[{ops = Table[AnnihilationOperator[size, {k}], {k, Length[lv["Annihilators"]]}], g = Alternatives @@ lv["Generators"],
+                    ex = expr /. o : (_NormalOrdered | _AntinormalOrdered) :> With[{p = orderedPolynomial[o, lv, size]}, p /; p =!= $Failed]},
+                ex /. GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n] /.
                     Power[base_, x_] /; FreeQ[base, g] && ! FreeQ[x, g] :> MatrixExp[Log[base] x] /. Join[
                     {NonCommutativeMultiply -> boseCompose},
                     Thread[lv["Creators"] -> (#["Dagger"] & /@ ops)],

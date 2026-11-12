@@ -21,7 +21,9 @@ cases = {
     {"bf-phen",     QECCode["BitFlipCode"], QECNoiseModel["Depolarizing", 1/100, "MeasurementError" -> 1/50], 2},
     {"steane-circ", QECCode["SteaneCode"],  QECNoiseModel["Circuit", 1/500], 2},
     {"shor-phen",   QECCode["ShorCode"],    QECNoiseModel["Depolarizing", 1/50, "MeasurementError" -> 1/100], 1},
-    {"5q-circ",     QECCode["5QubitCode"],  QECNoiseModel["Circuit", 1/500], 2}
+    {"5q-circ",     QECCode["5QubitCode"],  QECNoiseModel["Circuit", 1/500], 2},
+    {"surface3-circ", QECCode["Surface", 3], QECNoiseModel["Circuit", 1/500], 3},
+    {"toric3-phen",   QECCode["Toric", 3],   QECNoiseModel["Depolarizing", 1/100, "MeasurementError" -> 1/100], 2}
 };
 
 Do[
