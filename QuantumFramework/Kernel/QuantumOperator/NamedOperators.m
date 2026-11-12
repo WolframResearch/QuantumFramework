@@ -888,6 +888,16 @@ QuantumOperator["Trace"[args__ : 2], opts___] := With[{basis = QuditBasis[args]}
 QuantumOperator["Reset"[args___ : "0"], order_ ? orderQ, opts___] /; Length[order] > 1 && QuantumState[args]["Qudits"] == 1 :=
     QuantumOperator["Reset"[QuantumTensorProduct[ConstantArray[QuantumState[args], Length[order]]]], order, opts]
 
+(* A reset to an n-qudit state (n > 1) needs n output and n input wires, in any of the order forms. *)
+resetWireLists[order_] := Replace[order, {(in_ -> out_) :> {out, in}, {out_ ? orderQ, in_ ? orderQ} :> {out, in}, wires_ :> {wires}}]
+
+QuantumOperator["Reset"[args___ : "0"], order : (_ ? orderQ | {_ ? orderQ, _ ? orderQ} | (_ ? orderQ -> _ ? orderQ)), ___] /;
+    With[{n = QuantumState[args]["Qudits"]}, n > 1 && AnyTrue[resetWireLists[order], Length[#] != n &]] :=
+    With[{n = QuantumState[args]["Qudits"]},
+        Message[QuantumOperator::resetwires, n, order];
+        Failure["InvalidArguments", <|"MessageTemplate" :> QuantumOperator::resetwires, "MessageParameters" -> {n, order}|>]
+    ]
+
 (* rho -> Tr[rho] state: the trace runs over each qudit of the state separately, so the operator
    has as many input qudits as output qudits. The label stays "Reset"[...] even for an unlabeled
    state, so the operator is still recognized as a reset. *)

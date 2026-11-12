@@ -953,4 +953,122 @@ VerificationTest[
     TestID -> "reset-mixed-qiskit-message"
 ]
 
+(* operators exported by their data (a matrix with no gate name, or an injected state) on wires
+   listed out of order: the data and the wires are both taken in increasing wire order, so qiskit
+   sees the same operator as QF *)
+matrixOrderCircuits = <|
+    "unitary-two-wires-reversed" -> QuantumCircuitOperator[{"X" -> 1, QuantumOperator[Orthogonalize[{{1, 2, 0, 1}, {0, 1, 3, 0}, {2, 0, 1, 1}, {1, 1, 0, 2}}], {2, 1}]}],
+    "unitary-three-wires-permuted" -> QuantumCircuitOperator[{"X" -> 1, "H" -> 2, QuantumOperator[Orthogonalize[Table[Prime[i j] + i ^ 2 - j, {i, 8}, {j, 8}]], {3, 1, 2}]}],
+    "unitary-output-input-orders-differ" -> QuantumCircuitOperator[{"X" -> 1, QuantumOperator[Orthogonalize[{{1, 2, 0, 1}, {0, 1, 3, 0}, {2, 0, 1, 1}, {1, 1, 0, 2}}], {{2, 1}, {1, 2}}]}],
+    "inject-two-wires-reversed" -> QuantumCircuitOperator[{QuantumOperator[QuantumState[Normalize[{1, 2, 3, 4}]], {{2, 1}, {}}]}],
+    "inject-three-wires-permuted" -> QuantumCircuitOperator[{QuantumOperator[QuantumState["001"], {{3, 1, 2}, {}}]}]
+|>;
+
+KeyValueMap[
+    Function[{id, qc},
+        qtest[
+            Chop[qiskitProbabilities[qc["Qiskit"], Range[qc["Max"]]] - N[qc[]["ProbabilitiesList"]], 10^-10],
+            ConstantArray[0, 2 ^ qc["Max"]],
+            "matrix-order-" <> id <> "-qiskit"
+        ]
+    ],
+    matrixOrderCircuits
+]
+
+(* the whole unitary, not only the probabilities from |0...0>: qiskit's operator agrees with QF's
+   matrix up to a global phase *)
+qiskitUnitary[qc_QiskitCircuit] := Block[{pb = qc["Bytes"]},
+    pe[Context[pb], "
+import pickle
+from qiskit.quantum_info import Operator
+c = pickle.loads(<* pb *>)
+Operator(c).reverse_qargs().data.tolist()
+"]
+];
+
+KeyValueMap[
+    Function[{id, qc},
+        qtest[
+            With[{a = N @ Normal @ qc["Matrix"], b = qiskitUnitary[qc["Qiskit"]]},
+                Chop[Abs[Tr[ConjugateTranspose[a] . b]] / Length[a] - 1, 10^-9]
+            ],
+            0,
+            "matrix-order-" <> id <> "-qiskit-unitary"
+        ]
+    ],
+    KeySelect[matrixOrderCircuits, StringStartsQ["unitary"]]
+]
+
+(* the matrices above are unitary, so qiskit's UnitaryGate represents them exactly *)
+VerificationTest[
+    AllTrue[{Orthogonalize[{{1, 2, 0, 1}, {0, 1, 3, 0}, {2, 0, 1, 1}, {1, 1, 0, 2}}], Orthogonalize[Table[Prime[i j] + i ^ 2 - j, {i, 8}, {j, 8}]]}, UnitaryMatrixQ],
+    True,
+    TestID -> "matrix-order-test-matrices-unitary"
+]
+
+(* a reset to an n-qudit state needs n wires (or a one-qudit state, reset on every wire) *)
+VerificationTest[
+    Head[QuantumOperator["Reset"["00"], {1}]],
+    Failure,
+    {QuantumOperator::resetwires},
+    TestID -> "reset-state-larger-than-wires-fails"
+]
+
+VerificationTest[
+    Head[QuantumOperator["Reset"["000"], {1, 2}]],
+    Failure,
+    {QuantumOperator::resetwires},
+    TestID -> "reset-three-qudit-state-on-two-wires-fails"
+]
+
+VerificationTest[
+    Head[QuantumOperator["Reset"["00"], {{1}, {1}}]],
+    Failure,
+    {QuantumOperator::resetwires},
+    TestID -> "reset-explicit-orders-fails-list"
+]
+
+VerificationTest[
+    Head[QuantumOperator["Reset"["00"], {1} -> {1}]],
+    Failure,
+    {QuantumOperator::resetwires},
+    TestID -> "reset-explicit-orders-fails-rule"
+]
+
+VerificationTest[
+    Head[QuantumOperator["Reset"["00"], {{1, 2}, {1}}]],
+    Failure,
+    {QuantumOperator::resetwires},
+    TestID -> "reset-explicit-orders-fails-input-short"
+]
+
+VerificationTest[
+    #["Dimensions"] & /@ {QuantumOperator["Reset"["00"], {{2, 1}, {2, 1}}], QuantumOperator["Reset"["00"], {2, 1} -> {2, 1}]},
+    {{2, 2, 2, 2}, {2, 2, 2, 2}},
+    TestID -> "reset-explicit-orders-valid"
+]
+
+(* translating to a gate set can remove swaps and only record that the qubits end permuted;
+   the exported OpenQASM moves each qubit back to its own wire, so the state matches QF's *)
+gateSetCircuits = <|
+    "swap" -> QuantumCircuitOperator[{"X" -> 1, "SWAP" -> {1, 2}}],
+    "swap-three-wires" -> QuantumCircuitOperator[{"H" -> 1, "RY"[0.3] -> 2, "X" -> 3, "SWAP" -> {1, 3}, "CNOT" -> {3, 2}}],
+    "reset-reversed-wires" -> QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, QuantumOperator["Reset"[QuantumState["01"]], {2, 1}]}],
+    "inject-in-order" -> QuantumCircuitOperator[{QuantumOperator[QuantumState["01"], {{1, 2}, {}}]}],
+    "inject-three-wires-permuted" -> QuantumCircuitOperator[{QuantumOperator[QuantumState["001"], {{3, 1, 2}, {}}]}]
+|>;
+
+KeyValueMap[
+    Function[{id, qc},
+        qtest[
+            With[{qasm = QuantumQASM[qc, {"x", "sx", "rz", "cz"}]},
+                Chop[N[QuantumQASM[qasm][]["ProbabilitiesList"] - qc[]["ProbabilitiesList"]], 10^-8]
+            ],
+            ConstantArray[0, 2 ^ qc["Max"]],
+            "gate-set-qasm-qubit-order-" <> id
+        ]
+    ],
+    gateSetCircuits
+]
+
 EndTestSection[]

@@ -112,9 +112,33 @@ else:
         # the dump uses the named register (compose carries global_phase and drops the
         # layout). With a real coupling_map/target, the physical layout is meaningful and
         # is kept.
+        # The layout can also record a final permutation: the transpiler removes swaps
+        # and permutations and notes instead that qubit i ends on final_index_layout()[i].
+        # Dropping the layout drops that note, so swaps that move each qubit back to its
+        # own wire are appended, translated to the same gates without optimization (which
+        # would remove them again).
         if kwargs.get('coupling_map') is None and kwargs.get('target') is None and out.layout is not None:
             clean = QuantumCircuit(*out.qregs, *out.cregs)
             clean.compose(out, inplace=True)
+            final = list(out.layout.final_index_layout())
+            if final != list(range(len(final))):
+                where = final[:]
+                held = [0] * len(final)
+                for q, w in enumerate(where):
+                    held[w] = q
+                back = QuantumCircuit(clean.num_qubits)
+                for q in range(len(final)):
+                    w = where[q]
+                    if w != q:
+                        back.swap(q, w)
+                        other = held[q]
+                        held[q], held[w] = q, other
+                        where[q], where[other] = q, w
+                back_kwargs = {'optimization_level': 0}
+                if kwargs.get('basis_gates') is not None:
+                    back_kwargs['basis_gates'] = kwargs['basis_gates']
+                back = transpile(back, **back_kwargs)
+                clean.compose(back, qubits=list(range(back.num_qubits)), inplace=True)
             out = clean
         if skipped_props:
             md = dict(out.metadata) if out.metadata else {}

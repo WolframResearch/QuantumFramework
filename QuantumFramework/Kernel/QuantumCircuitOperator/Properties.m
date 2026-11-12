@@ -449,10 +449,10 @@ qasmStateInjectionQ[op_] := MatchQ[op, _QuantumOperator] && op["InputDimension"]
    gate sequence and becomes the "// Unimplemented" marker *)
 qasmResetQ[op_] := MatchQ[op, _QuantumOperator] && MatchQ[op["Label"], "Reset"[_]] && op["OutputOrder"] === op["InputOrder"]
 
-(* resetState gives the state on the wires in increasing order *)
+(* resetState gives the state with its qudits on op["Sort"]["OutputOrder"] *)
 qasmResetLines[op_] := With[{state = resetState[op]},
     If[ state["PureStateQ"],
-        qasmStatePrepLines[QuantumOperator[state, {Sort[op["OutputOrder"]], {}}]],
+        qasmStatePrepLines[QuantumOperator[state, {op["Sort"]["OutputOrder"], {}}]],
         {qasmUnimplemented[Replace[op["Label"], "Reset"[None] -> "Reset to a mixed or symbolic state"]]}
     ]
 ]
