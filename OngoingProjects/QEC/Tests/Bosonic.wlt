@@ -375,3 +375,142 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - gain, dephasing and combined channels"]
+
+(* Michael et al., PRX 6, 031006 (2016): the error set of Eq. (6) is the union
+   {I, a..a^L, ad..ad^G, n..n^D}, and the code of Eq. (7) corrects it when S = L + G
+   and N = max{L, G, 2D}.  Their Eqs. (2), (3) and (5) are the (N, S) = (1, 1), (2, 2)
+   and (2, 1) codes. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1]]["ErrorSet", "Gain"[2]],
+    {1, qecAdv, qecAdv ** qecAdv},
+    TestID -> "QBC-Gain-ErrorSet"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1]]["ErrorSet", {"Loss"[1], "Dephasing"[1]}],
+    {1, qecAv, qecAdv ** qecAv},
+    TestID -> "QBC-Combined-ErrorSet-Union"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1]]["Codewords"],
+    {<|0 -> 1/2, 4 -> Sqrt[3]/2|>, <|2 -> Sqrt[3]/2, 6 -> 1/2|>},
+    TestID -> "QBC-Binomial-21-Eq5-Codewords"
+]
+
+(* Eq. (5) corrects {I, a, n}.  Dephasing makes h non-diagonal: h(I, n) = <n> = 3 and
+   h(n, n) = <n^2> = 12 on both codewords, while a flips parity and leaves h(I, a) = 0. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1]]["KnillLaflammeMatrix", {"Loss"[1], "Dephasing"[1]}],
+    {{1, 0, 3}, {0, 3, 0}, {3, 0, 12}},
+    TestID -> "QBC-Binomial-21-KLMatrix-LossDephasing"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1]]["CorrectableQ", {"Loss"[1], "Dephasing"[1]}],
+    True,
+    TestID -> "QBC-Binomial-21-Correctable-LossDephasing"
+]
+
+(* N = 2 >= 2D stops at one dephasing. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1]]["CorrectableQ", "Dephasing"[2]],
+    False,
+    TestID -> "QBC-Binomial-21-NotCorrectable-Dephasing2"
+]
+
+(* Eq. (2) has N = 1, so no dephasing: <n^2> is 8 on one codeword and 4 on the other. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", "Dephasing"[1]],
+    False,
+    TestID -> "QBC-Binomial-11-NotCorrectable-Dephasing1"
+]
+
+(* S = L + G = 1 buys one loss or one gain, not both: a W0 and ad W1 both land on |3>. *)
+VerificationTest[
+    {QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", "Gain"[1]],
+     QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", {"Loss"[1], "Gain"[1]}]},
+    {True, False},
+    TestID -> "QBC-Binomial-11-GainOrLossNotBoth"
+]
+
+(* Eq. (3) corrects either {I, a, a^2, n} or {I, a, ad, n}. *)
+VerificationTest[
+    {QECBosonicCode["Binomial"[2, 2]]["CorrectableQ", {"Loss"[2], "Dephasing"[1]}],
+     QECBosonicCode["Binomial"[2, 2]]["CorrectableQ", {"Loss"[1], "Gain"[1], "Dephasing"[1]}]},
+    {True, True},
+    TestID -> "QBC-Binomial-22-Eq3-Correctable"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - ladder variables"]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1], qecB]["ErrorSet", {"Loss"[1], "Dephasing"[1]}],
+    {1, qecB, SuperDagger[qecB] ** qecB},
+    TestID -> "QBC-Vars-NamedChannelInVars"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1], {{SuperDagger[qecB]}, {qecB}}]["ErrorSet", "Loss"[1]],
+    {1, qecB},
+    TestID -> "QBC-Vars-FieldVariablesForm"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1], qecB]["KnillLaflammeMatrix", {1, qecB, SuperDagger[qecB] ** qecB}],
+    QECBosonicCode["Binomial"[2, 1]]["KnillLaflammeMatrix", {"Loss"[1], "Dephasing"[1]}],
+    TestID -> "QBC-Vars-ExplicitErrorsMatchDefault"
+]
+
+VerificationTest[
+    QECBosonicCode["Cat"[2, \[Alpha]], qecB, Assumptions -> \[Alpha] > 0]["MeanPhotonNumber"],
+    {\[Alpha]^2 Tanh[\[Alpha]^2], \[Alpha]^2 Coth[\[Alpha]^2]},
+    TestID -> "QBC-Vars-WithAssumptions"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1], {qecB, qecC}],
+    $Failed,
+    {QECBosonicCode::vars},
+    TestID -> "QBC-Vars-TwoModesRejected"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - QuantumState codewords"]
+
+VerificationTest[
+    QECBosonicCode[QECBosonicCode["Binomial"[2, 1]]["CodewordStates"]]["Codewords"],
+    QECBosonicCode["Binomial"[2, 1]]["Codewords"],
+    TestID -> "QBC-States-RoundTrip"
+]
+
+VerificationTest[
+    QECBosonicCode[{FockState[0, 5], FockState[3, 5]}, qecB]["ErrorSet", "Loss"[1]],
+    {1, qecB},
+    TestID -> "QBC-States-WithVars"
+]
+
+VerificationTest[
+    QECBosonicCode[{QuantumState[IdentityMatrix[3]/3, 3], FockState[1, 3]}],
+    $Failed,
+    {QECBosonicCode::states},
+    TestID -> "QBC-States-MixedRejected"
+]
+
+VerificationTest[
+    QECBosonicCode[{QuantumTensorProduct[FockState[0, 3], FockState[0, 3]],
+        QuantumTensorProduct[FockState[1, 3], FockState[1, 3]]}],
+    $Failed,
+    {QECBosonicCode::states},
+    TestID -> "QBC-States-TwoModesRejected"
+]
+
+EndTestSection[]

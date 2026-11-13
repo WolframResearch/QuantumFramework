@@ -14,11 +14,11 @@ PackageScope[bosonicBlocks]
 PackageScope[ncDagger]
 
 
-QECBosonicCode::usage = "QECBosonicCode[{w0, w1}] represents a single-mode bosonic code with the given logical codewords, each an association <|n -> amplitude|> in the Fock basis or a list of {coefficient, amplitude} pairs in the coherent basis.\nQECBosonicCode[\"Binomial\"[N, S]] builds the binomial code of Michael et al. with parameters N and S.\nQECBosonicCode[\"Cat\"[legs, alpha]] builds the rotation-symmetric cat code of amplitude alpha on an even number of coherent-state legs; 2d legs correct up to d-1 photon losses.\ncode[prop] gives a property; code[\"Properties\"] lists them.";
+QECBosonicCode::usage = "QECBosonicCode[{w0, w1}] represents a single-mode bosonic code with the given logical codewords, each an association <|n -> amplitude|> in the Fock basis, a list of {coefficient, amplitude} pairs in the coherent basis, or a pure single-mode QuantumState.\nQECBosonicCode[\"Binomial\"[N, S]] builds the binomial code of Michael et al. with parameters N and S.\nQECBosonicCode[\"Cat\"[legs, alpha]] builds the rotation-symmetric cat code of amplitude alpha on an even number of coherent-state legs; 2d legs correct up to d-1 photon losses.\nQECBosonicCode[spec, b] writes the code in the ladder operators b and b\[Dagger].\ncode[prop] gives a property; code[\"Properties\"] lists them.";
 
 
-$av := FieldVariables[][[2, 1]]
-$adv := FieldVariables[][[1, 1]]
+annihilator[a_Association] := a["LadderVariables"][[2, 1]]
+creator[a_Association] := a["LadderVariables"][[1, 1]]
 
 
 daggerAtom[SuperDagger[v_]] := v
@@ -40,6 +40,8 @@ bosonicCodeData[QECBosonicCode[a_Association]] := a
 
 QECBosonicCode::words = "Codewords must be two associations <|n -> amplitude|> in the Fock basis, or two lists of {coefficient, amplitude} pairs in the coherent basis.";
 QECBosonicCode::legs = "A cat code needs an even number of at least 2 legs; `1` was given.";
+QECBosonicCode::vars = "`1` does not name the ladder operators of a single mode.";
+QECBosonicCode::states = "QuantumState codewords must be pure states of a single mode.";
 
 Options[QECBosonicCode] = {Assumptions -> True};
 
@@ -48,41 +50,55 @@ coherentWordQ[w_] := MatchQ[w, {{_, _} ..}]
 
 normalizeFock[w_Association] := w/Sqrt[Total[Abs[Values[w]]^2]]
 
-codeObject[ws_, basis_, params_, assum_] :=
-    QECBosonicCode[<|
-        "Codewords" -> ws, "Basis" -> basis, "Modes" -> 1,
-        "Parameters" -> params, "Assumptions" -> assum|>]
+fockWord[qs_QuantumState] :=
+    DeleteCases[Association @ MapIndexed[First[#2] - 1 -> #1 &, Normal @ qs["StateVector"]], _ ? PossibleZeroQ]
 
-QECBosonicCode[ws : {_, _}, OptionsPattern[]] :=
+codeObject[ws_, basis_, params_, vars_, assum_] :=
+    With[{lv = Replace[vars, {Automatic :> FieldVariables[], v : _Symbol | {_Symbol} :> FieldVariables[v]}]},
+        If[ MatchQ[lv, {{_}, {_}}],
+            QECBosonicCode[<|
+                "Codewords" -> ws, "Basis" -> basis, "Modes" -> 1, "Parameters" -> params,
+                "LadderVariables" -> lv, "Assumptions" -> assum|>],
+            Message[QECBosonicCode::vars, vars]; $Failed
+        ]
+    ]
+
+QECBosonicCode[qs : {_QuantumState, _QuantumState}, rest___] :=
+    If[ AllTrue[qs, #["PureStateQ"] && #["Qudits"] == 1 &],
+        QECBosonicCode[fockWord /@ qs, rest],
+        Message[QECBosonicCode::states]; $Failed
+    ]
+
+QECBosonicCode[ws : {_, _}, vars : Except[_Rule | _RuleDelayed] : Automatic, OptionsPattern[]] :=
     Which[
-        AllTrue[ws, fockWordQ], codeObject[ws, "Fock", <||>, OptionValue[Assumptions]],
-        AllTrue[ws, coherentWordQ], codeObject[ws, "Coherent", <||>, OptionValue[Assumptions]],
+        AllTrue[ws, fockWordQ], codeObject[ws, "Fock", <||>, vars, OptionValue[Assumptions]],
+        AllTrue[ws, coherentWordQ], codeObject[ws, "Coherent", <||>, vars, OptionValue[Assumptions]],
         True, Message[QECBosonicCode::words]; $Failed
     ]
 
 QECBosonicCode["Binomial"[nn_Integer ? NonNegative, ss_Integer ? NonNegative],
-        OptionsPattern[]] :=
+        vars : Except[_Rule | _RuleDelayed] : Automatic, OptionsPattern[]] :=
     With[{word = Function[par,
             normalizeFock[Association[Table[
                 p (ss + 1) -> Sqrt[Binomial[nn + 1, p]], {p, par, nn + 1, 2}]]]]},
-        codeObject[{word[0], word[1]}, "Fock", <|"N" -> nn, "S" -> ss|>,
+        codeObject[{word[0], word[1]}, "Fock", <|"N" -> nn, "S" -> ss|>, vars,
             OptionValue[Assumptions]]
     ]
 
-QECBosonicCode["Cat"[legs_Integer, al_], OptionsPattern[]] :=
+QECBosonicCode["Cat"[legs_Integer, al_], vars : Except[_Rule | _RuleDelayed] : Automatic, OptionsPattern[]] :=
     If[ ! (EvenQ[legs] && legs >= 2),
         Message[QECBosonicCode::legs, legs]; $Failed,
         codeObject[
             Table[Table[{Exp[-2 Pi I r k/legs], al Exp[2 Pi I k/legs]}, {k, 0, legs - 1}],
                 {r, {0, legs/2}}],
-            "Coherent", <|"Legs" -> legs, "Alpha" -> al|>, OptionValue[Assumptions]]
+            "Coherent", <|"Legs" -> legs, "Alpha" -> al|>, vars, OptionValue[Assumptions]]
     ]
 
 
 componentElement[a_Association, x_, y_, expr_] :=
     If[ a["Basis"] === "Fock",
-        Conjugate[x[[2]]] y[[2]] BosonicMatrixElement[{x[[1]], y[[1]]}, expr, FieldVariables[]],
-        Conjugate[x[[1]]] y[[1]] BosonicMatrixElement[{x[[2]], y[[2]]}, expr, FieldVariables[], "Basis" -> "Coherent"]
+        Conjugate[x[[2]]] y[[2]] BosonicMatrixElement[{x[[1]], y[[1]]}, expr, a["LadderVariables"]],
+        Conjugate[x[[1]]] y[[1]] BosonicMatrixElement[{x[[2]], y[[2]]}, expr, a["LadderVariables"], "Basis" -> "Coherent"]
     ]
 
 wordComponents[a_Association, w_] := If[a["Basis"] === "Fock", List @@@ Normal[w], w]
@@ -103,25 +119,31 @@ bosonicElement[a_Association, i_Integer, j_Integer, expr_] :=
 
 (* The idealized span {I, a, ..., a^L}, not the Kraus set of the physical channel:
    its no-jump factor eta^(n/2) is not a polynomial in the ladder operators. *)
-bosonicErrorSet["Loss"[l_Integer ? NonNegative]] := NestList[ncTimes[#, $av] &, 1, l]
+bosonicErrorSet[a_, "Loss"[l_Integer ? NonNegative]] := NestList[ncTimes[#, annihilator[a]] &, 1, l]
 
-bosonicErrorSet["Dephasing"[dd_Integer ? NonNegative]] :=
-    NestList[ncTimes[#, $adv ** $av] &, 1, dd]
+bosonicErrorSet[a_, "Gain"[g_Integer ? NonNegative]] := NestList[ncTimes[#, creator[a]] &, 1, g]
+
+bosonicErrorSet[a_, "Dephasing"[dd_Integer ? NonNegative]] :=
+    NestList[ncTimes[#, creator[a] ** annihilator[a]] &, 1, dd]
 
 (* Every normally ordered monomial up to total degree L, the span a displacement reaches
    when expanded to that order.  Unlike loss it is not graded by photon number, so the
    coefficient matrix need not come out diagonal. *)
-bosonicErrorSet["Displacement"[l_Integer ? NonNegative]] :=
+bosonicErrorSet[a_, "Displacement"[l_Integer ? NonNegative]] :=
     Flatten @ Table[
-        ncTimes[Nest[ncTimes[#, $adv] &, 1, p], Nest[ncTimes[#, $av] &, 1, t - p]],
+        ncTimes[Nest[ncTimes[#, creator[a]] &, 1, p], Nest[ncTimes[#, annihilator[a]] &, 1, t - p]],
         {t, 0, l}, {p, 0, t}
     ]
 
-bosonicErrorSet[es_List] := es
+(* A list of named channels is the union of their error sets, as in Michael et al.,
+   where loss, gain and dephasing errors are corrected together but never multiplied. *)
+bosonicErrorSet[a_, chs : {(_String[_]) ..}] := DeleteDuplicates @ Catenate[bosonicErrorSet[a, #] & /@ chs]
+
+bosonicErrorSet[_, es_List] := es
 
 
 bosonicBlocks[a_Association, channel_] := bosonicBlocks[a, channel] =
-    With[{es = bosonicErrorSet[channel]},
+    With[{es = bosonicErrorSet[a, channel]},
         Table[
             Table[bosonicElement[a, i, j, ncTimes[ncDagger[es[[p]]], es[[q]]]], {i, 2}, {j, 2}],
             {p, Length[es]}, {q, Length[es]}]
@@ -133,7 +155,7 @@ bosonicKLMatrix[a_Association, channel_] :=
 (* The obstruction itself: what each block has left over once the codeword-independent
    part is removed, keyed by the error pair {E_a, E_b}. Zero exactly when the conditions hold. *)
 bosonicResidual[a_Association, channel_] :=
-    With[{es = bosonicErrorSet[channel]},
+    With[{es = bosonicErrorSet[a, channel]},
         AssociationThread[Tuples[{es, es}],
             Flatten[Map[# - IdentityMatrix[2] FullSimplify[Tr[#]/2, a["Assumptions"]] &,
                 bosonicBlocks[a, channel], {2}], 1]]
@@ -207,9 +229,9 @@ QECBosonicCode[a_Association]["Modes"] := a["Modes"]
 QECBosonicCode[a_Association]["Parameters"] := a["Parameters"]
 
 QECBosonicCode[a_Association]["MeanPhotonNumber"] :=
-    Table[bosonicElement[a, i, i, $adv ** $av], {i, 2}]
+    Table[bosonicElement[a, i, i, creator[a] ** annihilator[a]], {i, 2}]
 
-QECBosonicCode[a_Association]["ErrorSet", channel_] := bosonicErrorSet[channel]
+QECBosonicCode[a_Association]["ErrorSet", channel_] := bosonicErrorSet[a, channel]
 QECBosonicCode[a_Association]["KnillLaflammeBlocks", channel_] := bosonicBlocks[a, channel]
 QECBosonicCode[a_Association]["KnillLaflammeMatrix", channel_] := bosonicKLMatrix[a, channel]
 QECBosonicCode[a_Association]["KnillLaflammeResidual", channel_] := bosonicResidual[a, channel]
