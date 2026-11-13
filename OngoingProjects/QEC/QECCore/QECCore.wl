@@ -42,6 +42,7 @@ Module[{dir = DirectoryName[$InputFileName]},
         "Threshold.wl",
         "Stim.wl",
         "Deprecated.wl",
+        "Bosonic.wl",
         "Cache.wl"
     }
 ]
