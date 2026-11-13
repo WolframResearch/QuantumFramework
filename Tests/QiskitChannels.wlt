@@ -135,6 +135,7 @@ channelCircuits = <|
     "y-measurement-then-cnot" -> QuantumCircuitOperator[{"H" -> 1, "RY"[0.7] -> 2, QuantumMeasurementOperator["Y", {2}], "CNOT" -> {2, 1}, {1}}],
     "basis-listed-out-of-order" -> QuantumCircuitOperator[{"RY"[0.4] -> 1, "H" -> 2, "CNOT" -> {2, 3}, QuantumMeasurementOperator[QuantumBasis[{{0, 1}, {1, 0}}], {1}]}],
     "computational-measurement-two-wires" -> QuantumCircuitOperator[{"RY"[0.4] -> 1, "RY"[1.1] -> 2, "CNOT" -> {1, 2}, "M" -> {2, 1}}],
+    "injection-on-a-wire-in-use" -> QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, QuantumOperator[QuantumState["+"], {{2}, {}}], "CNOT" -> {2, 1}}],
     "product-basis-measurement" -> QuantumCircuitOperator[{"H" -> 1, "RY"[0.4] -> 3, "CNOT" -> {1, 2}, QuantumMeasurementOperator["XZ", {3, 1}]}]
 |>;
 
@@ -152,11 +153,8 @@ channelRoutes = <|
     "decode-transpiled" -> Function[qc, qc["Qiskit"]["Transpile", {"x", "sx", "rz", "cz"}, "OptimizationLevel" -> 3]["QuantumCircuitOperator"]]
 |>;
 
-(* After a measurement outside the computational basis, a later gate on the measured qubit changes
-   the outcome probabilities QF reports for that measurement, though the state it leaves is right
-   (an X measurement of RY(0.6)|0> reports P(+) = 0.5, where Born's rule gives (1 + Sin[0.6]) / 2).
-   For these circuits only the output state is compared. *)
-stateOnly = {"x-measurement-then-gates", "y-measurement-then-cnot"};
+(* every circuit's output state and outcome record are compared *)
+stateOnly = {};
 
 (* native OpenQASM has no name for an unnamed unitary on three or more qubits (two-qubit ones are
    written through their KAK decomposition): the export refuses it, naming its wires *)
