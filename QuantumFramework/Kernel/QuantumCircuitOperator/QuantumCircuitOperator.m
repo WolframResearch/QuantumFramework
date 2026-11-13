@@ -6,6 +6,7 @@ PackageExport["QuantumCircuitOperator"]
 
 PackageScope["QuantumCircuitOperatorQ"]
 PackageScope["BarrierQ"]
+PackageScope["injectionResets"]
 PackageScope["FromCircuitOperatorShorthand"]
 
 
@@ -99,6 +100,62 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 
 Options[quantumCircuitApply] := {Method -> Automatic}
 
+(* A state injected onto wires that already carry qudits (an operator with no input, on a wire an
+   earlier element or the circuit's input uses) replaces those qudits: they are discarded and the
+   state is left there, the reset of the wires to the state. A circuit on fixed wires has no other
+   place for the displaced qudits. Injections onto fresh wires, or onto wires an earlier element
+   ended, are left as they are. An injection onto some wires in use and some fresh ones first
+   puts |0> on its fresh wires, so that the reset acts on qudits that are there and the circuit's
+   input wires stay what they were. An injection of other dimensions than the qudits it displaces
+   traces those qudits out and then leaves the state on the freed wires. *)
+injectionResets[qco_QuantumCircuitOperator] := With[{elements = qco["Flatten"]["Elements"]},
+    If[ NoneTrue[elements, injectionQ],
+        qco,
+        QuantumCircuitOperator[
+            First @ Fold[
+                Function[{acc, el}, With[{live = acc[[2]]},
+                    If[ injectionQ[el] && IntersectingQ[el["OutputOrder"], Keys[live]],
+                        injectionReset[acc, el["Sort"]],
+                        {Append[acc[[1]], el], liveWires[live, el]}
+                    ]
+                ]],
+                {{}, KeySelect[AssociationThread[qco["InputOrder"], qco["InputDimensions"]], Positive]},
+                elements
+            ],
+            qco["Options"]
+        ]
+    ]
+]
+
+(* the elements replacing an injection el (sorted) onto some live wires, and the live wires after *)
+injectionReset[{elements_, live_}, el_] := With[{
+    wires = el["OutputOrder"], dims = el["OutputDimensions"], used = KeyExistsQ[live, #] & /@ el["OutputOrder"]
+},
+    {
+        Join[
+            elements,
+            If[ Lookup[live, Pick[wires, used]] === Pick[dims, used],
+                Join[
+                    If[ And @@ used,
+                        {},
+                        {QuantumOperator[QuantumState["Register"[Pick[dims, used, False]]], {Pick[wires, used, False], {}}]}
+                    ],
+                    {QuantumOperator["Reset"[el["State"]], wires]}
+                ],
+                Append[QuantumOperator["Trace"[live[#]], {#}] & /@ Pick[wires, used], el]
+            ]
+        ],
+        Join[live, AssociationThread[wires, dims]]
+    }
+]
+
+injectionQ[el_] := QuantumOperatorQ[el] && el["InputDimension"] == 1 && el["OutputDimension"] >= 2
+
+(* the wires carrying a qudit after an element, with their dimensions: it takes its input wires
+   and leaves its output wires, so a wire it ends (a post-selection, a discard) is free again *)
+liveWires[live_, el_ ? BarrierQ] := live
+liveWires[live_, el_] := Join[KeyDrop[live, el["InputOrder"]], KeySelect[AssociationThread[el["OutputOrder"], el["OutputDimensions"]], Positive]]
+
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"][[Ordering[qco["InputOrder"]]]] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
@@ -106,11 +163,11 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsP
            cases, at a fraction of the cost *)
         "Schrodinger" :> Block[{n = 1, m = qco["Gates"]},
             Progress`EvaluateWithProgress[
-                Simplify @ Fold[(n++; #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, qco["NormalOperators"]],
+                Simplify @ Fold[(n++; #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, injectionResets[qco]["NormalOperators"]],
                 <|"Text" -> "Folding gates", "Progress" :> n / m, "Percentage" :> n / m, "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
             ]
         ],
-        Automatic | "TensorNetwork" | {"TensorNetwork", subOpts___} :> TensorNetworkApply[qco["Flatten"], qs, FilterRules[{subOpts}, Options[TensorNetworkApply]]],
+        Automatic | "TensorNetwork" | {"TensorNetwork", subOpts___} :> TensorNetworkApply[injectionResets[qco]["Flatten"], qs, FilterRules[{subOpts}, Options[TensorNetworkApply]]],
         "QuEST" :> QuESTApply[qco, qs],
         "Qiskit" | {"Qiskit", subOpts___} :> qco["Qiskit"][qs, subOpts],
         "Stabilizer" :> PauliStabilizerApply[qco, qs],

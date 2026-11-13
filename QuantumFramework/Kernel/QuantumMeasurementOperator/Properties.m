@@ -145,13 +145,18 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
     perm = canonicalEigenPermutation[qmo]
     (* perm = EchoLabel[{qmo["Targets"], canonicalEigenPermutation[qmo]}] @ FindPermutation[Join @@ Sort /@ qmo["Targets"], ReverseSort[qmo["Target"]]] *)
 },
+    (* The canonical form only reorders the outcome register; it keeps every amplitude. Each
+       QuantumState below takes the array of the one before, written in the next basis, rather
+       than converting it: the register's outcome vectors need not be the target qudits' current
+       basis (a gate after the measurement changes that basis, and an observable's eigenvectors
+       are not its target's computational basis), so converting would mix the outcomes. *)
     QuantumMeasurementOperator[
         QuantumOperator[
             QuantumState[
                 QuantumState[
-                    qmo["SuperOperator"]["State"],
+                    qmo["SuperOperator"]["State"]["State"],
                     QuantumBasis[Join[Permute[Reverse[qmo["TargetDimensions"]], InversePermutation[perm]], qmo["StateBasis"]["OutputDimensions"]], basis["InputDimensions"]]
-                ]["PermuteOutput", perm],
+                ]["PermuteOutput", perm]["State"],
                 basis
             ]["PermuteOutput", PermutationProduct[
                 FindPermutation[Reverse[qmo["Target"]], ReverseSort[qmo["Target"]]],
