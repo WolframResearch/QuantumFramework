@@ -525,6 +525,62 @@ VerificationTest[
     TestID -> "BME-Modes-WingSeries"
 ]
 
+(* A middle that mixes modes, or one :e^{c N}: per mode, is read through the normal symbol: the coupled
+   evolution with unequal frequencies, beam splitter and squeezing (normal-mode frequencies rational), and
+   the squeezer with frequencies, agree through t^4 with the term-by-term expansion of e^{-i t H}. *)
+VerificationTest[
+    With[{v2 = {{bd1, bd2}, {b1, b2}}, ks = {{0, 0}, {1, 0}, {0, 1}, {1, 1}}},
+        Union @ Flatten @ Table[
+            With[{u = BosonicExpOrder[Exp[-I t h], v2]},
+                Table[Simplify[Normal[Series[BosonicMatrixElement[{m, n}, u, v2], {t, 0, 4}]] -
+                    Sum[(-I t)^j/j! BosonicMatrixElement[{m, n}, If[j == 0, 1, NonCommutativeMultiply @@ ConstantArray[h, j]], v2], {j, 0, 4}]],
+                    {m, ks}, {n, ks}]],
+            {h, {bd1 ** b1 + 11/4 bd2 ** b2 + 2/3 (bd1 ** b2 + bd2 ** b1) + 1/2 (bd1 ** bd2 + b1 ** b2),
+                 bd1 ** b1 + 2 bd2 ** b2 + 1/2 (bd1 ** bd2 + b1 ** b2)}}]
+    ],
+    {0},
+    TestID -> "BME-Modes-MixingMiddleSeries"
+]
+
+(* Coherent elements of a normally ordered product are <alpha|beta> times its normal symbol at
+   (Conjugate[alpha], beta), whatever mixes the modes: here a pair wing, an exchange middle and a pair wing. *)
+VerificationTest[
+    With[{v2 = {{bd1, bd2}, {b1, b2}}, al = {a1, a2}, be = {c1, c2}},
+        Simplify[
+            BosonicMatrixElement[{al, be}, Exp[z bd1 ** bd2] ** NormalOrdered[Exp[c bd1 ** b2 + d bd2 ** b1], v2] ** Exp[w b1 ** b2], v2, "Basis" -> "Coherent"] -
+            Exp[z Conjugate[a1] Conjugate[a2] + c Conjugate[a1] c2 + d Conjugate[a2] c1 + w c1 c2] *
+                Exp[Conjugate[al] . be - (Conjugate[al] . al + Conjugate[be] . be)/2]]
+    ],
+    0,
+    TestID -> "BME-Modes-CoherentMixingMiddle"
+]
+
+(* A function of a number operator between wings, a1^dagger f(N1) a1 |n> = n f(n - 1) |n>: f(N) = e^N - e
+   vanishes at the index but not one below it, and f(N) = 1/N is singular only where its term already vanishes. *)
+VerificationTest[
+    With[{v2 = {{bd1, bd2}, {b1, b2}}},
+        {
+            Simplify[BosonicMatrixElement[{{1, 0}, {1, 0}}, bd1 ** (Exp[bd1 ** b1] - E) ** b1, v2]],
+            BosonicMatrixElement[{{0, 0}, {0, 0}}, bd1 ** (bd1 ** b1)^(-1) ** Exp[c bd2 ** b2] ** b1, v2],
+            Simplify[BosonicMatrixElement[{{2, 1}, {2, 1}}, bd1 ** (bd1 ** b1)^(-1) ** Exp[c bd2 ** b2] ** b1, v2]]
+        }
+    ],
+    {1 - E, 0, 2 E^c},
+    TestID -> "BME-Modes-NumberFunctionBetweenWings"
+]
+
+(* Two middles on one mode are not a normally ordered product, :e^(u N): :e^(w N): =/= :e^((u + w) N):, so the
+   symbol must not multiply them: the element is (1 + u)(1 + w) or stays unevaluated, never 1 + u + w. *)
+VerificationTest[
+    With[{v2 = {{bd1, bd2}, {b1, b2}}},
+        With[{r = BosonicMatrixElement[{{1, 0}, {1, 0}}, NormalOrdered[Exp[u bd1 ** b1], v2] ** NormalOrdered[Exp[w bd1 ** b1], v2], v2]},
+            MatchQ[r, _BosonicMatrixElement] || Simplify[r - (1 + u) (1 + w)] === 0
+        ]
+    ],
+    True,
+    TestID -> "BME-Modes-SameModeMiddlesNotMultiplied"
+]
+
 (* BosonicVEV of exponentials goes through the vacuum element, in one or several modes. *)
 VerificationTest[
     {

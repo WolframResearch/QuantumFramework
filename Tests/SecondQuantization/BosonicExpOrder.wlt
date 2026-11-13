@@ -463,6 +463,32 @@ VerificationTest[
     TestID -> "SqueezeOperatorPolarTruncated"
 ]
 
+(* Any single-mode exponent of degree two, e^{t(q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a)}, disentangles
+   in either order: the general one, the parabolic (a + a^dagger)^2 + mu a^dagger + nu a where 4pq = w^2 and
+   the coefficients are the l -> 0 limits, and a number term beside linear ones. An ordered product's
+   symbol (a^dagger -> x, a -> y) is the product of its factors' symbols, the middle one read through
+   e^{g N} = :e^{(e^g - 1) N}: and e^{g a a^dagger} = antinormal e^{(1 - e^-g) a a^dagger}; to order t^3 it
+   matches sum_k t^k/k! times the symbol of the ordered H^k. Real coefficients let the root's branch Piecewise
+   refine away; the complex-coefficient version is slow and kept outside the suite. *)
+VerificationTest[
+    Module[{p, q, w, mu, nu, t, x, y, sym, fac, assum},
+        assum = Element[{p, q, w, mu, nu}, Reals] && t > 0;
+        With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+            sym[e_] := e /. GeneralizedPower[NonCommutativeMultiply, o_, k_] :> o^k /. NonCommutativeMultiply -> Times /. {ad -> x, a -> y};
+            fac[n_, mid_][f_] := With[{e = Expand[Replace[f, {Times[c__, Power[b_, z_ /; ! FreeQ[z, n]]] :> Log[Times[c]] + z Log[b], Power[b_, z_] :> z Log[b]}]]},
+                Exp[sym[e - Coefficient[e, n] n] + mid[Coefficient[e, n]] x y]];
+            Table[
+                Simplify[Normal[Series[BosonicExpOrder[Exp[t h], $vA, "Ordering" -> o[[1]], Assumptions -> assum] /. c_. NonCommutativeMultiply[f__] :> c Times @@ (fac[o[[2]], o[[3]]] /@ {f}), {t, 0, 3}]] -
+                    Sum[t^k/k! sym[o[[4]][If[k == 0, 1, NonCommutativeMultiply @@ ConstantArray[h, k]], $vA]], {k, 0, 3}], assum],
+                {h, {q a ** a + p ad ** ad + w ad ** a + mu ad + nu a, (a + ad) ** (a + ad) + mu ad + nu a, w ad ** a + mu ad + nu a}},
+                {o, {{"Normal", ad ** a, E^# - 1 &, BosonicNormalOrder}, {"Antinormal", a ** ad, 1 - E^-# &, BosonicAntinormalOrder}}}
+            ]
+        ]
+    ],
+    ConstantArray[0, {3, 2}],
+    TestID -> "DisentanglingQuadraticPlusLinearRealCoefficients"
+]
+
 (* The root D^(-1/2) stays continuous where D crosses the negative real axis: for e^{-itH} with
    H = N + c a^dagger^2 + conj(c) a^2, c = 1/5 + i/10, D winds once per period 2 Pi/Omega, Omega = 2/Sqrt[5],
    and the vacuum element has one limit from both sides of the first crossing t = Pi Sqrt[5]/2. *)

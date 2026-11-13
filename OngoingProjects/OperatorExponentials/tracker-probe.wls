@@ -168,11 +168,11 @@ creatorZ[u_] := With[{e = First @ Cases[u, Power[E, z_] /; FreeQ[z, b1 | b2] && 
 chk["P2-024 pair Riccati", Module[{t, al = 1/3 + I/4, u, z, s},
     u = BosonicExpOrder[Exp[-I t (bd1 ** b1 + bd2 ** b2/2 + al bd1 ** bd2 + Conjugate[al] b1 ** b2)], v2];
     z = creatorZ[u][[1, 2]]; s = BosonicMatrixElement[{{0, 0}, {0, 0}}, u, v2];
-    Simplify[{I D[z, t] - (al + Conjugate[al] z^2 + 3 z/2), D[s, t]/s + I Conjugate[al] z}] === {0, 0}]];
+    Simplify[FunctionExpand[{I D[z, t] - (al + Conjugate[al] z^2 + 3 z/2), D[s, t]/s + I Conjugate[al] z}], t \[Element] Reals] === {0, 0}]];
 chk["X-006 Gaussian vacuum", Module[{t, u, z, s},
     u = BosonicExpOrder[Exp[-I t (bd1 ** b1 + 2 bd2 ** b2 + (1/2 + I/5) bd1 ** bd2 + (1/2 - I/5) b1 ** b2)], v2];
     z = creatorZ[u]; s = BosonicMatrixElement[{{0, 0}, {0, 0}}, u, v2];
-    Max[Abs[N[z /. t -> 1]]] > 1/10 && Simplify[ComplexExpand[Abs[s]^4 - Det[IdentityMatrix[2] - z . ConjugateTranspose[z]]], t \[Element] Reals] === 0]];
+    Max[Abs[N[z /. t -> 1]]] > 1/10 && Simplify[ComplexExpand[Abs[s]^4 - Det[IdentityMatrix[2] - z . ConjugateTranspose[z]]] /. Sinc[x_] :> Sin[x]/x, t \[Element] Reals] === 0]];
 chk["Idea1 multimode linear", Module[{t, deq, sym, series, g = bd1 ** bd2/2 + b1 ** b2/7 + bd1/4 + b2/9 + 3/7, d2 = Exp[ga bd1 - Conjugate[ga] b1 + et bd2 - Conjugate[et] b2]},
     deq = # //. {bd1 -> x1, bd2 -> x2, b1 -> y1, b2 -> y2, GeneralizedPower[NonCommutativeMultiply, u_, k_] :> u^k, NonCommutativeMultiply -> Times} &;
     sym[o_] := deq[(o /. {NormalOrdered[f_, _] :> deq[f], Power[base_, e_] /; ! FreeQ[e, bd1 ** b1 | bd2 ** b2] && FreeQ[Expand[e] /. {bd1 ** b1 -> 0, bd2 ** b2 -> 0}, b1 | b2] :> Inactive[Exp][Log[base] e]}) //.

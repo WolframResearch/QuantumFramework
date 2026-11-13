@@ -226,13 +226,14 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
                     ladderSum[fockLadderElement, {ms, ns}, expr, lv]
                 ],
             Length[ms] === Length[ns] === Length[lv["Annihilators"]] && Length[ms] > 1 && ! coherentBasisQ[opts] &&
-                    FreeQ[d = dequantize[expr, Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ns]],
+                    FreeQ[d = dequantize[expr, Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> Array[j, Length[ns]]]],
                         Alternatives @@ lv["Generators"] | _NormalOrdered | _AntinormalOrdered],
-                d Times @@ MapThread[KroneckerDelta, {ms, ns}],
+                (d /. Thread[Array[j, Length[ns]] -> ns]) Times @@ MapThread[KroneckerDelta, {ms, ns}],
             If[ Length[lv["Annihilators"]] === 1, ListQ[m] || ListQ[n],
-                ! MatrixQ[{ms, ns}, IntegerQ] || Length[ms] =!= Length[lv["Annihilators"]] || coherentBasisQ[opts]], $Failed,
+                Length[ms] =!= Length[lv["Annihilators"]] || ! coherentBasisQ[opts] && ! MatrixQ[{ms, ns}, IntegerQ]], $Failed,
             True,
-                With[{el = If[Length[lv["Annihilators"]] === 1, normalProductElement[#, pair, m, n, j, coherentBasisQ[opts]] &, multimodeProductElement[#, lv, ms, ns] &]},
+                With[{el = If[Length[lv["Annihilators"]] === 1, normalProductElement[#, pair, m, n, j, coherentBasisQ[opts]] &,
+                        symbolElement[#, lv, ms, ns, coherentBasisQ[opts]] &]},
                     Replace[sumProductElement[el, expr, lv["Generators"]],
                         $Failed /; ! FreeQ[expr, E] :>
                             sumProductElement[el, BosonicExpOrder[expr, {lv["Creators"], lv["Annihilators"]}, Assumptions -> OptionValue[Assumptions]], lv["Generators"]]]
@@ -338,17 +339,29 @@ sumProductElement[f_, expr_, gens_] :=
         ]
     ]
 
-(* Creators commute among themselves, as do annihilators, so each multimode wing is a function of
-   commuting variables and its Fock element a multivariate Taylor coefficient. *)
-multimodeProductElement[expr_, lv_, ms_, ns_] :=
-    Module[{x, y, k, xs, ys, ks, fs, side, up, f, dn},
+
+symbolElement[expr_, lv_, ms_, ns_, coherent_] :=
+    Module[{x, y, k, val, xs, ys, ks, toXY, factors, num, middles},
         {xs, ys, ks} = Array[#, Length[ms]] & /@ {x, y, k};
-        fs = dequantize[Flatten[Replace[Replace[expr, {t_Times :> List @@ t, t_ :> {t}}], q_NonCommutativeMultiply :> List @@ q, {1}]],
-            Join[Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ks], Thread[lv["Creators"] -> xs], Thread[lv["Annihilators"] -> ys]]];
-        side = Boole[Outer[! FreeQ[#1, #2] &, fs, Alternatives @@@ {xs, ks, ys}, 1]];
-        If[ Max[Total[side, {2}]] > 1 || ! OrderedQ[DeleteCases[side = side . {1, 2, 3}, 0]], Return[$Failed, Module]];
-        {up, f, dn} = Times @@ Pick[fs, side, #] & /@ {1, 2, 3};
-        Times @@ Pick[fs, side, 0] Times @@ Sqrt[ms! ns!] Total[
-            SeriesCoefficient[up dn, Sequence @@ Thread[{Join[xs, ys], 0, Join[ms - #, ns - #]}]] (f /. Thread[ks -> #]) / Times @@ (#!) & /@
-                Tuples[Range[0, MapThread[Min, {ms, ns}]]]]
+        toXY = dequantize[#, Join[Thread[MapThread[NonCommutativeMultiply, {lv["Creators"], lv["Annihilators"]}] -> ks],
+            Thread[lv["Creators"] -> xs], Thread[lv["Annihilators"] -> ys]]] &;
+        factors = Replace[FixedPoint[Flatten[Replace[#, p : _Times | _NonCommutativeMultiply :> List @@ p, {1}]] &, {expr}], {
+            NormalOrdered[f_, ___] :> {2, toXY[f] /. Thread[ks -> xs ys]},
+            f_ :> With[{c = toXY[f]}, {Replace[Union[Cases[c, (h : x | k | y)[_] :> h, {0, Infinity}]], {{} -> 0, {x} -> 1, {k} -> 2, {y} -> 3, _ -> 4}], c}]
+        }, {1}];
+        num = Times @@ Select[factors[[All, 2]], ! FreeQ[#, k] &];
+        middles = Append[Cases[factors, {2, f_} /; FreeQ[f, k] :> f], num];
+        If[ MemberQ[factors[[All, 1]], 4] || ! OrderedQ[DeleteCases[factors[[All, 1]], 0]] ||
+                ! DuplicateFreeQ[Catenate[Union[Cases[#, (x | y | k)[i_] :> i, {0, Infinity}]] & /@ middles]],
+            $Failed,
+            With[{
+                s = Times @@ Select[factors[[All, 2]], FreeQ[#, k] &] Exp[-xs . ys] *
+                    Sum[val @@ ks Times @@ ((xs ys)^ks / ks!), Evaluate[Sequence @@ Thread[{ks, 0, If[coherent, Infinity, MapThread[Min, {ms, ns}]]}]]],
+                vals = val[kk__] :> (num /. Thread[ks -> {kk}])},
+                If[ coherent,
+                    Times @@ MapThread[coherentOverlap, {ms, ns}] (s /. vals /. Join[Thread[xs -> Conjugate[ms]], Thread[ys -> ns]]),
+                    (D[Exp[xs . ys] s, Sequence @@ Thread[{Join[xs, ys], Join[ms, ns]}]] /. Thread[Join[xs, ys] -> 0] /. vals) / Sqrt[Times @@ (ms! ns!)]
+                ]
+            ]
+        ]
     ]

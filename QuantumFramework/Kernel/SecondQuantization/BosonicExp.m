@@ -84,7 +84,7 @@ quadraticExp[g_, {cr_, an_}, lv_, s_] :=
             PossibleZeroQ[4 p q - w^2], Coefficient[Normal @ Series[# /. f -> 0, {l, 0, 0}], l, 0],
             True, # /. {l -> Sqrt[4 p q - w^2], f -> With[{x = {{w, 2 p}, {-2 q, -w}}},
                 If[MatrixQ[x / SelectFirst[Flatten[x], ! PossibleZeroQ[#] &], NumericQ], rootPhase[x],
-                    Piecewise[{{I Sign[Re[I w]] Sqrt[4 p q - w^2], Im[4 p q - w^2] == 0 && Re[4 p q - w^2] > 0}}, 0]]]} /. $nonuls
+                    With[{d = Expand[4 p q - w^2]}, Piecewise[{{I Sign[Re[I w]] Sqrt[d], Im[d] == 0 && Re[d] > 0}}, 0]]]]} /. $nonuls
         ] & @ Join[
             {Tan[l]/(l - w Tan[l]), Log[Sec[l] l/(l - w Tan[l])]},
             {mu Sinc[l] - (w mu - 2 p nu) (1 - Cos[l])/l^2,
@@ -482,7 +482,7 @@ expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
                         (NonCommutativeMultiply[l___, Times[s_, m_NonCommutativeMultiply], r___] /; FreeQ[s, Alternatives @@ lv["Generators"]] :>
                             s NonCommutativeMultiply[l, m, r]) &,
                     canonicalizeGenerators[expr, lv]
-                ],
+                ] /. pw_Piecewise :> Refine[pw],
                 tc
             ],
             r : Except[$Aborted] :> TimeConstrained[Simplify[r, ExcludedForms -> _GeneralizedPower | _Piecewise, Trig -> False], tc, r]
