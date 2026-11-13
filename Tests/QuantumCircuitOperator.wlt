@@ -956,3 +956,123 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+BeginTestSection["Schrodinger route on wires of different dimensions"]
+
+(* The Schrodinger route applies one gate at a time. On a qubit next to a qutrit it must give
+   the product of the gate matrices, here built by hand with the qubit as the first factor. *)
+VerificationTest[
+    With[{
+        shift = {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}},
+        h = {{1, 1}, {1, -1}} / Sqrt[2],
+        psi = Array[\[FormalA], 6]
+    },
+        With[{
+            circuit = QuantumCircuitOperator[{"H" -> 1, QuantumOperator[shift, {2}], QuantumOperator["Controlled"[QuantumOperator[shift, {2}], {1}]]}],
+            byHand = (KroneckerProduct[{{1, 0}, {0, 0}}, IdentityMatrix[3]] + KroneckerProduct[{{0, 0}, {0, 1}}, shift]) .
+                KroneckerProduct[IdentityMatrix[2], shift] . KroneckerProduct[h, IdentityMatrix[3]] . psi
+        },
+            Simplify[Normal[circuit[QuantumState[psi, {2, 3}], Method -> "Schrodinger"]["Computational"]["StateVector"]] - byHand]
+        ]
+    ],
+    ConstantArray[0, 6],
+    TestID -> "Schrodinger-qubit-and-qutrit-matches-matrix-product"
+]
+
+(* The same with the qutrit first and a gate on each wire. *)
+VerificationTest[
+    With[{
+        f3 = Table[Exp[2 Pi I j k / 3], {j, 0, 2}, {k, 0, 2}] / Sqrt[3],
+        h = {{1, 1}, {1, -1}} / Sqrt[2],
+        psi = Array[\[FormalB], 6]
+    },
+        Simplify[
+            Normal[QuantumCircuitOperator[{QuantumOperator[f3, {1}], "H" -> 2}][QuantumState[psi, {3, 2}], Method -> "Schrodinger"]["Computational"]["StateVector"]] -
+                KroneckerProduct[f3, h] . psi
+        ]
+    ],
+    ConstantArray[0, 6],
+    TestID -> "Schrodinger-qutrit-and-qubit-matches-matrix-product"
+]
+
+(* A gate written in another basis is the same physical gate: the Z written in the X basis
+   still acts as Z, and the qutrit shift written in the Fourier basis still acts as the shift.
+   Next to a gate in the computational basis the route has to convert between the two bases. *)
+VerificationTest[
+    With[{
+        shift = {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}},
+        h = {{1, 1}, {1, -1}} / Sqrt[2],
+        psi = Array[\[FormalC], 6]
+    },
+        Simplify[
+            Normal[QuantumCircuitOperator[{
+                "H" -> 1,
+                QuantumOperator[QuantumOperator[QuantumOperator["Z"], QuantumBasis["X"]], {1}],
+                QuantumOperator[shift, {2}]
+            }][QuantumState[psi, {2, 3}], Method -> "Schrodinger"]["Computational"]["StateVector"]] -
+                KroneckerProduct[DiagonalMatrix[{1, -1}] . h, shift] . psi
+        ]
+    ],
+    ConstantArray[0, 6],
+    TestID -> "Schrodinger-X-basis-gate-next-to-qutrit"
+]
+
+VerificationTest[
+    With[{
+        shift = {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}},
+        h = {{1, 1}, {1, -1}} / Sqrt[2],
+        f3 = Table[Exp[2 Pi I j k / 3], {j, 0, 2}, {k, 0, 2}] / Sqrt[3],
+        psi = Array[\[FormalD], 6]
+    },
+        Simplify[
+            Normal[QuantumCircuitOperator[{
+                "H" -> 1,
+                QuantumOperator[QuantumOperator[QuantumOperator[shift, {1}], QuantumBasis[QuditBasis[Transpose[f3]]]], {2}],
+                QuantumOperator["Controlled"[QuantumOperator[shift, {2}], {1}]]
+            }][QuantumState[psi, {2, 3}], Method -> "Schrodinger"]["Computational"]["StateVector"]] -
+                (KroneckerProduct[{{1, 0}, {0, 0}}, IdentityMatrix[3]] + KroneckerProduct[{{0, 0}, {0, 1}}, shift]) . KroneckerProduct[h, shift] . psi
+        ]
+    ],
+    ConstantArray[0, 6],
+    TestID -> "Schrodinger-Fourier-basis-qutrit-gate"
+]
+
+(* Qubits only. The Bell state has YY = -1; RY on wire 2 commutes with Y and Z on wire 1
+   anticommutes with it, so after both the two Y outcomes always agree, with probability 1/2
+   each, for every angle. *)
+VerificationTest[
+    Simplify[
+        QuantumCircuitOperator[{
+            "H" -> 1, "CNOT" -> {1, 2}, "RY"[\[FormalTheta]] -> 2, "Z" -> 1,
+            QuantumMeasurementOperator["Y", {1}], QuantumMeasurementOperator["Y", {2}]
+        }][QuantumState["00"], Method -> "Schrodinger"]["ProbabilitiesList"],
+        \[FormalTheta] \[Element] Reals
+    ],
+    {1/2, 0, 0, 1/2},
+    TestID -> "Schrodinger-Y-measurements-on-entangled-qubits"
+]
+
+(* The Z written in a basis rotated by a symbolic angle is still Z. Whether that basis equals
+   the computational one cannot be decided for a symbolic angle, so the route must convert. *)
+VerificationTest[
+    With[{
+        shift = {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}},
+        h = {{1, 1}, {1, -1}} / Sqrt[2],
+        rotated = QuditBasis[<|"a" -> {Cos[\[FormalT]], Sin[\[FormalT]]}, "b" -> {-Sin[\[FormalT]], Cos[\[FormalT]]}|>],
+        psi = Array[\[FormalE], 6]
+    },
+        Simplify[
+            Normal[QuantumCircuitOperator[{
+                "H" -> 1,
+                QuantumOperator[QuantumOperator[QuantumOperator["Z"], QuantumBasis[rotated]], {1}],
+                QuantumOperator[shift, {2}]
+            }][QuantumState[psi, {2, 3}], Method -> "Schrodinger"]["Computational"]["StateVector"]] -
+                KroneckerProduct[DiagonalMatrix[{1, -1}] . h, shift] . psi,
+            \[FormalT] \[Element] Reals
+        ]
+    ],
+    ConstantArray[0, 6],
+    TestID -> "Schrodinger-symbolic-basis-gate-next-to-qutrit"
+]
+
+EndTestSection[]

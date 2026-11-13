@@ -234,12 +234,16 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     info = Confirm @ circuit["TensorNetworkInfo"];
     basis = If[AssociationQ[info], Confirm @ tensorNetworkBasis[circuit, info], Confirm @ circuit["TensorNetworkBasis"]];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
+    (* each contracted index names two legs, the output of one operator and the input of the next:
+       the network needs the computational basis unless the bases at the two ends are equal,
+       and bases with symbolic vectors whose equality is undecided count as different *)
     computationalQ = TrueQ[OptionValue["Computational"]] || ! phaseSpaceQ &&
-        TrueQ[Or @@ Unequal @@@
+        AnyTrue[
             ConfirmBy[
-                Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2],
+                Select[Values @ GroupBy[info["QuditBases"], First -> Last], Length[#] == 2 &],
                 AllTrue[Equal @@ Through[#["Dimension"]] &]
-            ]
+            ],
+            ! TrueQ[Equal @@ #] &
         ];
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
