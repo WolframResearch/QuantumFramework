@@ -73,20 +73,15 @@ Scan[
     Tuples[{Keys[$pauli], {3, 4}}]
 ];
 
-(* a qudit rotation is stored as FullSimplify returns the operator exponential
-   exp(-i theta/2 sigma_k), and is the same object whether it is built on {2}, placed on {2}
-   after being built without a wire, or given as name -> 2 in a circuit. FullSimplify of the
-   d = 4 R_Y has more than one form, and which it returns depends on what the kernel has
-   simplified before: in a fresh kernel it is a RootSum, which re-expanding the matrix would
-   change, but after the tests above it is already expanded. So these checks hold the three
-   routes to one object in any kernel, and the fresh-kernel form was checked against the
-   code before the rotation rules, one kernel per case. *)
+(* a qudit rotation is stored as the operator exponential exp(-i theta/2 sigma_k) returns it,
+   not simplified when built, and is the same object whether it is built on {2}, placed on {2}
+   after being built without a wire, or given as name -> 2 in a circuit. *)
 Scan[
     Function[{gd},
         VerificationTest[
             With[{
                 op = gd[[1]][\[Theta], gd[[2]]],
-                exp = FullSimplify[QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]]
+                exp = QuantumOperator[Exp[- I \[Theta] / 2 QuantumOperator[$generator[gd[[1]]][gd[[2]]]]]]
             },
                 With[{qo = QuantumOperator[op, {2}]},
                     {

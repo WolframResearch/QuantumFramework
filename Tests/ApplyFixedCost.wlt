@@ -149,7 +149,7 @@ Scan[
 
         VerificationTest[
             withCache[cache, Normal @ QuantumOperator["RZ"[\[Theta]]]["Dagger"]["Matrix"] ===
-                ConjugateTranspose[Normal @ QuantumOperator["RZ"[\[Theta]]]["Matrix"]]],
+                Normal @ QuantumOperator["RZ"[-\[Theta]]]["Matrix"]],
             True,
             TestID -> "RZ-dagger-cache-" <> ToString[cache]
         ]

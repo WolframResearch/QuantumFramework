@@ -144,15 +144,16 @@ VerificationTest[
     TestID -> "Channel-Unitality-equals-channel-of-identity"
 ]
 
-(* A Kraus set scaled off unit norm is not trace preserving, and a symbolic
-   parameter leaves both witnesses undecidable rather than silently True. *)
+(* A Kraus set scaled off unit norm is not trace preserving. With a symbolic
+   damping g in [0, 1], amplitude damping is trace preserving for every g and
+   not unital (it fails at an interior g), both decided exactly. *)
 VerificationTest[
     {
         QuantumChannel[{2 {{1, 0}, {0, Sqrt[4/5]}}, 2 {{0, Sqrt[1/5]}, {0, 0}}}]["TracePreservingQ"],
         QuantumChannel["AmplitudeDamping"[g]]["TracePreservingQ"],
         QuantumChannel["AmplitudeDamping"[g]]["UnitalQ"]
     },
-    {False, Undefined, Undefined},
+    {False, True, False},
     TestID -> "Channel-NonTracePreserving-and-symbolic"
 ]
 

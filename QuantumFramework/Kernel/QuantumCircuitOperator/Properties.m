@@ -34,7 +34,7 @@ $QuantumCircuitPreventCache = {
 }
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
-    result = QuantumCircuitOperatorProp[qds, prop, args]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumCircuitOperator, prop, QuantumCircuitOperatorProp[qds, prop, args]], QuantumCircuitOperatorProp[qds, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumCircuitOperatorProp[qds, prop, args]] && ! MemberQ[$QuantumCircuitPreventCache, propName[prop]],
         cacheProperty[QuantumCircuitOperatorProp[qds, prop, args], result],
@@ -277,7 +277,8 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "Output" -> qco["Output"], "Input" -> qco["Input"],
     "Label" -> qco["Label"],
     "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[qco["FullOperators"]["Picture"]],
-    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["FullOperators"]["ParameterSpec"]], First]
+    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["FullOperators"]["ParameterSpec"]], First],
+    "SymbolDomains" -> MergeSymbolDomains @@ qco["FullOperators"]
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{
@@ -304,7 +305,8 @@ tensorNetworkBasis[qco_, info_] :=
     QuantumBasis[##,
             "Label" -> qco["Label"],
             "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[info["Operators"]["Picture"]],
-            "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[info["Operators"]["ParameterSpec"]], First]
+            "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[info["Operators"]["ParameterSpec"]], First],
+            "SymbolDomains" -> MergeSymbolDomains @@ info["Operators"]
         ] & @@ Normal @ Map[
         QuantumTensorProduct[Lookup[info["QuditBases"], #]] &,
         <|

@@ -562,7 +562,8 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
                 "Input"  -> If[resultInDecompose === {}, QuditBasis[], QuantumTensorProduct @@ resultInDecompose],
                 "Label" -> qo1["Label"] @* qo2["Label"],
                 "Picture" -> qo1["Picture"],
-                "ParameterSpec" -> MergeParameterSpecs[qo1, qo2]
+                "ParameterSpec" -> MergeParameterSpecs[qo1, qo2],
+                "SymbolDomains" -> MergeSymbolDomains[qo1, qo2]
             ]
         ],
         {resultOutOrder, resultInOrder}
@@ -924,7 +925,10 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
     qo[AssociationThread[Take[qo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qo["Parameters"]] :=
-    Enclose[QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]], innermostFailure]
+    Replace[valueOutsideFacts[qo, rules], {
+        bad_List :> domainFailure[QuantumOperator, bad],
+        None :> Enclose[QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]], innermostFailure]
+    }]
 
 
 (* *)

@@ -259,15 +259,20 @@ QuantumState["W"[subsystemCount : _Integer ? Positive : 3], args___] := Enclose 
 
 
 
+(* The swap of two qudits of dimension d sends |i j> to |j i>: entry (i d + j, j d + i) is 1. It is written out
+   rather than read off a permutation operator, which costs most of the build. *)
+swapMatrix[d_] := SparseArray[Catenate @ Table[{i d + j + 1, j d + i + 1} -> 1, {i, 0, d - 1}, {j, 0, d - 1}], {d ^ 2, d ^ 2}]
+
 wernerState[p_, qb_QuditBasis] /; qb["Qudits"] == 2 :=
     Module[{dim = qb["Dimension"], d = First[qb["Dimensions"]], fAB, sym, as},
-        fAB = QuantumOperator["Permutation"[qb["Dimensions"], Cycles[{{1, 2}}]]]["Matrix"];
+        fAB = swapMatrix[d];
         sym = IdentityMatrix[dim] + fAB;
         as = IdentityMatrix[dim] - fAB;
         QuantumState[p sym 1 / (dim + d) + 1 / (dim - d) (1 - p) as // Simplify, qb]
     ]
 
-(* The mixing parameter defaults exactly, so the default Werner state stays a
+(* The mixing parameter p, the weight of the symmetric part, lies in [0, 1] by its role.
+   It defaults exactly, so the default Werner state stays a
    symbolic density matrix rather than a machine-precision one. *)
 QuantumState["Werner"[p_ : 1/2, param_ : 2], args___] /; ! QuditBasisQ[param] :=
     Enclose @ QuantumState["Werner"[p, ConfirmBy[QuditBasis[param], QuditBasisQ]], args]
@@ -275,7 +280,7 @@ QuantumState["Werner"[p_ : 1/2, param_ : 2], args___] /; ! QuditBasisQ[param] :=
 QuantumState["Werner"[p_, qb_ ? QuditBasisQ], args___] := With[{
     basis = QuditBasis[qb, 2]
 },
-    QuantumState[wernerState[p, basis], args]
+    QuantumState[wernerState[p, basis], args, roleDomainOption[{p}, Interval[{0, 1}]]]
 ]
 
 
@@ -296,9 +301,20 @@ QuantumState["Graph"[graph : _ ? GraphQ : RandomGraph[{4, 4}]], args___] := Modu
     ]
 ]
 
+(* Each Bloch-vector component is real by its role. The state is positive only inside a region that ties
+   the components together (the unit ball for a qubit), which a per-symbol record does not hold, except
+   where it falls on one symbol: a qubit vector with one symbolic component c and exact numbers elsewhere
+   puts c in [-s, s], s the radius the other components leave. *)
 QuantumState["BlochVector"[r_ : {0, 0, 1}], args___] /; VectorQ[r] := Enclose @ With[{d = Ceiling[Sqrt[Length[r] + 1]]},
-    QuantumState[IdentityMatrix[d, SparseArray] / d + Sqrt[(d - 1) / 2 / d] PadRight[r, d ^ 2 - 1] . GellMannMatrices[d], ConfirmBy[QuantumBasis[d, args], QuantumBasisQ]]
+    QuantumState[IdentityMatrix[d, SparseArray] / d + Sqrt[(d - 1) / 2 / d] PadRight[r, d ^ 2 - 1] . GellMannMatrices[d], ConfirmBy[QuantumBasis[d, args, blochDomainOption[r, d]], QuantumBasisQ]]
 ]
+
+blochDomainOption[r_, 2] /; Count[r, _ ? (Not @* NumericQ)] == 1 && AllTrue[Select[r, NumericQ], exactRealQ] :=
+    With[{c = SelectFirst[r, Not @* NumericQ], s2 = 1 - Total[Select[r, NumericQ] ^ 2]},
+        If[TrueQ[s2 >= 0], roleDomainOption[{c}, Interval[{- Sqrt[s2], Sqrt[s2]}]], roleDomainOption[r, Reals]]
+    ]
+
+blochDomainOption[r_, _] := roleDomainOption[r, Reals]
 
 
 QuantumState["Dicke"[n : _Integer ? Positive : 3, k : _Integer : 1], args___] /; n >= k := QuantumState["Dicke"[{n - k, k}], args]

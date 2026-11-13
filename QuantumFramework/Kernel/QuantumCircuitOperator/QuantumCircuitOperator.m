@@ -159,9 +159,11 @@ liveWires[live_, el_] := Join[KeyDrop[live, el["InputOrder"]], KeySelect[Associa
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"][[Ordering[qco["InputOrder"]]]] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
+        (* one Simplify of the final state: the same short form as simplifying after every gate in most
+           cases, at a fraction of the cost *)
         "Schrodinger" :> Block[{n = 1, m = qco["Gates"]},
             Progress`EvaluateWithProgress[
-                Fold[(n++; FullSimplify @ #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, injectionResets[qco]["NormalOperators"]],
+                Simplify @ Fold[(n++; #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, injectionResets[qco]["NormalOperators"]],
                 <|"Text" -> "Folding gates", "Progress" :> n / m, "Percentage" :> n / m, "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
             ]
         ],
@@ -181,7 +183,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_QuantumState ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
-    quantumCircuitApply[
+    keepNorm[qco, qs, quantumCircuitApply[
         qco /* QuantumCircuitOperator[
             Join[
                 MapIndexed[
@@ -197,7 +199,23 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         If[# === {}, qs, QuantumTensorProduct[qs, QuantumState["Register"[#]]]] & @
             ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
-    ]
+    ]]
+
+(* A circuit whose every operator is known to be unitary leaves the norm of a state vector unchanged: the output
+   keeps the input as the state its norm is read from, so its probabilities divide by the input's norm instead of
+   expanding the output's amplitudes. Wires the circuit adds start in |0>, which has norm 1. *)
+keepNorm[qco_, qs_, out_QuantumState] /;
+    qs["VectorQ"] && out["VectorQ"] && qs["ComputationalQ"] && out["ComputationalQ"] &&
+        AllTrue[qco["Flatten"]["Operators"], knownUnitaryQ[#] && factsKeptQ[#, out] &] :=
+    setObjectFact[out, "NormSource", Replace[objectFact[qs, "NormSource"], Except[_QuantumState] -> qs]]
+
+keepNorm[_, _, out_] := out
+
+(* a gate is unitary on its own facts; those facts must still hold in the output, where a symbol the state declared
+   complex stays complex even if the gate took it as an angle *)
+factsKeptQ[op_, out_] := With[{own = symbolDomainsOf[op], all = symbolDomainsOf[out]},
+    SubsetQ[out["Basis"]["RealSymbols"], op["Basis"]["RealSymbols"]] && SubsetQ[Keys[all], Keys[own]] && AllTrue[Keys[own], all[#] === own[#] &]
+]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[]] := With[
     {method = OptionValue[quantumCircuitApply, {opts}, Method]},
@@ -307,10 +325,34 @@ Scan[
 
 (* parameterization *)
 
+(* each element's values are checked against that element's facts first, so a refused value is reported once,
+   under the circuit. The circuit's parameters are declared on every element, so a symbol one element declares
+   Complexes is not taken as real because another element holds it as a declared parameter: the explicit domain
+   wins. Only the real requirement is waived; a range an element declares is still checked. *)
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[rules_ ? AssociationQ] :=
-    QuantumCircuitOperator[
-        If[BarrierQ[#] || #["ParameterArity"] == 0, #, #[KeyTake[rules, #["Parameters"]]]] & /@ qco["Elements"],
-        qco["Label"] /. rules
+    Replace[
+        If[ NoneTrue[Values[rules], NumericQ] || ! TrueQ[$checkValues],
+            None,
+            (* elements of nested circuits are checked too: the circuit is flattened for the check *)
+            With[{
+                elements = Cases[qco["Flatten"]["Elements"], e : _QuantumOperator | _QuantumChannel | _QuantumMeasurementOperator | _QuantumState /; basisDeclared[e] =!= {}]
+            }, {
+                records = basisRecord /@ elements, declared = Union @@ (basisDeclared /@ elements)
+            }, {
+                complexes = Union @@ (Keys @ Select[#, MemberQ[Complexes]] & /@ records)
+            },
+                (* the elements' facts are checked together, once: each symbol has the domains every element gives it *)
+                valuesAgainst[Merge[records, Union @@ # &], declared, KeyTake[rules, declared], complexes]
+            ]
+        ],
+        {
+            bad_List :> domainFailure[QuantumCircuitOperator, bad],
+            (* the elements were checked above, together *)
+            None :> Block[{$checkValues = False}, QuantumCircuitOperator[
+                If[BarrierQ[#] || #["ParameterArity"] == 0, #, #[KeyTake[rules, #["Parameters"]]]] & /@ qco["Elements"],
+                qco["Label"] /. rules
+            ]]
+        }
     ] /; ContainsOnly[Keys[rules], qco["Parameters"]]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[parameters : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumCircuitOperator["Properties"], p] /; Length[{parameters}] <= Length[qco["Parameters"]] :=
