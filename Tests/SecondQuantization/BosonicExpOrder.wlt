@@ -811,14 +811,57 @@ VerificationTest[
     TestID -> "TwoModeSqueezerSurvivesNumericSubstitution"
 ]
 
+(* An exchange exponential e^(a^dagger W a) is :e^(a^dagger (e^W - 1) a):, with e^W - 1 = (Cos[mu] - 1) + Sinc[mu] W
+   for mu = Sqrt[-alpha beta]: one middle, creators left of the annihilators of both modes. *)
 VerificationTest[
-    Simplify[BosonicExpOrder[Exp[\[Alpha]*\[FormalA]**SuperDagger[\[FormalB]] + 
-    \[Beta]*SuperDagger[\[FormalA]]**\[FormalB]], $vAB]] /. {Sqrt[\[Alpha]*\[Beta]] -> \[Gamma],
-    1/Sqrt[\[Alpha]*\[Beta]] -> 1/\[Gamma]},
-    E^((\[Beta]*SuperDagger[\[FormalA]]**\[FormalB]*Tanh[\[Gamma]])/\[Gamma])**
-    Cosh[\[Gamma]]^(-SuperDagger[\[FormalA]]**\[FormalA] + SuperDagger[\[FormalB]]**\[FormalB])**
-    E^((\[Alpha]*\[FormalA]**SuperDagger[\[FormalB]]*Tanh[\[Gamma]])/\[Gamma]),
+    Simplify[BosonicExpOrder[Exp[\[Alpha]*\[FormalA]**SuperDagger[\[FormalB]] + \[Beta]*SuperDagger[\[FormalA]]**\[FormalB]], $vAB]],
+    NormalOrdered[E^((-1 + Cos[Sqrt[-(\[Alpha]*\[Beta])]])*(SuperDagger[\[FormalA]]**\[FormalA] + SuperDagger[\[FormalB]]**\[FormalB]) +
+        (\[Beta]*SuperDagger[\[FormalA]]**\[FormalB] + \[Alpha]*SuperDagger[\[FormalB]]**\[FormalA])*Sinc[Sqrt[-(\[Alpha]*\[Beta])]]), $vAB],
     TestID -> "TwoModeCrossTermNormalOrder"
+]
+
+(* "Disentangled" factors the passive middle Gamma(M) = Gamma(U) Gamma(Lambda) Gamma(L), M = U Lambda L, so the beam
+   splitter comes out as the SU(2) Gauss form e^(x tan w/w a^dagger b) cos^(N_b - N_a) e^(-y tan w/w b^dagger a), w = Sqrt[x y]. *)
+VerificationTest[
+    With[{d = BosonicExpOrder[Exp[x SuperDagger[\[FormalA]] ** \[FormalB] - y SuperDagger[\[FormalB]] ** \[FormalA]], $vAB, "Ordering" -> "Disentangled"],
+            w = Sqrt[x y], na = SuperDagger[\[FormalA]] ** \[FormalA], nb = SuperDagger[\[FormalB]] ** \[FormalB]},
+        {
+            Head[d],
+            Simplify[Coefficient[First @ Cases[d, Power[E, e_] /; ! FreeQ[e, SuperDagger[\[FormalA]] ** \[FormalB]] :> e, Infinity], SuperDagger[\[FormalA]] ** \[FormalB]] - x Tan[w]/w, x > 0 && y > 0],
+            Simplify[Coefficient[First @ Cases[d, Power[E, e_] /; ! FreeQ[e, SuperDagger[\[FormalB]] ** \[FormalA]] :> e, Infinity], SuperDagger[\[FormalB]] ** \[FormalA]] + y Tan[w]/w, x > 0 && y > 0],
+            Simplify[{Times @@ Cases[d, Power[c_, na] :> c, Infinity] - Sec[w], Times @@ Cases[d, Power[c_, nb] :> c, Infinity] - Cos[w]}, x > 0 && y > 0]
+        }
+    ],
+    {NonCommutativeMultiply, 0, 0, {0, 0}},
+    TestID -> "DisentangledBeamSplitterSU2"
+]
+
+(* The disentangled form is the same operator: realized on a truncation it matches MatrixExp exactly on the blocks with
+   fewer photons than the cutoff, which passive evolutions never leave; a detuned splitter and a three-mode network. *)
+VerificationTest[
+    With[{sz = 6, bd = SuperDagger /@ {b1, b2, b3}, low = SparseArray[Band[{1, 2}] -> Sqrt[Range[5.]], {6, 6}]},
+        Max[Function[{h, an},
+            With[{n = Length[an], v = {bd[[;; Length[an]]], an}},
+                With[{ops = Table[KroneckerProduct @@ ReplacePart[ConstantArray[IdentityMatrix[sz], n], j -> low], {j, n}],
+                        idx = Flatten[Position[Tuples[Range[0, sz - 1], n], t_ /; Total[t] < sz, {1}, Heads -> False]]},
+                    Max[Abs[(Normal[ToBosonicOperator[BosonicExpOrder[Exp[-I h], v, "Ordering" -> "Disentangled"], v, sz]["Matrix"]] -
+                        MatrixExp[-I Normal[h /. NonCommutativeMultiply -> Dot /. Join[Thread[v[[1]] -> (Transpose /@ ops)], Thread[an -> ops]]]])[[idx, idx]]]]
+                ]
+            ]
+        ] @@@ {
+            {0.8 (bd[[1]] ** b1 + 3/2 bd[[2]] ** b2 + 1/3 (bd[[1]] ** b2 + bd[[2]] ** b1)), {b1, b2}},
+            {0.6 (bd[[1]] ** b1 + 1/2 bd[[3]] ** b3 + (1/3 + I/4) bd[[1]] ** b2 + (1/3 - I/4) bd[[2]] ** b1 + 1/5 (bd[[2]] ** b3 + bd[[3]] ** b2)), {b1, b2, b3}}
+        }]
+    ] < 10^-12,
+    True,
+    TestID -> "DisentangledPassiveMatchesMatrixExp"
+]
+
+(* The Gauss form is singular where its last pivot vanishes, the 50:50 point of a beam splitter; the middle stays normal ordered. *)
+VerificationTest[
+    ! FreeQ[BosonicExpOrder[Exp[-I Pi/2 (SuperDagger[\[FormalA]] ** \[FormalB] + SuperDagger[\[FormalB]] ** \[FormalA])], $vAB, "Ordering" -> "Disentangled"], NormalOrdered],
+    True,
+    TestID -> "DisentangledKeepsMiddleAtZeroPivot"
 ]
 
 (* An exponential of one mode is not a polynomial in another, so the shift rules must

@@ -207,20 +207,15 @@ EndTestSection[]
 
 BeginTestSection["BosonicExpOrder - anti-normal two mode"]
 
-(* Mode-mixing generators are already mixed in a and a^dagger, so these rules reverse the
-   factorisation order rather than producing a strictly annihilator-left form.  Note the
-   two modes exchange the sign on log Cosh relative to the normal rule. *)
+(* An exchange exponential e^(a^dagger W a) is anti-normally e^(a (1 - e^-W) a^dagger), with 1 - e^-W
+   = (1 - Cos[mu]) + Sinc[mu] W for mu = Sqrt[-alpha beta]: one middle, annihilators left of both creators. *)
 VerificationTest[
     BosonicExpOrder[
         Exp[\[Alpha]*SuperDagger[\[FormalA]]**\[FormalB] +
             \[Beta]*\[FormalA]**SuperDagger[\[FormalB]]],
         $v2, "Ordering" -> "Antinormal"],
-    E^((\[Beta]*\[FormalA]**SuperDagger[\[FormalB]]*Tanh[Sqrt[\[Alpha]*\[Beta]]])/
-            Sqrt[\[Alpha]*\[Beta]])**
-        Cosh[Sqrt[\[Alpha]*\[Beta]]]^(\[FormalA]**SuperDagger[\[FormalA]] -
-            \[FormalB]**SuperDagger[\[FormalB]])**
-        E^((\[Alpha]*SuperDagger[\[FormalA]]**\[FormalB]*Tanh[Sqrt[\[Alpha]*\[Beta]]])/
-            Sqrt[\[Alpha]*\[Beta]]),
+    AntinormalOrdered[E^(-((-1 + Cos[Sqrt[-(\[Alpha]*\[Beta])]])*(\[FormalA]**SuperDagger[\[FormalA]] + \[FormalB]**SuperDagger[\[FormalB]])) +
+        (\[Beta]*\[FormalA]**SuperDagger[\[FormalB]] + \[Alpha]*\[FormalB]**SuperDagger[\[FormalA]])*Sinc[Sqrt[-(\[Alpha]*\[Beta])]]), $v2],
     TestID -> "BosonicExpAnti-BeamSplitter"
 ]
 

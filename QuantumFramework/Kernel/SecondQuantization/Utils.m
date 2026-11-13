@@ -141,16 +141,18 @@ ToBosonicOperator::usage =
 
 ToBosonicOperator[expr_] := (Message[ToBosonicOperator::argr, ToBosonicOperator, 2]; $Failed)
 
+(* Modes commute, so each ordered monomial is a Kronecker product of one-mode blocks, a^dagger^i a^j in normal
+   and a^j a^dagger^i in antinormal order. *)
 orderedPolynomial[(h : NormalOrdered | AntinormalOrdered)[f_, _], lv_, size_] :=
-    Module[{x, t, k = Length[lv["Annihilators"]], xs, p},
+    Module[{x, t, k = Length[lv["Annihilators"]], xs, p, pow, block},
         xs = Array[x, 2 k];
         p = Normal @ Series[dequantize[f, Thread[lv["Generators"] -> t xs]], {t, 0, 2 k (size - 1)}] /. t -> 1;
         If[ ! PolynomialQ[p, xs], Return[$Failed, Module]];
-        p = FromCoefficientRules[Select[CoefficientRules[p, xs], Max[First[#]] < size &], xs];
-        If[ h === NormalOrdered,
-            ncPolynomial[p, xs, lv["Generators"]],
-            ncPolynomial[p, RotateLeft[xs, k], Join[lv["Annihilators"], lv["Creators"]]]
-        ]
+        pow = NestList[SparseArray[Band[{1, 2}] -> Sqrt[Range[size - 1]], {size, size}] . # &, IdentityMatrix[size, SparseArray], size - 1];
+        block = If[h === NormalOrdered, Transpose[pow[[#1 + 1]]] . pow[[#2 + 1]], pow[[#2 + 1]] . Transpose[pow[[#1 + 1]]]] &;
+        QuantumOperator[
+            Total[#2 Fold[KroneckerProduct, MapThread[block, TakeDrop[#1, k]]] & @@@ Select[CoefficientRules[p, xs], Max[First[#]] < size &]],
+            Range[k], size]
     ]
 
 ToBosonicOperator[expr_, vars_, size : _Integer?Positive : $FockSize] :=

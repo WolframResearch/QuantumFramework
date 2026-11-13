@@ -118,7 +118,7 @@ rootPhase[x_, tau_] /; MatrixQ[x / tau, NumericQ] :=
         {lam, v} = MapAt[N @* Transpose, Eigensystem[x / tau], 2];
         (
             terms = {#[[1, 1]], Abs @ Total[#[[All, 2]]]} & /@ GatherBy[
-                With[{vi = Inverse[v]}, {Total[lam[[#]]], Det[v[[n + 1 ;;, #]]] Det[vi[[#, n + 1 ;;]]]} & /@ Subsets[Range[2 n], {n}]],
+                With[{vi = Inverse[v]}, {Total[lam[[#]]], Quiet[Det[v[[n + 1 ;;, #]]] Det[vi[[#, n + 1 ;;]]], Det::luc]} & /@ Subsets[Range[2 n], {n}]],
                 Round[N @ First[#], 10^-8] &
             ];
             best = First @ MaximalBy[terms, Last];
@@ -226,13 +226,10 @@ modeRulesNO[{cr_, an_}, vv_, lv_] := {
         NormalOrdered[thm44RHS[getNCPower[adagL, cr], 0, lambda, {cr, an}], vv]
 }
 
-pairRulesNO[{cr1_, an1_}, {cr2_, an2_}] := {
+pairRulesNO[{cr1_, an1_}, {cr2_, an2_}, vv_] := {
     Exp[alpha_. cr1 ** an2 + beta_. an1 ** cr2] :>
-        With[{Omega = Sqrt[alpha beta]},
-            Exp[(alpha Tanh[Omega]/Omega) cr1 ** an2] **
-                (Exp[-Log[Cosh[Omega]] cr1 ** an1]
-                Exp[Log[Cosh[Omega]] cr2 ** an2]) **
-                Exp[(beta Tanh[Omega]/Omega) an1 ** cr2]
+        With[{mu = Sqrt[-alpha beta]},
+            NormalOrdered[Exp[(Cos[mu] - 1) (cr1 ** an1 + cr2 ** an2) + Sinc[mu] (alpha cr1 ** an2 + beta cr2 ** an1)], vv]
         ],
 
     Exp[alpha_. an1 ** an2 + beta_. cr1 ** cr2] :>
@@ -298,13 +295,10 @@ modeRulesAN[{cr_, an_}, vv_, lv_] := {
         AntinormalOrdered[thm44ANRHS[getNCPower[aL, an], 0, lambda, {cr, an}], vv]
 }
 
-pairRulesAN[{cr1_, an1_}, {cr2_, an2_}] := {
+pairRulesAN[{cr1_, an1_}, {cr2_, an2_}, vv_] := {
     Exp[alpha_. cr1 ** an2 + beta_. an1 ** cr2] :>
-        With[{Omega = Sqrt[alpha beta]},
-            Exp[(beta Tanh[Omega]/Omega) an1 ** cr2] **
-                (Exp[Log[Cosh[Omega]] an1 ** cr1]
-                Exp[-Log[Cosh[Omega]] an2 ** cr2]) **
-                Exp[(alpha Tanh[Omega]/Omega) cr1 ** an2]
+        With[{mu = Sqrt[-alpha beta]},
+            AntinormalOrdered[Exp[(1 - Cos[mu]) (an1 ** cr1 + an2 ** cr2) + Sinc[mu] (alpha an2 ** cr1 + beta an1 ** cr2)], vv]
         ],
 
     Exp[alpha_. an1 ** an2 + beta_. cr1 ** cr2] :>
@@ -328,7 +322,7 @@ pairRulesAN[{cr1_, an1_}, {cr2_, an2_}] := {
 
 expRules[lv_, "Normal"] := expRules[lv, "Normal"] = Join[
     Flatten @ Transpose[modeRulesNO[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
-    Flatten[pairRulesNO @@@ Permutations[ladderPairs[lv], {2}]],
+    Flatten[pairRulesNO[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, 1]}, d /; d =!= $Failed]},
     {modeSwap[lv, ladderRank[lv]], modeMerge[lv]}
@@ -336,7 +330,7 @@ expRules[lv_, "Normal"] := expRules[lv, "Normal"] = Join[
 
 expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
     Flatten @ Transpose[modeRulesAN[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
-    Flatten[pairRulesAN @@@ Permutations[ladderPairs[lv], {2}]],
+    Flatten[pairRulesAN[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, -1]}, d /; d =!= $Failed]},
     {modeSwap[lv, 4 - ladderRank[lv][#] &], modeMerge[lv]}
@@ -473,6 +467,38 @@ AntinormalOrdered[expr_, vars_] :=
     ]
 
 
+
+gaussFactors[{{m_}}] := {{{1}}, {m}, {{1}}}
+
+gaussFactors[m_] :=
+    With[{p = m[[-1, -1]], b = m[[;; -2, -1]], c = m[[-1, ;; -2]]},
+        If[ PossibleZeroQ[p], $Failed,
+            Replace[gaussFactors[m[[;; -2, ;; -2]] - Outer[Times, b, c] / p], {u_, l_List, w_} :>
+                {ArrayFlatten[{{u, Transpose[{b / p}]}, {0, 1}}], Append[l, p], ArrayFlatten[{{w, 0}, {{c / p}, 1}}]}]
+        ]
+    ]
+
+
+gaussMiddle[NormalOrdered[c_. Exp[q_], _], lv_] /; FreeQ[c, Alternatives @@ lv["Generators"]] :=
+    Module[{x, y, n = Length[lv["Annihilators"]], xs, ys, d, k, s, g, log},
+        {xs, ys} = Array[#, n] & /@ {x, y};
+        d = Expand[dequantize[q, Thread[lv["Generators"] -> Join[xs, ys]]]];
+        k = Outer[Coefficient[d, #1 #2] &, xs, ys];
+        s = Expand[d - xs . k . ys];
+        g = If[ FreeQ[s, Alternatives @@ Join[xs, ys]],
+            Simplify[gaussFactors[IdentityMatrix[n] + k] /. Sinc[z_] /; ! PossibleZeroQ[z] :> Sin[z] / z],
+            $Failed];
+        log = ConstantArray[0, {n, n}] + Sum[(-1)^(j + 1) MatrixPower[# - IdentityMatrix[n], j] / j, {j, n - 1}] &;
+        c Exp[s] ncJoin[
+            Exp[ncPolynomial[Expand[xs . log[g[[1]]] . ys], Join[xs, ys], lv["Generators"]]],
+            Times @@ (g[[2]] ^ MapThread[NonCommutativeMultiply, ladderVars[lv]]),
+            Exp[ncPolynomial[Expand[xs . log[g[[3]]] . ys], Join[xs, ys], lv["Generators"]]]
+        ] /; g =!= $Failed
+    ]
+
+gaussMiddle[m_, _] := m
+
+
 expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
     Assuming[assum,
         Replace[
@@ -491,9 +517,9 @@ expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
 
 
 BosonicExpOrder::usage =
-"\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) brings a product of exponentials of the ladder operators vars into normal order.\n\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Ordering\\\"->\", \"\\\"Antinormal\\\"\"}], \"]\"}]\) brings it into anti-normal order.";
+"\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) brings a product of exponentials of the ladder operators vars into normal order.\n\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Ordering\\\"->\", \"\\\"Antinormal\\\"\"}], \"]\"}]\) brings it into anti-normal order.\n\!\(\*RowBox[{\"BosonicExpOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Ordering\\\"->\", \"\\\"Disentangled\\\"\"}], \"]\"}]\) brings it into normal order with each mode-mixing middle disentangled into raising, diagonal and lowering exponentials.";
 
-BosonicExpOrder::ordering = "`1` is not a valid setting for \"Ordering\"; use \"Normal\" or \"Antinormal\"."
+BosonicExpOrder::ordering = "`1` is not a valid setting for \"Ordering\"; use \"Normal\", \"Antinormal\" or \"Disentangled\"."
 
 BosonicExpOrder::time = "Ordering stopped after the TimeConstraint of `1` seconds; the input is returned unordered."
 
@@ -516,9 +542,11 @@ BosonicExpOrder[expr_, vars_, opts : OptionsPattern[]] :=
         If[ lv === $Failed,
             $Failed,
             Replace[OptionValue["Ordering"], {
-                ord : "Normal" | "Antinormal" :>
-                    Replace[expApplyRules[expr, OptionValue[Assumptions], expRules[lv, ord], lv, OptionValue[TimeConstraint]],
-                        $Aborted :> (Message[BosonicExpOrder::time, OptionValue[TimeConstraint]]; expr)],
+                ord : "Normal" | "Antinormal" | "Disentangled" :>
+                    Replace[expApplyRules[expr, OptionValue[Assumptions], expRules[lv, Replace[ord, "Disentangled" -> "Normal"]], lv, OptionValue[TimeConstraint]], {
+                        $Aborted :> (Message[BosonicExpOrder::time, OptionValue[TimeConstraint]]; expr),
+                        r_ /; ord === "Disentangled" :> (r /. m_NormalOrdered :> gaussMiddle[m, lv])
+                    }],
                 other_ :> (Message[BosonicExpOrder::ordering, other]; $Failed)
             }]
         ]

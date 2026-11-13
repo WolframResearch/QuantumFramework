@@ -46,7 +46,7 @@ chk["C-012", Simplify[BosonicMatrixElement[{al, be}, Exp[Log[w] nn], v, "Basis" 
 chk["B-097", Simplify[BosonicNormalOrder[(E^(-I om t2) b) ** (E^(I om t1) bd), v] - E^(-I om (t2 - t1)) (nn + 1)] === 0];
 chk["C-001", BosonicNormalOrder[p ** q - q ** p, v] === -I];
 chk["C-057", BosonicNormalOrder[(fc1 b1 + fc2 b2 + fc3 b3) ** (g1 bd1 + g2 bd2 + g3 bd3) - (g1 bd1 + g2 bd2 + g3 bd3) ** (fc1 b1 + fc2 b2 + fc3 b3), v3] === fc1 g1 + fc2 g2 + fc3 g3];
-chk["X-004", ! FreeQ[BosonicExpOrder[Exp[x bd1 ** b2 - y bd2 ** b1], v2], Cosh]];
+chk["X-004", ! FreeQ[BosonicExpOrder[Exp[x bd1 ** b2 - y bd2 ** b1], v2, "Ordering" -> "Disentangled"], Tan]];
 chk["P-024", Simplify[BosonicMatrixElement[{{j + m + 1, j - m - 1}, {j + m, j - m}}, bd1 ** b2, v2] - Sqrt[j - m] Sqrt[j + m + 1]] === 0];
 chk["P-026", zeroQ[BosonicExpSimplify[Exp[z bd1 ** b2] ** bd2 ** Exp[-z bd1 ** b2], v2] - (bd2 - z bd1), v2] ||
     zeroQ[BosonicExpSimplify[Exp[z bd1 ** b2] ** bd2 ** Exp[-z bd1 ** b2], v2] - (bd2 + z bd1), v2]];
@@ -110,6 +110,9 @@ chk["B-106 free Xi", Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp
     1/((1 - Exp[-be0 (e1 - mu)]) (1 - Exp[-be0 (e2 - mu)])), be0 (e1 - mu) > 0 && be0 (e2 - mu) > 0] === 0];
 chk["X-007 diagonal M", Simplify[Sum[BosonicMatrixElement[{{k1, k2}, {k1, k2}}, Exp[Log[m1] bd1 ** b1 + Log[m2] bd2 ** b2], v2], {k1, 0, Infinity}, {k2, 0, Infinity}] -
     1/Det[IdentityMatrix[2] - DiagonalMatrix[{m1, m2}]], 0 < m1 < 1 && 0 < m2 < 1] === 0];
+chk["X-007 general M", With[{gam = NormalOrdered[Exp[(m11 - 1) bd1 ** b1 + m12 bd1 ** b2 + m21 bd2 ** b1 + (m22 - 1) bd2 ** b2], v2]},
+    Table[Expand[Sum[BosonicMatrixElement[{{k, n - k}, {k, n - k}}, gam, v2], {k, 0, n}] -
+        SeriesCoefficient[1/Det[IdentityMatrix[2] - s {{m11, m12}, {m21, m22}}], {s, 0, n}]], {n, 0, 5}] === ConstantArray[0, 6]]];
 dtrace[e_] := FourierTransform[ComplexExpand[coh[{be, be}, e] /. be -> x + I y], {x, y}, {kx, ky}, FourierParameters -> {1, 1}]/Pi /. {kx -> 0, ky -> 0};
 recon[e_, A_] := Simplify[Integrate[Simplify[dtrace[e]] (coh[{z, w0}, disp[-(gx + I gy)]] /. {Conjugate[gx] -> gx, Conjugate[gy] -> gy}),
     {gx, -Infinity, Infinity}, {gy, -Infinity, Infinity}]/Pi - coh[{z, w0}, A]] === 0;
