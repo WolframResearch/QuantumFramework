@@ -39,7 +39,7 @@ Every slide poses one physical question, writes the model as an equation, and le
 
 &nbsp;
 
-### A driven qubit under continuous measurement
+### Watched qubits pin and jump
 
 A qubit is driven with Rabi frequency $\Omega$, detuned by $\Delta$ from its transition, while a detector continuously measures $\hat\sigma_z$ at strength $k$ and catches a fraction $\eta$ of the signal. Does watching stop the oscillation?
 
@@ -78,20 +78,20 @@ measuredQubitPanel[k_, {η_, Δ_}] := Show[
     PlotRange -> {-1, 1}, Frame -> True, FrameLabel -> {"\[CapitalOmega] t", Row[{"\[LeftAngleBracket]", Subscript["\[Sigma]", "z"], "\[RightAngleBracket]"}]},
     Epilog -> Inset[Row[{"\[Eta] = ", η}], Scaled[{0.96, 0.96}], {Right, Top}], ImageSize -> 300];
 measuredQubitPanels = BlockRandom[SeedRandom[1]; AssociationMap[Function[kd, measuredQubitPanel[First[kd], {#, Last[kd]}] & /@ {0.3, 1}], Tuples[{{0.1, 0.5, 1, 5, 10}, {0, 0.5, 1, 2}}]]];
-measuredQubitLesson = <|0.1 -> "Runs oscillate; the average decays only because they fall out of phase.",
+measuredQubitLesson = <|0.1 -> "Runs oscillate; at η = 1 the average decays only because they fall out of phase.",
    0.5 -> "Runs still oscillate, kicked irregularly by the record.",
-   1 -> "Crossover: oscillation stops and runs linger near the poles.",
+   1 -> "Crossover (on resonance): oscillation stops and runs linger near the poles.",
    5 -> "Zeno: runs stick at a pole and jump; the average only decays.",
    10 -> "Stronger watching, rarer jumps."|>;
-Manipulate[Legended[PlotGrid[{measuredQubitPanels[{k, d}]}, ImageSize -> 800],
-   Placed[LineLegend[Append[ColorData[97] /@ Range[3], Directive[Red, Dashed]], {"run 1", "run 2", "run 3", "Lindblad average"}, LegendLayout -> "Row"], Below]],
+With[{measuredQubitPanels = measuredQubitPanels, measuredQubitLesson = measuredQubitLesson},
+ Manipulate[Legended[PlotGrid[{measuredQubitPanels[{k, d}]}, ImageSize -> 800],
+   Placed[LineLegend[Append[ColorData[97] /@ Range[3], Directive[Red, Dashed]], {"run 1", "run 2", "run 3", "Lindblad average"}, LegendLayout -> {"Row", 1}], Below]],
   Row[{Column[{Control[{{k, 0.1, "measurement strength k/\[CapitalOmega]"}, {0.1, 0.5, 1, 5, 10}, SetterBar}], Control[{{d, 0, "detuning \[CapitalDelta]/\[CapitalOmega]"}, {0, 0.5, 1, 2}, SetterBar}]}],
     Spacer[20], Dynamic[Grid[{
       {Style[Row[{"k/\[CapitalOmega] = ", k}], Bold, 12], measuredQubitLesson[k]},
       {Style["\[Eta] < 1", Bold, 12], "Runs stay mixed and miss the poles."},
       {Style["\[CapitalDelta] \[NotEqual] 0", Bold, 12], "Weak watching only: smaller swing, slow drift between poles."}},
-     Alignment -> {Left, Top}, ItemSize -> {{6, 44}}, Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}]]}],
-  SaveDefinitions -> True]
+     Alignment -> {Left, Top}, ItemSize -> {{6, 44}}, Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}]]}]]]
 ```
 
 At $k/\Omega=0.1$ the runs keep Rabi-oscillating. At $k/\Omega=10$ they stay pinned near $z=1$, with brief spikes that fall back and now and then a full jump to the other pole: that is the quantum Zeno effect, which the average shows only as a slow decay. A detector that catches less of the signal leaves each run mixed, so under weak measurement its oscillation no longer reaches the poles. Detuning shrinks the Rabi swing to a fast wiggle near the starting pole, and under weak watching the record then carries the runs slowly from pole to pole; once the measurement is much stronger than the detuning, the runs look as they do on resonance.
@@ -101,7 +101,7 @@ At $k/\Omega=0.1$ the runs keep Rabi-oscillating. At $k/\Omega=10$ they stay pin
 
 &nbsp;
 
-### The quantum Zeno crossover as an exceptional point
+### Fastest relaxation at the Zeno exceptional point
 
 A qubit is driven with Rabi frequency $\Omega$, detuned by $\Delta$ from the drive, while a detector measures $\hat\sigma_z$ at strength $k$. Weak watching damps the Rabi oscillation and strong watching freezes it; what happens to the dynamics at the crossover?
 
@@ -136,8 +136,9 @@ rateA5[Δv_?NumericQ, kv_?NumericQ] := Min[Select[-Re[Eigenvalues[N[liouA5 /. {�
 freqA5[Δv_?NumericQ, kv_?NumericQ] := Max[Abs[Im[Eigenvalues[N[liouA5 /. {Ω -> 1, Δ -> Δv, k -> kv}]]]]];
 ratePanelA5[Δv_] := Plot[{rateA5[Δv, kk], freqA5[Δv, kk]}, {kk, 0.1, 1.7}, PlotPoints -> 200, PlotRange -> {-0.06, 1.5}, 
    Epilog -> markA5[Δv, {-0.06, 1.5}], GridLines -> {None, Prepend[Table[{y, Directive[GrayLevel[0.8], Dashed]}, {y, 0.2, 1.4, 0.2}], {0, Directive[GrayLevel[0.4]]}]}, AspectRatio -> 1/2, Frame -> True, FrameLabel -> {"k/Ω", "rate / Ω"}, ImageSize -> 230];
-Labeled[Legended[Column[{PlotGrid[{discPanelA5 /@ ΔsA5}, ImageSize -> 900], PlotGrid[{ratePanelA5 /@ ΔsA5}, ImageSize -> 900]}, Spacings -> 0], Placed[LineLegend[ColorData[97] /@ {1, 2}, {"relaxation rate (slowest decay)", "oscillation frequency"}, LegendLayout -> {"Row", 1}], Below]],
-  "top: log|D(k)| for complex k, with D the discriminant of the Liouvillian's characteristic polynomial;  bottom: relaxation rate and oscillation frequency for real k", Top]
+Column[{Labeled[PlotGrid[{discPanelA5 /@ ΔsA5}, ImageSize -> 800], Style["log|D(k)| against complex measurement strength k, with D(k) the discriminant of the Liouvillian's characteristic polynomial", 13, FontFamily -> "Helvetica"], Top],
+  Labeled[Legended[PlotGrid[{ratePanelA5 /@ ΔsA5}, ImageSize -> 800], Placed[LineLegend[ColorData[97] /@ {1, 2}, {"relaxation rate (slowest decay)", "oscillation frequency"}, LegendLayout -> {"Row", 1}], Below]],
+   Style["the qubit's relaxation rate and oscillation frequency for real k", 13, FontFamily -> "Helvetica"], Top]}, Spacings -> 2]
 ```
 
 On resonance the slowest decay rate rises to a sharp peak at $k=\Omega$, directly below the exceptional point: the qubit relaxes fastest there, critically damped between Rabi oscillation and the Zeno slowdown, whose rate falls as $\Omega^2/2k$. A small detuning splits the exceptional point into two zeros on the real axis, one where the Rabi pair turns real and one where two real rates meet and turn complex again; at $|\Delta/\Omega|=1/(2\sqrt2)$ the two zeros merge, and for $|\Delta/\Omega|>1/(2\sqrt2)$ they leave the axis as a complex-conjugate pair, so no measurement strength reaches them, the Rabi pair never turns real, and the sharp peak of the decay rate becomes a smooth hump.
@@ -157,7 +158,7 @@ $$
 \dot\rho=\mathcal L\rho=-i\left[\frac\varepsilon2\hat\sigma_z+\frac\Omega2\hat\sigma_x,\rho\right]+\kappa\,\mathcal D[\hat n_L]\rho ,\qquad k=\kappa/4 ,
 $$
 
-since $\mathcal D[\hat n_L]=\frac14\mathcal D[\hat\sigma_z]$, the watched-qubit Liouvillian of the Zeno crossover with $\varepsilon$ for $\Delta$. By quantum regression, the symmetrized spectrum is $S(\omega)=2\,\mathrm{Re}\,\mathrm{Tr}\left[\hat\sigma_z\,(i\omega-\mathcal L)^{-1}\frac12\{\hat\sigma_z-\langle\hat\sigma_z\rangle_{\rm ss},\rho_{\rm ss}\}\right]$ with steady state $\rho_{\rm ss}$. A side peak exists when $dS/d\omega=0$ has a root at $\omega>0$; an exceptional point is a $k$ where two nonzero eigenvalues of $\mathcal L$ coincide.
+since $\mathcal D[\hat n_L]=\frac14\mathcal D[\hat\sigma_z]$, the watched-qubit Liouvillian of the Zeno crossover with $\varepsilon$ for $\Delta$. By quantum regression, the symmetrized spectrum is $S(\omega)=2\,\mathrm{Re}\,\mathrm{Tr}\left[\hat\sigma_z\,(i\omega-\mathcal L)^{-1}\frac12\{\hat\sigma_z-\langle\hat\sigma_z\rangle_\mathrm{ss},\rho_\mathrm{ss}\}\right]$ with steady state $\rho_\mathrm{ss}$. A side peak exists when $dS/d\omega=0$ has a root at $\omega>0$; an exceptional point is a $k$ where two nonzero eigenvalues of $\mathcal L$ coincide.
 
 Inverting $\mathcal L$ for general $\varepsilon$, $\Omega$ and $k$ gives $S(\omega)$ in closed form, with the largest $k$ that keeps side peaks and the $k$ where the discriminant of $\mathcal L$'s characteristic polynomial vanishes; on resonance these are:
 
@@ -231,10 +232,11 @@ pointerPanel[r_] := With[{dr = pointerDR[r]},
 pointerOutput[r_] := Plot[pointerSep[r, x], {x, 0, pointerXEnd}, PlotStyle -> ColorData[97][3], PlotRange -> {0, pointerSepMax}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed], AspectRatio -> 1, Frame -> True,
    FrameLabel -> {"|χ| t", Row[{"output separation / ", Sqrt[Row[{2, "|χ|"}]]}]}, ImagePadding -> {{60, 10}, {45, 10}}, ImageSize -> 300];
 pointerPanels = AssociationMap[{pointerPanel[#], pointerOutput[#]} &, pointerRs];
-Manipulate[Grid[{pointerPanels[r]}], Row[{Control[{{r, 0.6, "cavity linewidth over dispersive shift κ/2|χ|"}, pointerRs, SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{controlNotes = controlNotes, pointerPanels = pointerPanels, pointerRs = pointerRs},
+ Manipulate[Grid[{pointerPanels[r]}], Row[{Control[{{r, 0.6, "cavity linewidth over dispersive shift κ/2|χ|"}, pointerRs, SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"κ/2|χ| = ", r}], <|0.3 -> "Narrow cavity: long spirals, steady states far apart inside.",
         0.6 -> "The output separation ends largest.",
-        2 -> "Wide cavity: the output separation settles soonest."|>[r]}}]]}], SaveDefinitions -> True]
+        2 -> "Wide cavity: the output separation settles soonest."|>[r]}}]]}]]]
 ```
 
 The cavity rings up along a different spiral for each qubit state and settles on its steady state; a narrower cavity spirals more and ends with the two states farther apart inside. The output separation is not ordered the same way: it settles soonest in the widest cavity, but ends largest at the intermediate linewidth.
@@ -276,13 +278,14 @@ bornRunsPanel[{Ω_, z0_}] := With[{zs = bornRunsZ[Ω, z0]}, Legended[Show[
        LineLegend[{Directive[Red, Dashed]}, {Subscript["z", 0]}]}], Below]]];
 bornRuns = BlockRandom[SeedRandom[8]; AssociationMap[bornRunsPanel, Tuples[{bornDrives, bornStarts}]]];
 bornLaw = AssociationMap[bornLawPanel, bornStarts];
-Manipulate[Grid[{{bornLaw[bornZ0], bornRuns[{bornOmega, bornZ0}]}}, Alignment -> Top, Spacings -> 3],
+With[{controlNotes = controlNotes, bornLaw = bornLaw, bornRuns = bornRuns, bornStarts = bornStarts},
+ Manipulate[Grid[{{bornLaw[bornZ0], bornRuns[{bornOmega, bornZ0}]}}, Alignment -> Top, Spacings -> 3],
   Row[{Column[{Control[{{bornZ0, 0.2, Subscript["z", 0]}, bornStarts, SetterBar}], Control[{{bornOmega, 0, "\[CapitalOmega]/k"}, bornDrives, SetterBar}]}], Spacer[20], Dynamic[controlNotes[{
       {Row[{Subscript["z", 0], " = ", bornZ0}], <|-0.5 -> "Undriven, a quarter of the runs end at z = +1.",
         0.2 -> "Undriven, 60% of the runs end at z = +1.",
         0.8 -> "Undriven, 90% of the runs end at z = +1."|>[bornZ0]},
       {Row[{"Ω/k = ", bornOmega}], <|0 -> "No drive: the mean stays at z₀ and every run settles on a pole.",
-        1 -> "Drive: the mean leaves z₀ and runs keep jumping."|>[bornOmega]}}]]}], SaveDefinitions -> True]
+        1 -> "Drive: the mean leaves z₀ and runs keep jumping."|>[bornOmega]}}]]}]]]
 ```
 
 Without a drive the drift of $z$ is zero: every run heads for a pole while the mean stays on $z_0$. A bounded process with constant mean that ends at $\pm1$ must end at $+1$ with probability $(1+z_0)/2$, and the fraction of runs ending above zero matches it within its standard error. A drive adds the drift $\Omega y$: the mean leaves $z_0$ and the runs keep jumping instead of settling.
@@ -367,12 +370,13 @@ panelPurify[ηv_, {Ωv_, Δv_}, label_] := ListLinePlot[Map[{#[[1]], Norm[#[[2]]
     Frame -> True, FrameLabel -> {"k t", "r"}, PlotLabel -> label, ImageSize -> 300];
 purifyDrives = {{{0, 0}, "\[CapitalOmega]/k = 0"}, {{1, 0}, "\[CapitalOmega]/k = 1"}, {{5, 0}, "\[CapitalOmega]/k = 5"}};
 purifyPanels = BlockRandom[SeedRandom[2]; AssociationMap[Function[ηv, panelPurify[ηv, ##] & @@@ purifyDrives], {0.5, 0.8, 1}]];
-Manipulate[Legended[PlotGrid[{purifyPanels[purifyEta]}, ImageSize -> 800],
+With[{controlNotes = controlNotes, purifyPanels = purifyPanels},
+ Manipulate[Legended[PlotGrid[{purifyPanels[purifyEta]}, ImageSize -> 800],
    Placed[LineLegend[Append[ColorData[97] /@ Range[3], Directive[Gray, Dashed]], {"run 1", "run 2", "run 3", TraditionalForm[HoldForm[r == Sqrt[η]]]}, LegendLayout -> "Row"], Below]],
   Row[{Control[{{purifyEta, 1, "\[Eta]"}, Keys[purifyPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"η = ", purifyEta}], <|0.5 -> "Drift turns inward above r = √η ≈ 0.71; runs purify only at a pole.",
         0.8 -> "Drift turns inward above r = √η ≈ 0.89; a strong drive keeps runs mixed.",
-        1 -> "Every run climbs to r = 1 and stays pure."|>[purifyEta]}}]]}], SaveDefinitions -> True]
+        1 -> "Every run climbs to r = 1 and stays pure."|>[purifyEta]}}]]}]]]
 ```
 
 Neither term contains $\Delta$ or $\Omega$: the Hamiltonian only rotates the Bloch vector. The drift is positive inside $r=\sqrt\eta$ and the noise vanishes at $r=1$, so at $\eta=1$ every run climbs to the surface and stays there: a mixed state purifies and a pure state stays pure. At $\eta<1$ the drift at $r=1$ is negative except at the poles, so without a drive the runs purify by reaching a pole, a drive comparable to $k$ lets them reach the poles only part of the time, and a strong drive keeps them off the poles and below $r=1$.
@@ -650,12 +654,13 @@ negPanel[key_, {κ_, Δ_}] := ListLinePlot[negData[{κ, Δ}, key], PlotStyle -> 
     PlotLegends -> {"coherent field", "phase-randomized field"}, Frame -> True, FrameLabel -> {"g t", negAxes[key][[1]]},
     ImageSize -> 260];
 negPanels = AssociationMap[Function[c, negPanel[#, c] & /@ Keys[negAxes]], negCases];
-Manipulate[Legended[Grid[{First /@ negPanels[{k, d}]}], legendBelow[Last[First[negPanels[{k, d}]]]]],
+With[{legendBelow = legendBelow, controlNotes = controlNotes, negPanels = negPanels},
+ Manipulate[Legended[Grid[{First /@ negPanels[{k, d}]}], legendBelow[Last[First[negPanels[{k, d}]]]]],
   Row[{Column[{Control[{{k, 0, "\[Kappa]/g"}, {0, 0.1}, SetterBar}], Control[{{d, 0, "\[CapitalDelta]/g"}, {0, 2}, SetterBar}]}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"κ/g = ", k}], <|0 -> "No loss: negativity builds after the collapse and returns.",
         0.1 -> "Loss: the guaranteed part (dashed) vanishes first, then all of it."|>[k]},
       {Row[{"Δ/g = ", d}], <|0 -> "The record swings about zero.",
-        2 -> "The record sits above zero, and less negativity builds."|>[d]}}]]}], SaveDefinitions -> True]
+        2 -> "The record sits above zero, and less negativity builds."|>[d]}}]]}]]]
 ```
 
 The cavity's Wigner function shows what the two curves measure; red is positive and blue negative, on resonance and without loss, at four times in units of $1/g$:
@@ -741,31 +746,46 @@ $$
 p_s\;\to\;\frac{\left(\frac14+e^{-4\gamma dt}(p_s-\frac14)\right)\,e^{2\sqrt{\eta\kappa}\,(s_1dJ_1+s_2dJ_2)}}{\sum_{s'}(\cdots)} .
 $$
 
-The $8\times8$ equation is integrated from $(|000\rangle+i|100\rangle)/\sqrt2$, a superposition of two sectors, with the positivity-preserving step of Rouchon and Ralph, at two time steps on the same noise, and the filter runs on each record and is compared with the sector populations $\mathrm{Tr}[\hat\Pi_s\rho]$ of the full state through their largest gap; time is in units of $1/\kappa$:
+The flips are drawn as events at random times, so a true syndrome exists at every moment, and each record is its stabilizer value plus detector noise. The filter starts from the two sectors of $(|000\rangle+i|100\rangle)/\sqrt2$ and sees only the records. The same records also drive the full $8\times8$ equation, integrated with the positivity-preserving step of Rouchon and Ralph at four time steps. For each detector efficiency and flip rate, the left plot shades the true syndrome and draws the probability the filter gives it, with how often the filter's most likely syndrome is the true one; the right plot draws the largest gap between the filter and the sector populations $\mathrm{Tr}[\hat\Pi_s\rho]$ of the full state against the time step. Time is in units of $1/\kappa$:
 
 ```wl
 qecStabs = Normal[QuantumOperator[#]["Matrix"]] & /@ {"ZZI", "IZZ"};
 qecFlips = Normal[QuantumOperator[#]["Matrix"]] & /@ {"XII", "IXI", "IIX"};
 qecSigns = {{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
+qecFlipSigns = {{-1, 1}, {-1, -1}, {1, -1}};
+qecTruth[γ_, dt_, n_] := FoldList[#1 (Times @@ Pick[qecFlipSigns, Thread[#2 < γ dt]]) &, RandomChoice[{{1, 1}, {-1, 1}}], RandomReal[1, {n, 3}]];
+qecRecord[η_, dt_, truth_] := 2 Sqrt[η] Most[truth] dt + RandomVariate[NormalDistribution[0, Sqrt[dt]], {Length[truth] - 1, 2}];
+qecFilter[γ_, η_, dt_, record_] := FoldList[#/Total[#] &[(1/4 + Exp[-4 γ dt] (#1 - 1/4)) Exp[2 Sqrt[η] qecSigns . #2]] &, {0.5, 0.5, 0., 0.}, record];
 qecProj = (IdentityMatrix[8] + #[[1]] qecStabs[[1]]) . (IdentityMatrix[8] + #[[2]] qecStabs[[2]])/4 & /@ qecSigns;
 qecStep[γ_, η_, dt_][ρ_, dJ_] := With[{σ = Sqrt[η] dJ . qecStabs},
    With[{M = (1 - (2 + 3 γ) dt/2 - η dt) IdentityMatrix[8] + σ + σ . σ/2},
     #/Tr[#] &[M . ρ . M + γ dt Total[# . ρ . # & /@ qecFlips] + (1 - η) dt Total[# . ρ . # & /@ qecStabs]]]];
-qecRun[γ_, η_, dt_, kicks_] := Rest @ FoldList[Function[{state, kick}, With[{dJ = 2 Sqrt[η] Re[Tr /@ (qecStabs . First[state])] dt + kick},
-      {qecStep[γ, η, dt][First[state], dJ], dJ}]], {Outer[Times, #, Conjugate[#]] &[(UnitVector[8, 1] + I UnitVector[8, 5])/Sqrt[2.]], {0., 0.}}, kicks];
-qecFilter[γ_, η_, dt_, record_] := FoldList[#/Total[#] &[(1/4 + Exp[-4 γ dt] (#1 - 1/4)) Exp[2 Sqrt[η] qecSigns . #2]] &, {0.5, 0.5, 0., 0.}, record];
-qecTrack[γ_, η_, dt_, kicks_] := With[{run = qecRun[γ, η, dt, kicks]}, With[{filter = qecFilter[γ, η, dt, run[[All, 2]]]},
-    {filter, Max[Abs[Rest[filter] - (Re[Tr /@ (qecProj . First[#])] & /@ run)]]}]];
-qecPanel[η_, γ_] := With[{kicks = RandomVariate[NormalDistribution[0, Sqrt[0.005]], {8000, 2}]},
-   With[{fine = qecTrack[γ, η, 0.005, kicks], coarse = qecTrack[γ, η, 0.01, Total /@ Partition[kicks, 2]]},
-    ListLinePlot[Transpose[First[fine]], DataRange -> {0, 40}, PlotRange -> {-0.02, 1.02}, Frame -> True, FrameLabel -> {"κ t", "syndrome probability"},
-     PlotLabel -> Column[{Row[{"η = ", η, ",   γ/κ = ", γ}], Row[{"largest gap at κ dt = 0.01, 0.005: ", NumberForm[Last[coarse], 2], ", ", NumberForm[Last[fine], 2]}]}, Center],
-     PlotLegends -> (Row[{"(", Subscript["S", "1"], ", ", Subscript["S", "2"], ") = (", #[[1]], ", ", #[[2]], ")"}] & /@ qecSigns), ImageSize -> 300]]];
-qecPanels = BlockRandom[SeedRandom[5]; Outer[qecPanel, {1, 0.2}, {0.01, 0.05, 0.2}]];
-Legended[PlotGrid[Map[First, qecPanels, {2}], ImageSize -> 900], legendBelow[Last[qecPanels[[1, 1]]]]]
+qecRho0 = Outer[Times, #, Conjugate[#]] &[(UnitVector[8, 1] + I UnitVector[8, 5])/Sqrt[2.]];
+qecPopulations[γ_, η_, dt_, record_] := Re[Tr /@ (qecProj . #)] & /@ FoldList[qecStep[γ, η, dt], qecRho0, record];
+qecGap[γ_, η_, dt_, record_] := Max[Abs[qecFilter[γ, η, dt, record] - qecPopulations[γ, η, dt, record]]];
+qecColors = ColorData[97] /@ Range[4];
+qecRow[η_, γ_] := With[{dt = 0.005, n = 8000}, With[{truth = qecTruth[γ, dt, n]}, With[{record = qecRecord[η, dt, truth]},
+    With[{filter = qecFilter[γ, η, dt, record], idx = First[FirstPosition[qecSigns, #]] & /@ truth,
+      gaps = Table[{m dt, qecGap[γ, η, m dt, Total /@ Partition[record, m]]}, {m, {1, 2, 4, 8}}]},
+     With[{bands = {qecColors[[First[#]]], Opacity[0.5], Rectangle[{dt (First[Last[#]] - 1), 0}, {dt Last[Last[#]], 1}]} & /@
+         ({#[[1, 1]], #[[All, 2]]} & /@ SplitBy[Transpose[{idx, Range[Length[idx]]}], First]),
+       hit = Mean[Boole[MapThread[First[Ordering[#1, -1]] == #2 &, {filter, idx}]]]},
+      Grid[{{ListLinePlot[MapThread[Part, {filter, idx}], DataRange -> {0, n dt}, PlotRange -> {{0, n dt}, {0, 1}}, PlotStyle -> Directive[Black, AbsoluteThickness[1]],
+          Prolog -> bands, Frame -> True, FrameLabel -> {"κ t", "P(true syndrome)"},
+          PlotLabel -> Row[{"most likely syndrome correct ", Round[100 hit], "% of the time"}], ImageSize -> 400, AspectRatio -> 0.5],
+         ListLogLogPlot[gaps, Joined -> True, PlotMarkers -> Automatic, Frame -> True, FrameLabel -> {"κ dt", "largest gap"},
+          GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed], PlotLabel -> "filter vs 8×8 state, same record", ImageSize -> 300]}},
+       Spacings -> 3, Alignment -> Center]]]]]];
+qecEtas = {1, 0.2};
+qecRates = {0.01, 0.05, 0.2};
+qecRows = BlockRandom[SeedRandom[5]; Association[Flatten[Outer[{#1, #2} -> qecRow[#1, #2] &, qecEtas, qecRates]]]];
+qecLegend = SwatchLegend[Directive[#, Opacity[0.5]] & /@ qecColors, MapThread[Row[{"(", #1[[1]], ", ", #1[[2]], ")  ", #2}] &, {qecSigns, {"no flip", "qubit 1 flipped", "qubit 2 flipped", "qubit 3 flipped"}}], LegendLabel -> "S₁ = Z₁Z₂,   S₂ = Z₂Z₃", LegendLayout -> {"Row", 1}];
+With[{qecRows = qecRows, qecLegend = qecLegend, qecEtas = qecEtas, qecRates = qecRates},
+ Manipulate[Legended[qecRows[{qecEta, qecRate}], Placed[qecLegend, Below]],
+  Grid[{{Control[{{qecEta, 1, "detector efficiency η"}, qecEtas, SetterBar}], Control[{{qecRate, 0.05, "flip rate γ/κ"}, qecRates, SetterBar}]}}, Spacings -> 4]]]
 ```
 
-The gap roughly halves with the time step, so it is the integration's error: the four probabilities follow the full state, coherences included, and need nothing else from it. With a perfect detector and rare flips the filter jumps cleanly from sector to sector as each flip happens. With a poor detector and frequent flips it rarely settles before the next flip.
+With a perfect detector and rare flips the filter moves to the new syndrome soon after each flip and its best guess is almost always right. With a poor detector and frequent flips it rarely settles before the next flip arrives. In every case the gap falls in proportion to the time step, so it is the integration's error: the four probabilities follow the full state, coherences included, and need nothing else from it. They close on themselves because both stabilizers are diagonal in the sectors and each flip only moves probability from one sector to another. For the same reason, records drawn from a true flip history have the same statistics as records from the quantum model.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -839,7 +859,7 @@ Each sector is pushed by its own probability times how far its signs sit from th
 
 ### Markovian feedback that protects the code space, and what the detector costs
 
-Three qubits carry the bit-flip code, $|0_L\rangle=|000\rangle$, $|1_L\rangle=|111\rangle$, and each qubit flips at rate $\gamma$ through the channel $\hat c_i=\sqrt\gamma X_i$. Each channel is monitored by homodyne detection of efficiency $\eta$, and its current $I_i$ drives the qubits at once through the Hamiltonian $I_i\hat F_i$, with $\hat F_i=i\sqrt\gamma\,{}[\hat\Pi_{\rm code},X_i]$ and $\hat\Pi_{\rm code}=|000\rangle\langle000|+|111\rangle\langle111|$. How well does this loop hold an encoded state?
+Three qubits carry the bit-flip code, $|0_L\rangle=|000\rangle$, $|1_L\rangle=|111\rangle$, and each qubit flips at rate $\gamma$ through the channel $\hat c_i=\sqrt\gamma X_i$. Each channel is monitored by homodyne detection of efficiency $\eta$, and its current $I_i$ drives the qubits at once through the Hamiltonian $I_i\hat F_i$, with $\hat F_i=i\sqrt\gamma\,{}[\hat\Pi_\mathrm{code},X_i]$ and $\hat\Pi_\mathrm{code}=|000\rangle\langle000|+|111\rangle\langle111|$. How well does this loop hold an encoded state?
 
 With $\hbar=1$ and $\mathcal D[\hat c]\rho=\hat c\rho\hat c^\dagger-\frac12\{\hat c^\dagger\hat c,\rho\}$, the Wiseman-Milburn feedback master equation is
 
@@ -847,28 +867,30 @@ $$
 \dot\rho=-\frac{i}{2}\sum_{i=1}^3\left[\hat c_i^\dagger\hat F_i+\hat F_i\hat c_i,\rho\right]+\sum_{i=1}^3\mathcal D[\hat c_i-i\hat F_i]\rho+\frac{1-\eta}{\eta}\sum_{i=1}^3\mathcal D[\hat F_i]\rho .
 $$
 
-The two identities $\hat c_i\hat F_i+\hat F_i\hat c_i=0$, which removes the Hamiltonian term, and $(\hat c_i-i\hat F_i)\hat\Pi_{\rm code}=0$ both hold exactly. The master equation evolves from $|0_L\rangle$ and from $|+_L\rangle=(|000\rangle+|111\rangle)/\sqrt2$, with $\mathcal D[\hat c_i]$ alone as the case without feedback; time is in units of $1/\gamma$:
+The raw current is fed back as it arrives, with no filtering, no estimate of the state and no delay, which is what keeps this equation closed in $\rho$; the part of the current that is detector noise reaches the qubits too, as the last term. The two identities $\hat c_i\hat F_i+\hat F_i\hat c_i=0$, which removes the Hamiltonian term, and $(\hat c_i-i\hat F_i)\hat\Pi_\mathrm{code}=0$ both hold exactly. The master equation evolves from $|0_L\rangle$ and from $|+_L\rangle=(|000\rangle+|111\rangle)/\sqrt2$, with $\mathcal D[\hat c_i]$ alone as the case without feedback; time is in units of $1/\gamma$:
 
 ```wl
 fbFlips = Normal[QuantumOperator[#]["Matrix"]] & /@ {"XII", "IXI", "IIX"};
 fbCode = DiagonalMatrix[UnitVector[8, 1] + UnitVector[8, 8]];
 fbF = I (fbCode . # - # . fbCode) & /@ fbFlips;
 fbChecks = {Max[Abs[MapThread[#1 . #2 + #2 . #1 &, {fbFlips, fbF}]]], Max[Abs[(# . fbCode) & /@ (fbFlips - I fbF)]]};
-fbRho[ops_, rates_, ψ_] := Normal[QuantumEvolve[QuantumOperator[ConstantArray[0, {8, 8}]], QuantumOperator /@ ops -> rates, QuantumState[ψ], {t, 0, 3}]["DensityMatrix"]];
+fbRho[ops_, rates_, ψ_] := Normal[QuantumEvolve[QuantumOperator[ConstantArray[0, {8, 8}]], QuantumOperator /@ ops -> rates, QuantumState[ψ], {t, 0, 2}]["DensityMatrix"]];
 fbEtas = {1, 1/2, 1/10, 1/50};
 fbStarts = {{Row[{"|", Subscript["0", "L"], "⟩"}], UnitVector[8, 1]}, {Row[{"|", Subscript["+", "L"], "⟩"}], (UnitVector[8, 1] + UnitVector[8, 8])/Sqrt[2]}};
 fbCurves[ψ_] := Append[Function[η, fbRho[Join[fbFlips - I fbF, fbF], Join[{1, 1, 1}, ConstantArray[(1 - η)/η, 3]], ψ]] /@ fbEtas, fbRho[fbFlips, {1, 1, 1}, ψ]];
 fbObs = {{Re[Tr[fbCode . #1]] &, "code-space population"}, {Re[Conjugate[#2] . #1 . #2] &, "fidelity with the start"}};
-fbPanel[{name_, ψ_}, ρs_, {obs_, label_}] := Plot[Evaluate[obs[#, ψ] & /@ ρs], {t, 0, 3}, PlotRange -> {0, 1.02}, Frame -> True, FrameLabel -> {"γ t", label}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed],
-   PlotLabel -> Row[{"start ", name}], PlotStyle -> {Automatic, Automatic, Automatic, Automatic, Dashed},
-   PlotLegends -> Append[Row[{"η = ", #}] & /@ fbEtas, "no feedback"], ImageSize -> 300];
+fbPanel[{name_, ψ_}, ρs_, {obs_, label_}] := With[{tag = Style[Row[{"start ", name}], 13, FontFamily -> "Helvetica"]},
+   Plot[Evaluate[obs[#, ψ] & /@ ρs], {t, 0, 2}, PlotRange -> {0, 1.2}, AspectRatio -> 1/2, Frame -> True, FrameLabel -> {"γ t", label},
+    FrameTicks -> {{Range[0, 1, 0.2], None}, {Automatic, None}}, GridLines -> {Automatic, Range[0, 1, 0.2]}, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed],
+    Epilog -> Inset[tag, Scaled[{0.97, 0.96}], {Right, Top}], PlotStyle -> {Automatic, Automatic, Automatic, Automatic, AbsoluteThickness[3.5]},
+    PlotLegends -> Append[Row[{"η = ", #}] & /@ fbEtas, "no feedback"], ImageSize -> 340]];
 fbPanels = Function[start, With[{ρs = fbCurves[Last[start]]}, fbPanel[start, ρs, #] & /@ fbObs]] /@ fbStarts;
-Labeled[Legended[PlotGrid[Transpose[Map[First, fbPanels, {2}]], ImageSize -> 700], legendBelow[Last[fbPanels[[1, 1]]]]],
+Labeled[Legended[PlotGrid[Transpose[Map[First, fbPanels, {2}]], ImageSize -> 760], legendBelow[Last[fbPanels[[1, 1]]]]],
   Style[Row[{Subscript["c", "i"], Subscript["F", "i"], " + ", Subscript["F", "i"], Subscript["c", "i"], " = ", fbChecks[[1]], "   and   (",
-     Subscript["c", "i"], " - i ", Subscript["F", "i"], ")", Subscript["Π", "code"], " = ", fbChecks[[2]], "   for every i"}], 14, FontFamily -> "Helvetica"], Top]
+     Subscript["c", "i"], " - i ", Subscript["F", "i"], ")", Subscript["Π", "code"], " = ", fbChecks[[2]], "   for each qubit i = 1, 2, 3"}], 14, FontFamily -> "Helvetica"], Top]
 ```
 
-At $\eta=1$ the two identities make every encoded state a fixed point, for $|0_L\rangle$ and $|+_L\rangle$ alike. Below unit efficiency the $\mathcal D[\hat F_i]$ term feeds detector noise back onto the qubits: the plateau falls with $\eta$, and at low efficiency the loop empties the code space faster than no feedback. From $|0_L\rangle$ the fidelity falls below the code-space population while from $|+_L\rangle$ the two agree: the noisy loop also flips $|0_L\rangle$ into $|1_L\rangle$, which no stabilizer sees.
+At $\eta=1$ the two identities make every encoded state a fixed point, for $|0_L\rangle$ and $|+_L\rangle$ alike. Below unit efficiency the $\mathcal D[\hat F_i]$ term feeds detector noise back onto the qubits: the plateau falls with $\eta$, and at low efficiency, with this feedback strength, the loop empties the code space faster than no feedback. From $|0_L\rangle$ the fidelity falls below the code-space population while from $|+_L\rangle$ the two agree: the noisy loop also flips $|0_L\rangle$ into $|1_L\rangle$, which no stabilizer sees.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -897,8 +919,8 @@ PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumF
 Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
 Get["/Users/mohammadb/Documents/GitHub/QuantumFramework/OngoingProjects/QEC/QECCore/QECCore.wl"]; Needs["Wolfram`QuantumFramework`QEC`"];
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/mbahram/TransmonLab/TransmonLab"]; Needs["TransmonLab`"];
-legendBelow[\[FormalL]_] := Placed[\[FormalL] /. Placed[\[FormalX]_, ___] :> \[FormalX] /. Column[\[FormalY]_List, ___] :> Row[\[FormalY], Spacer[20]] /.
-    (\[FormalH] : LineLegend | PointLegend | SwatchLegend)[\[FormalA]__] :> \[FormalH][Sequence @@ DeleteCases[{\[FormalA]}, LegendLayout -> _], LegendLayout -> {"Row", 1}], Below];
-controlNotes[\[FormalR]_List] := Grid[MapAt[Style[#, Bold] &, \[FormalR], {All, 1}], Alignment -> {Left, Top}, ItemSize -> {{Automatic, 40}},
-    Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}];
+legendBelow = Function[\[FormalL], Placed[\[FormalL] /. Placed[\[FormalX]_, ___] :> \[FormalX] /. Column[\[FormalY]_List, ___] :> Row[\[FormalY], Spacer[20]] /.
+    (\[FormalH] : LineLegend | PointLegend | SwatchLegend)[\[FormalA]__] :> \[FormalH][Sequence @@ DeleteCases[{\[FormalA]}, LegendLayout -> _], LegendLayout -> {"Row", 1}], Below]];
+controlNotes = Function[\[FormalR], Grid[MapAt[Style[#, Bold] &, \[FormalR], {All, 1}], Alignment -> {Left, Top}, ItemSize -> {{Automatic, 40}},
+    Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}]];
 ```

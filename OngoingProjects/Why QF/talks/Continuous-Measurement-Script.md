@@ -6,7 +6,7 @@ For each slide: the model, the question, how to read the figure, and the physics
 
 Each slide asks one physical question and answers it twice, in closed form and by sampling quantum trajectories, and checks one against the other. Five ideas recur. The stochastic master equation is written once as an `ItoProcess`, which samples trajectories and applies Itô's lemma to any function of the state. Its average over records is a Lindblad master equation, built and evolved in QuantumFramework. Exact results come from the Liouvillian: its spectrum gives decay rates and frequencies, its discriminant locates exceptional points, and a linear solve gives the noise spectrum. A filter is Bayes' rule folded over the measurement record, checked against the full conditional state driven by the same record. Where possible, the equations come from operator algebra instead of matrices: the canonical commutation relation for a particle, the Pauli relations for a code.
 
-## 1. A driven qubit under continuous measurement
+## 1. Watched qubits pin and jump
 
 **Model.** A Rabi-driven qubit under continuous σ_z measurement with strength k and efficiency η; single quantum trajectories against the Lindblad average.
 
@@ -16,7 +16,7 @@ Each slide asks one physical question and answers it twice, in closed form and b
 
 **Physics.** The drive rotates the state and the measurement backaction pushes it toward an eigenstate of σ_z. For weak measurement each trajectory keeps oscillating, and the average decays only by dephasing between trajectories. For strong measurement each trajectory is pinned near a pole and jumps rarely: the quantum Zeno effect, which the average shows only as slow decay. With η below one the conditional state stays mixed and never reaches the poles. Detuning reduces the Rabi amplitude, so under weak measurement the record moves the state slowly between the poles.
 
-## 2. The quantum Zeno crossover as an exceptional point
+## 2. Fastest relaxation at the Zeno exceptional point
 
 **Model.** The Liouvillian of the same measured qubit, whose eigenvalues give every decay rate and oscillation frequency of the averaged dynamics.
 

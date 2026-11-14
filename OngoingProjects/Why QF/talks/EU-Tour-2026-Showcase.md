@@ -23,10 +23,11 @@ Every example below is a physics question, the model, one runnable cell and what
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/TensorNetworks/TensorNetworks"];
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
 Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
-legendBelow[\[FormalL]_] := Placed[\[FormalL] /. Placed[\[FormalX]_, ___] :> \[FormalX] /. Column[\[FormalY]_List, ___] :> Row[\[FormalY], Spacer[20]] /.
-    (\[FormalH] : LineLegend | PointLegend | SwatchLegend)[\[FormalA]__] :> \[FormalH][Sequence @@ DeleteCases[{\[FormalA]}, LegendLayout -> _], LegendLayout -> {"Row", 1}], Below];
-controlNotes[\[FormalR]_List] := Grid[MapAt[Style[#, Bold] &, \[FormalR], {All, 1}], Alignment -> {Left, Top}, ItemSize -> {{Automatic, 40}},
-    Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}];
+Needs["Wolfram`TensorNetworks`"]; Needs["Wolfram`TensorNetworks`Symmetry`"];
+legendBelow = Function[\[FormalL], Placed[\[FormalL] /. Placed[\[FormalX]_, ___] :> \[FormalX] /. Column[\[FormalY]_List, ___] :> Row[\[FormalY], Spacer[20]] /.
+    (\[FormalH] : LineLegend | PointLegend | SwatchLegend)[\[FormalA]__] :> \[FormalH][Sequence @@ DeleteCases[{\[FormalA]}, LegendLayout -> _], LegendLayout -> {"Row", 1}], Below]];
+controlNotes = Function[\[FormalR], Grid[MapAt[Style[#, Bold] &, \[FormalR], {All, 1}], Alignment -> {Left, Top}, ItemSize -> {{Automatic, 40}},
+    Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}]];
 ```
 
 #| style: SlideShowNavigationBar
@@ -136,11 +137,12 @@ pulsePanel[d_, {a_, label_}] := With[{p = pulseP1[d, a]},
     Plot[{p, a/(2 Pi) Exp[-(t - 4)^2/2]}, {t, 0, 8}, PlotRange -> {0, 1}, Frame -> True, FrameLabel -> {"t/\[Tau]", None}, ImageSize -> 300,
      PlotLabel -> Style[Row[{"A = ", label}], 13, FontFamily -> "Helvetica"]]];
 panelsP = Outer[pulsePanel, pulseDetunings, pulseAreas, 1];
-Manipulate[Legended[PlotGrid[{panelsP[[pulseK]]}, ImageSize -> 900], Placed[LineLegend[{ColorData[97][1], ColorData[97][2]}, {"P(1)", Row[{"\[CapitalOmega](t), in units of the 2\[Pi] pulse's peak"}]}, LegendLayout -> "Row"], Below]],
+With[{controlNotes = controlNotes, panelsP = panelsP, pulseDetunings = pulseDetunings},
+ Manipulate[Legended[PlotGrid[{panelsP[[pulseK]]}, ImageSize -> 900], Placed[LineLegend[{ColorData[97][1], ColorData[97][2]}, {"P(1)", Row[{"\[CapitalOmega](t), in units of the 2\[Pi] pulse's peak"}]}, LegendLayout -> "Row"], Below]],
  Row[{Control[{{pulseK, 2, "\[Tau]\[CapitalDelta]"}, MapIndexed[First[#2] -> #1 &, pulseDetunings], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"τΔ = ", pulseDetunings[[pulseK]]}], <|1 -> "Resonance: area π flips the qubit fully, 2π brings it back.",
         2 -> "The π pulse stops short of a full flip.",
-        3 -> "Every pulse leaves almost nothing in |1⟩ at the end."|>[pulseK]}}]]}], SaveDefinitions -> True]
+        3 -> "Every pulse leaves almost nothing in |1⟩ at the end."|>[pulseK]}}]]}]]]
 ```
 
 On resonance $\hat H$ points along $\hat\sigma_x$ at every instant, so the propagator is the rotation by the area swept so far and a pulse with $A=\pi$ is a full flip. Detuning tilts the rotation axis by an angle that changes along the pulse, so the same pulse moves less population: at $\tau\Delta=0.5$ the $\pi$ pulse stops short of a full flip, and at $\tau\Delta=2$ the pulses leave almost nothing in $|1\rangle$ at the end.
@@ -384,7 +386,7 @@ Energy loss alone already removes the phase at rate $\gamma_1/2$, and dephasing 
 
 &nbsp;
 
-### Master equation, Kraus channels and a circuit: one Ramsey fringe
+### When a noisy circuit matches the master equation
 
 
 A Ramsey experiment applies a Hadamard to $|g\rangle$, waits a time $t$, applies a second Hadamard and reads $P(e)$. During the wait the qubit, detuned by $\delta$ from the drive, decays at rate $\gamma_1$ and dephases at rate $\gamma_\phi$, and a residual drive of Rabi frequency $\Omega$ may act. Device simulators model such a wait not with a master equation but as a circuit: a gate followed by textbook noise channels. When do the two give the same fringe?
@@ -395,9 +397,15 @@ $$
 \dot\rho=-i\left[\frac{\delta}{2}\hat\sigma_z+\frac{\Omega}{2}\hat\sigma_x,\rho\right]+\gamma_1\,\mathcal D[\hat\sigma_-]\rho+\gamma_\phi\,\mathcal D[\hat\sigma_z]\rho .
 $$
 
-The circuit cuts the wait into $m$ equal slices. Each slice is the unitary $e^{-i\hat Ht/m}$, then amplitude damping with decay probability $\lambda=1-e^{-\gamma_1t/m}$, then phase damping with $\mu=1-e^{-4\gamma_\phi t/m}$, which shrinks the coherence by $e^{-2\gamma_\phi t/m}$, the same factor as the dephasing term. With $m=1$ the whole wait is one gate and two channels, the usual circuit noise model. Larger $m$ follows the continuous evolution more closely.
+The circuit cuts the wait into $m$ equal slices. Each slice is the unitary $\mathcal U_{t/m}\rho=e^{-i\hat Ht/m}\rho\,e^{i\hat Ht/m}$, then amplitude damping $\mathcal A_\lambda$ with decay probability $\lambda=1-e^{-\gamma_1t/m}$, then phase damping $\mathcal P_\mu$ with $\mu=1-e^{-4\gamma_\phi t/m}$, which shrinks the coherence by $e^{-2\gamma_\phi t/m}$, the same factor as the dephasing term. With $\mathcal L$ the right-hand side of the master equation, the circuit reproduces the wait in the limit
 
-Lines are the master equation, dots the circuit with $m=1$ and squares with $m=8$; time is in units of $1/\gamma_1$:
+$$
+e^{t\mathcal L}\rho=\lim_{m\to\infty}\left(\mathcal P_\mu\circ\mathcal A_\lambda\circ\mathcal U_{t/m}\right)^m\rho ,
+$$
+
+and with $m=1$ the whole wait is one gate and two channels, the usual circuit noise model.
+
+Lines are the master equation, dots the circuit with $m=1$ and, when the drive is on, squares the circuit with $m=8$; the dephasing rate and the drive are set separately, and time is in units of $1/\gamma_1$:
 
 ```wl
 hamA4[δ_, Ω_] := -δ/2 QuantumOperator["Z"] + Ω/2 QuantumOperator["X"]; jumpsA4 = {QuantumOperator[{{0, 1}, {0, 0}}], QuantumOperator["Z"]};
@@ -406,8 +414,9 @@ sliceA4[h_, {γ1v_, γφv_}, τ_, {lu_, lad_, lpd_}] := {QuantumOperator[Exp[-I 
 pEA4[ρ_] := ρ["ProbabilitiesList"][[2]];
 viaMEA4[h_, γs_, T_] := pEA4[QuantumOperator["H"][QuantumEvolve[h, jumpsA4 -> γs, QuantumOperator["H"][QuantumState["0"]], T]]];
 circuitA4[h_, γs_, m_, s_, labels_ : {"U", "AD", "PD"}, group_ : Catenate] := QuantumCircuitOperator[Join[{"H"}, group[ConstantArray[sliceA4[h, γs, s/m, labels], m]], {"H"}]];
-diagramsA4 = {circuitA4[hamA4[δ, Ω], {γ1, γφ}, 1, t, {Superscript["e", "\[Minus]i H t"], Column[{"Amplitude", "damping"}, Alignment -> Center], Column[{"Phase", "damping"}, Alignment -> Center]}, Map[QuantumCircuitOperator[#, "slice"] &]]["Diagram", ImageSize -> 330],
-    circuitA4[hamA4[δ, Ω], {γ1, γφ}, 8, t, {"U", "AD", "PD"}, Map[QuantumCircuitOperator[#, "slice"] &]]["Diagram", ImageSize -> 760]};
+labelsA4[τ_] := {Subscript["\[ScriptCapitalU]", τ], Subscript["\[ScriptCapitalA]", "λ"], Subscript["\[ScriptCapitalP]", "μ"]};
+diagramsA4 = {circuitA4[hamA4[δ, Ω], {γ1, γφ}, 1, t, labelsA4["t"], Map[QuantumCircuitOperator[#, "slice"] &]]["Diagram", ImageSize -> 330],
+    circuitA4[hamA4[δ, Ω], {γ1, γφ}, 8, t, labelsA4["t/8"], Map[QuantumCircuitOperator[#, "slice"] &]]["Diagram", ImageSize -> 760]};
 transferA4[h_, γs_] := With[{ρ = Array[\[FormalR], {2, 2}]}, Function[\[FormalS], Evaluate[D[Flatten[Normal[
       QuantumCircuitOperator[sliceA4[h, γs, \[FormalT], {"U", "AD", "PD"}]][QuantumState[ρ]]["DensityMatrix"]]], {Flatten[ρ]}] /. \[FormalT] -> \[FormalS]]]];
 pointsA4[T_, m_] := With[{hm = Normal[QuantumOperator["H"]["Matrix"]]},
@@ -415,19 +424,29 @@ pointsA4[T_, m_] := With[{hm = Normal[QuantumOperator["H"]["Matrix"]]},
 panelA4[{γφv_, Ωv_}, δv_] := With[{me = viaMEA4[hamA4[δv, Ωv], {1, γφv}, {t, 0, 4}], T = transferA4[N[hamA4[δv, Ωv]], {1, γφv}]},
    ListPlot[Prepend[pointsA4[T, #] & /@ If[Ωv == 0, {1}, {1, 8}], Table[{x, me /. t -> x}, {x, 0, 4, 0.04}]],
     Joined -> {True, False, False}, PlotMarkers -> {None, {"\[FilledCircle]", 7}, {"\[EmptySquare]", 11}},
-    PlotLegends -> Take[{"master equation", "circuit, m = 1", "circuit, m = 8"}, If[Ωv == 0, 2, 3]], PlotRange -> {0, 1}, Frame -> True, FrameLabel -> {Row[{Subscript["γ", 1], " t"}], "P(e)"},
+    PlotLegends -> Take[{"master equation", "circuit, m = 1", "circuit, m = 8"}, If[Ωv == 0, 2, 3]], PlotRange -> {0, 1}, Frame -> True, GridLines -> {None, {0.25, 0.5, 0.75}}, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin], FrameLabel -> {Row[{Subscript["γ", 1], " t"}], "P(e)"},
     Epilog -> Inset[Row[{"δ/", Subscript["γ", 1], " = ", δv}], Scaled[{0.96, 0.96}], {Right, Top}], ImageSize -> Small]];
-casesA4 = {{0, 0}, {1/2, 0}, {1/2, 2}};
-panelsA4 = Outer[panelA4, casesA4, {0, 3, 8}, 1];
+panelsA4 = AssociationMap[Function[c, panelA4[c, #] & /@ {0, 3, 8}], Tuples[{{0, 1/2, 1}, {0, 1, 2, 4}}]];
 Column[{Column[diagramsA4, Alignment -> Center, Spacings -> 1],
-  Manipulate[Legended[PlotGrid[{First /@ panelsA4[[c]]}, ImageSize -> 660], legendBelow[Last[panelsA4[[c, 1]]]]],
-   Row[{Control[{{c, 3, "case"}, MapIndexed[First[#2] -> Row[{Subscript["γ", "φ"], "/", Subscript["γ", 1], " = ", #1[[1]], ",  Ω/", Subscript["γ", 1], " = ", #1[[2]]}] &, casesA4], SetterBar}], Spacer[20], Dynamic[controlNotes[{
-      {Row[{"case ", c}], <|1 -> "No dephasing, no drive: the routes agree; the fringe decays at γ₁/2.",
-        2 -> "Dephasing added: the routes still agree; decay at 1/T₂ = γ₁/2 + 2γ_φ.",
-        3 -> "Drive on: the circuit matches only when the wait is sliced finely."|>[c]}}]]}], SaveDefinitions -> True]}, Alignment -> Center, Spacings -> 2]
+  With[{legendBelow = legendBelow, controlNotes = controlNotes, panelsA4 = panelsA4},
+ Manipulate[Legended[PlotGrid[{First /@ panelsA4[{gφ, gΩ}]}, ImageSize -> 660], legendBelow[Last[panelsA4[{gφ, gΩ}][[1]]]]],
+   Grid[{{Grid[{{Style["dephasing", 12], Control[{{gφ, 1/2, Row[{Subscript["γ", "φ"], "/", Subscript["γ", 1]}]}, {0 -> "0", 1/2 -> "0.5", 1 -> "1"}, SetterBar}]},
+      {Style["drive", 12], Control[{{gΩ, 2, Row[{"Ω/", Subscript["γ", 1]}]}, {0 -> "0", 1 -> "1", 2 -> "2", 4 -> "4"}, SetterBar}]}}, Alignment -> {{Right, Left}, Center}, Spacings -> {1, 0.8}],
+    Dynamic[Pane[Style[<|{0, 0} -> "No dephasing, no drive: the routes agree; the fringe decays at γ₁/2.",
+        {1/2, 0} -> Row[{"Dephasing, no drive: the routes still agree; decay at 1/T₂ = γ₁/2 + 2", Subscript["γ", "φ"], "."}],
+        {1, 0} -> Row[{"Dephasing, no drive: the routes still agree; decay at 1/T₂ = γ₁/2 + 2", Subscript["γ", "φ"], "."}],
+        {0, 1} -> "Drive, no dephasing: the one‐step circuit misses; with 8 short steps it stays close.",
+        {0, 2} -> "Stronger drive: the one‐step circuit misses further; 8 short steps still come close.",
+        {0, 4} -> "Strong drive: the one‐step circuit is far off; 8 steps come close but not all the way.",
+        {1/2, 1} -> "Drive and dephasing: a smaller gap for one step; 8 steps close most of it.",
+        {1/2, 2} -> "The circuit matches only when the time between gates is very short.",
+        {1/2, 4} -> "Strong drive and dephasing: even 8 steps leave a visible gap.",
+        {1, 1} -> "Strong dephasing: the fringe swings less about 1/2; the one‐step gap shrinks, the 8‐step gap grows.",
+        {1, 2} -> "Strong dephasing and drive: 8 steps help less than without dephasing.",
+        {1, 4} -> "Strong drive and dephasing: the largest gap at m = 8; the steps must be shorter still."|>[{gφ, gΩ}], 12, LineIndent -> 0], ImageSize -> 520]]}}, Spacings -> 2, Alignment -> {Left, Center}]]]}, Alignment -> Center, Spacings -> 2]
 ```
 
-Without a drive the two routes agree for every value of every parameter, because the rotation, the decay and the dephasing generators commute: the wait is exactly one rotation followed by two named channels. The fringe oscillates about $P(e)=1/2$ at the detuning, and $\gamma_1$ enters its decay only through $1/T_2$. A drive during the wait stops the generators commuting, and the circuit approaches the master equation only as the wait is sliced finer.
+Without a drive the two routes agree for every value of every parameter, because the rotation, the decay and the dephasing generators commute: the wait is exactly one rotation followed by two named channels. The fringe oscillates about $P(e)=1/2$ at the detuning, and $\gamma_1$ enters its decay only through $1/T_2$. A drive during the wait stops the generators commuting: off resonance the circuit then approaches the master equation only as the time between gates gets shorter, while at $\delta=0$ they still give the same fringe. In these panels dephasing narrows the swing of the fringe about $1/2$ and shrinks the gap of the one-step circuit, but turning it on widens the gap left by eight steps, so with dephasing on the steps must be shorter.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -447,7 +466,7 @@ $$
 
 and in the frame rotating with each qubit the Hamiltonian drops out while the two dissipators stay as they are.
 
-The concurrence of the evolving state, computed for general $\theta$, rates and $t$, is
+The concurrence of the evolving state, computed for $0\le\theta\le\pi/2$ and general rates and $t$, is
 
 $$
 C(t)=2\,e^{-(\gamma_A+\gamma_B)t/2}\sin\theta\,\max\left(0,\ \cos\theta-\sin\theta\sqrt{(1-e^{-\gamma_At})(1-e^{-\gamma_Bt})}\right),
@@ -461,21 +480,21 @@ concA2 = QuantumEntanglementMonotone[QuantumEvolve[QuantumOperator[0 IdentityMat
 {θsA2, γBsA2} = {{π/8, π/4, π/3, 5 π/12}, {0, 3/10, 1}};
 deathA2[γBv_, θv_] := If[θv > π/4 && γBv > 0, First[NSolveValues[(1 - Exp[-t]) (1 - Exp[-γBv t]) == Cot[θv]^2 && t > 0, t, Reals]], None];
 panelA2[γBv_] := Plot[Evaluate[concA2 /. {γA -> 1, γB -> γBv, θ -> #} & /@ θsA2], {t, 0, 4}, PlotRange -> {-0.05, 1.02}, WorkingPrecision -> 20, Exclusions -> None,
-    GridLines -> {None, {0}}, Epilog -> {PointSize[0.035], MapIndexed[If[NumericQ[#1], {ColorData[97][First[#2]], Point[{#1, 0}]}, Nothing] &, deathA2[γBv, #] & /@ θsA2]},
+    GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin], Epilog -> {PointSize[0.035], MapIndexed[If[NumericQ[#1], {ColorData[97][First[#2]], Point[{#1, 0}]}, Nothing] &, deathA2[γBv, #] & /@ θsA2]},
     PlotStyle -> {Automatic, Dashed, Automatic, Automatic}, PlotLegends -> (Row[{"θ = ", #}] & /@ θsA2),
     Frame -> True, FrameLabel -> {Row[{Subscript["γ", "A"], " t"}], "concurrence"}, PlotLabel -> Row[{Subscript["γ", "B"], "/", Subscript["γ", "A"], " = ", γBv}], ImageSize -> Small];
 panelsA2 = panelA2 /@ γBsA2;
 Legended[PlotGrid[{First /@ panelsA2}, ImageSize -> 660], legendBelow[Column[{Last[First[panelsA2]], PointLegend[{Gray}, {"entanglement dies"}, LegendMarkers -> {"\[FilledCircle]", 9}]}]]]
 ```
 
-It vanishes once $(1-e^{-\gamma_At})(1-e^{-\gamma_Bt})$ reaches $\cot^2\theta$. That needs both qubits to decay and $\theta>\pi/4$, where $|ee\rangle$ outweighs $|gg\rangle$: those states lose all their entanglement at a finite time and never regain it, and the more slowly B decays, the later that time comes. At $\theta\le\pi/4$ (the boundary case $\theta=\pi/4$ is dashed), or if B does not decay, the entanglement only fades.
+It vanishes once $(1-e^{-\gamma_At})(1-e^{-\gamma_Bt})$ reaches $\cot^2\theta$. That needs both qubits to decay and $\pi/4<\theta<\pi/2$, where $|ee\rangle$ outweighs $|gg\rangle$: those states lose all their entanglement at a finite time and never regain it, and the more slowly B decays, the later that time comes. At $\theta\le\pi/4$ (the boundary case $\theta=\pi/4$ is dashed), or if B does not decay, the entanglement only fades.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
 
 &nbsp;
 
-### Two atoms in a shared field: superradiance, subradiance and a dark state
+### Correlated decay: bright, dim and dark states
 
 
 Two identical atoms, frequency $\omega$, sit close enough to radiate into the same field modes, so each decays at rate $\gamma$ and the field correlates their emission with strength $0\le r\le1$. Which states radiate faster or slower than a lone atom, and can one stop radiating altogether?
@@ -501,9 +520,9 @@ panelA3[rv_] := Show[
     Plot[Exp[-t], {t, 0, 5}, PlotStyle -> None, Filling -> {1 -> {Bottom, Directive[Opacity[0.22], superColorA3]}}],
     Plot[Exp[-t], {t, 0, 5}, PlotStyle -> None, Filling -> {1 -> {1.02, Directive[Opacity[0.22], subColorA3]}}],
     Plot[Evaluate[Limit[#, r -> rv] & /@ perExcitationA3], {t, 0, 5}, PlotStyle -> ColorData[97] /@ {3, 4, 5, 1}],
-    PlotRange -> {{0, 5}, {0, 1.02}}, Frame -> True, Axes -> False,
+    PlotRange -> {{0, 5}, {0, 1.02}}, Frame -> True, Axes -> False, GridLines -> {Automatic, {0, 0.25, 0.5, 0.75, 1}}, GridLinesStyle -> Dashed,
     FrameLabel -> {"γ t", Row[{"\[LeftAngleBracket]N\[RightAngleBracket] / ", Subscript["N", 0]}]},
-    PlotLabel -> Row[{"r = ", Style[TraditionalForm[rv], FractionBoxOptions -> {Beveled -> True}]}], ImageSize -> 260];
+    PlotLabel -> Row[{"correlation r = ", Style[TraditionalForm[rv], FractionBoxOptions -> {Beveled -> True}]}], ImageSize -> 260];
 Legended[PlotGrid[{panelA3 /@ {0, 1/2, 1}}, ImageSize -> 760],
   Placed[Row[{LineLegend[ColorData[97] /@ {3, 4, 5, 1}, Keys[statesA3], LegendLayout -> "Row"], Spacer[30],
      SwatchLegend[{Directive[Opacity[0.22], superColorA3], Directive[Opacity[0.22], subColorA3]}, {"faster than a lone atom: superradiant", "slower than a lone atom: subradiant"}, LegendLayout -> "Row"]}], Below]]
@@ -516,7 +535,7 @@ Without correlation, at $r=0$, the atoms decay independently and all four curves
 
 &nbsp;
 
-### The quantum Zeno crossover as an exceptional point
+### Fastest relaxation at the Zeno exceptional point
 
 
 A qubit is driven with Rabi frequency $\Omega$, detuned by $\Delta$ from the drive, while a detector measures $\hat\sigma_z$ at strength $k$. Weak watching damps the Rabi oscillation and strong watching freezes it; what happens to the dynamics at the crossover?
@@ -529,7 +548,7 @@ $$
 
 Away from exceptional points, every solution is a sum of $e^{\lambda t}$ over the eigenvalues $\lambda$ of the superoperator $\mathcal L$. At an exceptional point two eigenvalues and their eigenvectors coincide, so $\mathcal L$ cannot be diagonalized; there the discriminant of its characteristic polynomial, with the steady state's root $\lambda=0$ divided out, vanishes.
 
-On resonance the Rabi pair solves $\lambda^2+2k\lambda+\Omega^2=0$, so $\lambda=-k\pm\sqrt{k^2-\Omega^2}$: a damped oscillation for $k<\Omega$, and for $k>\Omega$ two real rates, one of which, about $\Omega^2/2k$, slows as the watching grows stronger, the Zeno effect. The two meet at $k=\Omega$. The discriminant of $\mathcal L$'s characteristic polynomial, with $\lambda=0$ divided out, has a zero at some $k>0$, an exceptional point, only for:
+On resonance the Rabi pair solves $\lambda^2+2k\lambda+\Omega^2=0$, so $\lambda=-k\pm\sqrt{k^2-\Omega^2}$: a damped oscillation for $k<\Omega$, and for $k>\Omega$ two real rates, one of which, about $\Omega^2/2k$, slows as the watching grows stronger, the Zeno effect. The two meet at $k=\Omega$. That discriminant has a zero at some $k>0$, an exceptional point, only for:
 
 ```wl
 liouA5 = Normal[QuantumOperator["Liouvillian"[Δ/2 QuantumOperator["Z"] + Ω/2 QuantumOperator["X"], {QuantumOperator["Z"]}, {k}]]["Matrix"]];
@@ -552,8 +571,9 @@ rateA5[Δv_?NumericQ, kv_?NumericQ] := Min[Select[-Re[Eigenvalues[N[liouA5 /. {�
 freqA5[Δv_?NumericQ, kv_?NumericQ] := Max[Abs[Im[Eigenvalues[N[liouA5 /. {Ω -> 1, Δ -> Δv, k -> kv}]]]]];
 ratePanelA5[Δv_] := Plot[{rateA5[Δv, kk], freqA5[Δv, kk]}, {kk, 0.1, 1.7}, PlotPoints -> 200, PlotRange -> {-0.06, 1.5}, 
    Epilog -> markA5[Δv, {-0.06, 1.5}], GridLines -> {None, Prepend[Table[{y, Directive[GrayLevel[0.8], Dashed]}, {y, 0.2, 1.4, 0.2}], {0, Directive[GrayLevel[0.4]]}]}, AspectRatio -> 1/2, Frame -> True, FrameLabel -> {"k/Ω", "rate / Ω"}, ImageSize -> 230];
-Labeled[Legended[Column[{PlotGrid[{discPanelA5 /@ ΔsA5}, ImageSize -> 900], PlotGrid[{ratePanelA5 /@ ΔsA5}, ImageSize -> 900]}, Spacings -> 0], Placed[LineLegend[ColorData[97] /@ {1, 2}, {"relaxation rate (slowest decay)", "oscillation frequency"}, LegendLayout -> {"Row", 1}], Below]],
-  "top: log|D(k)| for complex k, with D the discriminant of the Liouvillian's characteristic polynomial;  bottom: relaxation rate and oscillation frequency for real k", Top]
+Column[{Labeled[PlotGrid[{discPanelA5 /@ ΔsA5}, ImageSize -> 800], Style["log|D(k)| against complex measurement strength k, with D(k) the discriminant of the Liouvillian's characteristic polynomial", 13, FontFamily -> "Helvetica"], Top],
+  Labeled[Legended[PlotGrid[{ratePanelA5 /@ ΔsA5}, ImageSize -> 800], Placed[LineLegend[ColorData[97] /@ {1, 2}, {"relaxation rate (slowest decay)", "oscillation frequency"}, LegendLayout -> {"Row", 1}], Below]],
+   Style["the qubit's relaxation rate and oscillation frequency for real k", 13, FontFamily -> "Helvetica"], Top]}, Spacings -> 2]
 ```
 
 On resonance the slowest decay rate rises to a sharp peak at $k=\Omega$, directly below the exceptional point: the qubit relaxes fastest there, critically damped between Rabi oscillation and the Zeno slowdown, whose rate falls as $\Omega^2/2k$. A small detuning splits the exceptional point into two zeros on the real axis, one where the Rabi pair turns real and one where two real rates meet and turn complex again; at $|\Delta/\Omega|=1/(2\sqrt2)$ the two zeros merge, and for $|\Delta/\Omega|>1/(2\sqrt2)$ they leave the axis as a complex-conjugate pair, so no measurement strength reaches them, the Rabi pair never turns real, and the sharp peak of the decay rate becomes a smooth hump.
@@ -599,11 +619,12 @@ panelA6[row_, Ωv_] := Plot[Evaluate[curveA6[row, Ωv, #] & /@ ΔsA6], {ν, -8, 
     Frame -> True, Axes -> False, GridLines -> {None, If[row == 2, {1}, None]}, FrameLabel -> {"ν/γ", {"S(ν)/max", Row[{Subscript["S", "x"], "(ν)"}]}[[row]]},
     ImageSize -> 300];
 panelsA6 = AssociationMap[Function[Ωv, panelA6[#, Ωv] & /@ {1, 2}], ΩsA6];
-Manipulate[Legended[Grid[{First /@ panelsA6[w]}], legendBelow[Last[First[panelsA6[w]]]]], Row[{Control[{{w, 0.3, "Ω/γ"}, ΩsA6, SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{legendBelow = legendBelow, controlNotes = controlNotes, panelsA6 = panelsA6, ΩsA6 = ΩsA6},
+ Manipulate[Legended[Grid[{First /@ panelsA6[w]}], legendBelow[Last[First[panelsA6[w]]]]], Row[{Control[{{w, 0.3, "Ω/γ"}, ΩsA6, SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"Ω/γ = ", w}], <|0.3 -> "One line at the laser; on resonance, squeezed below shot noise at ν = 0.",
         1 -> "One broadened line; the squeezing at ν = 0 is gone.",
         5 -> "Mollow triplet, sidebands at ±Ω; no squeezing."|>[w]},
-      {"Δ ≠ 0", "Light moves into sidebands near ±Δ, pushed further out at strong drive."}}]]}], SaveDefinitions -> True]
+      {"Δ ≠ 0", "Light moves into sidebands near ±Δ, pushed further out at strong drive."}}]]}]]]
 ```
 
 At weak resonant driving the incoherent light is a single line at the laser frequency; at $\Omega/\gamma=5$ it splits into the Mollow triplet, whose sidebands detuning pushes further out, and with detuning even weak driving moves the light into sidebands near $\pm\Delta$. At weak resonant driving the out-of-phase quadrature dips below shot noise around $\nu=0$: a single atom emits squeezed light. Stronger driving or detuning lifts it back above shot noise there.
@@ -647,13 +668,14 @@ kerrPanel[Δ_, K_] := With[{Fs = {0.5, 1.5, 3}}, {ss = kerrSolve[Δ, K, #] & /@ 
       PlotRange -> All, Frame -> True, FrameLabel -> {"\[Kappa] t", "Mandel Q"},
       PlotLabel -> Row[{"\[CapitalDelta]/\[Kappa] = ", Δ, ",   K/\[Kappa] = ", K}], ImageSize -> 250]];
 kerrPanels = AssociationMap[kerrPanel @@ # &, Tuples[{{0, 2.5}, {0.5, 2.5, 10}}]];
-Manipulate[kerrPanels[{d, k}], Row[{Column[{Control[{{d, 0, "\[CapitalDelta]/\[Kappa]"}, {0, 2.5}, SetterBar}], Control[{{k, 0.5, "K/\[Kappa]"}, {0.5, 2.5, 10}, SetterBar}]}], Spacer[20], Dynamic[controlNotes[{
+With[{controlNotes = controlNotes, kerrPanels = kerrPanels},
+ Manipulate[kerrPanels[{d, k}], Row[{Column[{Control[{{d, 0, "\[CapitalDelta]/\[Kappa]"}, {0, 2.5}, SetterBar}], Control[{{k, 0.5, "K/\[Kappa]"}, {0.5, 2.5, 10}, SetterBar}]}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"Δ/κ = ", d, ",  K/κ = ", k}], <|{0, 0.5} -> "Sub-Poissonian at every drive; settled within about ten lifetimes.",
         {0, 2.5} -> "Sub-Poissonian at every drive; settled within a few lifetimes.",
         {0, 10} -> "Sub-Poissonian at every drive, deepest at F/κ = 1.5.",
         {2.5, 0.5} -> "F/κ = 1.5 turns super-Poissonian; its gap nearly closes, unsettled at κt = 20.",
         {2.5, 2.5} -> "The weakest drive turns super-Poissonian; stronger drives stay sub-Poissonian.",
-        {2.5, 10} -> "The weakest drive is near Poissonian; stronger drives stay sub-Poissonian."|>[{d, k}]}}]]}], SaveDefinitions -> True]
+        {2.5, 10} -> "The weakest drive is near Poissonian; stronger drives stay sub-Poissonian."|>[{d, k}]}}]]}]]]
 ```
 
 Every transient but one settles on the closed-form steady value within twenty photon lifetimes. On resonance every steady state is sub-Poissonian, and the cavity reaches it within a few photon lifetimes, with gaps near the empty-cavity value $\kappa/2$. Detuning makes the sign of $Q$ depend on the drive and the Kerr strength: some steady states become super-Poissonian, and in one of them the gap nearly closes, so $Q$ is still far from its steady value after twenty photon lifetimes.
@@ -676,7 +698,7 @@ $$
 
 where the last term, smaller than the others by a factor of order $(\Omega/k_BT)^2$, makes the generator a Lindblad generator. With jump operators $\hat x$ and $\hat p$ it takes the Hamiltonian $\hat H+\frac\gamma2\{\hat x,\hat p\}$ and the rate matrix $\begin{pmatrix}4\gamma Mk_BT & -i\gamma\\ i\gamma & \gamma/4Mk_BT\end{pmatrix}$.
 
-The equation is linear, so the difference between the cat and the mixture of its two lobes, $\Delta\rho=\rho_{\rm cat}-\rho_{\rm mix}\propto C-s\left(|\alpha\rangle\langle\alpha|+|-\alpha\rangle\langle-\alpha|\right)$, with the cross term $C=|\alpha\rangle\langle-\alpha|+|-\alpha\rangle\langle\alpha|$ and the overlap $s=\langle-\alpha|\alpha\rangle=e^{-2\alpha^2}$, evolves on its own. The coherence left at time $t$ is its trace norm relative to the start,
+The equation is linear, so the difference between the cat and the mixture of its two lobes, $\Delta\rho=\rho_\mathrm{cat}-\rho_\mathrm{mix}\propto C-s\left(|\alpha\rangle\langle\alpha|+|-\alpha\rangle\langle-\alpha|\right)$, with the cross term $C=|\alpha\rangle\langle-\alpha|+|-\alpha\rangle\langle\alpha|$ and the overlap $s=\langle-\alpha|\alpha\rangle=e^{-2\alpha^2}$, evolves on its own. The coherence left at time $t$ is its trace norm relative to the start,
 
 $$
 D(t)=\frac{\|\mathcal E_t(\Delta\rho)\|_1}{\|\Delta\rho\|_1},
@@ -748,10 +770,11 @@ gridA7[w_, tv_] := With[{m = Limit[w, t -> tv]},
     Epilog -> MapIndexed[Text[Style[If[#1 == 0, "0", NumberForm[N[#1], 2]], Black], #2 - 1/2] &, m, {2}],
     PlotLabel -> Row[{"γ t = ", TraditionalForm[tv]}], ImageSize -> Small]];
 rowsA7 = Function[ψ, With[{w = wignerA7[ψ]}, {ts = deathA7[w]}, gridA7[w, #] & /@ If[ts === ∞, {0, 1, 2, ∞}, {0, ts/2, ts, ∞}]]] /@ statesA7;
-Manipulate[Legended[Grid[{Values[rowsA7][[s]]}], Placed[BarLegend[{colorA7, {-1/3, 1/3}}, LegendLabel -> "W"], Right]], Row[{Control[{{s, Length[rowsA7], "state"}, MapIndexed[First[#2] -> #1 &, Keys[rowsA7]], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{controlNotes = controlNotes, rowsA7 = rowsA7, colorA7 = colorA7},
+ Manipulate[Legended[Grid[{Values[rowsA7][[s]]}], Placed[BarLegend[{colorA7, {-1/3, 1/3}}, LegendLabel -> "W"], Right]], Row[{Control[{{s, Length[rowsA7], "state"}, MapIndexed[First[#2] -> #1 &, Keys[rowsA7]], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Keys[rowsA7][[s]], <|1 -> "Its negative entry sits where W_∞ = 0: it only decays, never dies.",
         2 -> "Negative entries cross zero at different times, the last at γt = ln 2.",
-        3 -> "Negative entries cross zero at different times, the last at γt = 3 ln 2/2."|>[s]}}]]}], SaveDefinitions -> True]
+        3 -> "Negative entries cross zero at different times, the last at γt = 3 ln 2/2."|>[s]}}]]}]]]
 ```
 
 An entry that starts negative and whose limit $W_\infty$ is positive crosses zero at the exact time $\gamma t^*=\ln\left(1+|W_0|/W_\infty\right)$, and different phase-space points cross at different times. With no population in $|0\rangle$, the single negative entry of $(|1\rangle-|2\rangle)/\sqrt2$ sits where $W_\infty$ is zero, so it only decays and the negativity never dies.
@@ -772,7 +795,7 @@ $$
 \dot\rho=\mathcal L\rho=-i\left[\frac\varepsilon2\hat\sigma_z+\frac\Omega2\hat\sigma_x,\rho\right]+\kappa\,\mathcal D[\hat n_L]\rho ,\qquad k=\kappa/4 ,
 $$
 
-since $\mathcal D[\hat n_L]=\frac14\mathcal D[\hat\sigma_z]$, the watched-qubit Liouvillian of the Zeno crossover with $\varepsilon$ for $\Delta$. By quantum regression, the symmetrized spectrum is $S(\omega)=2\,\mathrm{Re}\,\mathrm{Tr}\left[\hat\sigma_z\,(i\omega-\mathcal L)^{-1}\frac12\{\hat\sigma_z-\langle\hat\sigma_z\rangle_{\rm ss},\rho_{\rm ss}\}\right]$ with steady state $\rho_{\rm ss}$. A side peak exists when $dS/d\omega=0$ has a root at $\omega>0$; an exceptional point is a $k$ where two nonzero eigenvalues of $\mathcal L$ coincide.
+since $\mathcal D[\hat n_L]=\frac14\mathcal D[\hat\sigma_z]$, the watched-qubit Liouvillian of the Zeno crossover with $\varepsilon$ for $\Delta$. By quantum regression, the symmetrized spectrum is $S(\omega)=2\,\mathrm{Re}\,\mathrm{Tr}\left[\hat\sigma_z\,(i\omega-\mathcal L)^{-1}\frac12\{\hat\sigma_z-\langle\hat\sigma_z\rangle_\mathrm{ss},\rho_\mathrm{ss}\}\right]$ with steady state $\rho_\mathrm{ss}$. A side peak exists when $dS/d\omega=0$ has a root at $\omega>0$; an exceptional point is a $k$ where two nonzero eigenvalues of $\mathcal L$ coincide.
 
 Inverting $\mathcal L$ for general $\varepsilon$, $\Omega$ and $k$ gives $S(\omega)$ in closed form, with the largest $k$ that keeps side peaks and the $k$ where the discriminant of $\mathcal L$'s characteristic polynomial vanishes; on resonance these are:
 
@@ -834,7 +857,8 @@ panel[\[Kappa]_, \[CapitalDelta]_] := Show[
     If[\[Kappa] == Last[\[Kappa]s], Plot[Evaluate[Exp[-(# + 4 \[Kappa]/(\[Kappa]^2 + 4 \[CapitalDelta]^2)) t] & /@ \[Gamma]s], {t, 0, 10}, PlotStyle -> Dashed, PlotRange -> All], Graphics[]],
     PlotRange -> {0, 1}, Frame -> True, FrameLabel -> {"g t", "P(e)"}, ImageSize -> Small];
 cavityPanels = AssociationMap[Function[\[Kappa]v, Show[First[panel[\[Kappa]v, #]], Graphics[Inset[Style[Row[{"\[CapitalDelta]/g = ", #}], 12], Scaled[{0.95, 0.95}], {Right, Top}]]] & /@ \[CapitalDelta]s], \[Kappa]s];
-Manipulate[Legended[PlotGrid[{cavityPanels[\[Kappa]]}, ImageSize -> 660],
+With[{controlNotes = controlNotes, cavityPanels = cavityPanels, \[Gamma]s = \[Gamma]s, \[Kappa]s = \[Kappa]s},
+ Manipulate[Legended[PlotGrid[{cavityPanels[\[Kappa]]}, ImageSize -> 660],
     Placed[LineLegend[Append[ColorData[97] /@ Range[Length[\[Gamma]s]], If[\[Kappa] == Last[\[Kappa]s], Directive[Gray, Dashed], Nothing]],
       Append[Row[{"\[Gamma]/g = ", #}] & /@ \[Gamma]s, If[\[Kappa] == Last[\[Kappa]s], "rate-equation decay", Nothing]], LegendLayout -> {"Row", 1}], Below]],
   Row[{Control[{{\[Kappa], 1, "\[Kappa]/g"}, \[Kappa]s, SetterBar}], Spacer[20], Dynamic[controlNotes[{
@@ -842,7 +866,7 @@ Manipulate[Legended[PlotGrid[{cavityPanels[\[Kappa]]}, ImageSize -> 660],
         0.1 -> "Weak leak: the photon returns many times before escaping.",
         1 -> "Damped exchange: one or two weak returns, then decay.",
         5 -> "Bad cavity: plain decay near the Purcell rate (dashed)."|>[\[Kappa]]},
-      {"Δ ≠ 0", "Faster but incomplete exchange, slower leak."}}]]}], SaveDefinitions -> True]
+      {"Δ ≠ 0", "Faster but incomplete exchange, slower leak."}}]]}]]]
 ```
 
 At small $\kappa$ the photon returns and $P_e$ oscillates; by $\kappa/g=5$ the atom simply decays, near the Purcell rate $\gamma+4g^2\kappa/(\kappa^2+4\Delta^2)$ (dashed), which becomes exact only for $\kappa\gg g$. Detuning makes the exchange faster but incomplete and slows the leak through the cavity.
@@ -885,11 +909,12 @@ controlPanel[Ω_, Δr_] := With[{ps = {0.6, 0.75, 0.9}},
       PlotLegends -> Append[Row[{"p = ", #}] & /@ ps, "constant drive"], Frame -> True, FrameLabel -> {"\[Gamma] t", Subscript["P", "e"]},
       PlotLabel -> Row[{"\[CapitalDelta]/\[CapitalOmega] = ", Δr}], ImageSize -> 300]];
 controlPanels = AssociationThread[{5, 15, 40}, Outer[controlPanel, {5, 15, 40}, {0, 0.5}]];
-Manipulate[Legended[PlotGrid[{First /@ controlPanels[Ω]}, ImageSize -> 600], legendBelow[Last[controlPanels[5][[1]]]]], Row[{Control[{{Ω, 15, "\[CapitalOmega]/\[Gamma]"}, Keys[controlPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{legendBelow = legendBelow, controlNotes = controlNotes, controlPanels = controlPanels},
+ Manipulate[Legended[PlotGrid[{First /@ controlPanels[Ω]}, ImageSize -> 600], legendBelow[Last[controlPanels[5][[1]]]]], Row[{Control[{{Ω, 15, "\[CapitalOmega]/\[Gamma]"}, Keys[controlPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"Ω/γ = ", Ω}], <|5 -> "Only p = 0.6 is held; p = 0.75 is clipped once; p = 0.9 is never reached.",
         15 -> "p = 0.6 and 0.75 are held; p = 0.9 is clipped once.",
         40 -> "Every band is held, a higher one for a shorter time."|>[Ω]},
-      {"Δ/Ω = 0.5", "P_e stays below Ω²/(Ω²+Δ²); only the first peaks are clipped."}}]]}], SaveDefinitions -> True]
+      {"Δ/Ω = 0.5", Row[{Subscript["P", "e"], " stays below Ω²/(Ω²+Δ²); only the first peaks are clipped."}]}}]]}]]]
 ```
 
 Without detuning, a drive that overshoots the band is held inside it, above $1/2$, for a time that shortens as the target rises, after which $P_e$ oscillates about $1/2$ as under constant drive; a drive whose peak barely reaches the band is only clipped once, and one that never reaches it gives the constant-drive curve. With $\Delta/\Omega=0.5$ the tilted axis keeps $P_e$ below $\Omega^2/(\Omega^2+\Delta^2)$; the switching clips only the first peaks, then the oscillation decays below every band.
@@ -908,10 +933,10 @@ Wolfram Language has Itô and Stratonovich processes built in (`ItoProcess`, `St
 
 &nbsp;
 
-### A driven qubit under continuous measurement
+### Watched qubits pin and jump
 
 
-A qubit is driven with Rabi frequency $\Omega$, detuned by $\Delta$ from its transition, while a detector continuously measures $\hat\sigma_z$ at strength $k$ and catches a fraction $\eta$ of the signal. Does watching stop the oscillation?
+A qubit is driven with Rabi frequency $\Omega$, detuned by $\Delta$ from its transition, while a detector continuously measures $\hat\sigma_z$ at strength $k$ and catches a fraction $\eta$ of the signal; averaged over the detector record, this is the qubit of the exceptional-point example, now followed run by run. Does watching stop the oscillation?
 
 With $\hbar=1$ and $\hat\sigma_z=|0\rangle\langle0|-|1\rangle\langle1|$, the driven qubit in the frame rotating at the drive frequency is
 
@@ -948,20 +973,20 @@ measuredQubitPanel[k_, {η_, Δ_}] := Show[
     PlotRange -> {-1, 1}, Frame -> True, FrameLabel -> {"\[CapitalOmega] t", Row[{"\[LeftAngleBracket]", Subscript["\[Sigma]", "z"], "\[RightAngleBracket]"}]},
     Epilog -> Inset[Row[{"\[Eta] = ", η}], Scaled[{0.96, 0.96}], {Right, Top}], ImageSize -> 300];
 measuredQubitPanels = BlockRandom[SeedRandom[1]; AssociationMap[Function[kd, measuredQubitPanel[First[kd], {#, Last[kd]}] & /@ {0.3, 1}], Tuples[{{0.1, 0.5, 1, 5, 10}, {0, 0.5, 1, 2}}]]];
-measuredQubitLesson = <|0.1 -> "Runs oscillate; the average decays only because they fall out of phase.",
+measuredQubitLesson = <|0.1 -> "Runs oscillate; at η = 1 the average decays only because they fall out of phase.",
    0.5 -> "Runs still oscillate, kicked irregularly by the record.",
-   1 -> "Crossover: oscillation stops and runs linger near the poles.",
+   1 -> "Crossover (on resonance): oscillation stops and runs linger near the poles.",
    5 -> "Zeno: runs stick at a pole and jump; the average only decays.",
    10 -> "Stronger watching, rarer jumps."|>;
-Manipulate[Legended[PlotGrid[{measuredQubitPanels[{k, d}]}, ImageSize -> 800],
-   Placed[LineLegend[Append[ColorData[97] /@ Range[3], Directive[Red, Dashed]], {"run 1", "run 2", "run 3", "Lindblad average"}, LegendLayout -> "Row"], Below]],
+With[{measuredQubitPanels = measuredQubitPanels, measuredQubitLesson = measuredQubitLesson},
+ Manipulate[Legended[PlotGrid[{measuredQubitPanels[{k, d}]}, ImageSize -> 800],
+   Placed[LineLegend[Append[ColorData[97] /@ Range[3], Directive[Red, Dashed]], {"run 1", "run 2", "run 3", "Lindblad average"}, LegendLayout -> {"Row", 1}], Below]],
   Row[{Column[{Control[{{k, 0.1, "measurement strength k/\[CapitalOmega]"}, {0.1, 0.5, 1, 5, 10}, SetterBar}], Control[{{d, 0, "detuning \[CapitalDelta]/\[CapitalOmega]"}, {0, 0.5, 1, 2}, SetterBar}]}],
     Spacer[20], Dynamic[Grid[{
       {Style[Row[{"k/\[CapitalOmega] = ", k}], Bold, 12], measuredQubitLesson[k]},
       {Style["\[Eta] < 1", Bold, 12], "Runs stay mixed and miss the poles."},
       {Style["\[CapitalDelta] \[NotEqual] 0", Bold, 12], "Weak watching only: smaller swing, slow drift between poles."}},
-     Alignment -> {Left, Top}, ItemSize -> {{6, 44}}, Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}]]}],
-  SaveDefinitions -> True]
+     Alignment -> {Left, Top}, ItemSize -> {{6, 44}}, Spacings -> {1, 0.6}, BaseStyle -> {12, LineIndent -> 0}]]}]]]
 ```
 
 At $k/\Omega=0.1$ the runs keep Rabi-oscillating. At $k/\Omega=10$ they stay pinned near $z=1$, with brief spikes that fall back and now and then a full jump to the other pole: that is the quantum Zeno effect, which the average shows only as a slow decay. A detector that catches less of the signal leaves each run mixed, so under weak measurement its oscillation no longer reaches the poles. Detuning shrinks the Rabi swing to a fast wiggle near the starting pole, and under weak watching the record then carries the runs slowly from pole to pole; once the measurement is much stronger than the detuning, the runs look as they do on resonance.
@@ -974,7 +999,7 @@ At $k/\Omega=0.1$ the runs keep Rabi-oscillating. At $k/\Omega=10$ they stay pin
 ### A monitored qubit stays in the Bloch ball: Itô's lemma on the sphere
 
 
-A qubit is Rabi-driven at frequency $\Omega$, relaxes toward $z=1$ at rate $\gamma_1$, dephases at rate $\gamma_\phi$, and is read out along $\hat\sigma_z$ by a detector that dephases it at rate $\Gamma_d$ and whose noise enters $z$ at the informational rate $\Gamma_{CI}$ and rotates the phase at the back-action rate $\Gamma_{BA}$; its efficiency is $\eta=(\Gamma_{CI}+\Gamma_{BA})/(2\Gamma_d)$. Does every run stay a density matrix, $r=|\vec r|\le1$, for every choice of rates?
+A qubit is Rabi-driven at frequency $\Omega$, relaxes toward $z=1$ at rate $\gamma_1$ and dephases at rate $\gamma_\phi$. It is read out along $\hat\sigma_z$ by a detector that dephases it at rate $\Gamma_d$; the detector's noise enters $z$ at the informational rate $\Gamma_{CI}$ and rotates the phase at the back-action rate $\Gamma_{BA}$, and its efficiency is $\eta=(\Gamma_{CI}+\Gamma_{BA})/(2\Gamma_d)$. Does every run stay a density matrix, $r=|\vec r|\le1$, for every choice of rates?
 
 With $\hbar=1$ and one Wiener noise $W$, the Bloch vector obeys the Itô equations
 
@@ -1229,7 +1254,7 @@ An unknown qubit state $\rho=\frac12(I+\vec r\cdot\hat{\vec\sigma})$ is measured
 
 In setting $k$ the counts $n_\pm$ give $\langle\hat\sigma_k\rangle\approx(n_+-n_-)/N$, each an average of $N$ outcomes $\pm1$ with variance $1-\langle\hat\sigma_k\rangle^2$, so the linear-inversion estimate has mean squared error $(3-|\vec r|^2)/N$. For a pure state the estimate is held inside the Bloch ball, which removes the outward half of the error along $\vec r$: $\left(2-\frac12(1-\sum_kr_k^4)\right)/N$. The estimator used here inverts the Born rule linearly, makes the result a valid state, and then climbs the likelihood of the counts by random steps, so the estimate is always a state.
 
-The counts come from a true $\vec r$ off every measurement axis, along $(4,3,8.5)$; the figure plots $\sqrt N$ times the root-mean-square error $|\vec r_{\rm est}-\vec r|$ over 100 runs, against these two references (dashed); a flat curve means the error falls as $N^{-1/2}$:
+The counts come from a true $\vec r$ off every measurement axis, along $(4,3,8.5)$; the figure plots $\sqrt N$ times the root-mean-square error $|\vec r_\mathrm{est}-\vec r|$ over 100 runs, against these two references (dashed); a flat curve means the error falls as $N^{-1/2}$:
 
 ```wl
 tomoOps = QuantumMeasurementOperator /@ {"X", "Y", "Z"};
@@ -1320,7 +1345,7 @@ Each probability is $\frac14$ plus a linear function of $\vec r$, largest, $\fra
 
 &nbsp;
 
-### Randomized benchmarking: the decay of sequence fidelity
+### Randomized benchmarking: same decay, different floors
 
 
 A qubit starts in $|0\rangle$, undergoes $m$ Clifford gates drawn at random and then the Clifford that undoes their product, and is measured; every gate is followed by the same noise. The noise is amplitude damping, which drops $|1\rangle$ to $|0\rangle$ with probability $\gamma$, or a coherent over-rotation $e^{-i\varepsilon X/2}$ with $\varepsilon$ chosen so that both noises have the same average gate fidelity $F$. How does the survival probability, the chance of finding $|0\rangle$ at the end, decay with $m$?
@@ -1333,28 +1358,62 @@ $$
 
 For damping $M=\mathrm{diag}(\sqrt{1-\gamma},\sqrt{1-\gamma},1-\gamma)$ and $\vec c=(0,0,\gamma)$; for the rotation $\operatorname{Tr}M=1+2\cos\varepsilon$, so equal $F$ means $\cos\varepsilon=\sqrt{1-\gamma}-\gamma/2$.
 
-$M$ and $\vec c$ of each noise come from its action on Bloch states; the survival is averaged over 50 random sequences at each $m$, in three independent runs (markers), against $P(m)$ (dashed):
+$M$ and $\vec c$ of each noise come from its action on Bloch states. For each $\gamma$, both noises run 200 random sequences at each length $m$; the plot shows their mean survival with the spread of single sequences as bars, against $P(m)$ (dashed) and each noise's floor. The sphere shows, for one noise, where the qubit ends after each sequence, colored by $m$, the mean as a path from $|0\rangle$, and one sequence of ten gates drawn gate by gate, Clifford rotations in gray and the noise after each gate in red. Below it, a side cut through the ball counts where 2000 sequences of four lengths end:
 
 ```wl
-cliffordRB = Select[Flatten[Outer[DiagonalMatrix[#1] . #2 &, Tuples[{1, -1}, 3], Permutations[IdentityMatrix[3]], 1], 1], Det[#] == 1 &];
-blochMapRB[f_] := With[{c = f[QuantumState["BlochVector"[{0, 0, 0}]]]["BlochVector"]}, {Transpose[f[QuantumState["BlochVector"[#]]]["BlochVector"] - c & /@ IdentityMatrix[3]], c}];
-survivalRB[{mm_, c_}, m_] := With[{seq = RandomChoice[cliffordRB, m], step = mm . (#2 . #1) + c &},
-   (1 + Last[step[Fold[step, {0, 0, 1}, seq], Transpose[Dot @@ Reverse[seq]]]])/2];
-decayRB[{mm_, c_}][m_] := (1 + c[[3]] + mm[[3, 3]] (Tr[mm]/3)^m)/2;
-panelRB[noise_, title_] := With[{map = Chop[Re[N[blochMapRB[noise]]]], ms = Range[1, 61, 4]},
-   Show[ListPlot[Table[BlockRandom[SeedRandom[run]; {#, Mean[Table[survivalRB[map, #], 50]]} & /@ ms], {run, 3}], PlotMarkers -> {Automatic, 8}, PlotRange -> All],
-    Plot[decayRB[map][m], {m, 0, 61}, PlotRange -> All, PlotStyle -> Dashed],
-    PlotRange -> {All, {0.4, 1.01}}, Axes -> False, Frame -> True, FrameLabel -> {"m", "survival"}, ImageSize -> 300,
-    Epilog -> Inset[Framed[Style[Column[{title, Row[{"p = Tr M/3 = ", NumberForm[Tr[First[map]]/3, 3]}]}, Alignment -> Right], 10], Background -> White, FrameStyle -> GrayLevel[0.8], FrameMargins -> 2],
-      Scaled[{0.97, 0.97}], {Right, Top}]]];
-\[Gamma]sRB = {1/20, 1/5};
-panelsRB = {panelRB[QuantumChannel["AmplitudeDamping"[#]], Row[{"damping, \[Gamma] = ", #}]] & /@ \[Gamma]sRB,
-   panelRB[QuantumOperator["RX"[ArcCos[Sqrt[1 - #] - #/2]]], Row[{"over-rotation matched to \[Gamma] = ", #}]] & /@ \[Gamma]sRB};
-Legended[PlotGrid[panelsRB, ImageSize -> 700], legendBelow[Column[{PointLegend[ColorData[97] /@ Range[3], {"run 1", "run 2", "run 3"}, LegendMarkers -> Automatic],
-   LineLegend[{Directive[ColorData[97][1], Dashed]}, {Row[{"P(m) = A ", Superscript["p", "m"], " + B"}]}]}]]]
+rbCliffords = Select[Flatten[Outer[DiagonalMatrix[#1] . #2 &, Tuples[{1, -1}, 3], Permutations[IdentityMatrix[3]], 1], 1], Det[#] == 1 &];
+rbBlochMap[f_] := With[{c = f[QuantumState["BlochVector"[{0, 0, 0}]]]["BlochVector"]}, {Transpose[f[QuantumState["BlochVector"[#]]]["BlochVector"] - c & /@ IdentityMatrix[3]], c}];
+rbNoises[γ_] := Chop[Re[N[rbBlochMap[#]]]] & /@ <|"damping" -> QuantumChannel["AmplitudeDamping"[γ]], "over-rotation" -> QuantumOperator["RX"[ArcCos[Sqrt[1 - γ] - γ/2]]]|>;
+rbUndo[seq_] := Transpose[Dot @@ Reverse[seq]];
+rbEnd[{mm_, c_}, seq_] := Fold[mm . (#2 . #1) + c &, {0., 0., 1.}, Append[seq, rbUndo[seq]]];
+rbExact[{mm_, c_}][m_] := (1 + c[[3]] + mm[[3, 3]] (Tr[mm]/3)^m)/2;
+rbMs = Range[1, 61, 4]; rbCutMs = {1, 5, 15, 40, 60};
+rbColor[m_] := ColorData["SunsetColors"][0.15 + 0.8 (m - 1)/60];
+rbNoiseColor = <|"damping" -> RGBColor[0, 0.75, 0.85], "over-rotation" -> RGBColor[0.9, 0.45, 0.8]|>;
+(* one gate drawn as the arc it rotates through *)
+rbAxisAngle[r_] := With[{θ = ArcCos[Clip[(Tr[r] - 1)/2, {-1, 1}]]}, Which[θ < 10^-9, {{0, 0, 1}, 0.},
+    Abs[θ - Pi] < 10^-9, {Normalize[First[NullSpace[N[r] - IdentityMatrix[3]]]], N[Pi]},
+    True, {Normalize[{r[[3, 2]] - r[[2, 3]], r[[1, 3]] - r[[3, 1]], r[[2, 1]] - r[[1, 2]]}], N[θ]}]];
+rbArc[r_, v_] := With[{aa = rbAxisAngle[r]}, Table[RotationMatrix[s Last[aa], First[aa]] . v, {s, 0, 1, 1/24}]];
+rbNoiseStep[{mm_, c_}, v_] := If[Norm[c] < 10^-12 && Max[Abs[mm . Transpose[mm] - IdentityMatrix[3]]] < 10^-9, rbArc[mm, v], {v, mm . v + c}];
+rbRun[noise_, seq_] := Rest[FoldList[With[{g = rbArc[#2, Last[#1[[2]]]]}, {g, rbNoiseStep[noise, Last[g]]}] &, {{}, {{0., 0., 1.}}}, Append[seq, rbUndo[seq]]]];
+rbSeq = BlockRandom[SeedRandom[4]; RandomChoice[rbCliffords, 10]];
+rbData[γ_] := BlockRandom[SeedRandom[1]; With[{maps = rbNoises[γ]}, <|"maps" -> maps,
+     "ends" -> Map[Function[map, AssociationMap[Table[rbEnd[map, RandomChoice[rbCliffords, #]], 200] &, rbMs]], maps],
+     "cuts" -> Map[Function[map, AssociationMap[Table[rbEnd[map, RandomChoice[rbCliffords, #]], 2000] &, rbCutMs]], maps]|>]];
+rbSphere[d_, k_] := Show[ResourceFunction["BlochSpherePlot"][], Graphics3D[{
+     KeyValueMap[{rbColor[#1], Opacity[0.4], AbsolutePointSize[2.5], Point[#2]} &, d["ends", k]],
+     {rbNoiseColor[k], AbsoluteThickness[3.5], Line[Prepend[Mean /@ Values[d["ends", k]], {0., 0., 1.}]]},
+     KeyValueMap[{rbColor[#1], AbsolutePointSize[8], Point[Mean[#2]]} &, d["ends", k]],
+     {RGBColor[0.45, 0.52, 0.65], Opacity[0.55], AbsoluteThickness[1.5], Line[First[#]] & /@ rbRun[d["maps", k], rbSeq]},
+     {RGBColor[0.8, 0.32, 0.32], Opacity[0.8], AbsoluteThickness[2.5], Line[Last[#]] & /@ rbRun[d["maps", k], rbSeq]}}],
+   ViewPoint -> {2.2, -2.4, 1.2}, SphericalRegion -> True, ImageSize -> 175];
+rbSurvival[d_] := Show[
+   Plot[Evaluate[rbExact[d["maps", #]][m] & /@ {"damping", "over-rotation"}], {m, 0, 62}, PlotStyle -> Directive[GrayLevel[0.55], Dashed]],
+   Graphics[KeyValueMap[Function[{k, shift}, KeyValueMap[Function[{m, pts}, With[{s = (1 + pts[[All, 3]])/2},
+        {rbNoiseColor[k], AbsoluteThickness[1.5], Line[{{m + shift, Mean[s] - StandardDeviation[s]}, {m + shift, Mean[s] + StandardDeviation[s]}}]}]], d["ends", k]]],
+     <|"damping" -> -0.6, "over-rotation" -> 0.6|>]],
+   ListLinePlot[KeyValueMap[{#1, Mean[(1 + #2[[All, 3]])/2]} &, d["ends", #]] & /@ {"damping", "over-rotation"},
+    PlotStyle -> (Directive[rbNoiseColor[#], AbsoluteThickness[3]] & /@ {"damping", "over-rotation"}), PlotMarkers -> {"\[FilledCircle]", 8}],
+   PlotRange -> {{0, 63}, {0, 1.02}}, Frame -> True, Axes -> False, FrameLabel -> {"sequence length m", "survival P(0)"}, ImageSize -> 250, AspectRatio -> 0.8,
+   GridLines -> {None, {{rbExact[d["maps", "damping"]][Infinity], Directive[rbNoiseColor["damping"], Dashed]}, {1/2, Directive[rbNoiseColor["over-rotation"], Dashed]}}}];
+rbCut[d_, k_, m_] := With[{pts = d["cuts", k][m]}, With[{counts = BinCounts[BlockRandom[SeedRandom[9]; MapThread[{#2 Norm[#1[[;; 2]]], #1[[3]]} &, {pts, RandomChoice[{-1, 1}, Length[pts]]}]], {-1.02, 1.02, 0.04}, {-1.02, 1.02, 0.04}]},
+    Show[ArrayPlot[Reverse[Transpose[Log10[1. + counts]]], DataRange -> {{-1.02, 1.02}, {-1.02, 1.02}}, ColorFunction -> (ColorData["SunsetColors"][Clip[#/3., {0, 1}]] &), ColorFunctionScaling -> False, Frame -> False],
+     Graphics[{{GrayLevel[0.7], Circle[]}, {GrayLevel[0.5], Dashed, Line[{{0, -1.1}, {0, 1.1}}]}, {rbNoiseColor[k], PointSize[0.06], Point[{Norm[Mean[pts][[;; 2]]], Mean[pts][[3]]}]},
+       Text[Style["|0⟩", 11, White], {0, 1.16}], Text[Style["|1⟩", 11, White], {0, -1.16}]}],
+     PlotRange -> {{-1.2, 1.2}, {-1.25, 1.25}}, ImageSize -> 100, Background -> Black, PlotLabel -> Style[Row[{"m = ", m}], 12, FontFamily -> "Helvetica"]]]];
+rbView[d_, k_] := Grid[{
+    {rbSphere[d, k], Legended[rbSurvival[d], Placed[LineLegend[Join[rbNoiseColor /@ {"damping", "over-rotation"}, {Directive[GrayLevel[0.55], Dashed]}, Directive[#, Dashed] & /@ (rbNoiseColor /@ {"damping", "over-rotation"})],
+        {"damping: mean of 200 sequences, bars: their spread", "over-rotation: the same", "exact P(m) = A p^m + B", "damping floor (1 + γ)/2", "over-rotation floor 1/2"}], Right]]},
+    {Column[{Style[Row[{k, ": side cut through the ball, where 2000 runs of length m end (log color)"}], 12, FontFamily -> "Helvetica"], Row[rbCut[d, k, #] & /@ rbCutMs, Spacer[6]]}, Center], SpanFromLeft}},
+   Spacings -> {2, 1.5}, Alignment -> Center];
+rbViews = Association[Flatten[Table[With[{d = rbData[γ]}, ({γ, #} -> rbView[d, #]) & /@ {"damping", "over-rotation"}], {γ, {1/50, 1/20, 1/5}}]]];
+With[{rbViews = rbViews},
+ Manipulate[rbViews[{rbγ, rbK}], Grid[{{Control[{{rbγ, 1/20, "noise strength γ"}, {1/50, 1/20, 1/5}, SetterBar}],
+     Control[{{rbK, "damping", "on the sphere"}, {"damping", "over-rotation"}, SetterBar}]}}, Spacings -> 4]]]
 ```
 
-In each column the mean survival of the two noises falls at the same rate: averaging over random Cliffords keeps only $\operatorname{Tr}M$ of the noise. The floors differ: damping pulls toward $|0\rangle$ and holds long sequences above $1/2$, while the rotation, which has no shift $\vec c$, settles at $1/2$. The rotation's runs scatter more, because within one sequence coherent errors can add up or cancel, and only the average over sequences follows the exponential.
+The two noises lose the qubit at the same rate: averaging over random Cliffords keeps only $\operatorname{Tr}M$ of the noise, so both means follow the same $p^m$. Everything else differs. Damping shrinks every run into the ball and pulls it toward $|0\rangle$, so the runs stay together near the axis and settle at the floor $(1+\gamma)/2$, above one half. The over-rotation keeps every run pure, on the surface; the random gates turn its small rotations to random axes, so the runs spread over the sphere and only their average sinks to the center, at the floor $\frac12$, with a far larger spread from one sequence to the next. The decay rate that randomized benchmarking reports cannot tell a coherent error from a random one; the spread between sequences can.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -1366,9 +1425,9 @@ In each column the mean survival of the two noises falls at the same rate: avera
 
 A qubit in $|\psi\rangle=\cos\frac\theta2|0\rangle+e^{i\phi}\sin\frac\theta2|1\rangle$ is measured in the $Z$ basis, and the outcome is written on a pointer qubit instead of being read. Before the measurement is reversed, the environment partly decoheres the pointer, at strength $\lambda$. How much of $|\psi\rangle$ does the reversal return?
 
-The measurement is the isometry $\hat V|\psi\rangle=\sum_k\hat P_k|\psi\rangle\otimes|k\rangle_{\rm P}$, $\hat P_k=|k\rangle\langle k|$, with $\hat V^\dagger\hat V=I$, so $\hat V^\dagger$ is its exact left inverse. Between the two, phase damping $\mathcal D_\lambda$ acts on the pointer with Kraus operators $|0\rangle\langle0|+\sqrt{1-\lambda}\,|1\rangle\langle1|$ and $\sqrt\lambda\,|1\rangle\langle1|$, which multiply the record's coherence by $\sqrt{1-\lambda}$: $\lambda=0$ keeps the record intact and $\lambda=1$ erases its coherence. From $\rho=|\psi\rangle\langle\psi|$ the returned state is $\rho_{\rm out}=\hat V^\dagger\,\mathcal D_\lambda(\hat V\rho\hat V^\dagger)\,\hat V$, with fidelity $F=\langle\psi|\rho_{\rm out}|\psi\rangle$.
+The measurement is the isometry $\hat V|\psi\rangle=\sum_k\hat P_k|\psi\rangle\otimes|k\rangle_\mathrm{P}$, $\hat P_k=|k\rangle\langle k|$, with $\hat V^\dagger\hat V=I$, so $\hat V^\dagger$ is its exact left inverse. Between the two, phase damping $\mathcal D_\lambda$ acts on the pointer with Kraus operators $|0\rangle\langle0|+\sqrt{1-\lambda}\,|1\rangle\langle1|$ and $\sqrt\lambda\,|1\rangle\langle1|$, which multiply the record's coherence by $\sqrt{1-\lambda}$: $\lambda=0$ keeps the record intact and $\lambda=1$ erases its coherence. From $\rho=|\psi\rangle\langle\psi|$ the returned state is $\rho_\mathrm{out}=\hat V^\dagger\,\mathcal D_\lambda(\hat V\rho\hat V^\dagger)\,\hat V$, with fidelity $F=\langle\psi|\rho_\mathrm{out}|\psi\rangle$.
 
-The measurement's dilation $\hat V$ puts its pointer on wire 2, and measure, damp, un-measure run as one circuit for general $\theta$, $\phi$, $\lambda$; $\rho_{\rm out}$ and $F$ come out in closed form:
+The measurement's dilation $\hat V$ puts its pointer on wire 2, and measure, damp, un-measure run as one circuit for general $\theta$, $\phi$, $\lambda$; $\rho_\mathrm{out}$ and $F$ come out in closed form:
 
 ```wl
 umPsi = QuantumState[{Cos[θ/2], Exp[I φ] Sin[θ/2]}];
@@ -1424,10 +1483,10 @@ The product probe gives $F_Q=n$, the standard quantum limit, since the variances
 
 &nbsp;
 
-### GHZ against product probes when every qubit dephases
+### Dephasing: GHZ gains nothing, squeezing a bounded factor
 
 
-A frequency $\omega$ is written on $n$ qubits, each dephasing independently at rate $\gamma$, by Ramsey runs of length $t$ repeated over a total time $T$. Without noise a GHZ probe has quantum Fisher information $n^2t^2$ against $nt^2$ for the product probe $|+\rangle^{\otimes n}$; does the GHZ advantage survive once $t$ is chosen optimally?
+A frequency $\omega$ is written on $n$ qubits, each dephasing independently at rate $\gamma$, by Ramsey runs of length $t$ repeated over a total time $T$. Without noise a GHZ probe has quantum Fisher information $F_Q=n^2t^2$, against $F_Q=nt^2$ for the product probe $|+\rangle^{\otimes n}$; $F_Q$ sets the best precision any measurement can reach, $\delta\omega\ge1/\sqrt{\nu F_Q}$ for $\nu$ runs. Does the GHZ advantage survive once $t$ is chosen optimally?
 
 With $\hbar=1$ and $\mathcal D[\hat c]\rho=\hat c\rho\hat c^\dagger-\frac12\{\hat c^\dagger\hat c,\rho\}$, each run evolves under
 
@@ -1437,37 +1496,44 @@ $$
 
 which damps each qubit's coherence as $e^{-2\gamma t}$. The $T/t$ runs carry information $(T/t)\,F_Q(t)$, with $F_Q=2\sum_{\lambda_i+\lambda_j>0}|\langle i|\partial_\omega\rho|j\rangle|^2/(\lambda_i+\lambda_j)$ over the eigenpairs $(\lambda_i,|i\rangle)$ of $\rho(t)$; the noise commutes with the phase, so $F_Q$ does not depend on $\omega$ and is taken at $\omega=0$.
 
-The GHZ coherence decays as $e^{-2n\gamma t}$, so $F_Q^{\rm GHZ}=n^2t^2e^{-4n\gamma t}$ and $F_Q^{\rm product}=nt^2e^{-4\gamma t}$, and the best run lengths $t=1/(4n\gamma)$ and $t=1/(4\gamma)$ give
+The GHZ coherence decays as $e^{-2n\gamma t}$, so $F_Q^\mathrm{GHZ}=n^2t^2e^{-4n\gamma t}$ and $F_Q^\mathrm{product}=nt^2e^{-4\gamma t}$, and the best run lengths $t=1/(4n\gamma)$ and $t=1/(4\gamma)$ give
 
 $$
-\max_t\frac{F_Q^{\rm GHZ}}{t}=\max_t\frac{F_Q^{\rm product}}{t}=\frac{n}{4e\gamma}.
+\max_t\frac{F_Q^\mathrm{GHZ}}{t}=\max_t\frac{F_Q^\mathrm{product}}{t}=\frac{n}{4e\gamma}.
 $$
 
-For both probes and $n=2,3,4$, $F_Q$ is computed from $\rho(t)$ for general $\omega$, $\gamma$ and $t$, and $F_Q/t$ is maximized over $t$ (markers); rates are in units of $\gamma$:
+Under the phase and the dephasing a GHZ state stays within $|0\cdots0\rangle$ and $|1\cdots1\rangle$, where it behaves as one qubit whose $\omega$ and $\gamma$ are both multiplied by $n$, while the product probe is $n$ independent qubits. So $F_Q$ is computed for symbolic $n$ from one evolved qubit. For comparison, a spin‑squeezed probe is added: the one‑axis‑twisted state with the least spin noise, read out through $J_y$, whose dephased spin averages give a lower bound on its $F_Q$. The curves show $F_Q/(nt)$, the information per qubit per unit time, for $n=2,10,100$, with markers at the best run lengths of GHZ and the product probe. The dotted curve is the large‑$n$ limit for any state, $F_Q\le n\,t^2e^{-4\gamma t}/(1-e^{-4\gamma t})$ (Escher et al. 2011; Demkowicz‑Dobrzański et al. 2012); rates are in units of $\gamma$:
 
 ```wl
-dgzZ[n_, k_] := QuantumOperator["Z", {k}, n];
-dgzRho[ψ_] := With[{n = ψ["Qudits"]}, Simplify[Normal[QuantumEvolve[Total[ω/2 dgzZ[n, #] & /@ Range[n]], dgzZ[n, #] & /@ Range[n] -> ConstantArray[γ, n], ψ, t]["DensityMatrix"]], γ > 0]];
+dgzRho1[w_, g_] := Simplify[Normal[QuantumEvolve[w/2 QuantumOperator["Z"], {QuantumOperator["Z"]} -> {g}, QuantumState["+"], t]["DensityMatrix"]], g > 0 && n > 0];
 dgzQFI[ρ_] := With[{es = Eigensystem[ρ /. ω -> 0]}, {λ = First[es], V = Orthogonalize[Last[es]]}, {M = Conjugate[V] . (D[ρ, ω] /. ω -> 0) . Transpose[V]},
-   Simplify[2 Total[MapThread[If[PossibleZeroQ[#2], 0, Abs[#1]^2/#2] &, {M, Outer[Plus, λ, λ]}, 2], 2], γ > 0 && t > 0]];
-dgzF = Table[{dgzQFI[dgzRho[QuantumState["GHZ"[n]]]], dgzQFI[dgzRho[QuantumState[StringRepeat["+", n]]]]}, {n, 2, 4}];
-dgzBest = Map[Maximize[{#/t /. γ -> 1, t > 0}, t] &, dgzF, {2}];
-dgzForms[k_] := {k^2 t^2 Exp[-4 k γ t], k t^2 Exp[-4 γ t]};
-dgzMatch = Simplify[dgzF - Table[dgzForms[k], {k, 2, 4}]] === ConstantArray[0, {3, 2}];
-dgzAnyN = Function[f, With[{t0 = t /. First[Solve[D[f/t, t] == 0, t]]}, {Simplify[f/t /. t -> t0], t0}]] /@ (dgzForms[n] /. γ -> 1);
-dgzPanel[i_] := Show[Plot[Evaluate[dgzF[[i]]/t /. γ -> 1], {t, 0, 0.6}, PlotRange -> All, PlotStyle -> {Automatic, Dashed}, PlotLegends -> {"GHZ", "product"}],
-   ListPlot[List /@ ({t /. Last[#], First[#]} & /@ dgzBest[[i]]), PlotMarkers -> {Automatic, 10}],
-   PlotRange -> {{0, 0.6}, {0, 0.5}}, Frame -> True, FrameLabel -> {"γ t", Row[{"γ ", Subscript["F", "Q"], "/t"}]}, Epilog -> Inset[Framed[Style[Row[{"n = ", i + 1}], 10], Background -> White, FrameStyle -> GrayLevel[0.8], FrameMargins -> 2], Scaled[{0.97, 0.97}], {Right, Top}], ImageSize -> 280];
-dgzPanels = dgzPanel /@ Range[3];
-Labeled[Legended[PlotGrid[{First /@ dgzPanels}, ImageSize -> 840], legendBelow[Last[First[dgzPanels]]]],
-  Style[Column[{Grid[Prepend[MapThread[{#1, TraditionalForm[#2[[1]]], TraditionalForm[#3[[1, 1]]], TraditionalForm[t /. #3[[1, 2]]], TraditionalForm[#2[[2]]], TraditionalForm[#3[[2, 1]]], TraditionalForm[t /. #3[[2, 2]]]} &, {Range[2, 4], dgzF, dgzBest}],
-       {"n", Row[{"GHZ  ", Subscript["F", "Q"]}], Row[{"largest γ ", Subscript["F", "Q"], "/t"}], "at γ t", Row[{"product  ", Subscript["F", "Q"]}], Row[{"largest γ ", Subscript["F", "Q"], "/t"}], "at γ t"}], Spacings -> {2, 0.6}],
-     Row[{"table = ", TraditionalForm[dgzForms[n]], " for n = 2, 3, 4: ", dgzMatch}],
-     Row[{"any n:   GHZ largest γ ", Subscript["F", "Q"], "/t = ", TraditionalForm[dgzAnyN[[1, 1]]], " at γ t = ", TraditionalForm[dgzAnyN[[1, 2]]],
-       ",   product largest γ ", Subscript["F", "Q"], "/t = ", TraditionalForm[dgzAnyN[[2, 1]]], " at γ t = ", TraditionalForm[dgzAnyN[[2, 2]]]}]}, Center, Spacings -> 1], 13, FontFamily -> "Helvetica"], Bottom]
+   Simplify[2 Total[MapThread[If[PossibleZeroQ[#2], 0, Abs[#1]^2/#2] &, {M, Outer[Plus, λ, λ]}, 2], 2], γ > 0 && t > 0 && n > 0]];
+dgzAny = {dgzQFI[dgzRho1[n ω, n γ]], n dgzQFI[dgzRho1[ω, γ]]};
+dgzBest = Function[f, With[{t0 = t /. First[Solve[D[f/t, t] == 0, t]]}, {Simplify[f/t /. t -> t0], t0}]] /@ (dgzAny /. γ -> 1);
+dgzSpin[k_] := With[{m = Range[k/2, -k/2, -1]}, With[{jp = SparseArray[Band[{1, 2}] -> (Sqrt[k/2 (k/2 + 1) - # (# + 1)] & /@ Rest[m]), {k + 1, k + 1}]},
+   N[{(jp + ConjugateTranspose[jp])/2, (jp - ConjugateTranspose[jp])/(2 I), SparseArray[DiagonalMatrix[m]]}]]];
+dgzTwist[J_, x0_, mu_?NumericQ] := With[{v = Exp[-I mu/2 Diagonal[Normal[J[[3]]]]^2] x0}, With[{ev = Function[op, Conjugate[v] . op . v]},
+   With[{y = ev[J[[2]]], z = ev[J[[3]]], c = ev[(J[[2]] . J[[3]] + J[[3]] . J[[2]])/2]},
+    {Re[ev[J[[1]]]], Min[Eigenvalues[Re[{{ev[J[[2]] . J[[2]]] - y^2, c - y z}, {c - y z, ev[J[[3]] . J[[3]]] - z^2}}]]]}]]];
+dgzSqueezed[k_] := With[{J = dgzSpin[k], x0 = N[Sqrt[Binomial[k, Range[0, k]]]/2^(k/2)]},
+   Block[{xi2}, xi2[mu_?NumericQ] := k #[[2]]/#[[1]]^2 &[dgzTwist[J, x0, mu]];
+    dgzTwist[J, x0, mu /. Last[NMinimize[{xi2[mu], 10^-4 <= mu <= 1}, mu]]]]];
+dgzSqF[{jx_, v_}, k_] := With[{η = Exp[-2 γ t]}, η^2 t^2 jx^2/(η^2 v + (1 - η^2) k/4)];
+dgzNs = {2, 10, 100}; dgzSqNs = {10, 100};
+dgzSq = dgzSqF[dgzSqueezed[#], #] & /@ dgzSqNs;
+dgzLimit = t Exp[-4 γ t]/(1 - Exp[-4 γ t]);
+Labeled[LogLinearPlot[Evaluate[Join[(First[dgzAny]/(n t) /. {γ -> 1, n -> #}) & /@ dgzNs, {Last[dgzAny]/(n t) /. γ -> 1},
+     MapThread[#1/(#2 t) /. γ -> 1 &, {dgzSq, dgzSqNs}], {dgzLimit /. γ -> 1}]], {t, 10^-4, 3},
+   PlotRange -> {0, 0.27}, PlotStyle -> {ColorData[97][1], ColorData[97][2], ColorData[97][3], Gray,
+     Directive[ColorData[97][2], Dashed], Directive[ColorData[97][3], Dashed], Directive[Gray, Dotted]}, Frame -> True,
+   FrameLabel -> {"γ t", Row[{"γ ", Subscript["F", "Q"], "/(n t)"}]}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+   Epilog -> {PointSize[0.014], MapIndexed[{ColorData[97][First[#2]], Point[{Log[1/(4 #1)], 1/(4 E)}]} &, dgzNs], Gray, Point[{Log[1/4], 1/(4 E)}]},
+   PlotLegends -> Join[Row[{"GHZ, n = ", #}] & /@ dgzNs, {"product, any n"}, Row[{"spin‐squeezed, n = ", #}] & /@ dgzSqNs, {"limit for any state, large n"}], ImageSize -> 620],
+  Style[Row[{"any n:   GHZ largest γ ", Subscript["F", "Q"], "/t = ", TraditionalForm[dgzBest[[1, 1]]], " at γ t = ", TraditionalForm[dgzBest[[1, 2]]],
+    ",   product largest γ ", Subscript["F", "Q"], "/t = ", TraditionalForm[dgzBest[[2, 1]]], " at γ t = ", TraditionalForm[dgzBest[[2, 2]]]}], 13, FontFamily -> "Helvetica"], Top]
 ```
 
-The computed $F_Q$ equals both closed forms for $n=2,3,4$, and each marker sits at $n/4e\gamma$. For short runs the GHZ probe gathers information faster, but the $n^2$ in its $F_Q$ comes with a decay $n$ times faster, so its best run is $n$ times shorter and reaches exactly the same rate as the product probe: under independent dephasing the Heisenberg gain cancels at the optimum.
+Divided by $n$, the product curve is the same for every $n$, and each GHZ curve reaches exactly the same peak, only at a run $n$ times shorter: GHZ picks up the phase $n$ times faster but loses its coherence $n$ times faster, and at the best run length the two cancel. The squeezed probe does beat the product probe, and by more as $n$ grows, but it stays under the dotted limit, which lies a factor $e$ above the product peak. Under independent dephasing, entanglement buys at most a fixed factor, never the $n$ of the noiseless case.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -1486,34 +1552,46 @@ Circuits are built from named gates, Boolean functions and named algorithms, run
 ### QAOA on MaxCut: the exact landscape and a certified optimum
 
 
-Color the $n$ vertices of a graph with two colors so that as many edges as possible join different colors; take the triangle, the square and the complete graph $K_4$. One layer of the quantum approximate optimization algorithm (QAOA) prepares a state that depends on two angles $\gamma$ and $\theta$ and scores it by the expected number of cut edges. How close does the best pair of angles come to the true maximum cut?
+Color the $n$ vertices of a graph with two colors so that as many edges as possible join different colors; take the triangle, the complete graph $K_4$ and rings of 5 and 6 vertices. Each layer of the quantum approximate optimization algorithm (QAOA) applies a cost rotation by an angle $\gamma$ and a mixing rotation by an angle $\theta$, so $p$ layers prepare a state that depends on $2p$ angles, scored by the expected number of cut edges. An optimizer searching over the angles finds good values but cannot prove that no better ones exist. Can the best score be certified exactly, and how many layers reach the true maximum cut?
 
-With $Z_i$ and $X_i$ the Pauli operators on vertex $i$, the cost Hamiltonian, the one-layer state and its landscape are
+With $Z_i$ and $X_i$ the Pauli operators on vertex $i$, the cost Hamiltonian, the $p$-layer state and its score are
 
 $$
-\hat H_C=\sum_{(i,j)\in\mathcal E}\frac{1-Z_iZ_j}{2},\qquad |\psi(\gamma,\theta)\rangle=\prod_i e^{-i\theta X_i/2}\prod_{(i,j)\in\mathcal E}e^{-i\gamma Z_iZ_j/2}\,|+\rangle^{\otimes n},\qquad E(\gamma,\theta)=\langle\psi|\hat H_C|\psi\rangle,
+\hat H_C=\sum_{(i,j)\in\mathcal E}\frac{1-Z_iZ_j}{2},\qquad |\psi_p\rangle=U_X(\theta_p)U_C(\gamma_p)\cdots U_X(\theta_1)U_C(\gamma_1)\,|+\rangle^{\otimes n},\qquad E=\langle\psi_p|\hat H_C|\psi_p\rangle,
 $$
 
-with $\mathcal E$ the edge set.
+with $\mathcal E$ the edge set, $U_C(\gamma)=\prod_{(i,j)\in\mathcal E}e^{-i\gamma Z_iZ_j/2}$ and $U_X(\theta)=\prod_i e^{-i\theta X_i/2}$.
 
-$E(\gamma,\theta)$ is in closed form from each graph's edge list, with its exact maximum as a dot; each title compares that maximum, with its minimal polynomial when it is irrational, with the graph's maximum cut:
+$E$ is in closed form from each graph's edge list and is drawn as a fraction of the maximum cut on one color scale. At one layer the figure is the whole landscape over $(\gamma_1,\theta_1)$ with its exact maximum as a dot, and the title gives that maximum, with its minimal polynomial when it is irrational; with more layers it is a slice over the last layer's angles, the earlier ones held at their best values, and the title gives the best value found:
 
 ```wl
-qaoaCircuit[graph_] := QuantumCircuitOperator[{"H" -> VertexList[graph], Splice[Thread["R"[γ, "ZZ"] -> List @@@ EdgeList[graph]]], "RX"[θ] -> VertexList[graph]}];
-qaoaLandscape[graph_] := With[{hc = Total[(1 - QuantumOperator["ZZ", #])/2 & /@ List @@@ EdgeList[graph]], ψ = qaoaCircuit[graph][]},
-    FullSimplify[ψ["Dagger"][hc[ψ]]["Scalar"], {γ, θ} ∈ Reals]];
-qaoaPanel[graph_] := With[{l = qaoaLandscape[graph]}, {opt = Maximize[l, {γ, θ}]},
-    DensityPlot[l, {γ, 0, 2 π}, {θ, 0, π}, PlotPoints -> 60, PlotLegends -> Automatic, FrameLabel -> {"γ", "θ"},
-     Epilog -> {PointSize[Large], Point[Mod[N[{γ, θ} /. Last[opt]], {2 π, π}]]},
-     PlotLabel -> Column[{Row[{Graph[graph, ImageSize -> 40], "   max cut = ", First[FindMaximumCut[graph]]}],
-        Row[{"max E = ", If[First[opt] ∈ Rationals, First[opt],
-           Row[{N[First[opt], 4], ", root of ", TraditionalForm[MinimalPolynomial[First[opt], x] == 0]}]]}]}, Alignment -> Center],
-     ImageSize -> 300]];
-Column[{Labeled[qaoaCircuit[CycleGraph[3]]["Diagram", ImageSize -> 360], Style["one QAOA layer on the triangle", 13, FontFamily -> "Helvetica"], Top],
-  Grid[{qaoaPanel /@ {CycleGraph[3], CycleGraph[4], CompleteGraph[4]}}]}, Center, Spacings -> 2]
+qaoaCircuit[graph_, p_] := QuantumCircuitOperator[Join[{"H" -> VertexList[graph]},
+    Catenate[Table[Join[Thread["R"[Subscript[γ, j], "ZZ"] -> List @@@ EdgeList[graph]], {"RX"[Subscript[θ, j]] -> VertexList[graph]}], {j, p}]]]];
+qaoaLandscape[graph_, p_] := With[{hc = Total[(1 - QuantumOperator["ZZ", #])/2 & /@ List @@@ EdgeList[graph]], ψ = qaoaCircuit[graph, p][]},
+    ψ["Dagger"][hc[ψ]]["Scalar"]];
+qaoaAngles[p_] := Flatten[Table[{Subscript[γ, j], Subscript[θ, j]}, {j, p}]];
+qaoaBest[l_, 1] := Maximize[FullSimplify[l, Subscript[γ, 1] ∈ Reals && Subscript[θ, 1] ∈ Reals], qaoaAngles[1]];
+qaoaBest[l_, p_] := BlockRandom[SeedRandom[1]; MaximalBy[Table[FindMaximum[l, Transpose[{qaoaAngles[p], RandomReal[{0, 2 π}, 2 p]}], AccuracyGoal -> 6, PrecisionGoal -> 6], 6], First][[1]]];
+qaoaColor = ColorData["SunsetColors"];
+qaoaTitle[best_, cut_, 1] := If[First[best] ∈ Rationals, {Row[{"max E = ", First[best]}]},
+    {Row[{"max E = ", N[First[best], 4]}], Row[{"root of ", TraditionalForm[MinimalPolynomial[First[best], \[FormalX]] == 0]}]}];
+qaoaTitle[best_, cut_, p_] := {Row[{"best E found ≈ ", NumberForm[First[best], {6, 4}], ", maximum cut ", cut}]};
+qaoaView[graph_, p_] := With[{l = qaoaLandscape[graph, p], cut = First[FindMaximumCut[graph]]}, With[{best = qaoaBest[l, p]},
+    Grid[{{(qaoaCircuit[graph, p]["Diagram", ImageSize -> 220 + 160 p] //. EventHandler[\[FormalG]_, ___] :> \[FormalG]),
+       DensityPlot[Evaluate[(l /. Drop[Last[best], -2] /. {Subscript[γ, p] -> u, Subscript[θ, p] -> v})/cut], {u, 0, 2 π}, {v, 0, π}, PlotPoints -> 40,
+        ColorFunction -> qaoaColor, ColorFunctionScaling -> False, PlotRange -> {0, 1}, FrameLabel -> {Subscript["γ", p], Subscript["θ", p]},
+        Epilog -> {ColorData[97][1], PointSize[Large], Point[Mod[N[{Subscript[γ, p], Subscript[θ, p]} /. Last[best]], {2 π, π}]]},
+        PlotLabel -> Column[Prepend[qaoaTitle[best, cut, p], Row[{Graph[graph, ImageSize -> 40], "   max cut = ", cut, ",   p = ", p}]], Alignment -> Center],
+        ImageSize -> 280]}}, Spacings -> 3, Alignment -> Center]]];
+qaoaGraphs = <|"triangle" -> {CycleGraph[3], 1}, Subscript["K", 4] -> {CompleteGraph[4], 2}, "ring of 5" -> {CycleGraph[5], 2}, "ring of 6" -> {CycleGraph[6], 3}|>;
+qaoaViews = Association[KeyValueMap[Function[{name, gp}, Table[{name, p} -> qaoaView[First[gp], p], {p, Last[gp]}]], qaoaGraphs]];
+With[{qaoaViews = qaoaViews, qaoaGraphs = qaoaGraphs, qaoaColor = qaoaColor},
+ Manipulate[Legended[qaoaViews[{qaG, Min[qaP, Last[qaoaGraphs[qaG]]]}], Placed[BarLegend[{qaoaColor, {0, 1}}, LegendLabel -> "E / max cut"], Right]],
+ Row[{Control[{{qaG, "triangle", "graph"}, Keys[qaoaGraphs], SetterBar}], Spacer[30], "layers p  ", Dynamic[SetterBar[Dynamic[qaP], Range[Last[qaoaGraphs[qaG]]]]]}],
+ {{qaP, 1}, ControlType -> None}]]
 ```
 
-For the triangle the best angles reach the maximum cut. For the square one layer reaches exactly three quarters of the edges, the ratio Farhi, Goldstone and Gutmann found for long even rings, and for $K_4$ it also falls short. The maximum is exact, not the best point a search visited, so the shortfall is certified.
+Because the expected cut is an exact trigonometric formula in the angles, WL's `Maximize` returns its one-layer global maximum as an exact algebraic number: no pair of angles anywhere does better. With more layers the best value comes from local searches started at random angles. One layer reaches the maximum cut only on the triangle; on $K_4$ it stops at an algebraic number below it, and on both rings at $3/4$ of the edges. A $p$-layer circuit sees only $2p+1$ consecutive edges of a ring, so, as Farhi, Goldstone and Gutmann found, it cuts $(2p+1)/(2p+2)$ of the edges until it sees the whole ring: $5/6$ for the ring of 6 at two layers, and the full cut once $2p+1$ reaches the ring's length, at two layers for the ring of 5 and three for the ring of 6; $K_4$ needs two. A search that reaches the maximum cut to numerical precision has found the best score, since no state cuts more edges than the maximum.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -1531,23 +1609,36 @@ $$
 \underbrace{\mathrm{CNOT}_{23}\,H_2}_{\text{Bell pair}},\qquad \underbrace{H_1\,\mathrm{CNOT}_{12}}_{\text{Bell basis}},\qquad \text{measure qubits 1, 2}\to m_1,m_2,\qquad \text{Bob applies } Z^{m_1}X^{m_2}.
 $$
 
-The protocol runs for general $\beta$ and $\phi$ with both record-controlled corrections, with one of them, and with none. Bob's Bloch vector comes out in closed form; each sphere draws it (dots) and the input's (dashed) along the inputs $\phi=4\beta$, $0\le\beta\le\pi$:
+The protocol runs for general $\beta$ and $\phi$ with both record-controlled corrections, with one of them, and with none. Bob's Bloch vector comes out in closed form, and the sphere evaluates it at twelve random inputs: a line joins each of Alice's inputs to the state Bob ends with, and the control chooses which corrections Bob applies:
 
 ```wl
-teleportCircuit[corrections_] := QuantumCircuitOperator[Join[{"H" -> 2, "CNOT" -> {2, 3}, "CNOT" -> {1, 2}, "H" -> 1, {1}, {2}}, corrections]];
+teleportLabel[s_] := Style[s, Black, 12, FontFamily -> "Helvetica"];
+teleportCircuit[corrections_] := QuantumCircuitOperator[Join[{
+    QuantumCircuitOperator[{"H" -> 2, "CNOT" -> {2, 3}}, teleportLabel["Bell pair"]], "Barrier",
+    QuantumCircuitOperator[{"CNOT" -> {1, 2}, "H" -> 1}, teleportLabel["Alice"]], {1}, {2}, "Barrier"},
+   If[corrections === {}, {}, {QuantumCircuitOperator[corrections, teleportLabel["Bob"]]}]]];
 bobBloch[corrections_] := FullSimplify[QuantumPartialTrace[Replace[
       teleportCircuit[corrections][
        QuantumTensorProduct[QuantumState[{Cos[β/2], Exp[I ϕ] Sin[β/2]}], QuantumState["00"]]], m_QuantumMeasurement :> m["State"]],
      {1, 2, 3, 4}]["BlochVector"], {β, ϕ} ∈ Reals];
-teleportPanel[label_, bob_] := Labeled[Show[ResourceFunction["BlochSpherePlot"][],
-   ParametricPlot3D[{Sin[β] Cos[4 β], Sin[β] Sin[4 β], Cos[β]}, {β, 0, π}, PlotStyle -> Dashed],
-   ListPointPlot3D[Table[bob /. ϕ -> 4 β, {β, 0, π, π/24}], PlotStyle -> PointSize[0.03]], ImageSize -> 240],
-  Style[Column[{label, TraditionalForm[bob]}, Alignment -> Center], 13, FontFamily -> "Helvetica"], Top];
-teleportPanels = MapThread[teleportPanel[#1, bobBloch[#2]] &, {{"X and Z", "X only", "Z only", "no correction"},
-    {{"CNOT" -> {-1, 3}, "CZ" -> {0, 3}}, {"CNOT" -> {-1, 3}}, {"CZ" -> {0, 3}}, {}}}];
-Column[{Labeled[teleportCircuit[{"CNOT" -> {-1, 3}, "CZ" -> {0, 3}}]["Diagram", ImageSize -> 520], Style["the protocol with both record-controlled corrections", 13, FontFamily -> "Helvetica"], Top],
-  Legended[Grid[{teleportPanels}], legendBelow[Column[{PointLegend[{ColorData[97][1]}, {"Bob's Bloch vector"}, LegendMarkers -> {"\[FilledCircle]", 10}],
-   LineLegend[{Directive[ColorData[97][1], Dashed]}, {"input Bloch vector"}]}]]]}, Center, Spacings -> 2]
+teleportWires = {-1 -> Placed["m₂ to Bob", Right], 0 -> Placed["m₁ to Bob", Right], 1 -> Placed["Alice  |ψ⟩", Left], 2 -> Placed["Alice", Left], 3 -> Placed["Bob", Right]};
+teleportCases = <|"X and Z" -> {"CNOT" -> {-1, 3}, "CZ" -> {0, 3}}, "X only" -> {"CNOT" -> {-1, 3}}, "Z only" -> {"CZ" -> {0, 3}}, "none" -> {}|>;
+teleportInputs = BlockRandom[SeedRandom[11]; Table[{ArcCos[RandomReal[{-1, 1}]], RandomReal[{0, 2 π}]}, 12]];
+teleportAlice = ({Sin[#1] Cos[#2], Sin[#1] Sin[#2], Cos[#1]} &) @@@ teleportInputs;
+teleportSphere[bob_] := With[{bobs = (bob /. {β -> #1, ϕ -> #2} &) @@@ teleportInputs},
+   Show[ResourceFunction["BlochSpherePlot"][], Graphics3D[{
+      {GrayLevel[0.45], AbsoluteThickness[1.5], Line[Transpose[{teleportAlice, bobs}]]},
+      {ColorData[97][2], Opacity[0.55], AbsolutePointSize[15], Point[teleportAlice]},
+      {ColorData[97][1], AbsolutePointSize[8], Point[bobs]}}], ImageSize -> 260]];
+teleportViews = AssociationThread[Keys[teleportCases], MapThread[Function[{corr, bob}, Column[{
+       Grid[{{(teleportCircuit[corr]["Diagram", "WireLabels" -> teleportWires, ImageSize -> 520] //. EventHandler[\[FormalG]_, ___] :> \[FormalG]), teleportSphere[bob]}}, Spacings -> 2],
+       Nothing}, Center]],
+    {Values[teleportCases], bobBloch /@ Values[teleportCases]}]];
+teleportLegend = legendBelow[Column[{PointLegend[{Directive[ColorData[97][2], Opacity[0.55]], ColorData[97][1]}, {"Alice's input", "Bob's state"}, LegendMarkers -> {{"\[FilledCircle]", 15}, {"\[FilledCircle]", 8}}],
+    LineLegend[{Directive[GrayLevel[0.45], AbsoluteThickness[1.5]]}, {"Alice to Bob"}]}]];
+With[{teleportViews = teleportViews, teleportLegend = teleportLegend, teleportCases = teleportCases},
+ Manipulate[Legended[teleportViews[tpCase], teleportLegend],
+ {{tpCase, "X and Z", "corrections Bob applies"}, Keys[teleportCases], SetterBar}]]
 ```
 
 With both corrections Bob's Bloch vector equals the input's for every $\beta$ and $\phi$. With only one correction, the Pauli Bob did not undo flips two Bloch components at random, so only the component it leaves unflipped survives and his dots collapse onto one axis. With neither, Bob holds the maximally mixed state at the center of the sphere.
@@ -1557,34 +1648,43 @@ With both corrections Bob's Bloch vector equals the input's for every $\beta$ an
 
 &nbsp;
 
-### Grover search: the success probability, iteration by iteration
+### Noise caps Grover's speedup
 
+A Boolean oracle accepts one of the $N=2^n$ bit strings, and Grover's search finds it in about $\frac\pi4\sqrt N$ iterations, where guessing needs $N$ tries. If every qubit is phase-flipped with probability $p$ before each iteration, how much noise can the search take before the speedup is gone?
 
-A Boolean oracle accepts $M$ of the $N=2^n$ bit strings. Grover's search starts from the uniform superposition and repeats one iteration, a phase flip of the accepted strings followed by a reflection about the uniform state. How does the probability of finding an accepted string change with the number of iterations $k$?
-
-With $f$ the oracle and $|s\rangle=|+\rangle^{\otimes n}$, one iteration, the state after $k$ of them and the success probability are
+With $|s\rangle=|+\rangle^{\otimes n}$, $x_*$ the accepted string and $\mathcal E_p(\rho)=(1-p)\rho+pZ\rho Z$ on each qubit, the iteration, the state after $k$ iterations and the success probability are
 
 $$
-G=\left(2|s\rangle\langle s|-1\right)O,\qquad O|x\rangle=(-1)^{f(x)}|x\rangle,\qquad |\psi_k\rangle=G^k|s\rangle,\qquad P_k=\sum_{f(x)=1}|\langle x|\psi_k\rangle|^2 .
+G=\left(2|s\rangle\langle s|-1\right)O,\qquad \rho_{k+1}=G\,\mathcal E_p^{\otimes n}(\rho_k)\,G^\dagger,\quad \rho_0=|s\rangle\langle s|,\qquad P_k=\langle x_*|\rho_k|x_*\rangle .
 $$
 
-In the plane of the accepted and rejected uniform states, $|s\rangle$ sits at the angle $a$ from the rejected one, with $\sin a=\sqrt{M/N}$, and $G$ is a rotation by $2a$, so $P_k=\sin^2\left((2k+1)a\right)$.
+A run of $k$ iterations, checked with one more oracle call and repeated until it succeeds, costs on average $(k+1)/P_k$ oracle calls; the best $k$ gives the cost of the noisy search, against $N$ for guessing.
 
-$G$, built from the Boolean function, acts on the state again and again (markers), up to about $\pi\sqrt N$ iterations, against the closed form (dashed); the accepted strings are a few fixed integers below 16:
+$G$ is QF's Grover iteration for the oracle accepting $x_*=5$. Phase flips on all qubits multiply each element $\rho_{xy}$ by $(1-2p)^{d(x,y)}$, with $d(x,y)$ the number of bits in which $x$ and $y$ differ, the same map as QF's `"PhaseFlip"` channel on every qubit. Left: $P_k$ for $N=256$ at four noise levels; right: the expected oracle calls against $p$ for $N=64$ and $256$, with guessing dashed:
 
 ```wl
-groverSuccess[n_, accepted_] := With[{g = Normal[QuantumCircuitOperator["GroverPhase"[BooleanFunction[Total[2^accepted], n]]]["Matrix"]]},
-   Total[Abs[#[[accepted + 1]]]^2] & /@ NestList[g . # &, ConstantArray[2^(-n/2), 2^n], Ceiling[π Sqrt[2^n]]]];
-groverAccepted = {{5}, {5, 9}, {5, 9, 12, 14}};
-groverPanels = Table[Show[
-    ListPlot[groverSuccess[n, #] & /@ groverAccepted, DataRange -> {0, Ceiling[π Sqrt[2^n]]}, PlotMarkers -> Automatic, PlotLegends -> (Row[{"M = ", Length[#]}] & /@ groverAccepted)],
-    Plot[Evaluate[With[{a = ArcSin[Sqrt[Length[#]/2^n]]}, Sin[(2 k + 1) a]^2] & /@ groverAccepted], {k, 0, Ceiling[π Sqrt[2^n]]}, PlotStyle -> Dashed, PlotRange -> All],
-    PlotRange -> {0, 1.02}, Frame -> True, FrameLabel -> {"iterations k", "success probability"}, PlotLabel -> Row[{"N = ", 2^n}], ImageSize -> 300], {n, {4, 6, 8}}];
-Column[{Labeled[QuantumCircuitOperator["GroverPhase"[BooleanFunction[2^5, 4]]]["Diagram", ImageSize -> 520], Style["one Grover iteration, N = 16, marked item 5", 13, FontFamily -> "Helvetica"], Top],
-  Legended[PlotGrid[{First /@ groverPanels}, ImageSize -> 900], legendBelow[Last[First[groverPanels]]]]}, Center, Spacings -> 2]
+grnIter[n_] := N[Normal[QuantumCircuitOperator["GroverPhase"[BooleanFunction[2^5, n]]]["Matrix"]]];
+grnMask[n_, p_] := Outer[(1 - 2 p)^DigitCount[BitXor[#1, #2], 2, 1] &, Range[0, 2^n - 1], Range[0, 2^n - 1]];
+(* success probability after k = 0, 1, ... iterations, every qubit phase-flipped with probability p before each iteration *)
+grnSuccess[n_, p_] := With[{g = grnIter[n], mask = grnMask[n, p]},
+   Re[#[[6, 6]]] & /@ NestList[g . (mask #) . ConjugateTranspose[g] &, ConstantArray[2.^-n, {2^n, 2^n}], Ceiling[π Sqrt[2^n]]]];
+(* expected oracle calls: k iterations plus one call to check, repeated until success *)
+grnCost[n_, p_] := Min[Rest[MapIndexed[First[#2]/#1 &, grnSuccess[n, p]]]];
+grnPs = {0, 0.003, 0.01, 0.03};
+grnLeft = ListPlot[grnSuccess[8, #] & /@ grnPs, DataRange -> {0, Ceiling[π Sqrt[256]]}, Joined -> True, PlotMarkers -> {Automatic, 5}, PlotRange -> {0, 1.02},
+   Frame -> True, FrameLabel -> {"iterations k", "success probability"}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+   PlotLegends -> Placed[Row[{"p = ", #}] & /@ grnPs, Below], PlotLabel -> "N = 256, one accepted string", ImageSize -> 360];
+grnPgrid = Append[10^Range[-4., -0.375, 0.125], 0.49];
+grnCosts = Table[{p, grnCost[n, p]}, {n, {6, 8}}, {p, grnPgrid}];
+grnRight = ListLogLogPlot[grnCosts, Joined -> True, PlotMarkers -> {Automatic, 5}, PlotRange -> {{10^-4, 0.49}, {3, 2000}},
+   Frame -> True, FrameLabel -> {"phase‐flip probability p per qubit per iteration", "expected oracle calls"},
+   GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+   Epilog -> {Dashed, ColorData[97][1], Line[{{Log[10^-4], Log[64]}, {Log[0.49], Log[64]}}], ColorData[97][2], Line[{{Log[10^-4], Log[256]}, {Log[0.49], Log[256]}}]},
+   FrameTicks -> {{Automatic, None}, {{#, ToString[#]} & /@ {0.0001, 0.001, 0.01, 0.1}, None}}, PlotLegends -> Placed[{"Grover, N = 64", "Grover, N = 256"}, Below], PlotLabel -> "dashed: guessing, N calls", ImageSize -> 360];
+Grid[{{grnLeft, grnRight}}, Spacings -> 3, Alignment -> Top]
 ```
 
-The simulated probabilities sit on the closed form, which depends on the accepted strings only through $M/N$. Each rotation by $2a$ carries the state toward the accepted strings and then past them, so the first peak comes near $k\approx\frac\pi4\sqrt{N/M}$: later for a larger search space, earlier for more accepted strings. For $N=16$ and $M=4$ one iteration finds an accepted string with certainty.
+Noise lowers each peak and pulls it to fewer iterations, so the best run stops earlier and has to be repeated more often. While a whole search, $n$ qubits over about $\frac\pi4\sqrt N$ iterations, collects well under one phase flip, the cost stays near $\frac\pi4\sqrt N$; once it collects about one, the cost climbs toward the classical $N$. So the noise a search tolerates per qubit and iteration while keeping its noiseless cost is roughly one over the number of chances it gives a phase flip, $1/(n\sqrt N)$: the larger the search, the better the qubits must be. A search that must run at least one iteration loses to guessing outright only at heavy noise, $p$ of order $0.2$ to $0.3$; running none is guessing itself.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -1836,10 +1936,9 @@ This probability has no trace of the state or the axis: the ancilla sees only th
 
 &nbsp;
 
-### Compiling a rotation from H and T gates
+### Compiling a rotation from H and T gates: each T gate buys a fixed factor in precision
 
-
-A fault-tolerant qubit offers only a finite gate set: the Clifford gates generated by $H$ and $S=T^2$, which are cheap, and the $T$ gate, which is expensive. Any target rotation $U$ can only be approximated by a product of them. How does the best approximation improve as the number of $T$ gates grows?
+A fault-tolerant qubit offers only a finite gate set: the Clifford gates generated by $H$ and $S=T^2$, which are cheap, and the $T$ gate, which is expensive. Any target rotation $U$ can only be approximated by a product of them. How many $T$ gates does a given precision cost?
 
 With $T=\mathrm{diag}(1,e^{i\pi/4})$ and $S=T^2$, every product of these gates equals, up to a global phase, a normal form (Matsumoto and Amano)
 
@@ -1847,9 +1946,9 @@ $$
 W=\left(T\ \text{or}\ 1\right)\,s_1s_2\cdots s_k\,C,\qquad s_i\in\{HT,\ SHT\},\qquad C\in\text{the 24 Cliffords},
 $$
 
-whose $T$ count is $k$ or $k+1$, so from $T$ count 1 on, each extra $T$ gate doubles the number of candidates. The error of $W$ is $\epsilon=1-\frac12|\mathrm{Tr}\,W^\dagger U|$, which ignores the global phase.
+whose $T$ count is $k$ or $k+1$, so from $T$ count 1 on, each extra $T$ gate doubles the number of candidates. The error of $W$ is $\epsilon=1-\frac12|\mathrm{Tr}\,W^\dagger U|$, which ignores the global phase and grows as the square of the rotation angle of $W^\dagger U$. Rotations up to phase fill a three-dimensional space, so $2^T$ circuits cannot come closer to a typical target than a distance $\propto2^{-T/3}$, which sets the floor $\epsilon\propto2^{-2T/3}$; whether the circuits spread evenly enough to reach it is what the enumeration tests.
 
-Every normal form up to $T$ count 16 is enumerated and the smallest error kept, for three rotations $R_{\hat n}(\alpha)=e^{-i\alpha\,\hat n\cdot\boldsymbol\sigma/2}$ ($R_{x+z}$ rotates about $(\hat x+\hat z)/\sqrt2$); the circuit that gives the $R_z(0.3)$ point at $T$ count 7 is drawn in time order:
+Every normal form up to $T$ count 16 is enumerated for 200 rotations drawn uniformly at random, and the smallest error so far is kept at each $T$ count; the orange line has the slope $2^{-2T/3}$ and passes through the median at $T$ count 10:
 
 ```wl
 {ctH, ctS, ctT} = N[{HadamardMatrix[2], DiagonalMatrix[{1, I}], DiagonalMatrix[{1, Exp[I π/4]}]}];
@@ -1859,15 +1958,23 @@ ctCliffords = DeleteDuplicatesBy[Catenate[Table[Tuples[{"H", "S"}, l], {l, 0, 6}
 ctLevels = NestList[Join[{#[[1]] . ctH . ctT, Join[{"T", "H"}, #[[2]]]} & /@ #, {#[[1]] . ctS . ctH . ctT, Join[{"T", "H", "S"}, #[[2]]]} & /@ #] &, {{IdentityMatrix[2], {}}}, 16];
 ctForms[t_] := If[t == 0, ctLevels[[1]], Join[ctLevels[[t + 1]], {ctT . #[[1]], Append[#[[2]], "T"]} & /@ ctLevels[[t]]]];
 ctOverlaps[t_, u_] := Abs[Flatten[Conjugate[ctForms[t][[All, 1]]], {{1}, {2, 3}}] . Transpose[Flatten[u . ConjugateTranspose[ctMatrix[#]]] & /@ ctCliffords]]/2;
-ctTargets = <|Row[{Subscript["R", "x+z"], "(0.8)"}] -> MatrixExp[-0.4 I (PauliMatrix[1] + PauliMatrix[3])/Sqrt[2]],
-   Row[{Subscript["R", "z"], "(0.3)"}] -> MatrixExp[-0.15 I PauliMatrix[3]], Row[{Subscript["R", "x"], "(1)"}] -> MatrixExp[-0.5 I PauliMatrix[1]]|>;
-ctBestWord[t_, u_] := With[{pos = First[Position[#, Max[#]]] &[ctOverlaps[t, u]]}, Join[ctCliffords[[pos[[2]]]], ctForms[t][[pos[[1]], 2]]]];
-Column[{ListLogPlot[1 - FoldList[Max, Table[Max[ctOverlaps[t, #]], {t, 0, 16}]] & /@ Values[ctTargets], DataRange -> {0, 16}, Joined -> True,
-    PlotMarkers -> Automatic, PlotLegends -> Keys[ctTargets], Frame -> True, FrameLabel -> {"T count", "best error ε"}, PlotLabel -> Row[{"normal forms over ", Length[ctCliffords], " Cliffords"}], ImageSize -> 450],
-  QuantumCircuitOperator[ctBestWord[7, ctTargets[[2]]]]["Diagram", ImageSize -> 650]}, Alignment -> Center]
+ctRandomU[] := With[{q = Normalize[RandomVariate[NormalDistribution[], 4]]}, {{q[[1]] + I q[[2]], q[[3]] + I q[[4]]}, {-q[[3]] + I q[[4]], q[[1]] - I q[[2]]}}];
+ctTargets = BlockRandom[SeedRandom[7]; Table[ctRandomU[], 200]];
+ctBest = Transpose[Table[Max[ctOverlaps[t, u]], {t, 0, 16}, {u, ctTargets}]];
+ctRun = 1 - FoldList[Max, #] & /@ ctBest;
+ctQuant = Transpose[Quantile[#, {0.1, 0.5, 0.9}] & /@ Transpose[ctRun]];
+ctLine = ctQuant[[2, 11]] 2^(-2 (Range[0, 16] - 10)/3);
+Legended[Show[ListLogPlot[ctRun, DataRange -> {0, 16}, Joined -> True, PlotStyle -> Directive[GrayLevel[0.6, 0.25], Thin]],
+  ListLogPlot[{ctQuant[[1]], ctQuant[[3]]}, DataRange -> {0, 16}, Joined -> True, PlotStyle -> Directive[ColorData[97][1], Dashed], Filling -> {1 -> {2}}, FillingStyle -> Directive[ColorData[97][1], Opacity[0.12]]],
+  ListLogPlot[{ctQuant[[2]], ctLine}, DataRange -> {0, 16}, Joined -> True, PlotStyle -> {Directive[ColorData[97][1], Thick], Directive[ColorData[97][4], Opacity[.7], Thick]},
+   PlotMarkers -> {{Automatic, 8}, None}],
+  PlotRange -> {{0, 16}, {Log[10^-6], Log[0.3]}}, Frame -> True, FrameLabel -> {"T count", "best error ε"}, GridLines -> {Automatic, Log[10.^Range[-6, -1]]}, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+  PlotLabel -> Row[{Length[ctTargets], " random targets, all normal forms over ", Length[ctCliffords], " Cliffords"}], AspectRatio -> 1/2, ImageSize -> 520],
+ Placed[LineLegend[{Directive[GrayLevel[0.6], Thin], Directive[ColorData[97][1], Dashed], Directive[ColorData[97][1], Thick], Directive[ColorData[97][4], Opacity[.7], Thick]},
+   {"one target", "10% and 90% of targets", "median", Row[{"slope ", Superscript[2, "−2T/3"], " from counting circuits"}]}], Right]]
 ```
 
-The best error falls in steps: a target can sit far from every circuit of one $T$ count and close to one of the next. $R_{x+z}(0.8)$ happens to lie close to a circuit with three $T$ gates that no circuit up to $T$ count 16 improves on.
+Each target's error falls in irregular steps: a target can sit far from every circuit of one $T$ count and close to one of the next. Across targets the steps average out, and the median follows the counting slope over the range shown, gaining about one decimal digit in $\epsilon$ for every five $T$ gates. The band shows how far luck moves a single target: a few $T$ gates either way.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -1922,7 +2029,7 @@ Every single-qubit error gives a different nonzero four-bit word, and four bits 
 ### A thousand-qubit GHZ state: entanglement entropy as a rank over F₂
 
 
-Take $n=1000$ qubits in the GHZ state $(|0\cdots0\rangle+|1\cdots1\rangle)/\sqrt2$, and for comparison in the one-dimensional cluster state, made by putting every qubit in $|+\rangle$ and applying $CZ$ to each neighboring pair. How much entanglement separates a set $A$ of $k$ qubits from the rest, when $A$ is a block at the end of the chain and when $A$ is scattered at random?
+Take $n$ qubits in the GHZ state $(|0\cdots0\rangle+|1\cdots1\rangle)/\sqrt2$, and for comparison in the one-dimensional cluster state, made by putting every qubit in $|+\rangle$ and applying $CZ$ to each neighboring pair. How much entanglement separates a set $A$ of $k$ qubits from the rest, when $A$ is a block at the end of the chain and when $A$ is scattered at random, and does the answer hold at $n=1000$?
 
 A stabilizer state is fixed by $n$ commuting Pauli generators: $X^{\otimes n}$ and $Z_iZ_{i+1}$ for GHZ, $Z_{i-1}X_iZ_{i+1}$ for the cluster. Write each generator as a binary vector $(x|z)\in\mathbb F_2^{2n}$, stack them as the rows of an $n\times2n$ matrix $G$, and let $G_A$ keep only the $x$ and $z$ columns of the qubits in $A$. Then the entanglement entropy, in bits, is (Fattal et al. 2004)
 
@@ -1930,13 +2037,41 @@ $$
 S(A)=\operatorname{rank}_{\mathbb F_2}G_A-|A|.
 $$
 
-Both states are held as tableaux, and the rank is evaluated for $k=50,100,\dots,950$, with one random set $A$ per $k$; no $2^{1000}$-entry vector is ever formed:
+The same rank has a picture. Applying $H$ to qubits $2,\dots,n$ turns the GHZ state into $(|0\rangle|{+}\cdots{+}\rangle+|1\rangle|{-}\cdots{-}\rangle)/\sqrt2$, the graph state of a star centered on qubit 1, and leaves every $S(A)$ unchanged; the cluster state is the graph state of the chain. In a graph state each edge is a $CZ$, and $S(A)$ is the rank over $\mathbb F_2$ of the block of the adjacency matrix that links $A$ to the rest, whose ones are the edges that cross the cut (Hein, Eisert and Briegel 2004). For $n=20$, with $A$ shaded, the crossing edges in red and $S(A)$ read from each tableau:
+
+```wl
+ghzGN = 20;
+ghzGStar = UndirectedEdge[1, #] & /@ Range[2, ghzGN];
+ghzGChain = UndirectedEdge @@@ Partition[Range[ghzGN], 2, 1];
+ghzGStates = {PauliStabilizer[ghzGN][Prepend[Table["CNOT" -> {q, q + 1}, {q, ghzGN - 1}], "H"]],
+   PauliStabilizer[ghzGN][Join[Thread["H" -> Range[ghzGN]], Table["CZ" -> {q, q + 1}, {q, ghzGN - 1}]]]};
+ghzGLayouts = {{Prepend[CirclePoints[{1, Pi/2}, ghzGN - 1], {0, 0}], 0.065, 230}, {Table[{q, 0}, {q, ghzGN}], 0.28, 560}};
+ghzGPanel[name_, edges_, {pos_, r_, size_}, ps_, a_] := With[{cut = Select[edges, Xor @@ (MemberQ[a, #] & /@ List @@ #) &]},
+   Graphics[{{Opacity[0.25], ColorData[97][2], Disk[pos[[#]], 1.7 r] & /@ a},
+     {AbsoluteThickness[1.2], GrayLevel[0.8], Line[pos[[List @@ #]]] & /@ Complement[edges, cut]},
+     {AbsoluteThickness[2.2], ColorData[97][4], Line[pos[[List @@ #]]] & /@ cut},
+     {EdgeForm[GrayLevel[0.3]], If[MemberQ[a, #], ColorData[97][2], White], Disk[pos[[#]], r]} & /@ Range[ghzGN]},
+    ImageSize -> size, PlotLabel -> Column[{name, Row[{Length[cut], If[Length[cut] == 1, " edge", " edges"], " cut,   S(A) = ", ps["Entropy", a]}]}, Alignment -> Center]]];
+ghzGSet[k_, "block"] := Range[k];
+ghzGSet[k_, "random"] := BlockRandom[SeedRandom[k]; Sort[RandomSample[Range[ghzGN], k]]];
+ghzGViews = Association @ Flatten @ Table[{k, cut} -> Grid[{MapThread[ghzGPanel[#1, #2, #3, #4, ghzGSet[k, cut]] &,
+       {{"GHZ (star)", "cluster (chain)"}, {ghzGStar, ghzGChain}, ghzGLayouts, ghzGStates}]}, Spacings -> 4, Alignment -> Center], {k, ghzGN - 1}, {cut, {"block", "random"}}];
+With[{ghzGViews = ghzGViews, ghzGN = ghzGN}, Manipulate[
+  Column[{ghzGViews[{ghzK, ghzCut}],
+    Style[Row[{"A = ", If[ghzCut == "block", Row[{"qubits 1 to ", ghzK}], Row[{ghzK, " qubits chosen at random"}]], " (shaded);  S(A) = entanglement between A and the other ", ghzGN - ghzK, " qubits"}], 12, FontFamily -> "Helvetica"]}, Center, Spacings -> 1.5],
+  {{ghzK, 6, "k = number of qubits in A"}, 1, 19, 1, Appearance -> "Labeled"},
+  {{ghzCut, "random", "A is"}, {"block" -> "a block 1 to k", "random" -> "k qubits at random"}}]]
+```
+
+In the star every crossing edge ends on qubit 1, so the crossing edges have rank 1 however many there are. In the chain a block is crossed by one edge, while a scattered $A$ is crossed by many separate edges, and most of them add to $S(A)$.
+
+Both states at $n=1000$ are held as tableaux, and the rank is evaluated for $k=50,100,\dots,950$, with one random set $A$ per $k$; no $2^{1000}$-entry vector is ever formed:
 
 ```wl
 ghzChain = PauliStabilizer[1000][Prepend[Table["CNOT" -> {q, q + 1}, {q, 999}], "H"]];
 clusterChain = PauliStabilizer[1000][Join[Thread["H" -> Range[1000]], Table["CZ" -> {q, q + 1}, {q, 999}]]];
 entropyPanel[label_, ps_] := ListLogPlot[Table[{k, ps["Entropy", sel[k]]}, {sel, {Range, RandomSample[Range[1000], #] &}}, {k, 50, 950, 50}],
-   Joined -> True, PlotMarkers -> {{"\[EmptyCircle]", 16}, {"\[EmptyUpTriangle]", 8}}, PlotStyle -> {Automatic, Dashed}, PlotRange -> {0.7, 500},
+   Joined -> True, PlotMarkers -> {{"\[EmptyCircle]", 16}, {"\[EmptyUpTriangle]", 8}}, PlotStyle -> {Automatic, Dashed}, PlotRange -> {0.7, 500}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed],
    PlotLegends -> {"block {1, \[Ellipsis], k}", "k qubits at random"}, Frame -> True, FrameLabel -> {"k", "S(A)  (bits)"}, PlotLabel -> label, ImageSize -> 340];
 entropyPanels = BlockRandom[SeedRandom[1]; {entropyPanel["GHZ", ghzChain], entropyPanel["cluster", clusterChain]}];
 Legended[PlotGrid[{First /@ entropyPanels}, ImageSize -> 680], legendBelow[Last[First[entropyPanels]]]]
@@ -2055,10 +2190,10 @@ The dense state vector rises from a fixed floor into exponential growth, a strai
 
 &nbsp;
 
-### Repetition code: the logical error rate is a polynomial in the flip probability
+### Repetition code: the error rate of the decoded bit is a polynomial in the flip probability
 
 
-One bit is stored in an odd number $n$ of qubits as $|0\cdots0\rangle$. Each qubit is flipped independently with probability $p$, and the bit is decoded by majority vote. For which $p$ does a longer code lower the probability $P_L$ that the decoded bit is wrong?
+One bit is stored in an odd number $n$ of qubits as $|0\cdots0\rangle$. Each qubit is flipped independently with probability $p$, and the bit is decoded by majority vote. For which $p$ does a longer code lower the probability $P_{\mathrm{bit}}$ that the decoded bit is wrong?
 
 Each qubit passes through the bit-flip channel
 
@@ -2069,25 +2204,28 @@ $$
 and majority vote fails when more than $n/2$ qubits flipped, so
 
 $$
-P_L(n)=\sum_{k>n/2}\binom nk p^k(1-p)^{n-k}=I_p\left(\frac{n+1}2,\frac{n+1}2\right).
+P_{\mathrm{bit}}(n)=\sum_{k>n/2}\binom nk p^k(1-p)^{n-k}=I_p\left(\frac{n+1}2,\frac{n+1}2\right).
 $$
 
-The bit-flip channel acts on each qubit of the stabilizer state $|0\cdots0\rangle$; every application splits each branch into an unflipped and a flipped tableau with weights $1-p$ and $p$, and qubit $k$ reads 1 when its generator $Z_k$ has sign $-1$. Summing the weights of the failing branches gives $P_L(p)$ exactly; the regularized beta function $I_p$ (dashed) extends it to long codes:
+Whether majority vote fails depends only on how many qubits flipped, not on which ones. So for each $k=0,\dots,n$ the stabilizer state $|0\cdots0\rangle$ gets its first $k$ qubits flipped by $X$ gates, qubit $j$ reads 1 when its generator $Z_j$ has sign $-1$, and a tableau that decodes wrong contributes $\binom nk p^k(1-p)^{n-k}$, the weight of all patterns with $k$ flips. This gives $P_{\mathrm{bit}}(p)$ exactly from $n+1$ tableaux instead of $2^n$ branches, which reaches $n=101$, and it equals $I_p$ for every $n$ shown:
 
 ```wl
-repFlip[branches_, q_] := Join @@ (Function[{w, ps}, {w #1, #2} & @@@ QuantumChannel["BitFlip"[p], {q}][ps]] @@@ branches);
-repRate[n_] := Expand[Total[Cases[Fold[repFlip, {{1, PauliStabilizer[n]}}, Range[n]], {w_, ps_} /; Count[ps["StabilizerSigns"], -1] > n/2 :> w]]];
-repRates = repRate /@ {1, 3, 5, 7};
-repPanels = {Plot[Evaluate[Join[repRates, BetaRegularized[p, (# + 1)/2, (# + 1)/2] & /@ {21, 101}]], {p, 0, 1},
-    PlotStyle -> {Automatic, Automatic, Automatic, Automatic, Dashed, Dashed}, PlotLegends -> (Row[{"n = ", #}] & /@ {1, 3, 5, 7, 21, 101}), Frame -> True, FrameLabel -> {"p", Subscript["P", "L"]},
-    PlotLabel -> Row[{Subscript["P", "L"], "(n+2) < ", Subscript["P", "L"], "(n)  \[DoubleLongLeftRightArrow]  ",
-       First[Union[MapThread[Reduce[#2 < #1 && 0 < p < 1, p] &, {Most[repRates], Rest[repRates]}]]]}], ImageSize -> 320],
-   LogLogPlot[Evaluate[repRates], {p, 10^-3, 1/2}, Frame -> True, FrameLabel -> {"p", Subscript["P", "L"]},
-    PlotLabel -> Row[{Subscript["P", "L"], "(3) = ", repRates[[2]]}], ImageSize -> 320]};
-Legended[Row[{First[First[repPanels]], Last[repPanels]}, "  "], legendBelow[Last[First[repPanels]]]]
+repFlipped[n_, k_] := QuantumCircuitOperator[Table["X" -> q, {q, k}]][PauliStabilizer[n]];
+repRate[n_] := Total[Table[Boole[Count[repFlipped[n, k]["StabilizerSigns"], -1] > n/2] Binomial[n, k] p^k (1 - p)^(n - k), {k, 0, n}]];
+repNs = {1, 3, 5, 7, 21, 101}; repRates = repRate /@ repNs;
+repPanels = {Plot[Evaluate[repRates], {p, 0, 1}, WorkingPrecision -> 20, PlotLegends -> (Row[{"n = ", #}] & /@ repNs), Frame -> True, FrameLabel -> {"flip probability p of each qubit", Row[{Subscript["P", "bit"], ":  probability the majority vote is wrong"}]},
+    Prolog -> {{Opacity[0.18], RGBColor[0.3, 0.75, 0.45], Rectangle[{0, 0}, {1/2, 1}]}, {Opacity[0.18], RGBColor[0.9, 0.4, 0.35], Rectangle[{1/2, 0}, {1, 1}]},
+      Text[Style["longer code helps", 11, FontFamily -> "Helvetica"], {1/4, 0.94}], Text[Style["longer code hurts", 11, FontFamily -> "Helvetica"], {3/4, 0.06}]},
+    PlotLabel -> Row[{Subscript["P", "bit"], "(n+2) < ", Subscript["P", "bit"], "(n)  \[DoubleLongLeftRightArrow]  ",
+       First[Union[MapThread[Reduce[#2 < #1 && 0 < p < 1, p] &, {Most[Take[repRates, 4]], Rest[Take[repRates, 4]]}]]]}], ImageSize -> 320],
+   LogLogPlot[Evaluate[repRates], {p, 10^-3, 1/2},
+    WorkingPrecision -> 20, PlotRange -> {{10^-3, 1/2}, {10^-16, 1}},
+    Prolog -> {{Opacity[0.18], RGBColor[0.3, 0.75, 0.45], Rectangle[Scaled[{0, 0}], Scaled[{1, 1}]]}, Text[Style["longer code helps", 11, FontFamily -> "Helvetica"], Scaled[{0.03, 0.06}], {-1, 0}]}, Frame -> True, FrameLabel -> {"flip probability p of each qubit", Row[{Subscript["P", "bit"], ":  probability the majority vote is wrong"}]},
+    PlotLabel -> Row[{Subscript["P", "bit"], " \[TildeTilde] ", TraditionalForm[HoldForm[Binomial[n, (n + 1)/2] p^((n + 1)/2)]], "  at small p"}], ImageSize -> 320]};
+Legended[Row[{First[First[repPanels]], Last[repPanels]}, Spacer[10]], legendBelow[Last[First[repPanels]]]]
 ```
 
-For $n=3$ the rate has no linear term, so at small $p$ the code fails far less often than a bare qubit; on the log-log axes each code becomes a straight line at small $p$, with slope equal to the smallest number of flips that defeats the majority. All curves meet at $p=1/2$ and tend to a step there as $n$ grows, and the exact threshold is the same for each pair of neighboring codes drawn: below one half the longer code is better, above it worse. For every odd $n=2m+1$ the difference factors as $P_L(n+2)-P_L(n)=\binom{2m+1}{m}\,{}[p(1-p)]^{m+1}(2p-1)$, which has the sign of $2p-1$.
+For $n=3$ the rate has no linear term, so at small $p$ the code fails far less often than a bare qubit; on the log-log axes each code becomes a straight line at small $p$, with slope equal to the smallest number of flips that defeats the majority. All curves meet at $p=1/2$ and tend to a step there as $n$ grows, and the exact threshold is the same for each pair of neighboring codes drawn: below one half the longer code is better, above it worse. For every odd $n=2m+1$ the difference factors as $P_{\mathrm{bit}}(n+2)-P_{\mathrm{bit}}(n)=\binom{2m+1}{m}\,{}[p(1-p)]^{m+1}(2p-1)$, which has the sign of $2p-1$.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2149,29 +2287,56 @@ $$
 \mathcal E(\rho)=(1-p_X-p_Y-p_Z)\,\rho+p_X\,X\rho X+p_Y\,Y\rho Y+p_Z\,Z\rho Z,
 $$
 
-depolarizing when $p_X=p_Y=p_Z=p/3$ and $Z$-biased here as $p_X=p_Y=p/10$, $p_Z=p$. An error $E$ on the $n$ qubits has a syndrome, the checks it anticommutes with, and a class, the logical operators it anticommutes with. The lookup decoder answers each syndrome with the class of the lightest error that produces it; the maximum-likelihood decoder answers with the class of largest total probability. A round fails when the answer is not the class of the error that occurred:
+depolarizing when $p_X=p_Y=p_Z=p/3$ and $Z$-biased here as $p_X=p_Y=p/10$, $p_Z=p$. An error $E$ on the $n$ qubits has a syndrome, the checks it anticommutes with, and a class, the logical operators it anticommutes with. The minimum-weight decoder answers each syndrome with the class of the lightest error that produces it, taking the first in a fixed order when several are equally light; the maximum-likelihood decoder answers with the class of largest total probability. A round fails when the answer is not the class of the error that occurred:
 
 $$
 P_L=\sum_{E}\Pr(E)\,\left[\operatorname{class}(E)\neq\operatorname{guess}(\operatorname{syndrome}(E))\right].
 $$
 
-Summing over all $4^n$ errors for general $p$, with each syndrome's most probable class chosen at small $p$, gives $P_L$ as a polynomial for each decoder; the panels plot $P_L/p^2$, whose value at $p=0$ is the coefficient of $p^2$:
+Each code's check matrix, one row per stabilizer with its $X$ part in blue and its $Z$ part in orange, shows where degeneracy comes from: the Shor code's six $Z$ checks each touch only two neighboring qubits, so many light errors differ by a check and share a class. Summing over all $4^n$ errors gives $P_L$ as an exact polynomial in $p$ for each decoder. The maximum-likelihood decoder picks, for each syndrome, the class that is most probable at small $p$, and keeps that choice for every $p$; for $p$ up to $0.2$, the range of the top row, that choice stays the most probable:
 
 ```wl
 Get["/Users/mohammadb/Documents/GitHub/QuantumFramework/OngoingProjects/QEC/QECCore/QECCore.wl"]; Needs["Wolfram`QuantumFramework`QEC`"];
 mlDecCases = Append[MapThread[{#1, #2 <> ", depolarizing", QECNoiseModel["Depolarizing", p]} &, {{"5QubitCode", "ShorCode", "SteaneCode"}, {"five-qubit code", "Shor code", "Steane code"}}],
    {"SteaneCode", "Steane code, Z-biased", QECNoiseModel[<|"X" -> p/10, "Y" -> p/10, "Z" -> p|>]}];
-mlDecRates[code_, noise_] := Expand[QECLogicalErrorRate[QECCode[code], noise, "Decoder" -> #]] & /@ {"MaximumLikelihood", "MinimumWeight"};
-mlDecPanel[{code_, title_, noise_}] := With[{r = mlDecRates[code, noise]},
-   Plot[Evaluate[Expand[r/p^2]], {p, 0, 0.2}, PlotStyle -> {Automatic, Dashed}, PlotRange -> All, PlotLegends -> {"maximum likelihood", "lookup table"},
-    Frame -> True, FrameLabel -> {"p", Row[{Subscript["P", "L"], " / ", Superscript["p", 2]}]}, ImageSize -> 360,
-    PlotLabel -> Style[Column[{title, If[SameQ @@ r, Row[{Subscript["P", "L"], " = ", TraditionalForm[First[r]]}],
-         Row[{"order ", Superscript["p", 2], ":  ", TraditionalForm[Coefficient[r[[1]], p, 2] p^2], "  against  ", TraditionalForm[Coefficient[r[[2]], p, 2] p^2]}]]}, Alignment -> Center], 12, FontFamily -> "Helvetica"]]];
-mlDecPanels = mlDecPanel /@ mlDecCases;
-Legended[Grid[Partition[First /@ mlDecPanels, 2], Spacings -> {2, 2}], legendBelow[Last[First[mlDecPanels]]]]
+mlDecRates[code_, noise_] := Expand[QECLogicalErrorRate[QECCode[code], noise, "Decoder" -> #, "DecoderReach" -> 3]] & /@ {"MaximumLikelihood", "MinimumWeight"};
+mlDecPL = Association[(#[[2]] -> mlDecRates[#[[1]], #[[3]]]) & /@ mlDecCases];
+mlCheckPlot[code_, title_] := With[{c = QECCode[code]}, With[{h = c["CheckMatrix"], n = c["Qubits"]},
+   Labeled[ArrayPlot[MapThread[Join[#1, 2 #2] &, {h[[All, ;; n]], h[[All, n + 1 ;;]]}], ColorRules -> {0 -> White, 1 -> ColorData[97][1], 2 -> ColorData[97][2]},
+     Mesh -> All, MeshStyle -> GrayLevel[0.85], Frame -> True, FrameTicks -> None, Epilog -> {GrayLevel[0.3], AbsoluteThickness[2], Line[{{n, 0}, {n, Length[h]}}]}, ImageSize -> 20 n],
+    Column[{Style[title, 12, FontFamily -> "Helvetica"], Style[Row[{"[[", Row[c["Parameters"], ","], "]]"}], 11, Gray, FontFamily -> "Helvetica"]}, Center], Top]]];
+mlChecks = Labeled[Row[MapThread[mlCheckPlot, {{"5QubitCode", "SteaneCode", "ShorCode"}, {"five‐qubit code", "Steane code", "Shor code"}}], Spacer[30]],
+   Style[Column[{"check matrices:", "one row per stabilizer,", "one column per qubit", Row[{Style["X part", ColorData[97][1]], " | ", Style["Z part", ColorData[97][2]]}]}, Alignment -> Left, Spacings -> 0.3], 11, FontFamily -> "Helvetica"], Right];
+Column[{mlChecks, Grid[Prepend[KeyValueMap[{#1, TraditionalForm[#2[[1]]], TraditionalForm[#2[[2]]]} &, mlDecPL], Style[#, Bold] & /@ {Row[{Subscript["P", "L"], ": total probability\nof a harmful correction"}], "maximum‐likelihood decoder", "minimum‐weight decoder"}],
+ Alignment -> Left, Dividers -> {None, {2 -> True}}, Spacings -> {2, 1.2}, BaseStyle -> {12, FontFamily -> "Helvetica"}, FrameMargins -> 8]}, Spacings -> 2, Alignment -> Center]
 ```
 
-The five-qubit code gives one polynomial for both decoders: its fifteen nonzero syndromes come from the fifteen one-qubit errors, so the lightest error already lies in the most probable class. The Shor code is degenerate, with many light errors that differ by a check and so share a class, and adding up their probabilities is where maximum likelihood lowers the $p^2$ coefficient most. The Steane code gains less, under depolarizing and $Z$-biased noise alike, and in every panel the order of the two curves holds over the whole range of $p$.
+The top row plots $P_L/p^2$, whose value at $p=0$ is the coefficient of $p^2$, the term that sets $P_L$ at small $p$; the bottom row sets $P_L$ against $p_X+p_Y+p_Z$, the probability that an unencoded qubit suffers an error, and marks the pseudothreshold, the $p$ below which the encoded qubit fails less often:
+
+```wl
+mlDecPanel[{code_, title_, noise_}] := With[{r = mlDecPL[title]},
+   With[{label = Style[title, 11, FontFamily -> "Helvetica"],
+     order2 = Style[Row[{"order ", Superscript["p", 2], ":  ", TraditionalForm[Coefficient[r[[1]], p, 2] p^2], "  against  ", TraditionalForm[Coefficient[r[[2]], p, 2] p^2]}], 11, FontFamily -> "Helvetica"]},
+    Plot[Evaluate[Expand[r/p^2]], {p, 0, 0.2}, PlotStyle -> {Automatic, Dashed}, PlotRange -> All, PlotLegends -> {"maximum‐likelihood decoder:\nundoes the most probable class of errors", "minimum‐weight decoder:\nundoes the lightest error"}, Axes -> False, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed],
+     Frame -> True, FrameLabel -> {"p", Row[{Subscript["P", "L"], " / ", Superscript["p", 2]}]}, AspectRatio -> 1/2, ImageSize -> 290, PlotLabel -> label,
+     Epilog -> Inset[order2, Scaled[{0.97, 0.94}], {Right, Top}]]]];
+mlDecPanels = mlDecPanel /@ mlDecCases;
+mlPTPanel[{code_, title_, noise_}] := With[{r = mlDecPL[title], bare = noise["MeanWeight"]},
+  With[{pts = First[SortBy[p /. Solve[# == bare && 0 < p < 1, p, Reals], N]] & /@ r},
+   LogLogPlot[Evaluate[Append[r, bare]], {p, 10^-3, 1/2}, PlotStyle -> {ColorData[97][1], Directive[ColorData[97][2], Dashed], Directive[ColorData[97][3], Dashed]},
+    Frame -> True, FrameLabel -> {"p", Subscript["P", "L"]}, AspectRatio -> 1/2, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+    PlotLabel -> Style[Row[{"pseudothreshold  ", Row[NumberForm[N[#], 2] & /@ pts, "  against  "]}], 11, FontFamily -> "Helvetica"], FrameTicks -> {{Automatic, None}, {{0.001, 0.01, 0.1}, None}}, ImageSize -> 290,
+    Prolog -> With[{a = Log[10.^-4], b = Log[2.], ya = Log[N[bare /. p -> 10^-4]], yb = Log[N[bare /. p -> 2]], lo = Log[10.^-8], hi = Log[3.]},
+      {{Opacity[0.12], ColorData[97][3], Polygon[{{a, ya}, {b, yb}, {b, lo}, {a, lo}}]}, {Opacity[0.12], ColorData[97][4], Polygon[{{a, ya}, {b, yb}, {b, hi}, {a, hi}}]},
+       Text[Style["error correction helps", 10, ColorData[97][3], FontFamily -> "Helvetica"], Scaled[{0.72, 0.1}]], Text[Style["error correction hurts", 10, ColorData[97][4], FontFamily -> "Helvetica"], Scaled[{0.28, 0.9}]]}],
+    Epilog -> {PointSize[0.03], MapThread[{#2, Point[Log[N[{#1, bare /. p -> #1}]]]} &, {pts, {ColorData[97][1], ColorData[97][2]}}]}]]];
+mlPTPanels = mlPTPanel /@ mlDecCases;
+Legended[Column[{PlotGrid[{First /@ mlDecPanels}, ImageSize -> 1200], PlotGrid[{mlPTPanels}, ImageSize -> 1200]}, Spacings -> 1.5],
+ Placed[LineLegend[{ColorData[97][1], Directive[ColorData[97][2], Dashed], Directive[ColorData[97][3], Dashed]},
+   {"maximum\[Hyphen]likelihood decoder:\nchoices fixed at small p, exact up to p = 0.2", "minimum\[Hyphen]weight decoder:\nundoes the lightest error", Row[{"unencoded qubit: error probability ", Subscript["p", "X"], " + ", Subscript["p", "Y"], " + ", Subscript["p", "Z"]}]}, LegendLayout -> {"Row", 1}], Below]]
+```
+
+Under depolarizing noise the two decoders give the same polynomial for each of the three codes, the same in both columns of the table. $X$, $Y$ and $Z$ are equally likely, so the lightest errors of a syndrome are also its most probable ones, and for these three codes the class the lightest error points to also carries the most probability; for the five-qubit code this is plain, since its fifteen nonzero syndromes come from the fifteen one-qubit errors. Under $Z$-biased noise the two part. A Steane syndrome left by two errors can also be left by two other errors of the same weight, one pair an $X$ and a $Z$, the other an $X$ and a $Y$, ten times less likely, and in different classes; counting weight alone, the minimum-weight decoder sometimes undoes the unlikely pair, while maximum likelihood weighs the classes and lowers the $p^2$ coefficient. Over the plotted range the maximum-likelihood curve never lies above the minimum-weight one.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2233,31 +2398,46 @@ $$
 p_s\;\to\;\frac{\left(\frac14+e^{-4\gamma dt}(p_s-\frac14)\right)\,e^{2\sqrt{\eta\kappa}\,(s_1dJ_1+s_2dJ_2)}}{\sum_{s'}(\cdots)} .
 $$
 
-The $8\times8$ equation is integrated from $(|000\rangle+i|100\rangle)/\sqrt2$, a superposition of two sectors, with the positivity-preserving step of Rouchon and Ralph, at two time steps on the same noise, and the filter runs on each record and is compared with the sector populations $\mathrm{Tr}[\hat\Pi_s\rho]$ of the full state through their largest gap; time is in units of $1/\kappa$:
+The flips are drawn as events at random times, so a true syndrome exists at every moment, and each record is its stabilizer value plus detector noise. The filter starts from the two sectors of $(|000\rangle+i|100\rangle)/\sqrt2$ and sees only the records. The same records also drive the full $8\times8$ equation, integrated with the positivity-preserving step of Rouchon and Ralph at four time steps. For each detector efficiency and flip rate, the left plot shades the true syndrome and draws the probability the filter gives it, with how often the filter's most likely syndrome is the true one; the right plot draws the largest gap between the filter and the sector populations $\mathrm{Tr}[\hat\Pi_s\rho]$ of the full state against the time step. Time is in units of $1/\kappa$:
 
 ```wl
 qecStabs = Normal[QuantumOperator[#]["Matrix"]] & /@ {"ZZI", "IZZ"};
 qecFlips = Normal[QuantumOperator[#]["Matrix"]] & /@ {"XII", "IXI", "IIX"};
 qecSigns = {{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
+qecFlipSigns = {{-1, 1}, {-1, -1}, {1, -1}};
+qecTruth[γ_, dt_, n_] := FoldList[#1 (Times @@ Pick[qecFlipSigns, Thread[#2 < γ dt]]) &, RandomChoice[{{1, 1}, {-1, 1}}], RandomReal[1, {n, 3}]];
+qecRecord[η_, dt_, truth_] := 2 Sqrt[η] Most[truth] dt + RandomVariate[NormalDistribution[0, Sqrt[dt]], {Length[truth] - 1, 2}];
+qecFilter[γ_, η_, dt_, record_] := FoldList[#/Total[#] &[(1/4 + Exp[-4 γ dt] (#1 - 1/4)) Exp[2 Sqrt[η] qecSigns . #2]] &, {0.5, 0.5, 0., 0.}, record];
 qecProj = (IdentityMatrix[8] + #[[1]] qecStabs[[1]]) . (IdentityMatrix[8] + #[[2]] qecStabs[[2]])/4 & /@ qecSigns;
 qecStep[γ_, η_, dt_][ρ_, dJ_] := With[{σ = Sqrt[η] dJ . qecStabs},
    With[{M = (1 - (2 + 3 γ) dt/2 - η dt) IdentityMatrix[8] + σ + σ . σ/2},
     #/Tr[#] &[M . ρ . M + γ dt Total[# . ρ . # & /@ qecFlips] + (1 - η) dt Total[# . ρ . # & /@ qecStabs]]]];
-qecRun[γ_, η_, dt_, kicks_] := Rest @ FoldList[Function[{state, kick}, With[{dJ = 2 Sqrt[η] Re[Tr /@ (qecStabs . First[state])] dt + kick},
-      {qecStep[γ, η, dt][First[state], dJ], dJ}]], {Outer[Times, #, Conjugate[#]] &[(UnitVector[8, 1] + I UnitVector[8, 5])/Sqrt[2.]], {0., 0.}}, kicks];
-qecFilter[γ_, η_, dt_, record_] := FoldList[#/Total[#] &[(1/4 + Exp[-4 γ dt] (#1 - 1/4)) Exp[2 Sqrt[η] qecSigns . #2]] &, {0.5, 0.5, 0., 0.}, record];
-qecTrack[γ_, η_, dt_, kicks_] := With[{run = qecRun[γ, η, dt, kicks]}, With[{filter = qecFilter[γ, η, dt, run[[All, 2]]]},
-    {filter, Max[Abs[Rest[filter] - (Re[Tr /@ (qecProj . First[#])] & /@ run)]]}]];
-qecPanel[η_, γ_] := With[{kicks = RandomVariate[NormalDistribution[0, Sqrt[0.005]], {8000, 2}]},
-   With[{fine = qecTrack[γ, η, 0.005, kicks], coarse = qecTrack[γ, η, 0.01, Total /@ Partition[kicks, 2]]},
-    ListLinePlot[Transpose[First[fine]], DataRange -> {0, 40}, PlotRange -> {-0.02, 1.02}, Frame -> True, FrameLabel -> {"κ t", "syndrome probability"},
-     PlotLabel -> Column[{Row[{"η = ", η, ",   γ/κ = ", γ}], Row[{"largest gap at κ dt = 0.01, 0.005: ", NumberForm[Last[coarse], 2], ", ", NumberForm[Last[fine], 2]}]}, Center],
-     PlotLegends -> (Row[{"(", Subscript["S", "1"], ", ", Subscript["S", "2"], ") = (", #[[1]], ", ", #[[2]], ")"}] & /@ qecSigns), ImageSize -> 300]]];
-qecPanels = BlockRandom[SeedRandom[5]; Outer[qecPanel, {1, 0.2}, {0.01, 0.05, 0.2}]];
-Legended[PlotGrid[Map[First, qecPanels, {2}], ImageSize -> 900], legendBelow[Last[qecPanels[[1, 1]]]]]
+qecRho0 = Outer[Times, #, Conjugate[#]] &[(UnitVector[8, 1] + I UnitVector[8, 5])/Sqrt[2.]];
+qecPopulations[γ_, η_, dt_, record_] := Re[Tr /@ (qecProj . #)] & /@ FoldList[qecStep[γ, η, dt], qecRho0, record];
+qecGap[γ_, η_, dt_, record_] := Max[Abs[qecFilter[γ, η, dt, record] - qecPopulations[γ, η, dt, record]]];
+qecColors = ColorData[97] /@ Range[4];
+qecRow[η_, γ_] := With[{dt = 0.005, n = 8000}, With[{truth = qecTruth[γ, dt, n]}, With[{record = qecRecord[η, dt, truth]},
+    With[{filter = qecFilter[γ, η, dt, record], idx = First[FirstPosition[qecSigns, #]] & /@ truth,
+      gaps = Table[{m dt, qecGap[γ, η, m dt, Total /@ Partition[record, m]]}, {m, {1, 2, 4, 8}}]},
+     With[{bands = {qecColors[[First[#]]], Opacity[0.5], Rectangle[{dt (First[Last[#]] - 1), 0}, {dt Last[Last[#]], 1}]} & /@
+         ({#[[1, 1]], #[[All, 2]]} & /@ SplitBy[Transpose[{idx, Range[Length[idx]]}], First]),
+       hit = Mean[Boole[MapThread[First[Ordering[#1, -1]] == #2 &, {filter, idx}]]]},
+      Grid[{{ListLinePlot[MapThread[Part, {filter, idx}], DataRange -> {0, n dt}, PlotRange -> {{0, n dt}, {0, 1}}, PlotStyle -> Directive[Black, AbsoluteThickness[1]],
+          Prolog -> bands, Frame -> True, FrameLabel -> {"κ t", "P(true syndrome)"},
+          PlotLabel -> Row[{"most likely syndrome correct ", Round[100 hit], "% of the time"}], ImageSize -> 400, AspectRatio -> 0.5],
+         ListLogLogPlot[gaps, Joined -> True, PlotMarkers -> Automatic, Frame -> True, FrameLabel -> {"κ dt", "largest gap"},
+          GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed], PlotLabel -> "filter vs 8×8 state, same record", ImageSize -> 300]}},
+       Spacings -> 3, Alignment -> Center]]]]]];
+qecEtas = {1, 0.2};
+qecRates = {0.01, 0.05, 0.2};
+qecRows = BlockRandom[SeedRandom[5]; Association[Flatten[Outer[{#1, #2} -> qecRow[#1, #2] &, qecEtas, qecRates]]]];
+qecLegend = SwatchLegend[Directive[#, Opacity[0.5]] & /@ qecColors, MapThread[Row[{"(", #1[[1]], ", ", #1[[2]], ")  ", #2}] &, {qecSigns, {"no flip", "qubit 1 flipped", "qubit 2 flipped", "qubit 3 flipped"}}], LegendLabel -> "S₁ = Z₁Z₂,   S₂ = Z₂Z₃", LegendLayout -> {"Row", 1}];
+With[{qecRows = qecRows, qecLegend = qecLegend, qecEtas = qecEtas, qecRates = qecRates},
+ Manipulate[Legended[qecRows[{qecEta, qecRate}], Placed[qecLegend, Below]],
+  Grid[{{Control[{{qecEta, 1, "detector efficiency η"}, qecEtas, SetterBar}], Control[{{qecRate, 0.05, "flip rate γ/κ"}, qecRates, SetterBar}]}}, Spacings -> 4]]]
 ```
 
-The gap roughly halves with the time step, so it is the integration's error: the four probabilities follow the full state, coherences included, and need nothing else from it. With a perfect detector and rare flips the filter jumps cleanly from sector to sector as each flip happens. With a poor detector and frequent flips it rarely settles before the next flip.
+With a perfect detector and rare flips the filter moves to the new syndrome soon after each flip and its best guess is almost always right. With a poor detector and frequent flips it rarely settles before the next flip arrives. In every case the gap falls in proportion to the time step, so it is the integration's error: the four probabilities follow the full state, coherences included, and need nothing else from it. They close on themselves because both stabilizers are diagonal in the sectors and each flip only moves probability from one sector to another. For the same reason, records drawn from a true flip history have the same statistics as records from the quantum model.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2267,7 +2447,7 @@ The gap roughly halves with the time step, so it is the integration's error: the
 ### Markovian feedback that protects the code space, and what the detector costs
 
 
-Three qubits carry the bit-flip code, $|0_L\rangle=|000\rangle$, $|1_L\rangle=|111\rangle$, and each qubit flips at rate $\gamma$ through the channel $\hat c_i=\sqrt\gamma X_i$. Each channel is monitored by homodyne detection of efficiency $\eta$, and its current $I_i$ drives the qubits at once through the Hamiltonian $I_i\hat F_i$, with $\hat F_i=i\sqrt\gamma\,{}[\hat\Pi_{\rm code},X_i]$ and $\hat\Pi_{\rm code}=|000\rangle\langle000|+|111\rangle\langle111|$. How well does this loop hold an encoded state?
+Three qubits carry the bit-flip code, $|0_L\rangle=|000\rangle$, $|1_L\rangle=|111\rangle$, and each qubit flips at rate $\gamma$ through the channel $\hat c_i=\sqrt\gamma X_i$. Each channel is monitored by homodyne detection of efficiency $\eta$, and its current $I_i$ drives the qubits at once through the Hamiltonian $I_i\hat F_i$, with $\hat F_i=i\sqrt\gamma\,{}[\hat\Pi_\mathrm{code},X_i]$ and $\hat\Pi_\mathrm{code}=|000\rangle\langle000|+|111\rangle\langle111|$. How well does this loop hold an encoded state?
 
 With $\hbar=1$ and $\mathcal D[\hat c]\rho=\hat c\rho\hat c^\dagger-\frac12\{\hat c^\dagger\hat c,\rho\}$, the Wiseman-Milburn feedback master equation is
 
@@ -2275,28 +2455,30 @@ $$
 \dot\rho=-\frac{i}{2}\sum_{i=1}^3\left[\hat c_i^\dagger\hat F_i+\hat F_i\hat c_i,\rho\right]+\sum_{i=1}^3\mathcal D[\hat c_i-i\hat F_i]\rho+\frac{1-\eta}{\eta}\sum_{i=1}^3\mathcal D[\hat F_i]\rho .
 $$
 
-The two identities $\hat c_i\hat F_i+\hat F_i\hat c_i=0$, which removes the Hamiltonian term, and $(\hat c_i-i\hat F_i)\hat\Pi_{\rm code}=0$ both hold exactly. The master equation evolves from $|0_L\rangle$ and from $|+_L\rangle=(|000\rangle+|111\rangle)/\sqrt2$, with $\mathcal D[\hat c_i]$ alone as the case without feedback; time is in units of $1/\gamma$:
+The raw current is fed back as it arrives, with no filtering, no estimate of the state and no delay, which is what keeps this equation closed in $\rho$; the part of the current that is detector noise reaches the qubits too, as the last term. The two identities $\hat c_i\hat F_i+\hat F_i\hat c_i=0$, which removes the Hamiltonian term, and $(\hat c_i-i\hat F_i)\hat\Pi_\mathrm{code}=0$ both hold exactly. The master equation evolves from $|0_L\rangle$ and from $|+_L\rangle=(|000\rangle+|111\rangle)/\sqrt2$, with $\mathcal D[\hat c_i]$ alone as the case without feedback; time is in units of $1/\gamma$:
 
 ```wl
 fbFlips = Normal[QuantumOperator[#]["Matrix"]] & /@ {"XII", "IXI", "IIX"};
 fbCode = DiagonalMatrix[UnitVector[8, 1] + UnitVector[8, 8]];
 fbF = I (fbCode . # - # . fbCode) & /@ fbFlips;
 fbChecks = {Max[Abs[MapThread[#1 . #2 + #2 . #1 &, {fbFlips, fbF}]]], Max[Abs[(# . fbCode) & /@ (fbFlips - I fbF)]]};
-fbRho[ops_, rates_, ψ_] := Normal[QuantumEvolve[QuantumOperator[ConstantArray[0, {8, 8}]], QuantumOperator /@ ops -> rates, QuantumState[ψ], {t, 0, 3}]["DensityMatrix"]];
+fbRho[ops_, rates_, ψ_] := Normal[QuantumEvolve[QuantumOperator[ConstantArray[0, {8, 8}]], QuantumOperator /@ ops -> rates, QuantumState[ψ], {t, 0, 2}]["DensityMatrix"]];
 fbEtas = {1, 1/2, 1/10, 1/50};
 fbStarts = {{Row[{"|", Subscript["0", "L"], "⟩"}], UnitVector[8, 1]}, {Row[{"|", Subscript["+", "L"], "⟩"}], (UnitVector[8, 1] + UnitVector[8, 8])/Sqrt[2]}};
 fbCurves[ψ_] := Append[Function[η, fbRho[Join[fbFlips - I fbF, fbF], Join[{1, 1, 1}, ConstantArray[(1 - η)/η, 3]], ψ]] /@ fbEtas, fbRho[fbFlips, {1, 1, 1}, ψ]];
 fbObs = {{Re[Tr[fbCode . #1]] &, "code-space population"}, {Re[Conjugate[#2] . #1 . #2] &, "fidelity with the start"}};
-fbPanel[{name_, ψ_}, ρs_, {obs_, label_}] := Plot[Evaluate[obs[#, ψ] & /@ ρs], {t, 0, 3}, PlotRange -> {0, 1.02}, Frame -> True, FrameLabel -> {"γ t", label}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed],
-   PlotLabel -> Row[{"start ", name}], PlotStyle -> {Automatic, Automatic, Automatic, Automatic, Dashed},
-   PlotLegends -> Append[Row[{"η = ", #}] & /@ fbEtas, "no feedback"], ImageSize -> 300];
+fbPanel[{name_, ψ_}, ρs_, {obs_, label_}] := With[{tag = Style[Row[{"start ", name}], 13, FontFamily -> "Helvetica"]},
+   Plot[Evaluate[obs[#, ψ] & /@ ρs], {t, 0, 2}, PlotRange -> {0, 1.2}, AspectRatio -> 1/2, Frame -> True, FrameLabel -> {"γ t", label},
+    FrameTicks -> {{Range[0, 1, 0.2], None}, {Automatic, None}}, GridLines -> {Automatic, Range[0, 1, 0.2]}, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed],
+    Epilog -> Inset[tag, Scaled[{0.97, 0.96}], {Right, Top}], PlotStyle -> {Automatic, Automatic, Automatic, Automatic, AbsoluteThickness[3.5]},
+    PlotLegends -> Append[Row[{"η = ", #}] & /@ fbEtas, "no feedback"], ImageSize -> 340]];
 fbPanels = Function[start, With[{ρs = fbCurves[Last[start]]}, fbPanel[start, ρs, #] & /@ fbObs]] /@ fbStarts;
-Labeled[Legended[PlotGrid[Transpose[Map[First, fbPanels, {2}]], ImageSize -> 700], legendBelow[Last[fbPanels[[1, 1]]]]],
+Labeled[Legended[PlotGrid[Transpose[Map[First, fbPanels, {2}]], ImageSize -> 760], legendBelow[Last[fbPanels[[1, 1]]]]],
   Style[Row[{Subscript["c", "i"], Subscript["F", "i"], " + ", Subscript["F", "i"], Subscript["c", "i"], " = ", fbChecks[[1]], "   and   (",
-     Subscript["c", "i"], " - i ", Subscript["F", "i"], ")", Subscript["Π", "code"], " = ", fbChecks[[2]], "   for every i"}], 14, FontFamily -> "Helvetica"], Top]
+     Subscript["c", "i"], " - i ", Subscript["F", "i"], ")", Subscript["Π", "code"], " = ", fbChecks[[2]], "   for each qubit i = 1, 2, 3"}], 14, FontFamily -> "Helvetica"], Top]
 ```
 
-At $\eta=1$ the two identities make every encoded state a fixed point, for $|0_L\rangle$ and $|+_L\rangle$ alike. Below unit efficiency the $\mathcal D[\hat F_i]$ term feeds detector noise back onto the qubits: the plateau falls with $\eta$, and at low efficiency the loop empties the code space faster than no feedback. From $|0_L\rangle$ the fidelity falls below the code-space population while from $|+_L\rangle$ the two agree: the noisy loop also flips $|0_L\rangle$ into $|1_L\rangle$, which no stabilizer sees.
+At $\eta=1$ the two identities make every encoded state a fixed point, for $|0_L\rangle$ and $|+_L\rangle$ alike. Below unit efficiency the $\mathcal D[\hat F_i]$ term feeds detector noise back onto the qubits: the plateau falls with $\eta$, and at low efficiency, with this feedback strength, the loop empties the code space faster than no feedback. From $|0_L\rangle$ the fidelity falls below the code-space population while from $|+_L\rangle$ the two agree: the noisy loop also flips $|0_L\rangle$ into $|1_L\rangle$, which no stabilizer sees.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2381,7 +2563,7 @@ Each sector is pushed by its own probability times how far its signs sit from th
 ### A beam splitter with symbolic photon numbers
 
 
-$n_1$ and $n_2$ photons enter the two ports of a beam splitter with mixing angle $\theta$ and phase $\varphi$. What is the probability of finding $t_1$ photons in the first output, for every photon number at once?
+$n_1$ and $n_2$ photons enter the two ports of a beam splitter with mixing angle $\theta$ and phase $\varphi$. What is the probability of finding $m$ photons in the first output, for every photon number at once?
 
 The splitter rotates the creation operators,
 
@@ -2389,23 +2571,29 @@ $$
 \hat a_1^\dagger\to\cos\theta\,\hat a_1^\dagger+e^{i\varphi}\sin\theta\,\hat a_2^\dagger,\qquad \hat a_2^\dagger\to-e^{-i\varphi}\sin\theta\,\hat a_1^\dagger+\cos\theta\,\hat a_2^\dagger,
 $$
 
-so it conserves the photon number, and the second output holds $n_1+n_2-t_1$ photons.
+so it conserves the photon number, and the second output holds $n_1+n_2-m$ photons.
 
-The probability for general $n_1,n_2,t_1,\theta,\varphi$ comes out in closed form (shown at $\varphi=0$); each panel fixes the input photon numbers:
+QF returns the amplitude for general $n_1,n_2,m,\theta,\varphi$ as a Wigner D-function, and the probability as its square:
 
 ```wl
-splitterProb = QuantumInterferometer[{"BS"[θ, φ]}]["Probability", {n1, n2} -> {t1, n1 + n2 - t1}];
-twinPanel[{p_, q_}] := Plot[Evaluate[FullSimplify[Table[splitterProb /. {n1 -> p, n2 -> q, t1 -> j}, {j, 0, p + q}], Element[{θ, φ}, Reals]]],
-    {θ, 0, π/2}, PlotRange -> {0, 1}, PlotStyle -> Table[Directive[If[OddQ[j], Dashed, {}], AbsoluteThickness[If[j < 2, 4, 1.6]]], {j, 0, p + q}],
-    PlotLegends -> Table[Row[{Subscript["t", 1], " = ", j}], {j, 0, p + q}], GridLines -> {{π/4}, None}, Frame -> True,
-    FrameTicks -> {{Automatic, None}, {{#, Style[TraditionalForm[#], FractionBoxOptions -> {Beveled -> True}]} & /@ Range[0, π/2, π/8], None}}, FrameLabel -> {"θ", Row[{"P(", Subscript["t", 1], ")"}]},
-    PlotLabel -> Row[{Subscript["n", 1], " = ", p, ",   ", Subscript["n", 2], " = ", q}], ImageSize -> 300];
-twinPanels = twinPanel /@ {{1, 1}, {2, 2}, {1, 3}};
-Labeled[Legended[PlotGrid[{First /@ twinPanels}, ImageSize -> 900], legendBelow[Last[Last[twinPanels]]]],
-  Style[TraditionalForm[splitterProb /. {φ -> 0, n1 -> Subscript[n, 1], n2 -> Subscript[n, 2], t1 -> Subscript[t, 1]}], 14, FontFamily -> "Times"], Top]
+splitterAmp = Simplify[QuantumInterferometer[{"BS"[θ, φ]}]["Amplitude", {n1, n2} -> {m, n1 + n2 - m}] /.
+    WignerD[{j_, a_, b_}, ψ_, β_, χ_] :> Exp[I (a ψ + b χ)] WignerD[{j, a, b}, β], Element[{θ, φ, n1, n2, m}, Reals]]
+splitterProb = Simplify[Abs[splitterAmp]^2, Element[{θ, φ, n1, n2, m}, Reals]]
 ```
 
-The probability is the squared Wigner D-function of a spin $j=(n_1+n_2)/2$ rotated by $2\theta$: two modes holding $N$ photons carry the spin-$N/2$ representation of SU(2), and the splitter rotates it. The phase $\varphi$ enters the D-function only as a phase factor, so it drops out of the probability. At the balanced splitter (vertical line) equal inputs never leave an odd $t_1$ (dashed), with $n_1=n_2=1$ the Hong-Ou-Mandel zero, while one and three photons never leave two in each output.
+Each panel fixes the input photon numbers:
+
+```wl
+twinPanel[{p_, q_}] := Plot[Evaluate[FullSimplify[Table[splitterProb /. {n1 -> p, n2 -> q, m -> j}, {j, 0, p + q}], Element[{θ, φ}, Reals]]],
+    {θ, 0, π/2}, PlotRange -> {-0.04, 1.04}, PlotStyle -> Table[Directive[If[OddQ[j], Dashed, {}], AbsoluteThickness[If[j < 2, 3, 1.6]]], {j, 0, p + q}],
+    PlotLegends -> Table[Row[{"m = ", j}], {j, 0, p + q}], GridLines -> {{π/4}, None}, Frame -> True,
+    FrameTicks -> {{Automatic, None}, {{#, Style[TraditionalForm[#], FractionBoxOptions -> {Beveled -> True}]} & /@ Range[0, π/2, π/8], None}}, FrameLabel -> {"θ", "P(m)"},
+    PlotLabel -> Row[{"|", p, ", ", q, "⟩  →  |m, ", p + q, " − m⟩"}], ImageSize -> 270];
+twinPanels = twinPanel /@ {{1, 1}, {2, 2}, {1, 3}};
+Legended[PlotGrid[{First /@ twinPanels}, ImageSize -> 810], legendBelow[Last[Last[twinPanels]]]]
+```
+
+The probability is the squared Wigner D-function of a spin $j=(n_1+n_2)/2$ rotated by $2\theta$: two modes holding $N$ photons carry the spin-$N/2$ representation of SU(2), and the splitter rotates it. The phase $\varphi$ enters the D-function only as a phase factor, so it drops out of the probability. At the balanced splitter (vertical line) equal inputs never leave an odd $m$ (dashed), with $n_1=n_2=1$ the Hong-Ou-Mandel zero, while one and three photons never leave two in each output.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2445,24 +2633,33 @@ Loss only scales the coincidence curve by $\eta_1\eta_2$, the chance that both p
 
 Two photons meet at a beam splitter with angle $\theta$ and phase $\varphi$. The first is horizontally polarized, the second is polarized at angle $\chi$, $\cos\chi\,|H\rangle+\sin\chi\,|V\rangle$, and the detectors do not resolve polarization. How does the coincidence probability depend on $\theta$ and $\chi$?
 
-Treat the polarizations as extra modes $1_H,2_H,1_V,2_V$, with the same splitter $\hat a_1^\dagger\to\cos\theta\,\hat a_1^\dagger+e^{i\varphi}\sin\theta\,\hat a_2^\dagger$, $\hat a_2^\dagger\to-e^{-i\varphi}\sin\theta\,\hat a_1^\dagger+\cos\theta\,\hat a_2^\dagger$ on the $H$ pair and on the $V$ pair. The input is $\cos\chi\,|1,1,0,0\rangle+\sin\chi\,|1,0,0,1\rangle$, and the coincidence sums over the four outputs $T$ with one photon in each path:
+Each port carries two modes, one per polarization, so the network has four wires, ordered $1_H,2_H,2_V,1_V$. The one physical splitter, the transformation of the beam-splitter example, treats both polarizations alike, so it appears twice: once on the $H$ pair and once on the $V$ pair. Both photons enter horizontal, $|1,1,0,0\rangle$, and a waveplate on port 2 turns the second photon's polarization by $\chi$: it mixes $2_H$ and $2_V$ as a beam splitter of angle $\chi$ would. The coincidence sums over the four outputs $T$ with one photon in each port:
 
 $$
-P_{\rm coinc}=\sum_T\left|\cos\chi\,A(1100\to T)+\sin\chi\,A(1001\to T)\right|^2 .
+P_\mathrm{coinc}=\sum_T\left|A(1100\to T)\right|^2 .
 $$
 
-Summing the polarization-resolved probabilities gives $P_{\rm coinc}(\theta,\chi)$ for general $\theta,\varphi,\chi$ in closed form:
+The network, each wire labeled by its port and polarization, and $P_\mathrm{coinc}(\theta,\chi)$ for general $\theta,\varphi,\chi$ in closed form; it depends on $\chi$ only through $\cos2\chi$, so it is written as its value at $\chi=0$ times $\cos^2\chi$ plus its value at $\chi=\pi/2$ times $\sin^2\chi$:
 
 ```wl
-polarizedHOM = QuantumInterferometer[{"BS"[θ, φ] -> {1, 2}, "BS"[θ, φ] -> {3, 4}}, 4];
-partialCoincidence = Collect[ComplexExpand @ FullSimplify[Total[Abs[Cos[χ] polarizedHOM["Amplitude", {1, 1, 0, 0} -> #] + Sin[χ] polarizedHOM["Amplitude", {1, 0, 0, 1} -> #]]^2 & /@
-    {{1, 1, 0, 0}, {1, 0, 0, 1}, {0, 1, 1, 0}, {0, 0, 1, 1}}], Element[{θ, φ, χ}, Reals]], Sin[χ]^2, Simplify];
-Plot[Evaluate[Table[partialCoincidence /. χ -> c, {c, {0, π/8, π/4, 3 π/8, π/2}}]], {θ, 0, π/2}, PlotRange -> {0, 1},
-  PlotLegends -> {"χ = 0", "χ = π/8", "χ = π/4", "χ = 3π/8", "χ = π/2"}, GridLines -> {{π/4}, None},
-  Frame -> True, FrameTicks -> {{Automatic, None}, {Range[0, π/2, π/8], None}}, FrameLabel -> {"θ", "P(coincidence)"}, PlotLabel -> TraditionalForm[partialCoincidence], ImageSize -> 420]
+polarizedHOM = QuantumInterferometer[{"BS"[χ, 0] -> {2, 3}, "BS"[θ, φ] -> {1, 2}, "BS"[θ, φ] -> {4, 3}}, 4];
+homRaw = FullSimplify[ComplexExpand[Total[Abs[polarizedHOM["Amplitude", {1, 1, 0, 0} -> #]]^2 & /@ {{1, 1, 0, 0}, {1, 0, 1, 0}, {0, 1, 0, 1}, {0, 0, 1, 1}}]], Element[{θ, φ, χ}, Reals]];
+partialCoincidence = FullSimplify[homRaw /. χ -> 0] Cos[χ]^2 + FullSimplify[homRaw /. χ -> π/2] Sin[χ]^2;
+homDiagramPol = Show[polarizedHOM["Diagram", "ShowParameters" -> True, "ModeLabels" -> False],
+   Graphics[{MapThread[Text[Column[{Style[#1, 11, FontFamily -> "Helvetica"], Style[#3, 10, Italic, GrayLevel[0.5]]}, Alignment -> Right, Spacings -> 0], {0.12, -#2}, {1, 0}] &,
+       {{"port 1, H", "port 2, H", "port 2, V", "port 1, V"}, Range[4], {"photon a", "photon b", "empty", "empty"}}],
+     Text[Style["waveplate on port 2", 11, GrayLevel[0.4]], {1, -3.3}, {0, 1}],
+     Text[Style["H pair", 11, GrayLevel[0.4]], {2.85, -1.5}, {-1, 0}], Text[Style["V pair", 11, GrayLevel[0.4]], {2.85, -3.5}, {-1, 0}]}],
+   PlotRange -> {{-1.05, 3.4}, {-4.75, -0.3}}, ImageSize -> 300];
+homPlotPol = Plot[Evaluate[Table[partialCoincidence /. χ -> c, {c, {0, π/8, π/4, 3 π/8, π/2}}]], {θ, 0, π/2}, PlotRange -> {0, 1},
+  PlotLegends -> {"χ = 0 (identical)", "χ = π/8", "χ = π/4", "χ = 3π/8", "χ = π/2 (orthogonal)"}, GridLines -> {{π/4}, None},
+  Epilog -> Text[Style["balanced", 10, GrayLevel[0.5]], {π/4, 0.97}, {-1.1, 0}],
+  Frame -> True, FrameTicks -> {{Automatic, None}, {Range[0, π/2, π/8], None}}, FrameLabel -> {"splitter angle θ", "P(one photon in each output port)"},
+  PlotLabel -> Row[{"P = ", TraditionalForm[partialCoincidence]}], ImageSize -> 400];
+Grid[{{homDiagramPol, homPlotPol}}, Spacings -> 3, Alignment -> Center]
 ```
 
-The phase $\varphi$ drops out, and $P_{\rm coinc}$ is the Hong-Ou-Mandel curve $\cos^22\theta$ of identical photons weighted by the squared polarization overlap $\cos^2\chi$, plus the distinguishable-particle curve $(3+\cos4\theta)/4=\cos^4\theta+\sin^4\theta$ weighted by $\sin^2\chi$. At the balanced splitter only the second term survives, so the depth of the dip measures how indistinguishable the photons are.
+The phase $\varphi$ drops out, and $P_\mathrm{coinc}$ is the Hong-Ou-Mandel curve $\cos^22\theta$ of identical photons weighted by the squared polarization overlap $\cos^2\chi$, plus the distinguishable-particle curve $(3+\cos4\theta)/4=\cos^4\theta+\sin^4\theta$ weighted by $\sin^2\chi$. At the balanced splitter only the second term survives, so the depth of the dip measures how indistinguishable the photons are.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2506,16 +2703,20 @@ One photon enters each port of an $N$-mode interferometer whose transfer matrix 
 
 The network maps $\hat a_k^\dagger\to\sum_j W_{jk}\,\hat a_j^\dagger$ with $W_{jk}=\omega^{(j-1)(k-1)}/\sqrt N$ and $\omega=e^{2\pi i/N}$; each output amplitude is a permanent of an $N\times N$ matrix built from $W$.
 
-The figure gives the exact probability of every output pattern $\{t_1,\dots,t_N\}$ from $|1,\dots,1\rangle$, for $N=3$ and $N=4$:
+The figure gives the exact probability of every output pattern $\{m_1,\dots,m_N\}$ from $|1,\dots,1\rangle$, for $N=2$, $3$ and $4$:
 
 ```wl
 fourierProbabilities[d_] := QuantumInterferometer[FourierMatrix[d]]["Probabilities", ConstantArray[1, d]];
 fourierChart[d_] := With[{pr = fourierProbabilities[d]}, BarChart[Values[pr], ChartLabels -> Placed[StringJoin[ToString /@ #["Name"]] & /@ Keys[pr], Axis, Rotate[#, Pi/2] &],
-    PlotRange -> {0, 0.4}, Frame -> True, FrameLabel -> {None, "probability"}, PlotLabel -> Row[{"output patterns,  N = ", d}], AspectRatio -> Full, ImageSize -> {80 + 18 Length[pr], 280}]];
-Row[fourierChart /@ {3, 4}, Spacer[20]]
+    PlotRange -> {0, 0.55}, Frame -> True, FrameLabel -> {None, "probability"}, PlotLabel -> Row[{"output patterns,  N = ", d}], AspectRatio -> Full, ImageSize -> 400]];
+fourierViews = AssociationMap[Grid[{{QuantumInterferometer[FourierMatrix[#]]["Diagram", "ShowParameters" -> True, ImageSize -> {Automatic, 200}], fourierChart[#]}}, Spacings -> 3, Alignment -> Center] &, {2, 3, 4}];
+With[{fourierViews = fourierViews},
+ Manipulate[fourierViews[fN], Row[{Control[{{fN, 3, "modes N"}, Keys[fourierViews], SetterBar}], Spacer[20], Dynamic[Pane[Style[<|2 -> "A balanced beam splitter: {1,1} is the Hong‐Ou‐Mandel zero, so both photons leave through the same port.",
+       3 -> "Only all three photons in one port, or one photon in each port, can come out; two in one port and one in another never do.",
+       4 -> "Ten of the 35 patterns occur; the input pattern {1,1,1,1} itself never comes out."|>[fN], 12, LineIndent -> 0], ImageSize -> 520]]}]]]
 ```
 
-Most patterns are exactly zero, among them every two-plus-one pattern at $N=3$ and the input pattern $\{1,1,1,1\}$ itself at $N=4$. Relabeling the input ports cyclically leaves the input unchanged but multiplies the amplitude of $\{t_1,\dots,t_N\}$ by $\omega^{\sum_j (j-1)t_j}$, so a pattern can occur only if that sum is a multiple of $N$, and in both networks every pattern that passes this test does occur.
+Most patterns are exactly zero, among them every two-plus-one pattern at $N=3$ and the input pattern $\{1,1,1,1\}$ itself at $N=4$. Relabeling the input ports cyclically leaves the input unchanged but multiplies the amplitude of $\{m_1,\dots,m_N\}$ by $\omega^{\sum_j (j-1)m_j}$, so a pattern can occur only if that sum is a multiple of $N$, and in every network shown every pattern that passes this test does occur.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -2525,17 +2726,17 @@ Most patterns are exactly zero, among them every two-plus-one pattern at $N=3$ a
 ### Six photons that the suppression law does not darken
 
 
-One photon enters each port of a six-mode lossless network whose transfer matrix is the discrete Fourier matrix. The suppression law of Tichy and coworkers says that an output pattern $\{t_1,\dots,t_6\}$ is dark whenever $\sum_j (j-1)\,t_j$ is not a multiple of 6. Is every pattern the law allows actually bright?
+One photon enters each port of a six-mode lossless network whose transfer matrix is the discrete Fourier matrix. The suppression law of Tichy and coworkers says that an output pattern $\{m_1,\dots,m_6\}$ is dark whenever $\sum_j (j-1)\,m_j$ is not a multiple of 6. Is every pattern the law allows actually bright?
 
 The network maps $\hat a_k^\dagger\to\sum_j W_{jk}\,\hat a_j^\dagger$ with $W_{jk}=\omega^{(j-1)(k-1)}/\sqrt6$ and $\omega=e^{2\pi i/6}$. With one photon per input port, a pattern $T$ has probability
 
 $$
-P(T)=\frac{\left|\operatorname{Per}W_{T}\right|^2}{\prod_j t_j!},
+P(T)=\frac{\left|\operatorname{Per}W_{T}\right|^2}{\prod_j m_j!},
 $$
 
-where $W_T$ uses every column of $W$ once and repeats row $j$ $t_j$ times.
+where $W_T$ uses every column of $W$ once and repeats row $j$ $m_j$ times.
 
-The probabilities of all $\binom{11}{6}$ output patterns from $|1,1,1,1,1,1\rangle$ are exact rational numbers, so a zero is exact; the patterns are sorted by $\sum_j (j-1)\,t_j \bmod 6$:
+The probabilities of all $\binom{11}{6}$ output patterns from $|1,1,1,1,1,1\rangle$ are exact rational numbers, so a zero is exact; the patterns are sorted by $\sum_j (j-1)\,m_j \bmod 6$:
 
 ```wl
 fourierProbs[m_] := KeyMap[#["Name"] &, QuantumInterferometer[FourierMatrix[m]]["Probabilities", ConstantArray[1, m]]];
@@ -2546,9 +2747,9 @@ sixPhotonAllowedDark = Select[Keys[sixPhotonProbs], sixPhotonResidue[#] == 0 && 
 sixPhotonExtra[m_] := Count[Normal @ fourierProbs[m], (t_ -> p_) /; Divisible[Range[0, m - 1] . t, m] && Chop[N[p]] == 0];
 Labeled[BarChart[Table[Lookup[sixPhotonCounts[r], {False, True}, 0], {r, 0, 5}], ChartLayout -> "Stacked",
     ChartLabels -> {Range[0, 5], None}, ChartLegends -> {"bright", "exactly dark"}, Frame -> True,
-    FrameLabel -> {Row[{"\[Sum] (j \[Minus] 1) ", Subscript["t", "j"], "  mod 6"}], "output patterns"}, ImageSize -> 480],
-  Style[Column[{Row[{"allowed by the law, yet exactly dark (", Subscript["t", "1"], "\[Ellipsis]", Subscript["t", "6"], "):"}], Grid[Partition[Row /@ sixPhotonAllowedDark, 6], Spacings -> {2, 0.5}],
-      Row[{"allowed yet dark, m = 2, 3, 4, 5, 6 modes:  ", Row[Append[sixPhotonExtra /@ Range[2, 5], Length[sixPhotonAllowedDark]], ", "]}]}, Alignment -> Center], 13, FontFamily -> "Helvetica"], Top]
+    FrameLabel -> {Row[{"\[Sum] (j \[Minus] 1) ", Subscript["m", "j"], "  mod 6"}], "output patterns"}, ImageSize -> 480],
+  Style[Column[{Row[{"allowed by the law, yet exactly dark (", Subscript["m", "1"], "\[Ellipsis]", Subscript["m", "6"], "):"}], Grid[Partition[Row /@ sixPhotonAllowedDark, 6], Spacings -> {2, 0.5}],
+      Row[{"allowed yet dark, N = 2, 3, 4, 5, 6 modes:  ", Row[Append[sixPhotonExtra /@ Range[2, 5], Length[sixPhotonAllowedDark]], ", "]}]}, Alignment -> Center], 13, FontFamily -> "Helvetica"], Top]
 ```
 
 Every pattern whose sum is not a multiple of 6 is exactly dark, as the law requires. Most patterns with sum 0 are bright, but some are exactly dark as well, each with one or two ports holding two photons. The law is sufficient for darkness but not necessary, and six ports is the smallest Fourier network where it fails to be necessary.
@@ -2571,16 +2772,17 @@ $$
 
 so the kept signal is $\sum_m c_m\langle m,1,0|\hat U|m,1,0\rangle\,|m\rangle$.
 
-The network gives these amplitudes for $m=0,\dots,5$ (bars); the first three give the kept signal for general $c_0,c_1,c_2$:
+$W$ factors into beam splitters with angle and phase $(\theta,\varphi)$ and a phase shifter $\phi$; the network gives these amplitudes for $m=0,\dots,5$ (bars), and the first three give the kept signal for general $c_0,c_1,c_2$:
 
 ```wl
 nsGate = QuantumInterferometer[{{1 - Sqrt[2], 2^(-1/4), Sqrt[3/Sqrt[2] - 2]}, {2^(-1/4), 1/2, (1 - Sqrt[2])/2},
     {Sqrt[3/Sqrt[2] - 2], (1 - Sqrt[2])/2, Sqrt[2] - 1/2}}];
 nsAmps = RootReduce[Table[nsGate["Amplitude", {m, 1, 0} -> {m, 1, 0}], {m, 0, 5}]];
 keptSignal = {c0, c1, c2} Take[nsAmps, 3];
-Labeled[BarChart[nsAmps, PlotLabels -> Range[0, 5],
-    LabelingFunction -> Above, Frame -> True, FrameLabel -> {"signal photons m", "⟨m,1,0|U|m,1,0⟩"}, ImageSize -> 480],
-  Style[Row[{"kept signal  ", TraditionalForm[keptSignal]}], 13, FontFamily -> "Helvetica"], Top]
+Grid[{{nsGate["Diagram", "ShowParameters" -> True], Labeled[BarChart[nsAmps, PlotLabels -> Range[0, 5],
+    LabelingFunction -> (Placed[TraditionalForm[#1], If[#1 >= 0, Above, Below]] &), PlotRangePadding -> {Automatic, Scaled[0.12]},
+    Frame -> True, FrameLabel -> {"signal photons m", "⟨m,1,0|U|m,1,0⟩"}, ImageSize -> 400],
+  Style[Row[{"kept signal  ", TraditionalForm[keptSignal]}], 13, FontFamily -> "Helvetica"], Top]}}, Spacings -> 3, Alignment -> Center]
 ```
 
 For zero, one and two signal photons the amplitudes have the same size and only the two-photon one is negative, so every input comes out with $c_2$ flipped and the same overall factor: the gate works with a probability that does not depend on the input. From three signal photons on the amplitudes differ, so the gate works only on inputs with at most two signal photons.
@@ -2598,7 +2800,7 @@ Two particles, one in each input of a beam splitter with angle $\theta$ and phas
 With transfer matrix $W=\begin{pmatrix}\cos\theta & -e^{-i\varphi}\sin\theta\\ e^{i\varphi}\sin\theta & \cos\theta\end{pmatrix}$, bosons add the two histories with a plus sign, fermions with a minus sign, and distinguishable particles add their probabilities:
 
 $$
-P_{\rm B}=|\operatorname{Per}W|^2,\qquad P_{\rm F}=|\det W|^2,\qquad P_{\rm D}=\operatorname{Per}\left(|W_{jk}|^2\right).
+P_\mathrm{B}=|\operatorname{Per}W|^2,\qquad P_\mathrm{F}=|\det W|^2,\qquad P_\mathrm{D}=\operatorname{Per}\left(|W_{jk}|^2\right).
 $$
 
 For general $\theta,\varphi$ the three coincidence probabilities follow from $W$ in closed form (legend):
@@ -2608,7 +2810,8 @@ statisticsW = QuantumInterferometer[{"BS"[θ, φ]}]["Unitary"];
 statisticsCoincidences = FullSimplify[{Abs[Permanent[statisticsW]]^2, Permanent[Abs[statisticsW]^2], Abs[Det[statisticsW]]^2}, Element[{θ, φ}, Reals]];
 Plot[Evaluate[statisticsCoincidences], {θ, 0, π/2}, PlotRange -> {0, 1.05}, GridLines -> {{π/4}, None},
   PlotLegends -> MapThread[Row[{#1, ":  ", TraditionalForm[#2]}] &, {{"bosons", "distinguishable", "fermions"}, statisticsCoincidences}],
-  Frame -> True, FrameTicks -> {{Automatic, None}, {Range[0, π/2, π/8], None}}, FrameLabel -> {"θ", "P(1, 1)"}, ImageSize -> 420]
+  Frame -> True, FrameTicks -> {{Automatic, None}, {Range[0, π/2, π/8], None}}, FrameLabel -> {"θ", "P(1, 1)"}, ImageSize -> 420,
+  Epilog -> Inset[QuantumInterferometer[{"BS"[θ, φ]}]["Diagram", "ShowParameters" -> True, ImageSize -> 85], Scaled[{0.015, 0.02}], {Left, Bottom}]]
 ```
 
 The phase $\varphi$ drops out of all three. Bosons never separate at the balanced splitter, fermions separate at every $\theta$, and distinguishable particles lie between them. Bosons and fermions differ only in the sign of the exchange term; distinguishable particles have none, so their curve is the average of the other two.
@@ -2660,15 +2863,15 @@ The markers sit on the curves, which for equal arms reduce to $F=n^2\eta^n$. Sin
 ### What one boson-sampling amplitude costs
 
 
-$n$ identical photons enter a random lossless network of $m=2n$ modes with occupation list $S=\{s_1,\dots,s_m\}$, and we ask for the amplitude of one output list $T$. How does the cost of that one number depend on $n$ and on how the photons share the modes?
+$n$ identical photons enter a random lossless network of $M=2n$ modes with occupation list $S=\{s_1,\dots,s_M\}$, and we ask for the amplitude of one output list $T$. How does the cost of that one number depend on $n$ and on how the photons share the modes?
 
-With $W$ the $m\times m$ transfer matrix and $W_{T,S}$ the $n\times n$ matrix that repeats column $k$ $s_k$ times and row $j$ $t_j$ times,
+With $W$ the $M\times M$ transfer matrix and $W_{T,S}$ the $n\times n$ matrix that repeats column $k$ $s_k$ times and row $j$ $m_j$ times,
 
 $$
-A(T\leftarrow S)=\frac{\operatorname{Per}W_{T,S}}{\sqrt{\prod_k s_k!\,\prod_j t_j!}} .
+A(T\leftarrow S)=\frac{\operatorname{Per}W_{T,S}}{\sqrt{\prod_k s_k!\,\prod_j m_j!}} .
 $$
 
-Ryser's and Glynn's formulas evaluate a permanent in about $n\,2^n$ operations. When modes hold several photons, the amplitude can instead be grouped into a sum of $\min\{\prod_k(s_k+1),\prod_j(t_j+1)\}$ terms, each costing about one multiply per pair of occupied input and output modes; the computation here takes this grouped sum only when its estimated cost is about 50 times below $n\,2^n$.
+Ryser's and Glynn's formulas evaluate a permanent in about $n\,2^n$ operations. When modes hold several photons, the amplitude can instead be grouped into a sum of $\min\{\prod_k(s_k+1),\prod_j(m_j+1)\}$ terms, each costing about one multiply per pair of occupied input and output modes; the computation here takes this grouped sum only when its estimated cost is about 50 times below $n\,2^n$.
 
 Each amplitude is timed as the fastest of five runs, each with cleared caches, with the input in the first $n$ modes and the output pattern moved to the last $n$:
 
@@ -2679,7 +2882,7 @@ bsNetwork[n_] := BlockRandom[SeedRandom[1107 + 1000 n]; QuantumInterferometer["R
 bsSeconds[q_, s_] := With[{t = RotateRight[s, Total[s]]}, Min @ Table[ClearSystemCache[]; First @ AbsoluteTiming[q["Amplitude", s -> t]], 5]];
 bsTimes = AssociationMap[Function[n, With[{q = bsNetwork[n]}, bsSeconds[q, #] & /@ bsOccupations[n]]], {12, 14, 16, 18, 20}];
 ListLogPlot[Transpose[bsTimes], Joined -> True, PlotMarkers -> Automatic,
-  Frame -> True, FrameLabel -> {"photons n  (m = 2n modes)", "seconds per amplitude"}, ImageSize -> 450]
+  Frame -> True, FrameLabel -> {"photons n  (M = 2n modes)", "seconds per amplitude"}, ImageSize -> 450]
 ```
 
 The collision-free amplitude grows exponentially, a straight line on the log scale. For pairs at these photon numbers the grouped sum is not cheap enough (it overtakes the permanent only near $n=44$), so the permanent is computed and the paired curve tracks the collision-free one within timing noise, while the fully bunched amplitude needs only $n+1$ terms and stays essentially free.
@@ -2728,9 +2931,9 @@ Every setting of both meshes comes out in closed form, the phases as rational mu
 
 Two modes with annihilation operators $\hat a_1,\hat a_2$ meet on a beam splitter with mixing angle $\theta$ and phase $\varphi$, and $n_1$, $n_2$ photons enter. Without truncating the Fock space, what does the splitter do to the creation operators?
 
-The splitter is $\hat B=e^{\hat G}$ with $\hat G=\theta\left(e^{i\varphi}\hat a_1\hat a_2^\dagger-e^{-i\varphi}\hat a_1^\dagger \hat a_2\right)$ and $[\hat a_j,\hat a_k^\dagger]=\delta_{jk}$. By $e^{\hat G}\hat a_k^\dagger e^{-\hat G}=\hat a_k^\dagger+[\hat G,\hat a_k^\dagger]+\frac1{2!}[\hat G,[\hat G,\hat a_k^\dagger]]+\dots$, if $[\hat G,\cdot\,]$ maps $(\hat a_1^\dagger,\hat a_2^\dagger)$ linearly by a matrix $M$, then $\hat a_k^\dagger\to\sum_j W_{jk}\hat a_j^\dagger$ with $W=e^{M}$. The vacuum stays put, so $|n_1,n_2\rangle$ leaves as $(\sum_j W_{j1}x_j)^{n_1}(\sum_j W_{j2}x_j)^{n_2}/\sqrt{n_1!\,n_2!}$ with $x_j$ standing for $\hat a_j^\dagger$, and $x_1^{t_1}x_2^{t_2}$ is $\sqrt{t_1!\,t_2!}\,|t_1,t_2\rangle$.
+The splitter is $\hat B=e^{\hat G}$ with $\hat G=\theta\left(e^{i\varphi}\hat a_1\hat a_2^\dagger-e^{-i\varphi}\hat a_1^\dagger \hat a_2\right)$ and $[\hat a_j,\hat a_k^\dagger]=\delta_{jk}$. By $e^{\hat G}\hat a_k^\dagger e^{-\hat G}=\hat a_k^\dagger+[\hat G,\hat a_k^\dagger]+\frac1{2!}[\hat G,[\hat G,\hat a_k^\dagger]]+\dots$, if $[\hat G,\cdot\,]$ maps $(\hat a_1^\dagger,\hat a_2^\dagger)$ linearly by a matrix $M$, then $\hat a_k^\dagger\to\sum_j W_{jk}\hat a_j^\dagger$ with $W=e^{M}$. The vacuum stays put, so $|n_1,n_2\rangle$ leaves as $(\sum_j W_{j1}x_j)^{n_1}(\sum_j W_{j2}x_j)^{n_2}/\sqrt{n_1!\,n_2!}$ with $x_j$ standing for $\hat a_j^\dagger$, and $x_1^{m_1}x_2^{m_2}$ is $\sqrt{m_1!\,m_2!}\,|m_1,m_2\rangle$.
 
-The commutators for general $\theta,\varphi$ give $e^{M}$, compared with the network's transfer matrix; the curves are the probabilities of $t_1$ photons in output 1 read off the polynomial, and the markers the Fock-space beam-splitter operator at $\varphi=\pi/3$:
+The commutators for general $\theta,\varphi$ give $e^{M}$, compared with the network's transfer matrix; the curves are the probabilities of $m_1$ photons in output 1 read off the polynomial, and the markers the Fock-space beam-splitter operator at $\varphi=\pi/3$:
 
 ```wl
 algBSVars = FieldVariables[{\[FormalA], \[FormalB]}];
@@ -2741,9 +2944,9 @@ algBSProb[{n1_, n2_}] := With[{x = Array[\[FormalX], 2]}, KeySort @ Association[
      CoefficientRules[Expand[(x . algBSW[[All, 1]])^n1 (x . algBSW[[All, 2]])^n2], x]]];
 algBSFock[{n1_, n2_}] := With[{d = n1 + n2 + 1}, Transpose @ Table[With[{pr = ArrayReshape[BeamSplitterOperator[{t, π/3}, d][FockState[{n1, n2}, d]]["ProbabilitiesList"], {d, d}]},
       Table[{t, pr[[j + 1, n1 + n2 - j + 1]]}, {j, 0, n1 + n2}]], {t, 0., N[π/2], N[π/16]}]];
-algBSPanel[in_] := Show[Plot[Evaluate[Values[algBSProb[in]]], {θ, 0, π/2}, PlotRange -> All, PlotLegends -> Table[Row[{Subscript["t", 1], " = ", j}], {j, 0, Total[in]}]],
+algBSPanel[in_] := Show[Plot[Evaluate[Values[algBSProb[in]]], {θ, 0, π/2}, PlotRange -> All, PlotLegends -> Table[Row[{Subscript["m", 1], " = ", j}], {j, 0, Total[in]}]],
     ListPlot[algBSFock[in], PlotMarkers -> Automatic], PlotRange -> {-0.02, 1.02}, Frame -> True, FrameTicks -> {{Automatic, None}, {{#, Style[TraditionalForm[#], FractionBoxOptions -> {Beveled -> True}]} & /@ Range[0, π/2, π/8], None}},
-    FrameLabel -> {"θ", Row[{"P(", Subscript["t", 1], ")"}]}, PlotLabel -> Row[{"input  |", Subscript["n", 1], ", ", Subscript["n", 2], "⟩ = |", in[[1]], ", ", in[[2]], "⟩"}], ImageSize -> 300];
+    FrameLabel -> {"θ", Row[{"P(", Subscript["m", 1], ")"}]}, PlotLabel -> Row[{"input  |", Subscript["n", 1], ", ", Subscript["n", 2], "⟩ = |", in[[1]], ", ", in[[2]], "⟩"}], ImageSize -> 300];
 algBSPanels = algBSPanel /@ {{2, 1}, {3, 1}, {3, 2}};
 algBSCoef[c_] := If[MatchQ[c, Times[-1, __]], Row[{"\[Minus]", TraditionalForm[-c]}], TraditionalForm[c]];
 Labeled[Legended[PlotGrid[{First /@ algBSPanels}, ImageSize -> 900], legendBelow[Last[Last[algBSPanels]]]],
@@ -2835,11 +3038,12 @@ heraldPanel[t_, b_] := With[{w = heraldWigner[t, b]},
 heraldPanels = AssociationThread[{π/8, π/4, 3 π/8}, Outer[heraldPanel, {π/8, π/4, 3 π/8}, {0.5, 1, 2}]];
 heraldLabel = Style[Row[{"QF:  ", TraditionalForm[FullSimplify[heraldAmps[[;; 2]], Element[θ, Reals]]], " for k = 0, 1;    all k ≤ 14 equal ⟨k|ψ⟩:  ",
      FullSimplify[heraldAmps - heraldModel, Element[θ, Reals]] === ConstantArray[0, 15]}], 13, FontFamily -> "Helvetica"];
-Manipulate[Labeled[Legended[Grid[{heraldPanels[θv]}], BarLegend[{heraldColors, {-1, 1}}, LegendLabel -> "πW"]], heraldLabel, Top],
+With[{controlNotes = controlNotes, heraldPanels = heraldPanels, heraldColors = heraldColors, heraldLabel = heraldLabel},
+ Manipulate[Labeled[Legended[Grid[{heraldPanels[θv]}], BarLegend[{heraldColors, {-1, 1}}, LegendLabel -> "πW"]], heraldLabel, Top],
   Row[{Control[{{θv, π/4, "θ"}, Keys[heraldPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"θ = ", θv}], <|π/8 -> "Weak light looks like the coherent bump |β cos θ⟩.",
         π/4 -> "The negative dip deepens as |β| grows.",
-        3 π/8 -> "|β| = 1 heralds nearly a single photon; at |β| = 2 the dip is shallower again."|>[θv]}}]]}], SaveDefinitions -> True]
+        3 π/8 -> "|β| = 1 heralds nearly a single photon; at |β| = 2 the dip is shallower again."|>[θv]}}]]}]]]
 ```
 
 Output 2 is a displaced superposition of $|0\rangle$ and $|1\rangle$, so its Wigner function is negative somewhere whenever the reflected photon contributes; with weak light and a small $\theta$ that negative region is too shallow to reach the white contour at $\pi W=-0.01$, and output 2 looks like the coherent bump $|\beta\cos\theta\rangle$. A larger $\theta$ or a brighter $\beta$ deepens it, beside a crescent of positive $W$, until $|\beta|\sin\theta$ reaches about 1, where the click heralds a displaced single photon; past that the vacuum part returns and the dip grows shallower again, as at $\theta=3\pi/8$, $|\beta|=2$.
@@ -2919,14 +3123,17 @@ catColors = ColorData["Rainbow"][(1 + #)/2] &;
 catParity = (Exp[-2 α^2] + Cos[φ])/(1 + Exp[-2 α^2] Cos[φ]);
 catPanel[amp_, phase_] := With[{w = WignerRepresentation[CatState[40][N[amp], N[phase]], {-6, 6}, {-3, 3}, "GridSize" -> 61]},
   Plot3D[π w[x, p], {x, -6, 6}, {p, -3, 3}, PlotRange -> {-1, 1}, ColorFunction -> (catColors[#3] &), ColorFunctionScaling -> False, PlotPoints -> 40, MaxRecursion -> 0,
-   MeshFunctions -> {#3 &}, Mesh -> {{0}}, MeshStyle -> Directive[White, Thick], BoxRatios -> {2, 1, 0.6}, AxesLabel -> {"x", "p", "πW"}, ImageSize -> 340,
+   MeshFunctions -> {#3 &}, Mesh -> {{0}}, MeshStyle -> Directive[GrayLevel[1, 0.4], Thin], BoxRatios -> {2, 1, 0.6}, AxesLabel -> {"x", "p", "πW"}, ImageSize -> 250, PlotStyle -> Opacity[0.6], ViewPoint -> {1.2, -2.8, 0.55},
    PlotLabel -> Column[{Row[{"α = ", amp, ",   φ = ", StringReplace[ToString[phase, InputForm], "Pi" -> "π"]}], Row[{"computed πW(0,0) = ", NumberForm[π w[0, 0], {4, 3}, ExponentFunction -> (Null &)]}]}, Alignment -> Center]]];
-catPanels = AssociationThread[{1, 2, 3}, Outer[catPanel, {1, 2, 3}, {0, π/2, π}]];
-Manipulate[Labeled[Legended[Grid[{catPanels[amp]}], BarLegend[{catColors, {-1, 1}}, LegendLabel -> "πW"]],
+catPanels = AssociationThread[{0.5, 1, 1.5, 2, 3}, Outer[catPanel, {0.5, 1, 1.5, 2, 3}, {0, π/2, π}]];
+With[{controlNotes = controlNotes, catPanels = catPanels, catColors = catColors, catParity = catParity},
+ Manipulate[Labeled[Legended[Grid[{catPanels[amp]}], Placed[BarLegend[{catColors, {-1, 1}}, LegendLabel -> "πW", LegendLayout -> "Row"], Below]],
   Style[Row[{"πW(0,0) = ⟨Π⟩ = ", TraditionalForm[catParity]}], 15, FontFamily -> "Helvetica"], Top], Row[{Control[{{amp, 2, "α"}, Keys[catPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
-      {Row[{"α = ", amp}], <|1 -> "The lobes still overlap, yet W already goes negative.",
+      {Row[{"α = ", amp}], <|0.5 -> "The lobes merge: the even cat looks like the vacuum, the odd cat like one photon, with πW = −1 at the origin.",
+        1 -> "The lobes still overlap, yet W already goes negative.",
+        1.5 -> "The lobes separate; fringes form between them.",
         2 -> "The lobes pull apart; fringes between them dip below zero.",
-        3 -> "The fringes crowd together; at φ = π/2 the origin sits near zero."|>[amp]}}]]}], SaveDefinitions -> True]
+        3 -> "The fringes crowd together; at φ = π/2 the origin sits near zero."|>[amp]}}]]}]]]
 ```
 
 As $\alpha$ grows the two coherent lobes, at $x=\pm\sqrt2\,\alpha$, pull apart, and the fringes along $p$ between them dip below zero and crowd together; at $\alpha=1$ the lobes still overlap, yet $W$ already goes negative. In every panel the origin takes the closed-form parity: $\varphi=0$ and $\varphi=\pi$ give parity eigenstates at $\pm1$ for every $\alpha$, while at $\varphi=\pi/2$ the parity is $e^{-2\alpha^2}$, so the origin falls toward zero, between a positive and a negative fringe.
@@ -2944,10 +3151,10 @@ A field mode in thermal equilibrium, with mean photon number $\bar n$, is squeez
 With $\hat x=(\hat a+\hat a^\dagger)/\sqrt2$ and $\hat p=(\hat a-\hat a^\dagger)/i\sqrt2$, the state is
 
 $$
-\rho=\hat S(r)\,\rho_{\rm th}\,\hat S^\dagger(r),\qquad \hat S(r)=e^{r\left(\hat a^2-\hat a^{\dagger2}\right)/2},\qquad \rho_{\rm th}=\sum_n\frac{\bar n^{\,n}}{(1+\bar n)^{n+1}}\,|n\rangle\langle n| .
+\rho=\hat S(r)\,\rho_\mathrm{th}\,\hat S^\dagger(r),\qquad \hat S(r)=e^{r\left(\hat a^2-\hat a^{\dagger2}\right)/2},\qquad \rho_\mathrm{th}=\sum_n\frac{\bar n^{\,n}}{(1+\bar n)^{n+1}}\,|n\rangle\langle n| .
 $$
 
-The state is Gaussian, so its Wigner function is the Gaussian $W\propto e^{-v\cdot\sigma^{-1}v/2}$ in $v=(x,p)$, fixed by the quadrature covariance matrix $\sigma$ ($\sigma=\frac12$ for the vacuum). The Husimi function $Q(x,p)=\langle\alpha|\rho|\alpha\rangle/2\pi$, with $\alpha=(x+ip)/\sqrt2$, is $W$ smoothed by the vacuum's Wigner function, so it is the Gaussian with $\sigma+\frac12$. Half the peak of either lies on the ellipse $v\cdot\sigma^{-1}v=2\ln2$. Here $\sigma=(\bar n+\frac12)\,{\rm diag}(e^{-2r},e^{2r})$, so the $W$ ellipse enters the vacuum's circle once $r>\frac12\ln(2\bar n+1)$.
+The state is Gaussian, so its Wigner function is the Gaussian $W\propto e^{-v\cdot\sigma^{-1}v/2}$ in $v=(x,p)$, fixed by the quadrature covariance matrix $\sigma$ ($\sigma=\frac12$ for the vacuum). The Husimi function $Q(x,p)=\langle\alpha|\rho|\alpha\rangle/2\pi$, with $\alpha=(x+ip)/\sqrt2$, is $W$ smoothed by the vacuum's Wigner function, so it is the Gaussian with $\sigma+\frac12$. Half the peak of either lies on the ellipse $v\cdot\sigma^{-1}v=2\ln2$. Here $\sigma=(\bar n+\frac12)\,\mathrm{diag}(e^{-2r},e^{2r})$, so the $W$ ellipse enters the vacuum's circle once $r>\frac12\ln(2\bar n+1)$.
 
 $\sigma$ comes from the state on a Fock space cut at 140 levels. Each panel draws the half-peak ellipses of $W$ and $Q$ and, dashed, those of the vacuum:
 
@@ -2959,10 +3166,11 @@ sqPanel[nb_, r_] := With[{cov = sqCovariance[nb, r], v = {x, p}},
    {x, -5, 5}, {p, -5, 5}, ContourStyle -> {Automatic, Automatic, Dashed, Dashed}, PlotLegends -> {"Wigner W", "Husimi Q", "vacuum W", "vacuum Q"},
    FrameLabel -> {"x", "p"}, PlotLabel -> Row[{OverBar["n"], " = ", nb, ",   r = ", r}], ImageSize -> 260]];
 sqPanels = AssociationThread[{0, 0.5, 1}, Outer[sqPanel, {0, 0.5, 1}, {0, 0.5, 1}]];
-Manipulate[Legended[PlotGrid[{First /@ sqPanels[nb]}, ImageSize -> 780], legendBelow[Last[sqPanels[0][[1]]]]], Row[{Control[{{nb, 0.5, OverBar["n"]}, Keys[sqPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{legendBelow = legendBelow, controlNotes = controlNotes, sqPanels = sqPanels},
+ Manipulate[Legended[PlotGrid[{First /@ sqPanels[nb]}, ImageSize -> 780], legendBelow[Last[sqPanels[0][[1]]]]], Row[{Control[{{nb, 0.5, OverBar["n"]}, Keys[sqPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{OverBar["n"], " = ", nb}], <|0 -> "Any squeezing pushes W inside the vacuum circle.",
         0.5 -> "r = 0.5 already pushes W inside the vacuum circle.",
-        1 -> "r = 0.5 stays just outside; only r = 1 pushes W inside."|>[nb]}}]]}], SaveDefinitions -> True]
+        1 -> "r = 0.5 stays just outside; only r = 1 pushes W inside."|>[nb]}}]]}]]]
 ```
 
 Squeezing narrows both ellipses along $x$ and stretches them along $p$, while thermal noise widens them in every direction, so at $\bar n=1$ the Wigner ellipse at $r=0.5$ still sits just outside the vacuum's circle and only $r=1$ pushes it inside, as the threshold predicts. $Q$ is $W$ smoothed by the vacuum, so every $Q$ ellipse is its $W$ ellipse widened by one vacuum's worth of noise: it never enters the vacuum's $W$ circle, yet it enters the vacuum's own $Q$ circle exactly when $W$ enters the vacuum's $W$ circle. Only the width of $W$ is the quadrature noise itself.
@@ -3028,15 +3236,15 @@ jcPanel[nbar_, Δv_] := Plot[Evaluate[jcRecord[nbar, Δv]], {t, 0, 60}, PlotPoin
     PlotLabel -> Row[{OverBar["n"], " = ", nbar, ",   \[CapitalDelta]/g = ", Δv}], ImageSize -> 330];
 jcPanels = AssociationMap[jcPanel @@ # &, Tuples[{{5, 20}, {0, 2, 4, 6}}]];
 With[{formula = Style[Row[{Subscript["w", "n"], "(t) = ", TraditionalForm[jcInversion]}], 13, FontFamily -> "Helvetica"]},
-  Manipulate[jcPanels[{nb, d}],
+  With[{controlNotes = controlNotes, jcPanels = jcPanels},
+ Manipulate[jcPanels[{nb, d}],
     Row[{Column[{Control[{{nb, 20, OverBar["n"]}, {5, 20}, SetterBar}], Control[{{d, 0, "\[CapitalDelta]/g"}, {0, 2, 4, 6}, SetterBar}]}], Spacer[40], Column[{formula, Dynamic[controlNotes[{
       {Row[{OverBar["n"], " = ", nb}], <|5 -> "Revivals smear into one another.",
         20 -> "Revivals stand apart cleanly."|>[nb]},
       {Row[{"Δ/g = ", d}], <|0 -> "Collapses about zero, then revives.",
         2 -> "Oscillates about a raised level; the revival comes later.",
         4 -> "A higher level and a later revival.",
-        6 -> "The inversion stays near 1: the atom emits little."|>[d]}}]]}, Spacings -> 1]}],
-    SaveDefinitions -> True]]
+        6 -> "The inversion stays near 1: the atom emits little."|>[d]}}]]}, Spacings -> 1]}]]]]
 ```
 
 The oscillation does not survive at first: the photon numbers rotate the atom at different frequencies $\sqrt{\Delta^2+4g^2(n+1)}$, so the inversion collapses within a few $1/g$, and it revives when their phases realign. On resonance the revivals stand apart cleanly only in the larger field. Detuning lifts the level around which the inversion oscillates, because each $w_n$ is pulled toward 1, and delays the revival; the larger the detuning, the closer the inversion stays to 1 and the less the atom emits.
@@ -3078,12 +3286,13 @@ negPanel[key_, {κ_, Δ_}] := ListLinePlot[negData[{κ, Δ}, key], PlotStyle -> 
     PlotLegends -> {"coherent field", "phase-randomized field"}, Frame -> True, FrameLabel -> {"g t", negAxes[key][[1]]},
     ImageSize -> 260];
 negPanels = AssociationMap[Function[c, negPanel[#, c] & /@ Keys[negAxes]], negCases];
-Manipulate[Legended[Grid[{First /@ negPanels[{k, d}]}], legendBelow[Last[First[negPanels[{k, d}]]]]],
+With[{legendBelow = legendBelow, controlNotes = controlNotes, negPanels = negPanels},
+ Manipulate[Legended[Grid[{First /@ negPanels[{k, d}]}], legendBelow[Last[First[negPanels[{k, d}]]]]],
   Row[{Column[{Control[{{k, 0, "\[Kappa]/g"}, {0, 0.1}, SetterBar}], Control[{{d, 0, "\[CapitalDelta]/g"}, {0, 2}, SetterBar}]}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"κ/g = ", k}], <|0 -> "No loss: negativity builds after the collapse and returns.",
         0.1 -> "Loss: the guaranteed part (dashed) vanishes first, then all of it."|>[k]},
       {Row[{"Δ/g = ", d}], <|0 -> "The record swings about zero.",
-        2 -> "The record sits above zero, and less negativity builds."|>[d]}}]]}], SaveDefinitions -> True]
+        2 -> "The record sits above zero, and less negativity builds."|>[d]}}]]}]]]
 ```
 
 The cavity's Wigner function shows what the two curves measure; red is positive and blue negative, on resonance and without loss, at four times in units of $1/g$:
@@ -3151,12 +3360,11 @@ Quantifier elimination (`Reduce`, `Resolve`) turns statements about every state,
 
 &nbsp;
 
-### GHZ and W: two kinds of three-qubit entanglement
-
+### GHZ and W: arbitrarily close, never connected
 
 Three qubits share $|\mathrm{GHZ}\rangle=(|000\rangle+|111\rangle)/\sqrt2$ or $|W\rangle=(|001\rangle+|010\rangle+|100\rangle)/\sqrt3$. Each party may apply any invertible local map $A$, $B$, $C$, even one that succeeds only with some probability. Can such maps turn GHZ into W?
 
-The maps act as $|\psi\rangle\mapsto(A\otimes B\otimes C)|\psi\rangle$, followed by normalization. Cut the amplitudes $\psi_{ijk}$ into the two $2\times2$ slices $M_i=(\psi_{ijk})_{jk}$; the Cayley hyperdeterminant $\operatorname{Det}\psi$ is the discriminant of the quadratic $\det(M_0+xM_1)$, and the three-tangle of a normalized state is $\tau_3=4|\operatorname{Det}\psi|$. The family
+The maps act as $|\psi\rangle\mapsto(A\otimes B\otimes C)|\psi\rangle$, followed by normalization. Cut the amplitudes $\psi_{ijk}$ into the two $2\times2$ slices $M_i=(\psi_{ijk})_{jk}$; the Cayley hyperdeterminant $\operatorname{Det}\psi$ is the discriminant of the quadratic $\det(M_0+xM_1)$, and the three-tangle of a normalized state is $\tau_3=4|\operatorname{Det}\psi|$. It is the part of qubit 1's entanglement that no single pair carries, $\tau_3=\mathcal C_{1|23}^2-\mathcal C_{12}^2-\mathcal C_{13}^2$ (Coffman, Kundu and Wootters), with $\mathcal C$ the concurrence: $1$ for GHZ and $\frac89-\frac49-\frac49=0$ for W. The family
 
 $$
 |\psi_\varepsilon\rangle\propto A_\varepsilon^{\otimes3}|\mathrm{GHZ}\rangle\propto(|0\rangle+\varepsilon|1\rangle)^{\otimes3}-|000\rangle,\qquad A_\varepsilon=\begin{pmatrix}1&-1\\ \varepsilon&0\end{pmatrix},\quad\det A_\varepsilon=\varepsilon,
@@ -3164,24 +3372,43 @@ $$
 
 is GHZ moved by an invertible map for every $\varepsilon>0$.
 
-Transforming both states with all twelve entries of $A,B,C$ general gives $\tau_3$ and the infidelity $1-|\langle W|\psi_\varepsilon\rangle|^2$ in closed form:
+With all twelve entries of $A$, $B$, $C$ left as symbols, both states are transformed and their hyperdeterminants compared with $(\det A\det B\det C)^2$; the family $\psi_\varepsilon$ gives $\tau_3$ and the infidelity with W in closed form:
 
 ```wl
 hyperdetSLOCC[v_] := With[{m = ArrayReshape[Normal[v], {2, 2, 2}]}, With[{c = CoefficientList[Det[m[[1]] + \[FormalX] m[[2]]], \[FormalX], 3]}, c[[2]]^2 - 4 c[[1]] c[[3]]]];
 {ghzSLOCC, wSLOCC} = QuantumState[#[3]] & /@ {"GHZ", "W"};
 mapSLOCC = QuantumTensorProduct @@ (QuantumOperator[Array[#, {2, 2}]] & /@ {slA, slB, slC});
 detsSLOCC = Times @@ (Det[Array[#, {2, 2}]] & /@ {slA, slB, slC});
-ghzMapSLOCC = Normal[mapSLOCC[ghzSLOCC]["StateVector"]];
-{ghzRuleQ, wRuleQ} = {Expand[hyperdetSLOCC[ghzMapSLOCC] - detsSLOCC^2/4] === 0, Expand[hyperdetSLOCC[mapSLOCC[wSLOCC]["StateVector"]]] === 0};
+{ghzMapSLOCC, wMapSLOCC} = Normal[mapSLOCC[#]["StateVector"]] & /@ {ghzSLOCC, wSLOCC};
+{ghzRuleQ, wRuleQ} = {Expand[hyperdetSLOCC[ghzMapSLOCC] - detsSLOCC^2/4] === 0, Expand[hyperdetSLOCC[wMapSLOCC]] === 0};
 vecSLOCC = ghzMapSLOCC /. Flatten[Thread[Flatten[Array[#, {2, 2}]] -> {1, -1, \[Epsilon], 0}] & /@ {slA, slB, slC}];
 {tau3SLOCC, infidSLOCC} = Simplify[{4 Abs[hyperdetSLOCC[vecSLOCC]]/(vecSLOCC . vecSLOCC)^2, 1 - (Normal[wSLOCC["StateVector"]] . vecSLOCC)^2/(vecSLOCC . vecSLOCC)}, \[Epsilon] > 0];
-LogLogPlot[{tau3SLOCC, infidSLOCC}, {\[Epsilon], 10^-3, 1}, PlotRange -> All, PlotStyle -> {Automatic, Dashed},
- PlotLegends -> {Subscript["\[Tau]", 3], "1 - |\[LeftAngleBracket]W|\[Psi]\[RightAngleBracket]|²"}, Frame -> True, FrameLabel -> {"\[Epsilon]", None}, ImageSize -> 420,
- PlotLabel -> Style[Column[{Row[{"Det((A\[CircleTimes]B\[CircleTimes]C)GHZ) = (det A det B det C)²/4: ", ghzRuleQ}], Row[{"Det((A\[CircleTimes]B\[CircleTimes]C)W) = 0: ", wRuleQ}],
-     Row[{Subscript["\[Tau]", 3], " = ", TraditionalForm[tau3SLOCC], ",   1 - |\[LeftAngleBracket]W|\[Psi]\[RightAngleBracket]|² = ", TraditionalForm[infidSLOCC]}]}], 13, FontFamily -> "Helvetica"]]
+Grid[{{Subscript["\[Tau]", 3], "=", TraditionalForm[tau3SLOCC]}, {Row[{"1 - |\[LeftAngleBracket]W|", Subscript["A", "\[Epsilon]"], Subscript["A", "\[Epsilon]"], Subscript["A", "\[Epsilon]"], "|GHZ\[RightAngleBracket]|²"}], "=", TraditionalForm[infidSLOCC]},
+  {Row[{"Det((A\[CircleTimes]B\[CircleTimes]C)GHZ) = (det A det B det C", Superscript[")", 2], "/4"}], "", ghzRuleQ}, {"Det((A\[CircleTimes]B\[CircleTimes]C)W) = 0", "", wRuleQ}},
+  Alignment -> {{Right, Center, Left}}, Spacings -> {1, 1.2}, BaseStyle -> {13, FontFamily -> "Helvetica"}]
 ```
 
-An invertible local map multiplies the hyperdeterminant by $(\det A\det B\det C)^2\neq0$, so $\tau_3$ of W stays zero and $\tau_3$ of GHZ stays positive, and no such map links the two in either direction. The family $\psi_\varepsilon$ is GHZ-class at every $\varepsilon>0$, yet its $\tau_3$ and its infidelity with W both vanish as $\varepsilon^2$: W sits on the boundary of the GHZ class, reachable only as a limit.
+The same rule for 300 invertible maps with random complex integer entries (left), and the family $\psi_\varepsilon$ as $\varepsilon$ shrinks (right):
+
+```wl
+(* 300 invertible maps with random Gaussian-integer entries, exact arithmetic *)
+entriesSLOCC = Flatten[Array[#, {2, 2}] & /@ {slA, slB, slC}];
+samplesSLOCC = BlockRandom[SeedRandom[3]; Select[Table[Thread[entriesSLOCC -> RandomInteger[{-9, 9}, 12] + I RandomInteger[{-9, 9}, 12]], 400], (detsSLOCC /. #) =!= 0 &][[;; 300]]];
+pointsSLOCC = {Abs[detsSLOCC^2/4], Abs[hyperdetSLOCC[ghzMapSLOCC]], Abs[hyperdetSLOCC[wMapSLOCC]]} /. # & /@ samplesSLOCC;
+sampledSLOCC = ListLogLogPlot[{pointsSLOCC[[All, {1, 2}]], {#, 10^3} & /@ pointsSLOCC[[All, 1]]},
+ PlotRange -> {{10^5, 10^13}, {10^2.5, 10^13}}, Frame -> True,
+ FrameLabel -> {Row[{"(det A det B det C", Superscript[")", 2], "/4"}], Row[{"hyperdeterminant of A\[CircleTimes]B\[CircleTimes]C|\[Psi]\[RightAngleBracket]"}]},
+ FrameTicks -> {{{{10^3, 0}, {10^6, Superscript[10, 6]}, {10^9, Superscript[10, 9]}, {10^12, Superscript[10, 12]}}, None}, {Automatic, None}},
+ Epilog -> {Directive[GrayLevel[0.5], Thin], Line[{{Log[10^5], Log[10^5]}, {Log[10^13], Log[10^13]}}]},
+ PlotLegends -> Placed[{"|\[Psi]\[RightAngleBracket] = |GHZ\[RightAngleBracket]", "|\[Psi]\[RightAngleBracket] = |W\[RightAngleBracket]"}, {Left, Top}], PlotLabel -> "300 random invertible local maps", AspectRatio -> 0.75, ImageSize -> 400];
+labelSLOCC = Style[Column[{Row[{Subscript["\[Tau]", 3], " = ", RawBoxes[ToBoxes[TraditionalForm[tau3SLOCC]]]}], Row[{"1 - |\[LeftAngleBracket]W|", Subscript["A", "\[Epsilon]"], Subscript["A", "\[Epsilon]"], Subscript["A", "\[Epsilon]"], "|GHZ\[RightAngleBracket]|²", " = ", RawBoxes[ToBoxes[TraditionalForm[infidSLOCC]]]}]}, Spacings -> 1], 12];
+limitSLOCC = LogLogPlot[{tau3SLOCC, infidSLOCC}, {\[Epsilon], 10^-3, 1}, PlotRange -> All, PlotStyle -> {Automatic, Dashed},
+ PlotLegends -> Placed[{Subscript["\[Tau]", 3], Row[{"1 - |\[LeftAngleBracket]W|", Subscript["A", "\[Epsilon]"], Subscript["A", "\[Epsilon]"], Subscript["A", "\[Epsilon]"], "|GHZ\[RightAngleBracket]|²"}]}, {Right, Bottom}], Frame -> True, FrameLabel -> {Row[{"\[Epsilon],  the determinant of each local map ", Subscript["A", "\[Epsilon]"]}], None}, AspectRatio -> 0.75, ImageSize -> 400, PlotLabel -> Row[{"GHZ moved toward W by ", Subscript["A", "\[Epsilon]"], " on every qubit"}],
+ Epilog -> Inset[labelSLOCC, Scaled[{0.04, 0.96}], {Left, Top}]];
+Grid[{{sampledSLOCC, limitSLOCC}}, Spacings -> 4, Alignment -> Top]
+```
+
+Every map puts GHZ on the diagonal: its hyperdeterminant after the map is exactly $(\det A\det B\det C)^2/4$, never zero, while W stays at zero. An invertible local map can only rescale the hyperdeterminant, so no such map turns GHZ into W or W into GHZ. Yet $\psi_\varepsilon$ stays in the GHZ class for every $\varepsilon>0$ while its $\tau_3$ and its infidelity with W both vanish as $\varepsilon^2$: W sits on the boundary of the GHZ class, reached only in the limit $\varepsilon\to0$, where the map stops being invertible.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -3518,7 +3745,7 @@ The two regions never overlap and together fill the ordered triangle $\lambda_3\
 One of two qubit states arrives, $\rho_1$ with prior $p$ or $\rho_2$ with prior $1-p$; their Bloch vectors have equal length $r$ and meet at angle $\theta$. One two-outcome measurement $\{\hat E_1,\hat E_2\}$ must name it, with $\hat E_2$ meaning "it was $\rho_2$". What is the smallest possible error?
 
 $$
-P_{\rm err}=p\operatorname{Tr}\rho_1\hat E_2+(1-p)\operatorname{Tr}\rho_2\hat E_1=(1-p)+\operatorname{Tr}\Lambda \hat E_2,\qquad \Lambda=p\rho_1-(1-p)\rho_2,\qquad \hat E_1=I-\hat E_2,\quad 0\le \hat E_2\le I .
+P_\mathrm{err}=p\operatorname{Tr}\rho_1\hat E_2+(1-p)\operatorname{Tr}\rho_2\hat E_1=(1-p)+\operatorname{Tr}\Lambda \hat E_2,\qquad \Lambda=p\rho_1-(1-p)\rho_2,\qquad \hat E_1=I-\hat E_2,\quad 0\le \hat E_2\le I .
 $$
 
 A unitary maps the set of effects to itself, so in the eigenbasis of $\Lambda=\mathrm{diag}(l_1,l_2)$ the most general effect is $\hat E_2=\begin{pmatrix}a&b+ic\\b-ic&e\end{pmatrix}$ with $\hat E_2\ge0$ and $I-\hat E_2\ge0$.
@@ -3580,37 +3807,80 @@ In every dimension the same eigenvalue crosses zero at the same weight, so the t
 
 &nbsp;
 
-### Proving a circuit's phase approximation correct over the reals
+### A $1/\sqrt{x}$ phase circuit: its error, rounding included, proved for every input
 
 
-A circuit that applies $|x\rangle\mapsto e^{2\pi i/\sqrt x}|x\rangle$ needs $1/\sqrt x$ in fixed-point arithmetic. Writing $x=4^km$ with $1\le m<4$ reduces it to $1/\sqrt m$, evaluated on $3\cdot2^r$ intervals $m=a+t$, $0\le t\le h=2^{-r}$, as a quadratic $p(t)$ with coefficients in $2^{-w}\mathbb Z$. Is the relative error below a bound $\eta$, proposed on each interval from finitely many samples, for every $m$ in it?
+A circuit that applies $|x\rangle\mapsto e^{2\pi i/\sqrt x}|x\rangle$ needs $1/\sqrt x$ in fixed-point arithmetic. Writing $x=4^km$ with $1\le m<4$ reduces it to $1/\sqrt m$, which the circuit replaces by a table: on each of $3\cdot2^r$ intervals $m=a+t$, $0\le t\le h=2^{-r}$, a quadratic with coefficients $c_0,c_1,c_2$ in $2^{-w}\mathbb Z$, evaluated as $(c_2t+c_1)t+c_0$ in $w$-bit registers that round after each step. Does the circuit's result stay within a relative error $\eta$ of $1/\sqrt m$, with $\eta$ proposed from finitely many samples, for every $m$ and every rounding?
 
-On each interval the claim is a polynomial inequality in one real variable,
-
-$$
-\forall\,t\in{}[0,h]:\quad p(t)>0\ \wedge\ (1-\eta)^2\le(a+t)\,p(t)^2\le(1+\eta)^2\iff\left|\sqrt{a+t}\,p(t)-1\right|\le\eta ,
-$$
-
-for $0\le\eta<1$, decided exactly over the reals, with rational $a$, $h$, $\eta$ and coefficients and no rounding. The quadratic interpolates $1/\sqrt{a+t}$ at Chebyshev nodes before rounding, and $\eta$ is proposed from 201 samples with a 2% margin.
-
-For each $r$ and $w$ the figure plots $|\sqrt m\,p-1|$ against $m$ over every interval (solid) with each interval's $\eta$ (dashed), and reports whether the claim is proved on all intervals:
+For $r=1$ and $w=8$ the six quadratics lie on $1/\sqrt m$ (top left); on the first interval the relative error is known only at the samples that propose $\eta$ (bottom left):
 
 ```wl
-intervalsCert[r_, w_] := With[{h = 2^-r, nodes = 2^-r (1 - Cos[Pi (2 Range[3] - 1)/6])/2, ts = Subdivide[0., 2.^-r, 200]}, Table[
-     With[{poly = Round[2^w CoefficientList[InterpolatingPolynomial[Transpose[{nodes, N[1/Sqrt[a + nodes], 30]}], \[FormalT]], \[FormalT]]] . \[FormalT]^Range[0, 2]/2^w},
-      With[{eta = Ceiling[1.02 2^40 Max[Abs[Sqrt[a + ts] (poly /. \[FormalT] -> ts) - 1]]]/2^40},
-       <|"a" -> a, "h" -> h, "poly" -> poly, "eta" -> eta,
-        "proof" -> Resolve[ForAll[\[FormalT], 0 <= \[FormalT] <= h, poly > 0 && (1 - eta)^2 <= (a + \[FormalT]) poly^2 <= (1 + eta)^2], Reals]|>]], {a, 1, 4 - h, h}]];
-panelCert[r_, w_] := With[{ivs = intervalsCert[r, w]},
-   Show[Plot[Evaluate[Piecewise[N[{Abs[Sqrt[m] (#poly /. \[FormalT] -> m - #a) - 1], #a <= m < #a + #h}] & /@ ivs]], {m, 1, 4}, PlotRange -> All, PlotPoints -> 100, Exclusions -> None],
-    Plot[Evaluate[Piecewise[N[{#eta, #a <= m < #a + #h}] & /@ ivs]], {m, 1, 4}, PlotStyle -> Directive[ColorData[97][2], Dashed], PlotRange -> All, Exclusions -> None],
-    PlotRange -> {0, All}, Axes -> False, Frame -> True, FrameLabel -> {"m", "|relative error|"}, ImageSize -> 280,
-    PlotLabel -> Style[Column[{Row[{"r = ", r, ",   w = ", w, " bits"}], If[And @@ Lookup[ivs, "proof"], Row[{"bound proved on all ", Length[ivs], " intervals"}], "bound not proved on every interval"]}, Alignment -> Center], 13, FontFamily -> "Helvetica"]]];
-Legended[Grid[Outer[panelCert, {1, 2}, {8, 16, 24}]], legendBelow[LineLegend[{ColorData[97][1], Directive[ColorData[97][2], Dashed]},
-  {Row[{"|", Sqrt["m"], " p \[Minus] 1|"}], Row[{"proved bound \[Eta] on each interval"}]}]]]
+intervalsCert[r_, w_] := With[{h = 2^-r, e = 2^-(w + 1), nodes = 2^-r (1 - Cos[Pi (2 Range[3] - 1)/6])/2, ts = Subdivide[0., 2.^-r, 200]}, Table[
+     With[{cs = Round[2^w CoefficientList[InterpolatingPolynomial[Transpose[{nodes, N[1/Sqrt[a + nodes], 30]}], \[FormalT]], \[FormalT]]]/2^w},
+      With[{horner = Function[{t, d1, d2}, (cs[[3]] t + cs[[2]] + d1) t + cs[[1]] + d2], corners = Tuples[{-e, e}, 2]},
+       With[{eta = Ceiling[1.02 2^40 Max[Abs[Sqrt[a + ts] # - 1] & /@ (horner[ts, ##] & @@@ corners)]]/2^40},
+        <|"a" -> a, "h" -> h, "poly" -> cs . \[FormalT]^Range[0, 2], "horner" -> horner, "corners" -> corners, "eta" -> eta,
+         "proof" -> Resolve[ForAll[{\[FormalT], \[FormalD], \[FormalE]}, 0 <= \[FormalT] <= h && Abs[\[FormalD]] <= e && Abs[\[FormalE]] <= e,
+            horner[\[FormalT], \[FormalD], \[FormalE]] > 0 && (1 - eta)^2 <= (a + \[FormalT]) horner[\[FormalT], \[FormalD], \[FormalE]]^2 <= (1 + eta)^2], Reals]|>]]], {a, 1, 4 - h, h}]];
+worstCase[iv_, m_] := Max[Function[c, Abs[Sqrt[m] iv["horner"][m - iv["a"], c[[1]], c[[2]]] - 1]] /@ iv["corners"]];
+lookupLabel = Style[Column[{Row[{"j \[RightArrow] ", Subscript["c", 0], ", ", Subscript["c", 1], ", ", Subscript["c", 2]}], Row[{"j: 1 of 3\[CenterDot]", Superscript[2, "r"], " pieces"}]}, Alignment -> Center], Black];
+lookupStripes = LinearGradientFilling[Flatten[Table[{(j - 1)/6 -> Lighter[ColorData[97][j], 0.25], j/6 -> Lighter[ColorData[97][j], 0.25]}, {j, 6}]], Bottom];
+blk[label_, wires_] := QuantumOperator[IdentityMatrix[2^Length[wires]], wires, "Label" -> label];
+phaseSteps = QuantumCircuitOperator[{
+    blk[Row[{"x = ", Superscript[4, "k"], " m"}], {1, 2}],
+    blk[lookupLabel, {1, 3}],
+    blk[Row[{"y = ", Subscript["c", 0], " + ", Subscript["c", 1], " t + ", Subscript["c", 2], " ", Superscript["t", 2]}], {1, 3, 4}],
+    blk[Row[{Superscript[2, "\[Minus]k"], " y"}], {2, 4}],
+    blk[Superscript["e", Row[{"2\[Pi]i y"}]], {4}],
+    blk["undo", {1, 2, 3, 4}]}];
+phaseKey = Style[Grid[{
+     {Row[{"x = ", Superscript[4, "k"], " m"}], Row[{"normalization: leading‐one detection gives k, a barrel shift gives m in [1, 4)"}]},
+     {Row[{"j \[RightArrow] ", Subscript["c", 0], ", ", Subscript["c", 1], ", ", Subscript["c", 2]}], Row[{"QROM table lookup of piece j's coefficients"}]},
+     {Row[{"y = ", Subscript["c", 0], " + ", Subscript["c", 1], " t + ", Subscript["c", 2], " ", Superscript["t", 2]}], Row[{"Horner evaluation with fixed‐point multiply‐adds, rounded to w bits"}]},
+     {Row[{Superscript[2, "\[Minus]k"], " y"}], Row[{"barrel shift by k, restoring the scale: y \[TildeTilde] 1/", Sqrt["x"]}]},
+     {Superscript["e", Row[{"2\[Pi]i y"}]], Row[{"phase gradient: one controlled phase rotation per bit of y"}]},
+     {"undo", Row[{"uncomputation of every register except the phase"}]}}, Alignment -> {Left, Top}, Spacings -> {1.5, 0.6}, ItemSize -> {{Automatic, 30}}], 12, FontFamily -> "Helvetica", LineIndent -> 0];
+phaseCircuit = Column[{phaseSteps["Diagram", "ShowConnectors" -> True, "GateBackgroundStyle" -> {lookupLabel -> lookupStripes}, "WireLabels" -> {"|x\[RightAngleBracket]", "k", Column[{Row[{Subscript["c", 0], ", ", Subscript["c", 1], ", ", Subscript["c", 2]}], "w bits each"}, Alignment -> Right], "y"}, ImageSize -> 440], phaseKey}, Spacings -> 1.5, Alignment -> Center];
+problemIvs = intervalsCert[1, 8];
+problemPanels = With[{iv = First[problemIvs], ms = 1 + Subdivide[0, 1/2, 20]}, {
+    Show[Plot[1/Sqrt[m], {m, 1, 4}, PlotStyle -> Directive[GrayLevel[0.6], AbsoluteThickness[7]]],
+     Plot[Evaluate[Piecewise[{{#poly /. \[FormalT] -> m - #a, #a <= m < #a + #h}}, Indeterminate] & /@ problemIvs], {m, 1, 4}, PlotStyle -> (Directive[ColorData[97][#], AbsoluteThickness[2]] & /@ Range[6]), Exclusions -> None],
+     Graphics[{GrayLevel[0.5], Dashed, Line[{{#, 0.45}, {#, 1.02}}] & /@ Range[1, 4, 1/2]}],
+     Prolog -> {Opacity[0.18], ColorData[97][1], Rectangle[{1, 0.45}, {1.5, 1.02}]},
+     Epilog -> {Text[Style[Column[{"zoomed", "below"}, Alignment -> Center], 11, FontFamily -> "Helvetica"], {1.25, 0.52}],
+       Table[Text[Style[Row[{"j = ", j - 1}], 11, Bold, ColorData[97][j], FontFamily -> "Helvetica"], {1 + (j - 1/2)/2, 0.98}], {j, 6}]},
+     PlotRange -> {{1, 4}, {0.45, 1.02}}, Frame -> True, Axes -> False, FrameLabel -> {"m", None}, ImageSize -> 340,
+     PlotLabel -> Style[Column[{Row[{"gray: exact ", 1/Sqrt["m"]}], "colors: the circuit's six quadratics, one per piece"}, Alignment -> Center], 12, FontFamily -> "Helvetica"]],
+    Show[ListPlot[Transpose[{ms, N[worstCase[iv, #] & /@ ms]}], PlotStyle -> Directive[ColorData[97][1], AbsolutePointSize[6]]],
+     Plot[N[iv["eta"]], {m, 1, 3/2}, PlotStyle -> Directive[ColorData[97][2], Dashed]],
+     PlotRange -> {{1, 3/2}, {0, 1.08 N[iv["eta"]]}}, PlotRangePadding -> Scaled[0.03], Prolog -> {Opacity[0.18], ColorData[97][1], Rectangle[Scaled[{0, 0}], Scaled[{1, 1}]]}, Frame -> True, Axes -> False, FrameLabel -> {"m", "|relative error|"}, ImageSize -> 320,
+     Epilog -> Inset[Style[Grid[{{Graphics[{ColorData[97][1], Disk[]}, ImageSize -> 7], "samples"},
+          {Graphics[{ColorData[97][2], AbsoluteDashing[{4, 3}], AbsoluteThickness[1.5], Line[{{0, 0}, {1, 0}}]}, ImageSize -> {26, 6}, AspectRatio -> 6/26, PlotRange -> {{0, 1}, {-0.1, 0.1}}], Row[{"bound ", "\[Eta]", " suggested by samples"}]}}, Alignment -> {{Center, Left}, Center}, Spacings -> {0.6, 0.4}], 11, FontFamily -> "Helvetica"], Scaled[{0.97, 0.04}], {Right, Bottom}]]}];
+Row[{Column[problemPanels, Spacings -> 2, Alignment -> Center], phaseCircuit}, Spacer[30], Alignment -> Center]
 ```
 
-The bound is proved on every interval in every panel, so the error stays under the dashed line for every real $m$, not only at the samples that proposed $\eta$. With 8-bit coefficients rounding sets the error, which jumps from interval to interval and barely shrinks when the intervals halve. By 24 bits rounding is negligible and the error is the interpolation's ripple, which shrinks as the intervals halve and as $m$ grows.
+On each interval the claim is a polynomial inequality in three real variables,
+
+$$
+\forall\,t\in{}[0,h],\ |\delta_1|,|\delta_2|\le2^{-w-1}:\quad P>0\ \wedge\ (1-\eta)^2\le(a+t)\,P^2\le(1+\eta)^2,\qquad P=(c_2t+c_1+\delta_1)\,t+c_0+\delta_2,
+$$
+
+for $0\le\eta<1$, decided exactly over the reals, with rational $a$, $h$, $\eta$ and coefficients and no rounding in the proof itself. The quadratic interpolates $1/\sqrt{a+t}$ at Chebyshev nodes before its coefficients are rounded, and $\eta$ is proposed from 201 samples at the four extreme roundings, with a 2% margin.
+
+For each $r$ and $w$ the figure plots the worst case of $|\sqrt m\,P-1|$ over the rounding (solid) against $m$, with each interval's $\eta$ (dashed), and reports whether the claim is proved on all intervals:
+
+```wl
+certs = AssociationMap[intervalsCert @@ # &, Tuples[{{1, 2}, {8, 12, 16}}]];
+panelCert[{r_, w_}] := With[{ivs = certs[{r, w}]},
+   Show[Plot[Evaluate[Piecewise[Function[iv, {worstCase[iv, m], iv["a"] <= m < iv["a"] + iv["h"]}] /@ ivs]], {m, 1, 4}, PlotRange -> All, PlotPoints -> 100, Exclusions -> None],
+    Plot[Evaluate[Piecewise[N[{#eta, #a <= m < #a + #h}] & /@ ivs]], {m, 1, 4}, PlotStyle -> Directive[ColorData[97][2], Dashed], PlotRange -> All, Exclusions -> None],
+    PlotRange -> {0, All}, Axes -> False, Frame -> True, FrameLabel -> {"m", "|relative error|"}, ImageSize -> 280,
+    PlotLabel -> Style[Column[{Row[{"r = ", r, ":  ", Length[ivs], " intervals of width ", 2^-r}], Row[{"w = ", w, ":  every register in steps of ", Superscript[2, -w]}]}, Alignment -> Center], 13, FontFamily -> "Helvetica"]]];
+Legended[Grid[Map[panelCert, Outer[List, {1, 2}, {8, 12, 16}], {2}]], legendBelow[LineLegend[{ColorData[97][1], Directive[ColorData[97][2], Dashed]},
+  {"worst case over the circuit's rounding", If[And @@ Flatten[Lookup[#, "proof"] & /@ Values[certs]], "bound \[Eta] on each interval, proved by Resolve on all of them", "bound \[Eta] on each interval: NOT proved on every interval"]}]]]
+```
+
+The bound is proved on every interval in every panel, so the circuit's error stays under the dashed line for every real $m$ and every rounding, not only at the samples that proposed $\eta$. With 8-bit registers the rounding of the coefficients and of each step sets the error, which jumps from interval to interval and barely shrinks when the intervals halve. At 12 bits rounding and the interpolation's error are comparable on the wider intervals, while on the narrower ones rounding takes over again. At 16 bits the interpolation's ripple sets the error where it is largest, on the wider intervals and at small $m$; where the ripple has shrunk, on the narrower intervals and at larger $m$, rounding sets the error again. The model takes $t$ as exact and the shift by $2^{-k}$ as error-free.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -3626,28 +3896,62 @@ The TensorNetworks paclet contracts networks and builds matrix-product states, a
 
 &nbsp;
 
-### One site of an arbitrarily long Ising chain after a quench
-
+### An infinite Ising chain from 2d − 1 sites: the light cone of a Trotter circuit
 
 A chain of spins with coupling $J$ in a transverse field $h$ starts with every spin up, $|0\cdots0\rangle$, and evolves under the transverse-field Ising Hamiltonian, Trotterized with step $\delta t$. What is the magnetization $\langle Z_c\rangle$ of a site deep inside the chain after $d$ steps?
 
-With $\hbar=1$, $\hat H=J\sum_iZ_iZ_{i+1}+h\sum_iX_i$, and one step is $\prod_iR_X^{(i)}(2h\,\delta t)\prod_iR_{ZZ}^{(i,i+1)}(2J\,\delta t)$ with $R_{ZZ}(\vartheta)=e^{-i\vartheta Z\otimes Z/2}$. After $d$ steps $\langle Z_c\rangle=\langle0|U^\dagger Z_cU|0\rangle$, and the first $ZZ$ layer only multiplies $|0\cdots0\rangle$ by a phase, so every gate outside the sites $c-d+1,\dots,c+d-1$ cancels against its conjugate and a window of $2d-1$ sites gives the value for a chain of any length.
+With $\hbar=1$, $\hat H=J\sum_iZ_iZ_{i+1}+h\sum_iX_i$, and one step is $\prod_iR_X^{(i)}(2h\,\delta t)\prod_iR_{ZZ}^{(i,i+1)}(2J\,\delta t)$ with $R_{ZZ}(\vartheta)=e^{-i\vartheta Z\otimes Z/2}$. After $d$ steps $\langle Z_c\rangle=\langle0|U^\dagger Z_cU|0\rangle$, unchanged when the sign of $\hat H$ flips, since $\hat H$ and the initial state are real, so the flip only complex-conjugates $U$; so the sign convention, opposite to that of the Ising-ring example, does not matter here. Every gate acts on one site or on two neighbors, so each step lets $Z_c$ reach one more site to each side; gates beyond that reach cancel against their conjugates. This light cone would span the $2d+1$ sites from $c-d$ to $c+d$, but the first $ZZ$ layer only multiplies $|0\cdots0\rangle$ by a phase, so it spans only the $2d-1$ sites from $c-d+1$ to $c+d-1$, and a window of that size gives the value for a chain of any length.
 
-The circuit runs from $|0\cdots0\rangle$ on a window of $m$ sites centered on $c$, giving $\langle Z_c\rangle$ for the $2d-1$-site window (filled), a larger $2d+3$-site window (open) and a smaller $2d-3$-site window (crosses), with $J\delta t=0.2$:
+The circuit runs from $|0\cdots0\rangle$ on a window of $m$ sites centered on $c$ and gives $\langle Z_c\rangle$ for every odd $m$ up to $2d+3$, with $J\delta t=0.2$; the dashed lines mark $m=2d-1$ and the value of the largest window. The drawing shows the $2d+3$-site circuit, one box per Trotter step, with each gate colored by whether it reaches $Z_c$ (key above the drawing); the third control picks a window, framed on the circuit and circled on the plot:
 
 ```wl
 lcJdt = 0.2;
-lcQuench[m_, d_, hJ_] := QuantumCircuitOperator @ Join[{StringRepeat["0", m]},
-    Flatten @ ConstantArray[Join[Thread["R"[2 lcJdt, "ZZ"] -> Partition[Range[m], 2, 1]], Thread["RX"[2 hJ lcJdt] -> Range[m]]], d]];
-lcZ[m_, d_, hJ_] := With[{st = lcQuench[m, d, hJ][]}, Re[st["Dagger"][QuantumOperator["Z", {(m + 1)/2}][st]]["Scalar"]]];
-lcPanel[hJ_] := ListPlot[Table[{lcJdt d, lcZ[2 d + #, d, hJ]}, {d, 2, 5}] & /@ {-1, 3, -3}, PlotRange -> {{0, 1.1}, {-1, 1.05}},
-    PlotMarkers -> {{"\[FilledCircle]", 9}, {"\[EmptyCircle]", 18}, {"\[Times]", 14}}, PlotLegends -> {Row[{2, "d - 1 sites"}], Row[{2, "d + 3 sites"}], Row[{2, "d - 3 sites"}]},
-    Frame -> True, FrameLabel -> {"J t", Row[{"\[LeftAngleBracket]", Subscript["Z", "c"], "\[RightAngleBracket]"}]}, PlotLabel -> Row[{"h/J = ", hJ}], ImageSize -> 300];
-lcPanels = lcPanel /@ {0.5, 1, 2};
-Legended[PlotGrid[{First /@ lcPanels}, ImageSize -> 900], legendBelow[Last[First[lcPanels]]]]
+lcTerms[m_, hJ_] := Join[QuantumOperator["ZZ", #] & /@ Partition[Range[m], 2, 1], hJ QuantumOperator["X", {#}] & /@ Range[m]];
+lcTrotter[m_, d_, hJ_] := QuantumCircuitOperator["Trotterization"[lcTerms[m, hJ], 1, d, lcJdt d]];
+lcZ[m_, d_, hJ_] := With[{st = QuantumCircuitOperator[{StringRepeat["0", m], lcTrotter[m, d, hJ]}][]}, Re[st["Dagger"][QuantumOperator["Z", {(m + 1)/2}][st]]["Scalar"]]];
+lcStep[d_, j_, hJ_] := With[{m = 2 d + 3, c = d + 2, k = d - j + 1}, QuantumCircuitOperator[Join[
+     QuantumOperator["R"[2 lcJdt, "ZZ"], {#, # + 1}, "Label" -> Which[j == 1, "phase", Max[Abs[# - c], Abs[# + 1 - c]] <= k, "in", True, "out"]] & /@ Join[Range[1, m - 1, 2], Range[2, m - 1, 2]],
+     {"Barrier"}, QuantumOperator["RX"[2 hJ lcJdt], {#}, "Label" -> If[Abs[# - c] <= k - 1, "in", "out"]] & /@ Range[m]], "step " <> ToString[j]]];
+lcCone[{hJ_, d_}] := With[{m = 2 d + 3, c = d + 2}, (QuantumCircuitOperator[lcStep[d, #, hJ] & /@ Range[d]]["Diagram", "ShowGateLabels" -> False, "BarrierStyle" -> Opacity[0],
+    "GateBackgroundStyle" -> {"in" -> RGBColor[0.55, 0.45, 0.85], "out" -> GrayLevel[0.93], "phase" -> RGBColor[1, 0.87, 0.65]},
+    "GateBoundaryStyle" -> {"in" -> RGBColor[0.4, 0.3, 0.7], "out" -> GrayLevel[0.8], "phase" -> RGBColor[0.9, 0.6, 0.2]},
+    "WireLabels" -> Table[i -> Placed[Which[i == c, Style["c", Bold], i < c, "c \[Minus] " <> ToString[c - i], True, "c + " <> ToString[i - c]], Left], {i, m}], ImageSize -> {UpTo[520], UpTo[360]}] //. EventHandler[\[FormalG]_, ___] :> \[FormalG])];
+lcWin = AssociationMap[Function[hd, Table[{m, lcZ[m, hd[[2]], hd[[1]]]}, {m, 1, 2 hd[[2]] + 3, 2}]], Tuples[{{0.5, 1, 2}, Range[2, 5]}]];
+lcCones = AssociationMap[lcCone, Tuples[{{0.5, 1, 2}, Range[2, 5]}]];
+lcColumn[i_] := If[OddQ[i], {0.625, 1.375}, {1.625, 2.375}];
+lcWindow[hJ_, d_, m_] := With[{lo = d + 2 - (m - 1)/2, hi = d + 2 + (m - 1)/2, x = First[PlotRange /. AbsoluteOptions[lcCones[{hJ, d}], PlotRange]], p = 0.08},
+   With[{xl = x[[1]] + 0.1, xr = x[[2]] - 0.05, yt = -lo + 0.45, yb = -hi - 0.45,
+     top = If[lo > 1, Table[4 (j - 1) + lcColumn[lo - 1] + {-p, p}, {j, d}], {}], bot = If[hi < 2 d + 3, Table[4 (j - 1) + lcColumn[hi] + {-p, p}, {j, d}], {}]},
+    Show[lcCones[{hJ, d}], Graphics[{ColorData[97][3], AbsoluteThickness[2.5], Dashed, Line[Join[
+         {{xl, yt}}, Catenate[{{#[[1]], yt}, {#[[1]], -lo - 0.375 - p}, {#[[2]], -lo - 0.375 - p}, {#[[2]], yt}} & /@ top], {{xr, yt}, {xr, yb}},
+         Catenate[{{#[[2]], yb}, {#[[2]], -hi + 0.375 + p}, {#[[1]], -hi + 0.375 + p}, {#[[1]], yb}} & /@ Reverse[bot]], {{xl, yb}, {xl, yt}}]]}]]]];
+lcPurpleZ[hJ_, d_] := With[{m = 2 d + 3, c = d + 2}, With[{st = QuantumCircuitOperator[Join[{StringRepeat["0", m]}, Catenate[Table[With[{k = d - j + 1}, Join[
+         QuantumOperator["R"[2 lcJdt, "ZZ"], {#, # + 1}] & /@ Select[Range[m - 1], j > 1 && Max[Abs[# - c], Abs[# + 1 - c]] <= k &],
+         QuantumOperator["RX"[2 hJ lcJdt], {#}] & /@ Select[Range[m], Abs[# - c] <= k - 1 &]]], {j, d}]]]][]},
+    Re[st["Dagger"][QuantumOperator["Z", {c}][st]]["Scalar"]]]];
+lcPurple = AssociationMap[lcPurpleZ @@ # &, Tuples[{{0.5, 1, 2}, Range[2, 5]}]];
+lcView3[hJ_, d_, m_] := With[{pts = lcWin[{hJ, d}], exact = lcWin[{hJ, d}][[-1, 2]]}, Grid[{{
+     Labeled[lcWindow[hJ, d, m], Column[{Row[{"purple gates reach ", Subscript["Z", "c"], "; grey gates cancel; orange gates only add a phase to ", Ket[{"0\[CenterEllipsis]0"}]}],
+        Row[{Style["dashed frame", ColorData[97][3]], ": the ", m, "-site window, stepping around the two-qubit gates it drops"}]}, Center] // Style[#, 12, FontFamily -> "Helvetica"] &, Top],
+     ListPlot[{Select[pts, #[[1]] < 2 d - 1 &], Select[pts, #[[1]] >= 2 d - 1 &], {{2 d + 5, lcPurple[{hJ, d}]}}}, PlotStyle -> {Red, ColorData[97][1], RGBColor[0.55, 0.45, 0.85]},
+      PlotMarkers -> {{"\[FilledCircle]", 12}, {"\[FilledCircle]", 12}, {"\[FivePointedStar]", 20}},
+      PlotLegends -> Placed[PointLegend[{Red, ColorData[97][1], RGBColor[0.55, 0.45, 0.85]}, {"window cuts the light cone", "window contains the light cone", "purple gates only"},
+        LegendMarkers -> {{"\[FilledCircle]", 12}, {"\[FilledCircle]", 12}, {"\[FivePointedStar]", 16}}], Below],
+      GridLines -> {{2 d - 1}, {exact}}, GridLinesStyle -> Directive[Gray, Dashed], PlotRange -> {{0, 2 d + 6}, All}, PlotRangePadding -> {Automatic, {Scaled[0.05], Scaled[0.16]}},
+      Epilog -> {Text[Style["light-cone width 2d \[Minus] 1", 10, Gray], Scaled[{(2 d - 1)/(2 d + 6), 0.5}], {0, -1.4}, {0, 1}], Text[Style["infinite chain", 10, Gray], {0.2, exact}, {-1, 1.4}],
+        Inset[Style["\[EmptyCircle]", 30, ColorData[97][3]], {m, Cases[pts, {m, v_} :> v][[1]]}],
+        Text[Style[d (2 #1 - 1), 9, GrayLevel[0.35]], {#1, #2}, {0, -2.8}] & @@@ pts, Text[Style[2 d^2 - d, 9, GrayLevel[0.35]], {2 d + 5, lcPurple[{hJ, d}]}, {0, -2.8}]},
+      PlotLabel -> Style["numbers: gates in each circuit", 10, Gray],
+      Frame -> True, FrameLabel -> {"window size m (sites)", Row[{"\[LeftAngleBracket]", Subscript["Z", "c"], "\[RightAngleBracket]", " at J t = ", Rationalize[lcJdt d]}]},
+      FrameTicks -> {{Automatic, None}, {Append[Range[1, 2 d + 3, 2], {2 d + 5, "purple\nonly"}], None}}, ImageSize -> 320]}}, Spacings -> 3, Alignment -> Center]];
+lcViews = Association[Flatten[Table[{hJ, d, m} -> lcView3[hJ, d, m], {hJ, {0.5, 1, 2}}, {d, 2, 5}, {m, 1, 2 d + 3, 2}]]];
+With[{lcViews = lcViews},
+ Manipulate[lcViews[{lcH, lcD, Min[lcM, 2 lcD + 3]}],
+ Row[{Control[{{lcH, 1, "h/J"}, {0.5, 1, 2}, SetterBar}], Spacer[20], Control[{{lcD, 2, "Trotter steps d"}, Range[2, 5], SetterBar}], Spacer[20],
+   "window m  ", Dynamic[SetterBar[Dynamic[lcM], Range[1, 2 lcD + 3, 2]]]}], {{lcM, 3}, ControlType -> None}]]
 ```
 
-At every depth the $2d-1$ and $2d+3$ windows give the same magnetization, so each filled point is exact for a bulk site of an arbitrarily long chain, while the $2d-3$ window cuts into the light cone and departs from them, visibly at $Jt=0.4$ for $h/J$ of 1 and above. The magnetization falls faster as $h/J$ grows, and at $h/J=2$ it changes sign within the times shown.
+Every window that contains the light cone, $m\ge2d-1$, gives the same $\langle Z_c\rangle$, so the $2d-1$-site circuit already gives the value for a bulk site of an arbitrarily long chain, while every smaller window cuts the cone and misses it. Stepping through $d$, the magnetization falls faster as $h/J$ grows, and at $h/J=2$ it changes sign within the times shown.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -3733,7 +4037,6 @@ Index symmetries alone settle only the trace of a Kronecker product, which is a 
 
 ### The first Bianchi identity from the Riemann tensor's Young diagram
 
-
 The Riemann tensor $R_{abcd}$ in $d$ dimensions has the pair symmetries $R_{abcd}=-R_{bacd}=-R_{abdc}=R_{cdab}$ and the first Bianchi identity $R_{abcd}+R_{acdb}+R_{adbc}=0$. Suppose only that $R$ lies in the image of the Young projector of shape $\{2,2\}$, which is one irreducible representation of $GL(d)$ inside the $\{2,2\}$ sector of $S_4$ acting on the four slots. Does that projector alone impose the first Bianchi identity?
 
 For the tableau with rows $\{1,3\},\{2,4\}$ the projector is
@@ -3742,31 +4045,52 @@ $$
 P_{\{2,2\}}\,T=\frac{2}{4!}\;\mathcal A_{\{1,2\}}\mathcal A_{\{3,4\}}\,\mathcal S_{\{1,3\}}\mathcal S_{\{2,4\}}\,T,
 $$
 
-where $\mathcal S$ sums over the permutations of a row of slots, $\mathcal A$ sums over the permutations of a column with their signs, and $2$ is the dimension of the $S_4$ representation $\{2,2\}$. The pair symmetries alone make $R$ a symmetric matrix on antisymmetric index pairs, with $N(N+1)/2$ components for $N=d(d-1)/2$; the image of $P_{\{2,2\}}$ has the dimension $s_{\{2,2\}}(d)$ of the $GL(d)$ representation.
+where $\mathcal S$ sums over the permutations of a row of slots, $\mathcal A$ sums over the permutations of a column with their signs, and $2$ is the dimension of the $S_4$ representation $\{2,2\}$.
 
-The projector acts on a random integer tensor in $d=4$, and the slot-permuted copies of the result are searched for three-term sums that vanish, with slot 1 fixed; the components are then counted for $d=2,\dots,5$ and the two counts compared at general $d$:
+Each relation is a linear map on four-index tensors, and every tensor in the projector's image obeys it exactly when the map times the projector is zero. On four-index tensors in $d=4$ the 24 slot permutations act faithfully (Schur–Weyl duality), so an identity between such maps that holds there holds in the group algebra of the permutations, and so in every dimension. The cell builds the projector and each relation as exact $256\times256$ matrices and multiplies them, with a control relation that is not a Riemann symmetry. It then compares, for symbolic $d$, the projector's rank, the dimension $s_{\{2,2\}}(d)$ of its $GL(d)$ representation from TensorNetworks' `SchurDimension`, with the number of components the pair symmetries and Bianchi leave: the pair symmetries make $R$ a symmetric matrix on the $N=d(d-1)/2$ antisymmetric pairs, and Bianchi then only sets the totally antisymmetric part $R_{[abcd]}$ to zero, which removes $\binom d4$ more:
 
 ```wl
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/TensorNetworks/TensorNetworks"]; Needs["Wolfram`TensorNetworks`Symmetry`"];
 riemannTableau = YoungTableau[{{1, 3}, {2, 4}}];
-projectedT = BlockRandom[SeedRandom[7]; YoungProject[RandomInteger[{-9, 9}, {4, 4, 4, 4}], riemannTableau]];
-threeTermRelations = Select[Subsets[Select[Permutations[Range[4]], First[#] == 1 &], {3}],
-   Total[Transpose[projectedT, #] & /@ #] == ConstantArray[0, {4, 4, 4, 4}] &];
-slotTerm[σ_] := Subscript["R", StringJoin[Characters["abcd"][[σ]]]];
-pairCount[dd_] := Length[SymmetrizedIndependentComponents[{dd, dd, dd, dd}, {{Cycles[{{1, 2}}], -1}, {Cycles[{{3, 4}}], -1}, {Cycles[{{1, 3}, {2, 4}}], 1}}]];
-projectorRank[dd_] := MatrixRank[Flatten[YoungProject[ArrayReshape[#, {dd, dd, dd, dd}], riemannTableau]] & /@ IdentityMatrix[dd^4]];
-componentCounts = Table[{dd, pairCount[dd], projectorRank[dd]}, {dd, 2, 5}];
-ListPlot[{componentCounts[[All, {1, 2}]], componentCounts[[All, {1, 3}]]}, Joined -> True, PlotMarkers -> Automatic,
-  PlotLegends -> {"pair symmetries only", Row[{"rank of ", Subscript["P", "{2,2}"]}]}, Frame -> True,
-  FrameLabel -> {"dimension d", "independent components"}, FrameTicks -> {{Automatic, None}, {Range[2, 5], None}}, ImageSize -> 440,
-  PlotLabel -> Style[Column[{Row[{"vanishing three-term sums:  ", Column[Row[{Row[slotTerm /@ #, " + "], " = 0"}] & /@ threeTermRelations]}],
-     Row[{"rank = ", Subscript["s", "{2,2}"], "(d) = ", TraditionalForm[Factor[SchurDimension[{2, 2}, d]]], " at d = 2, ..., 5:  ",
-       componentCounts[[All, 3]] === (SchurDimension[{2, 2}, #] & /@ Range[2, 5])}],
-     Row[{"pair count \[Minus] ", Subscript["s", "{2,2}"], "(d) = ", TraditionalForm[Factor[With[{np = d (d - 1)/2}, np (np + 1)/2] - SchurDimension[{2, 2}, d]]]}]}],
-    13, FontFamily -> "Helvetica"]]
+(* every operator as an exact 256 x 256 matrix on 4-index tensors in d = 4 *)
+slotOperator[f_] := Transpose[Flatten[f[ArrayReshape[#, {4, 4, 4, 4}]]] & /@ IdentityMatrix[256]];
+projectorM = slotOperator[YoungProject[#, riemannTableau] &];
+relationM = <|
+   Row[{Subscript["R", "abcd"], " + ", Subscript["R", "acdb"], " + ", Subscript["R", "adbc"]}] -> slotOperator[Function[T, Table[T[[a, b, c, e]] + T[[a, c, e, b]] + T[[a, e, b, c]], {a, 4}, {b, 4}, {c, 4}, {e, 4}]]],
+   Row[{Subscript["R", "abcd"], " + ", Subscript["R", "bacd"]}] -> slotOperator[Function[T, T + Transpose[T, {2, 1, 3, 4}]]],
+   Row[{Subscript["R", "abcd"], " + ", Subscript["R", "abdc"]}] -> slotOperator[Function[T, T + Transpose[T, {1, 2, 4, 3}]]],
+   Row[{Subscript["R", "abcd"], " \[Minus] ", Subscript["R", "cdab"]}] -> slotOperator[Function[T, T - Transpose[T, {3, 4, 1, 2}]]]|>;
+relationHolds = (Max[Abs[# . projectorM]] == 0) & /@ relationM;
+controlM = slotOperator[Function[T, T + Transpose[T, {1, 3, 2, 4}]]];
+controlNonzero = Count[Flatten[controlM . projectorM], x_ /; x != 0];
+dimRiemann = With[{np = d (d - 1)/2}, np (np + 1)/2] - Binomial[d, 4];
+dimImage = SchurDimension[{2, 2}, d];
+Grid[Join[
+   {{Item[Style["on every tensor in the image of the projector, exactly:", Bold], Alignment -> Left], SpanFromLeft}},
+   KeyValueMap[{Row[{#1, " = 0"}], #2} &, relationHolds],
+   {{Row[{"control:  ", Subscript["R", "abcd"], " + ", Subscript["R", "acbd"], " = 0"}], Row[{"False  (", controlNonzero, " of the 65536 entries are nonzero)"}]}},
+   {{Item[Style["dimensions, for symbolic d:", Bold], Alignment -> Left], SpanFromLeft},
+    {Row[{"rank of ", Subscript["P", "{2,2}"], " = ", Subscript["s", "{2,2}"], "(d)"}], TraditionalForm[Factor[dimImage]]},
+    {Row[{"pair symmetries and Bianchi:  N(N+1)/2 \[Minus] ", TraditionalForm[HoldForm[Binomial[d, 4]]]}], TraditionalForm[Factor[FunctionExpand[dimRiemann]]]},
+    {"equal for every d", Simplify[FunctionExpand[dimRiemann - dimImage] == 0]}}],
+  Alignment -> {{Right, Left}, Center}, Spacings -> {2, 0.9}, BaseStyle -> {13, FontFamily -> "Helvetica"}]
 ```
 
-The search returns only the cyclic sum over slots 2, 3, 4 (once with each sign), which is the first Bianchi identity; nothing beyond the projector was supplied. The rank of the projector is the textbook count of Riemann components, and the gap to the pair-symmetry count vanishes for $d\le3$: only in four or more dimensions does Bianchi remove components.
+The two counts and their difference against $d$, the closed forms as lines and, as dots, the counts for $d=2,\dots,6$ taken directly from `SymmetrizedIndependentComponents` and the projector's rank:
+
+```wl
+pairCount[dd_] := Length[SymmetrizedIndependentComponents[{dd, dd, dd, dd}, {{Cycles[{{1, 2}}], -1}, {Cycles[{{3, 4}}], -1}, {Cycles[{{1, 3}, {2, 4}}], 1}}]];
+projectorRank[dd_] := MatrixRank[Flatten[YoungProject[ArrayReshape[#, {dd, dd, dd, dd}], riemannTableau]] & /@ IdentityMatrix[dd^4]];
+countTable = Table[{dd, pairCount[dd], projectorRank[dd]}, {dd, 2, 6}];
+Show[Plot[Evaluate[{dimRiemann + Binomial[d, 4], dimImage, Binomial[d, 4]} /. d -> x], {x, 2, 6.2}, PlotStyle -> (Directive[ColorData[97][#], Opacity[0.6]] & /@ {1, 2, 3}),
+   PlotLegends -> Placed[{"pair symmetries only, N(N+1)/2", Row[{"rank of ", Subscript["P", "{2,2}"], ", the Riemann count"}], Row[{"difference, ", TraditionalForm[HoldForm[Binomial[d, 4]]]}]}, {Left, Top}]],
+ ListPlot[{countTable[[All, {1, 2}]], countTable[[All, {1, 3}]], {#1, #2 - #3} & @@@ countTable}, PlotMarkers -> {Automatic, 9}, PlotStyle -> (ColorData[97] /@ {1, 2, 3})],
+ PlotRange -> {{1.8, 6.3}, {-5, 125}}, Frame -> True, FrameTicks -> {{Automatic, None}, {Range[2, 6], None}}, Axes -> False,
+ FrameLabel -> {"dimension d", "independent components"}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+ PlotLabel -> "dots: counted directly;  lines: closed forms", ImageSize -> 420]
+```
+
+The projector alone makes every tensor in its image antisymmetric in each pair, symmetric under exchanging the pairs, and obey the first Bianchi identity. Its rank equals the number of components those relations leave, for every $d$, so it imposes nothing else: the Riemann symmetries are exactly the statement that $R$ lies in the image of this tableau's Young projector of shape $\{2,2\}$, with Bianchi included rather than added. The identity removes no component for $d\le3$, one in four dimensions and $\binom d4$ in general.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -3845,10 +4169,11 @@ permSumPanel[dd_, nn_] := ListPlot[{permSumLevels[nn, dd], permSumNumeric[nn, dd
 permSumPanels = AssociationThread[{2, 3, 4}, Outer[permSumPanel, {2, 3, 4}, {3, 4, 5}]];
 permSumLabel = Style[Column[Append[Row[{"λ = ", #, ":   E = ", permSumContent[#], " J,   degeneracy ", TraditionalForm[Factor[TableauDimension[#] SchurDimension[#, d]]]}] & /@ IntegerPartitions[4],
      Row[{"every eigenvalue within ", Superscript[10, -8], " J of an integer: ", Max[Abs[# - Round[#]] &[Flatten[Outer[permSumEigen, {3, 4, 5}, {2, 3, 4}]]]] < 10^-8}]]], 13, FontFamily -> "Helvetica"];
-Manipulate[Labeled[Legended[Grid[{First /@ permSumPanels[dd]}], legendBelow[Last[permSumPanels[2][[1]]]]], permSumLabel, Top], Row[{Control[{{dd, 3, "d"}, Keys[permSumPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{legendBelow = legendBelow, controlNotes = controlNotes, permSumPanels = permSumPanels, permSumLabel = permSumLabel},
+ Manipulate[Labeled[Legended[Grid[{First /@ permSumPanels[dd]}], legendBelow[Last[permSumPanels[2][[1]]]]], permSumLabel, Top], Row[{Control[{{dd, 3, "d"}, Keys[permSumPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"d = ", dd}], <|2 -> "Two-row diagrams only: no antisymmetric level for n ≥ 3.",
         3 -> "n = 3 gains its antisymmetric level; n = 4, 5 still lack it.",
-        4 -> "Only n = 5 still lacks its antisymmetric level."|>[dd]}}]]}], SaveDefinitions -> True]
+        4 -> "Only n = 5 still lacks its antisymmetric level."|>[dd]}}]]}]]]
 ```
 
 Every eigenvalue of $\hat H$ sits on a predicted level with the predicted degeneracy, in every panel. A level exists only when its diagram fits in $d$ rows, so the most negative energies appear one at a time as $d$ grows, the fully antisymmetric level $-n(n-1)/2$ only once $d\ge n$. The degeneracy of a diagram with $r$ rows carries the factors $(d-1)\cdots(d-r+1)$, so it vanishes for every $d<r$.
@@ -3968,7 +4293,7 @@ The projector averages $|x\rangle$ over all its rearrangements, and each of the 
 
 ### The AKLT ring: from a matrix-product state to an exact ground state
 
-A ring of $n$ spin-1 sites is given as a matrix-product state whose bonds carry only two states: one $2\times2\times3$ tensor, repeated on every site, fixes all $3^n$ amplitudes. Contracted into those amplitudes, is it an exact ground state of the AKLT Hamiltonian, and how fast do the spin correlations $C(r)=\langle S^z_1S^z_{1+r}\rangle$ decay with the distance $r$?
+A ring of $n$ spin-1 sites is given as a matrix-product state whose bonds carry only two states: one $2\times2\times3$ tensor, repeated on every site, fixes all $3^n$ amplitudes. Without ever writing those amplitudes out, is it an exact ground state of the AKLT Hamiltonian, and how fast do the spin correlations $C(r)=\langle S^z_1S^z_{1+r}\rangle$ decay with the distance $r$?
 
 With $\mathbf S_i$ the spin-1 operators of site $i$ and $P_2^{(i,i+1)}$ the projector of two neighbors onto total spin 2, the Hamiltonian on the ring ($n+1\equiv1$) and the state, with $m_i\in\{1,0,-1\}$ and $\sigma^\pm$, $\sigma^z$ the $2\times2$ Pauli matrices, are
 
@@ -3981,31 +4306,55 @@ $$
 A^{1}=\sqrt{\frac23}\,\sigma^+,\qquad A^{0}=-\sqrt{\frac13}\,\sigma^z,\qquad A^{-1}=-\sqrt{\frac23}\,\sigma^- .
 $$
 
-$\hat H$ is a sum of projectors, so $\langle\hat H\rangle\ge0$ and any state with $\langle\hat H\rangle=0$ is a ground state. The transfer matrix $\sum_mA^m\otimes\bar A^m$ has eigenvalues $1$ and $-\frac13$ (three times), which gives on the ring
+$\hat H$ is a sum of projectors, so $\langle\hat H\rangle\ge0$ and any state with $\langle\hat H\rangle=0$ is a ground state. The transfer matrix $\sum_mA^m\otimes\overline{A^m}$ has eigenvalues $1$ and $-\frac13$ (three times), which gives on the ring
 
 $$
 C(r)=\frac43\,\frac{(-1/3)^r+(-1/3)^{n-r}}{1+3\,(-1/3)^n}.
 $$
 
-The network is contracted exactly for rings of $n=6$, $8$ and $10$ sites; the markers are $|C(r)|$ computed from the amplitudes for $r\le n/2$, the dashed line is the infinite-chain law $\frac43\,3^{-r}$, and the energy is in the plot label:
+Every quantity is a closed network: the ring of $A$ joined to its mirror ring of $\overline{A}$ at every spin-1 leg gives $\langle\psi|\psi\rangle$, and inserting $P_2$ on one bond, or $S^z$ on two sites, gives the energy and $C(r)$. Each network contracts exactly to one number at a cost that grows only linearly with $n$, so the control offers rings of $n=6$, $12$ and $24$ sites, and the same contraction stays exact for rings of hundreds of sites. The drawings show the energy network, with $P_2$ joining sites 1 and 2, and the correlation network for the chosen $r$, with $S^z$ on sites 1 and $1+r$; that $r$ is marked in red on the plot. In the plot the markers are $|C(r)|$ for $r\le n/2$, the dashed line is the ring formula and the dotted line the infinite-chain law $\frac43\,3^{-r}$, and the energy is in the plot label:
 
 ```wl
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/TensorNetworks/TensorNetworks"]; Needs["Wolfram`TensorNetworks`"];
 akltA = Transpose[{Sqrt[2/3] {{0, 1}, {0, 0}}, -Sqrt[1/3] {{1, 0}, {0, -1}}, -Sqrt[2/3] {{0, 0}, {1, 0}}}, {3, 1, 2}];
-akltPsi[n_] := TensorNetworkContract[TensorNetwork[ConstantArray[akltA, n], Table[{i, Mod[i, n] + 1, n + i}, {i, n}]]];
 akltSS = Total[KroneckerProduct[#, #] & /@ {{{0, 1, 0}, {1, 0, 1}, {0, 1, 0}}/Sqrt[2], {{0, -I, 0}, {I, 0, -I}, {0, I, 0}}/Sqrt[2], DiagonalMatrix[{1, 0, -1}]}];
 akltP2 = (akltSS + IdentityMatrix[9]) . (akltSS + 2 IdentityMatrix[9])/6;
-akltData[n_] := With[{psi = akltPsi[n]}, With[{m = ArrayReshape[psi, {9, 3^(n - 2)}], p = Abs[psi]^2/Total[Abs[psi]^2, Infinity]},
-    {n Tr[akltP2 . m . ConjugateTranspose[m]]/Total[Abs[psi]^2, Infinity],
-     Table[{r, Abs[Total[Total[Flatten[p, {{1}, {r + 1}, Complement[Range[n], {1, r + 1}]}], {3}] Outer[Times, {1, 0, -1}, {1, 0, -1}], 2]]}, {r, n/2}]}]];
-akltRes = akltData /@ {6, 8, 10};
-ListLogPlot[Append[akltRes[[All, 2]], Table[{r, 4/3 3^-r}, {r, 1, 5}]], Joined -> {False, False, False, True}, PlotStyle -> {Automatic, Automatic, Automatic, Dashed},
-  PlotMarkers -> {Automatic, Automatic, Automatic, None}, PlotLegends -> Append[Row[{"n = ", #}] & /@ {6, 8, 10}, Row[{TraditionalForm[4/3], " ", TraditionalForm[HoldForm[3^-r]]}]],
-  Frame -> True, FrameLabel -> {"r", Row[{"|\[LeftAngleBracket]", Subsuperscript["S", 1, "z"], Subsuperscript["S", "1+r", "z"], "\[RightAngleBracket]|"}]},
-  PlotLabel -> Row[{"\[LeftAngleBracket]", OverHat["H"], "\[RightAngleBracket] = ", Row[akltRes[[All, 1]], ", "], "  for n = 6, 8, 10"}], ImageSize -> 460]
+akltClosed[n_, ops_] := With[{opSites = Flatten[Last /@ ops]}, TensorNetwork[Join[ConstantArray[akltA, n], ConstantArray[Conjugate[akltA], n], First /@ ops],
+    Join[Table[{i, Mod[i, n] + 1, 2 n + i}, {i, n}], Table[{n + i, n + Mod[i, n] + 1, If[MemberQ[opSites, i], 3 n + i, 2 n + i]}, {i, n}], Join[3 n + #, 2 n + #] & /@ (Last /@ ops)]]];
+akltData[n_] := With[{norm = TensorNetworkContract[akltClosed[n, {}]]},
+   {Simplify[n TensorNetworkContract[akltClosed[n, {{ArrayReshape[akltP2, {3, 3, 3, 3}], {1, 2}}}]]/norm],
+    Table[{r, Abs[Simplify[TensorNetworkContract[akltClosed[n, {{DiagonalMatrix[{1, 0, -1}], {1}}, {DiagonalMatrix[{1, 0, -1}], {1 + r}}}]]/norm]]}, {r, n/2}]}];
+akltAngle[n_, i_] := 2 Pi i/n;
+akltDraw[n_, ops_, size_] := With[{opSites = Flatten[Last /@ ops], net = akltClosed[n, ops]},
+   With[{opEdges = Join[3 n + #, 2 n + #] & /@ (Last /@ ops)},
+    RawBoxes[ToBoxes[net["Hypergraph", VertexLabels -> Join[Table[2 n + i -> i, {i, opSites}], Table[k -> None, {k, Complement[Join[Range[3 n], 3 n + opSites], 2 n + opSites]}]], EdgeLabels -> None, ImageSize -> size,
+      EdgeStyle -> Join[Table[{i, Mod[i, n] + 1, 2 n + i} -> Directive[ColorData[97][1], Opacity[0.6]], {i, n}],
+        Table[{n + i, n + Mod[i, n] + 1, If[MemberQ[opSites, i], 3 n + i, 2 n + i]} -> Directive[ColorData[97][3], Opacity[0.6]], {i, n}],
+        Thread[opEdges -> Directive[Red, Opacity[0.9], AbsoluteThickness[5]]]],
+      VertexCoordinates -> Join[Table[i -> 1.3 {Cos[2 Pi (i - 1/2)/n], Sin[2 Pi (i - 1/2)/n]}, {i, n}], Table[n + i -> 0.7 {Cos[2 Pi (i - 1/2)/n], Sin[2 Pi (i - 1/2)/n]}, {i, n}],
+        Table[2 n + i -> If[MemberQ[opSites, i], 1.15, 1] {Cos[akltAngle[n, i]], Sin[akltAngle[n, i]]}, {i, n}],
+        Table[3 n + i -> 0.85 {Cos[akltAngle[n, i]], Sin[akltAngle[n, i]]}, {i, opSites}]]]]]]];
+akltP2Op = {{ArrayReshape[akltP2, {3, 3, 3, 3}], {1, 2}}};
+akltSzOps[r_] := {{DiagonalMatrix[{1, 0, -1}], {1}}, {DiagonalMatrix[{1, 0, -1}], {1 + r}}};
+akltView[n_, akltR_] := With[{res = akltResults[n]}, Grid[{{
+    Labeled[akltDraw[n, akltP2Op, 200], Style[Column[{Row[{"\[LeftAngleBracket]\[Psi]|", OverHat["H"], "|\[Psi]\[RightAngleBracket] = n \[LeftAngleBracket]\[Psi]|", Subsuperscript["P", 2, "(1,2)"], "|\[Psi]\[RightAngleBracket]"}],
+        "red: the projector on one bond"}, Alignment -> Center], 12, FontFamily -> "Helvetica"], Top],
+    Labeled[akltDraw[n, akltSzOps[akltR], 200], Style[Column[{Row[{"\[LeftAngleBracket]\[Psi]|", Subsuperscript["S", 1, "z"], Subsuperscript["S", 1 + akltR, "z"], "|\[Psi]\[RightAngleBracket],  r = ", akltR}],
+        Row[{"red: ", Superscript["S", "z"], " on two sites"}]}, Alignment -> Center], 12, FontFamily -> "Helvetica"], Top],
+    ListLogPlot[{res[[2]], Table[{r, 4/3 (3^-r + 3^(r - n))/(1 + 3^(1 - n))}, {r, 1, n/2, 1/20}], Table[{r, 4/3 3^-r}, {r, 1, 12, 1/20}]}, Joined -> {False, True, True},
+     PlotStyle -> {ColorData[97][1], Directive[ColorData[97][1], Dashed], Directive[Gray, Dotted]}, PlotMarkers -> {Automatic, None, None},
+     PlotLegends -> Placed[{Row[{"contracted, ring of n = ", n}], "ring formula |C(r)|", Row[{"infinite chain  ", TraditionalForm[4/3], " ", TraditionalForm[HoldForm[3^-r]]}]}, {Right, Top}],
+     PlotRange -> {{0.5, 12.5}, {10^-6, 1}}, Frame -> True, Epilog -> {Red, PointSize[0.025], Point[{akltR, Log[res[[2, akltR, 2]]]}]},
+     FrameLabel -> {"distance r between the two sites", Row[{"spin correlation  |\[LeftAngleBracket]", Subsuperscript["S", 1, "z"], Subsuperscript["S", "1+r", "z"], "\[RightAngleBracket]|"}]},
+     PlotLabel -> Row[{"\[LeftAngleBracket]", OverHat["H"], "\[RightAngleBracket] = ", res[[1]]}], ImageSize -> 400]}}, Spacings -> 2, Alignment -> Center]];
+akltResults = AssociationMap[akltData, {6, 12, 24}];
+akltViews = Association[Flatten[Table[{n, r} -> akltView[n, r], {n, {6, 12, 24}}, {r, n/2}]]];
+With[{akltViews = akltViews}, Manipulate[akltViews[{akltN, Min[akltRr, akltN/2]}],
+  Grid[{{"ring size n", Control[{{akltN, 6, ""}, {6, 12, 24}, SetterBar}]}, {"distance r", Dynamic[SetterBar[Dynamic[akltRr], Range[akltN/2]]]}}, Alignment -> {{Right, Left}, Center}],
+  {{akltRr, 2}, ControlType -> None}]]
 ```
 
-The contracted state has energy exactly zero on every ring, so the two-state bonds hold an exact ground state of the AKLT chain. The correlations fall by a factor of three per site with alternating sign, a correlation length of $1/\ln3$ sites, and they follow the infinite-chain line except near $r=n/2$, where the correlation reaching the other way round the ring, the term $(-1/3)^{n-r}$ of the ring formula, adds to it and lifts the points above the line.
+Contracting the ring with its mirror image gives an energy of exactly zero for each ring offered, so the two-state bonds hold an exact ground state of the AKLT chain, and the state's $3^n$ amplitudes are never written out. The correlations fall by a factor of three per site with alternating sign, a correlation length of $1/\ln3$ sites. The contracted values sit on the ring formula, which follows the infinite-chain line until near $r=n/2$. There the correlation reaching the other way round the ring, the term $(-1/3)^{n-r}$, has the same sign on an even ring, adds to it, and bends the curve up; on a larger ring the bend moves out to larger $r$.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -4014,7 +4363,7 @@ The contracted state has energy exactly zero on every ring, so the two-state bon
 
 ### The entanglement profile of an Ising ring, and the bond dimension it needs
 
-A ring of $n$ spins in its ground state is cut into a block of $\ell$ neighboring sites and the rest. How does the entanglement entropy $S(\ell)$ of the block depend on $\ell$, in the ordered phase, at the critical point and in the paramagnet? The answer sets the bond dimension $\chi$ a matrix-product state needs, because the reduced state of the block has rank at least $e^{S(\ell)}$, so $\chi\ge e^{S(\ell)}$ at that cut.
+A ring of $n$ spins in its ground state is cut into a block of $\ell$ neighboring sites and the rest. How does the entanglement entropy $S(\ell)$ of the block depend on $\ell$, in the ordered phase, at the critical point and in the paramagnet, and what bond dimension $\chi$ does a matrix-product state of the ground state need? Keeping the $\chi$ largest Schmidt values at a cut discards the weight of the rest, and $\chi$ needed is the smallest number that keeps the discarded weight below $10^{-6}$.
 
 With $Z_i$, $X_i$ the Pauli operators of site $i$ and $Z_{n+1}\equiv Z_1$, the transverse-field Ising ring is
 
@@ -4030,29 +4379,41 @@ $$
 
 with central charge $c$ and a constant $s_1$.
 
-The ground state of a ring of $n=16$ spins is found exactly at $h/J=\frac12$, $1$ and $2$ and written as a matrix-product state with no truncation; $S(\ell)$ is read from its Schmidt values at each bond. The dashed lines are a straight-line fit to the critical points, whose slope gives $c$, and the level $\ln2$:
+The ground state is found by exact diagonalization at $h/J=\frac12$, $1$ and $2$ and written as a matrix-product state with no truncation, and the Schmidt values at each bond give $S(\ell)$ and $\chi$. Top: the state for $n=16$, each bond drawn as thick as the $\chi$ it needs; bottom left: $S(\ell)$, with the critical profile fitted to the formula above; bottom right: $\chi$ at the middle cut for rings of $n=8$ to $18$:
 
 ```wl
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/TensorNetworks/TensorNetworks"]; Needs["Wolfram`TensorNetworks`"];
-epN = 16;
-epSite[ops_Association] := KroneckerProduct @@ Table[Lookup[ops, k, IdentityMatrix[2, SparseArray]], {k, epN}];
-epH[hJ_] := -Sum[epSite[<|i -> SparseArray[{{1, 0}, {0, -1}}], Mod[i, epN] + 1 -> SparseArray[{{1, 0}, {0, -1}}]|>], {i, epN}] - hJ Sum[epSite[<|i -> SparseArray[{{0, 1}, {1, 0}}]|>], {i, epN}];
-epGround[hJ_] := First[Eigenvectors[-N[epH[hJ]], 1, Method -> {"Arnoldi", "Criteria" -> "RealPart"}]];
+epSite[n_, ops_Association] := KroneckerProduct @@ Table[Lookup[ops, k, IdentityMatrix[2, SparseArray]], {k, n}];
+epH[n_, hJ_] := -Sum[epSite[n, <|i -> SparseArray[{{1, 0}, {0, -1}}], Mod[i, n] + 1 -> SparseArray[{{1, 0}, {0, -1}}]|>], {i, n}] - hJ Sum[epSite[n, <|i -> SparseArray[{{0, 1}, {1, 0}}]|>], {i, n}];
+epGround[n_, hJ_] := First[Eigenvectors[-N[epH[n, hJ]], 1, Method -> {"Arnoldi", "Criteria" -> "RealPart"}]];
 epStep[{_, r_}, _] := With[{m = ArrayReshape[r, {2 Length[r], Length[First[r]]/2}]},
    With[{svd = SingularValueDecomposition[m, Min[Dimensions[m]]]}, {svd[[1]], svd[[2]] . ConjugateTranspose[svd[[3]]]}]];
-epMPS[psi_] := With[{steps = Rest[FoldList[epStep, {None, {psi}}, Range[epN - 1]]]},
+epMPS[n_, psi_] := With[{steps = Rest[FoldList[epStep, {None, {psi}}, Range[n - 1]]]},
    TensorNetwork[Join[{Transpose[steps[[1, 1]]]}, Transpose[ArrayReshape[#, {Length[#]/2, 2, Last[Dimensions[#]]}], {1, 3, 2}] & /@ steps[[2 ;;, 1]], {steps[[-1, 2]]}],
-    Join[{{1, epN + 1}}, Table[{i - 1, i, epN + i}, {i, 2, epN - 1}], {{epN - 1, 2 epN}}]]];
-epChord = Log[(epN/Pi) Sin[Pi Range[epN - 1]/epN]];
-epProfiles = Table[Transpose[{epChord, With[{mps = epMPS[epGround[hJ]]}, Table[MPSEntanglementEntropy[mps, l], {l, epN - 1}]]}], {hJ, {1/2, 1, 2}}];
-epFit = Fit[epProfiles[[2]], {1, x}, x];
-ListPlot[Join[epProfiles, {Table[{x, epFit}, {x, MinMax[epChord]}], Table[{x, Log[2]}, {x, MinMax[epChord]}]}], Joined -> {False, False, False, True, True},
-  PlotStyle -> {Automatic, Automatic, Automatic, Dashed, Dashed}, PlotMarkers -> {Automatic, Automatic, Automatic, None, None}, PlotRange -> {0, 0.85},
-  PlotLegends -> {Row[{"h/J = ", 1/2}], "h/J = 1", "h/J = 2", Row[{"fit at h/J = 1: c = ", NumberForm[3 Coefficient[epFit, x], 2]}], TraditionalForm[HoldForm[Log[2]]]},
-  Frame -> True, FrameLabel -> {TraditionalForm[HoldForm[Log[n/\[Pi] Sin[\[Pi] \[ScriptL]/n]]]], Row[{"S(\[ScriptL])"}]}, PlotLabel -> "n = 16", ImageSize -> 480]
+    Join[{{1, n + 1}}, Table[{i - 1, i, n + i}, {i, 2, n - 1}], {{n - 1, 2 n}}]]];
+chiNeeded[s_, tol_] := Count[Reverse[Accumulate[Reverse[s^2]]], _?(# > tol &)];
+epHs = {1/2, 1, 2}; epNames = {"ordered", "critical", "paramagnet"};
+epMPS16 = epMPS[16, epGround[16, #]] & /@ epHs;
+epChi = Table[chiNeeded[MPSSchmidtValues[mps, l], 10^-6], {mps, epMPS16}, {l, 15}];
+epS = Table[MPSEntanglementEntropy[mps, l], {mps, epMPS16}, {l, 15}];
+epFit = Fit[Transpose[{Log[(16/Pi) Sin[Pi Range[15]/16]], epS[[2]]}], {1, x}, x];
+epDraw[k_] := Graphics[{
+    MapIndexed[{ColorData[97][k], AbsoluteThickness[1 + 1.2 #1], Line[{{First[#2], 0}, {First[#2] + 1, 0}}], Black, Text[Style[#1, 9], {First[#2] + 0.5, 0.45}]} &, epChi[[k]]],
+    Table[{GrayLevel[0.5], Line[{{i, 0}, {i, -0.6}}], EdgeForm[GrayLevel[0.3]], White, Disk[{i, 0}, 0.22]}, {i, 16}]},
+   PlotLabel -> Row[{epNames[[k]], ",  h/J = ", epHs[[k]]}], ImageSize -> 560, PlotRange -> {{0.4, 16.6}, {-0.8, 0.8}}];
+epChain = Labeled[Column[epDraw /@ Range[3], Spacings -> 1], Style[Row[{"n = 16: each bond drawn as thick as the bond dimension that keeps the discarded weight below ", Superscript[10, -6]}], 12, FontFamily -> "Helvetica"], Top];
+epProfile = Legended[ListPlot[Append[Transpose[{Range[15], #}] & /@ epS, Table[{l, epFit /. x -> Log[(16/Pi) Sin[Pi l/16]]}, {l, 1, 15, 0.1}]],
+   Joined -> {False, False, False, True}, PlotMarkers -> {Automatic, Automatic, Automatic, None}, PlotStyle -> {Automatic, Automatic, Automatic, Dashed},
+   
+   GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin], Frame -> True, FrameLabel -> {Row[{"block size ", Style["\[ScriptL]", FontFamily -> "Times"]}], Row[{"entanglement entropy S(", Style["\[ScriptL]", FontFamily -> "Times"], ")"}]}, PlotRange -> {0, 0.85}, PlotLabel -> "n = 16", ImageSize -> 330], Placed[LineLegend[{Directive[ColorData[97][4], Dashed]}, {Row[{"(c/3) ln[(n/\[Pi]) sin(\[Pi]", Style["\[ScriptL]", FontFamily -> "Times"], "/n)] + ", Subscript["s", 1], ", c = ", NumberForm[3 Coefficient[epFit, x], 2]}]}], Below]];
+epNs = {8, 10, 12, 14, 16, 18};
+epGrowth = Table[chiNeeded[MPSSchmidtValues[epMPS[n, epGround[n, hJ]], n/2], 10^-6], {hJ, epHs}, {n, epNs}];
+epScale = ListPlot[Transpose[{epNs, #}] & /@ epGrowth, Joined -> True, PlotMarkers -> Automatic, PlotRange -> {0, 15},
+   GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin], Frame -> True, FrameLabel -> {"ring size n", "bond dimension at the middle cut"}, PlotLabel -> Row[{"bond dimension needed (discarded weight < ", Superscript[10, -6], ")"}], ImageSize -> 330];
+Column[{epChain, Row[{epProfile, Spacer[30], epScale}]}, Alignment -> Center, Spacings -> 2]
 ```
 
-At the critical point the entropy grows along a straight line in $\ln[\frac n\pi\sin\frac{\pi\ell}n]$ whose slope gives $c$ close to $\frac12$, the central charge of the Ising critical point, so the bond dimension a critical chain needs grows as a power of the block size, $\chi\ge e^{S}\propto\ell^{1/6}$. In the paramagnet and in the ordered phase the entropy hardly depends on $\ell$: it stays small at $h/J=2$, and at $h/J=\frac12$ it sits near $\ln2$, the one bit of the cat state $\frac1{\sqrt2}(|{\uparrow\cdots\uparrow}\rangle+|{\downarrow\cdots\downarrow}\rangle)$ that the symmetric ground state of a finite ring forms. A gapped chain therefore needs a bond dimension that does not grow with the block.
+In the ordered phase and in the paramagnet the entropy hardly depends on $\ell$, so the bonds stop thickening a few sites in from the ends and $\chi$ at the middle cut stays the same as the ring grows. At $h/J=\frac12$ the entropy sits near $\ln2$, the one bit of a state close to the cat state $\frac1{\sqrt2}(|{\uparrow\cdots\uparrow}\rangle+|{\downarrow\cdots\downarrow}\rangle)$ that the symmetric ground state of a finite ring forms; at $h/J=2$ it stays small. At the critical point the entropy follows the conformal profile with $c$ close to $\frac12$, the central charge of the Ising critical point, and the bonds keep thickening toward the middle: over the sizes shown, the bond dimension a critical chain needs grows with the system, while that of a gapped chain does not.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -4218,7 +4579,7 @@ The three families separate by how their cuts grow. A block of two or more sites
 
 ## Superconducting hardware: pulses, transmons and control
 
-The same operators model a transmon's levels, pulses and couplings; TransmonLab models readout and QUALink compiles pulses to Quantum Machines control programs.
+The same operators model a transmon's levels, pulses and couplings; TransmonLab models readout and QUALink compiles pulses to Quantum Machines control programs, which run on IQCC's Arbel processor with decisions made by the controller within each shot.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -4230,38 +4591,66 @@ The same operators model a transmon's levels, pulses and couplings; TransmonLab 
 
 A transmon is an anharmonic oscillator, frequency $\omega_q$ and anharmonicity $\alpha<0$, so its $|1\rangle\to|2\rangle$ transition sits only $|\alpha|$ below the qubit transition. A π pulse of length $\tau$, detuned by $\delta$ from the qubit, is meant to flip $|0\rangle$ to $|1\rangle$, and a DRAG term of strength $\lambda$ adds a second quadrature that follows the slope of the envelope. Where does the population end up after the pulse: outside the qubit, or left in $|0\rangle$?
 
-With $\hbar=1$, the driven transmon and its form in the frame rotating at the drive frequency $\omega_d=\omega_q+\delta$, after the rotating-wave approximation, are
+For a typical transmon, $E_J/E_C=50$ and $E_C/h=250$ MHz, TransmonLab draws the circuit and gives its lowest levels, drawn in the cosine potential of the junction:
+
+```wl
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/mbahram/TransmonLab/TransmonLab"]; Needs["TransmonLab`"];
+(* E_J/E_C = 50 and E_C/h = 250 MHz, a typical transmon; energies in units of E_C *)
+{tmRatio, tmEC} = {50, 0.25};
+tmSpec = TransmonSpectrum[tmRatio, 4];
+tmLevels = Min[Eigenvalues[N[CPBHamiltonian[tmRatio, 0, 20]]]] + tmSpec["Eigenvalues"];
+tmCross[e_] := ArcCos[-e/tmRatio];
+tmGHz[x_] := Row[{NumberForm[tmEC x, 3], " GHz"}];
+tmLevelPlot = Show[Plot[-tmRatio Cos[φ], {φ, -2.2, 2.2}, PlotStyle -> GrayLevel[0.6]],
+   Graphics[{MapIndexed[{ColorData[97][1], AbsoluteThickness[2], Line[{{-tmCross[#1], #1}, {tmCross[#1], #1}}],
+        GrayLevel[0.5], Text[Style[Row[{"|", First[#2] - 1, "\[RightAngleBracket]"}], 12], {tmCross[#1] + 0.06, #1}, {-1, 0}]} &, tmLevels],
+     Arrowheads[0.04], ColorData[97][2], Arrow[{{-0.12, tmLevels[[1]]}, {-0.12, tmLevels[[2]]}}], ColorData[97][4], Arrow[{{0.12, tmLevels[[2]]}, {0.12, tmLevels[[3]]}}],
+     GrayLevel[0.5], Text[Style[Row[{Subscript["\[Omega]", "01"], "/2\[Pi] = ", tmGHz[tmSpec["Frequency"]]}], 11], {-0.3, Mean[tmLevels[[;; 2]]]}, {1, 0}],
+     Text[Style[Row[{Subscript["\[Omega]", "12"], "/2\[Pi] = ", tmGHz[tmSpec["Frequency"] + tmSpec["Anharmonicity"]]}], 11], {0.3, Mean[tmLevels[[2 ;; 3]]]}, {-1, 0}]}],
+   PlotRange -> {{-2.2, 2.2}, {-52, tmLevels[[4]] + 6}}, Axes -> False, Frame -> True, FrameLabel -> {"phase \[CurlyPhi] across the junction", Row[{"energy / ", Subscript["E", "C"]}]},
+   PlotLabel -> Row[{Subscript["E", "J"], "/", Subscript["E", "C"], " = ", tmRatio, ",  \[Alpha]/2\[Pi] = ", tmGHz[tmSpec["Anharmonicity"]]}], ImageSize -> 250];
+Grid[{{TransmonCircuitPlot["Circuit", Background -> White, ImageSize -> 550], tmLevelPlot}}, Spacings -> 2, Alignment -> Center]
+```
+
+The model below keeps only the lowest levels of this spectrum, through the qubit frequency $\omega_q$ and the anharmonicity $\alpha$, which is close to $-E_C$. With $\hbar=1$, the driven transmon and its form in the frame rotating at the drive frequency $\omega_d=\omega_q-\delta$, after the rotating-wave approximation, are
 
 $$
-\hat H=\omega_q \hat b^\dagger \hat b+\frac{\alpha}{2}\hat b^{\dagger2}\hat b^2+\left[\Omega(t)\cos\omega_d t-\frac{\lambda\dot\Omega(t)}{\alpha}\sin\omega_d t\right](\hat b+\hat b^\dagger)\;\longrightarrow\;\frac{\alpha}{2}\hat b^{\dagger2}\hat b^2-\delta\,\hat b^\dagger \hat b+\frac{\Omega(t)}{2}(\hat b+\hat b^\dagger)-\frac{\lambda\dot\Omega(t)}{2\alpha}\,i(\hat b^\dagger-\hat b),
+\hat H=\omega_q \hat b^\dagger \hat b+\frac{\alpha}{2}\hat b^{\dagger2}\hat b^2+\left[\Omega(t)\cos\omega_d t-\frac{\lambda\dot\Omega(t)}{\alpha}\sin\omega_d t\right](\hat b+\hat b^\dagger)\;\longrightarrow\;\frac{\alpha}{2}\hat b^{\dagger2}\hat b^2+\delta\,\hat b^\dagger \hat b+\frac{\Omega(t)}{2}(\hat b+\hat b^\dagger)-\frac{\lambda\dot\Omega(t)}{2\alpha}\,i(\hat b^\dagger-\hat b),
 $$
 
 with the raised-cosine envelope $\Omega(t)=\frac{\pi}{\tau}\left(1-\cos\frac{2\pi t}{\tau}\right)$, whose area is $\pi$, and the oscillator kept to its five lowest levels.
 
-Starting from $|0\rangle$, the figure plots the leakage $P(n\ge2)$ (solid) and the population left in $|0\rangle$, $P(0)$ (dashed), during the pulse, and at $\delta=0$ also $P(0)$ for a two-level qubit with $\lambda=0$ (dotted); times and frequencies are in units of $|\alpha|$:
+Starting from $|0\rangle$, the figure plots the leakage $P(n\ge2)$ (solid) and the population left in $|0\rangle$, $P(0)$ (dashed), during the pulse, whose envelope is drawn in gray, and lists the leakage left at the end; times and frequencies are in units of $|\alpha|$:
 
 ```wl
 dragB = AnnihilationOperator[5]; dragN = SuperDagger[dragB] @ dragB;
 dragEnvelope[τ_] := Pi/τ (1 - Cos[2 Pi t/τ]);
-dragH[α_, τ_, λ_, δ_] := α/2 (dragN @ dragN - dragN) - δ dragN + dragEnvelope[τ]/2 (dragB + SuperDagger[dragB]) -
+dragH[α_, τ_, λ_, δ_] := α/2 (dragN @ dragN - dragN) + δ dragN + dragEnvelope[τ]/2 (dragB + SuperDagger[dragB]) -
     λ D[dragEnvelope[τ], t]/(2 α) I (SuperDagger[dragB] - dragB);
 dragB2 = AnnihilationOperator[2];
 dragPops[τ_, λ_, δ_] := QuantumEvolve[dragH[-1, τ, λ, δ], FockState[0, 5], {t, 0, τ}][t]["ProbabilitiesList"];
 dragλs = {0, 0.5, 1};
+dragPercent[x_] := If[x >= 10^-4, Row[{NumberForm[100 x, 2], "%"}], Row[{NumberForm[ScientificForm[100 x, 1]], "%"}]];
 dragPanel[τ_, δ_] := With[{pops = dragPops[τ, #, δ] & /@ dragλs},
    Show[LogPlot[Evaluate[Total[#[[3 ;;]]] & /@ pops], {t, 0, τ}, PlotRange -> All, PlotLegends -> (Row[{"λ = ", #}] & /@ dragλs)],
     LogPlot[Evaluate[First /@ pops], {t, 0, τ}, PlotRange -> All, PlotStyle -> Dashed],
-    If[δ == 0, LogPlot[Evaluate[First @ QuantumEvolve[dragEnvelope[τ]/2 (dragB2 + SuperDagger[dragB2]), FockState[0, 2], {t, 0, τ}][t]["ProbabilitiesList"]],
-      {t, 0, τ}, PlotRange -> All, PlotStyle -> Dotted], Graphics[]], PlotRange -> {Log[10^-9], Log[2]}, Frame -> True,
-    FrameLabel -> {"|α| t", "population"}, PlotLabel -> Row[{"|α|τ = ", τ, ",   δ/|α| = ", δ}], ImageSize -> 300]];
+    PlotRange -> {Log[10^-9], Log[2]}, Frame -> True, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.5, 0.35], Thin],
+    Prolog -> With[{pts = Table[{s, Log[10^-9] - Log[10^-9] (1 - Cos[2 Pi s/τ])/2}, {s, 0, τ, τ/200}]},
+      {{Opacity[0.12], GrayLevel[0.5], Polygon[Join[{{0, Log[10^-9]}}, pts, {{τ, Log[10^-9]}}]]}, {GrayLevel[0.5, 0.6], AbsoluteThickness[0.8], Line[pts]}}],
+    FrameLabel -> {"|α| t", "population"},
+    Epilog -> Inset[Style[Column[Prepend[MapThread[Style[Row[{"λ = ", #1, ":  ", dragPercent[Total[#2[[3 ;;]]] /. t -> τ]}], #3] &,
+         {dragλs, pops, ColorData[97] /@ Range[3]}], "leaked at the end"], Alignment -> Center, Spacings -> 0.2], 10, FontFamily -> "Helvetica"],
+      Scaled[{0.5, 0.04}], {Center, Bottom}], PlotLabel -> Row[{"δ/|α| = ", δ}], ImageSize -> 300]];
 dragPanels = AssociationThread[{5, 10, 20}, Outer[dragPanel, {5, 10, 20}, {-0.05, 0, 0.05}]];
-Manipulate[Legended[PlotGrid[{First /@ dragPanels[τv]}, ImageSize -> 900], legendBelow[Last[dragPanels[5][[1]]]]], Row[{Control[{{τv, 10, "|α|τ"}, Keys[dragPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
-      {Row[{"|α|τ = ", τv}], <|5 -> "Shortest pulse: without DRAG, leakage grows to the end.",
+With[{legendBelow = legendBelow, controlNotes = controlNotes, dragPanels = dragPanels},
+ Manipulate[Legended[PlotGrid[{First /@ dragPanels[τv]}, ImageSize -> 700], Placed[Row[{First[legendBelow[Last[dragPanels[5][[1]]]]], Spacer[30],
+     LineLegend[{Directive[Gray], Directive[Gray, Dashed], Directive[GrayLevel[0.5, 0.6], AbsoluteThickness[0.8]]}, {"leakage P(n \[GreaterEqual] 2)", "left in |0\[RightAngleBracket]", "pulse envelope \[CapitalOmega](t) (shape)"}, LegendLayout -> {"Row", 1}]}], Below]], Row[{Control[{{τv, 10, Column[{"pulse length |α|τ", Style["α: anharmonicity", 10]}, Alignment -> Right, Spacings -> 0]}, Keys[dragPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+      {"", <|5 -> "Shortest pulse: without DRAG, leakage grows to the end.",
         10 -> "Leakage peaks and partly returns; the two shifts nearly cancel at λ = 1/2.",
-        20 -> "The lowest leakage; the shifts nearly cancel at λ = 1/2."|>[τv]}}]]}], SaveDefinitions -> True]
+        20 -> "The lowest leakage; the shifts nearly cancel at λ = 1/2."|>[τv]}}]]}]]]
 ```
 
-The drive couples only neighboring levels, so leakage builds up through $|1\rangle$ during the pulse; only the shortest pulse without DRAG keeps leaking to the end, and otherwise it peaks and partly returns. At $\lambda=1$ the population left outside the qubit drops by orders of magnitude, and a longer pulse lowers it further. Most of the remaining error is population left in $|0\rangle$, which a resonant π pulse on a two-level qubit would empty (dotted). The qubit transition is shifted by the $|2\rangle$ level and, in the opposite direction, by the DRAG quadrature itself; for the longer pulses the two shifts nearly cancel at $\lambda=1/2$, and a detuning partly undoes what is left, a positive one without DRAG and a negative one at $\lambda=1$.
+The drive couples only neighboring levels, so leakage builds up through $|1\rangle$ during the pulse; only the shortest pulse without DRAG keeps leaking to the end, and otherwise it peaks and partly returns. At $\lambda=1$ the population left outside the qubit drops by orders of magnitude, and a longer pulse lowers it further. Most of the remaining error is population left in $|0\rangle$: a resonant π pulse on a two-level qubit would empty it, so what stays there mostly reflects how far the qubit transition has moved. The qubit transition is shifted by the $|2\rangle$ level and, in the opposite direction, by the DRAG quadrature itself; for the longer pulses the two shifts nearly cancel at $\lambda=1/2$, and a detuning partly undoes what is left, a negative one without DRAG and a positive one at $\lambda=1$.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -4305,10 +4694,11 @@ czPopPanel[a_] := ListLinePlot[czDynamics[a][[1]], PlotStyle -> {Automatic, Auto
 czAmpPanel[a_] := ListLinePlot[czDynamics[a][[2]], PlotRange -> {-1.05, 1.05},
    PlotLegends -> Placed[LineLegend[{"Re c", "Im c"}, LegendLayout -> "Row"], Below], GridLines -> {None, {0}}, Frame -> True, FrameLabel -> {"g t", "amplitude c of |11⟩"}, ImagePadding -> {{50, 10}, {40, 10}}, ImageSize -> 330];
 czStep1 = AssociationMap[{czPopPanel[#], czAmpPanel[#]} &, {-3, -10, -40}];
-Manipulate[Grid[{czStep1[czα]}, Alignment -> Top], Row[{Control[{{czα, -10, "α/g"}, Keys[czStep1], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{controlNotes = controlNotes, czStep1 = czStep1},
+ Manipulate[Grid[{czStep1[czα]}, Alignment -> Top], Row[{Control[{{czα, -10, "α/g"}, Keys[czStep1], SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"α/g = ", czα}], <|-3 -> "|20⟩ joins in, |11⟩ does not fully return, |01⟩ and |10⟩ exchange.",
         -10 -> "|11⟩ swaps to |02⟩ and back, returning as c = -1.",
-        -40 -> "A clean swap: |11⟩ returns close to c = -1."|>[czα]}}]]}], SaveDefinitions -> True]
+        -40 -> "A clean swap: |11⟩ returns close to c = -1."|>[czα]}}]]}]]]
 ```
 
 From $|11\rangle$ the population moves to $|02\rangle$ and back, while $|01\rangle$ and $|10\rangle$ stay where they are. The amplitude $c$ stays nearly real, passes through zero when the state is entirely in $|02\rangle$, and returns close to $-1$ at $\alpha/g=-40$. When $|\alpha|$ is comparable to $g$ this blurs: $|20\rangle$ joins in, $|11\rangle$ does not fully return, and $|01\rangle$ and $|10\rangle$, now close in energy, exchange population.
@@ -4352,14 +4742,15 @@ czMatrix[m_, label_] := MatrixPlot[m, ColorFunction -> czColor, ColorFunctionSca
    FrameTicks -> {{czTicks, None}, {czTicks, None}}, PlotLabel -> label,
    Epilog -> {White, AbsoluteThickness[3], Line[{{0, 5}, {4, 5}, {4, 9}, {0, 9}, {0, 5}}]}, ImageSize -> 260];
 czStep3 = AssociationMap[With[{u = czGate @@ #}, {czMatrix[Re[u], "Re U"], czMatrix[Im[u], "Im U"]}] &, Tuples[{{0, 1, 3}, {-3, -10, -40}}]];
-Manipulate[Legended[Grid[{czStep3[{czδ, czα}]}], Placed[BarLegend[{czColor, {-1, 1}}], Right]],
+With[{controlNotes = controlNotes, czStep3 = czStep3, czColor = czColor},
+ Manipulate[Legended[Grid[{czStep3[{czδ, czα}]}], Placed[BarLegend[{czColor, {-1, 1}}], Right]],
   Row[{Column[{Control[{{czδ, 0, "δ/g"}, {0, 1, 3}, SetterBar}], Control[{{czα, -40, "α/g"}, {-3, -10, -40}, SetterBar}]}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"δ/g = ", czδ}], <|0 -> "Resonance: |11⟩ picks up close to -1, nearer as |α|/g grows.",
         1 -> "|11⟩ picks up a complex phase, not -1.",
         3 -> "|11⟩ picks up a complex phase, further from -1."|>[czδ]},
       {Row[{"α/g = ", czα}], <|-3 -> "|01⟩ and |10⟩ mix; |11⟩ leaks into |20⟩.",
         -10 -> "Nearly isolated from the other levels.",
-        -40 -> "The corner is cut off from the other levels."|>[czα]}}]]}], SaveDefinitions -> True]
+        -40 -> "The corner is cut off from the other levels."|>[czα]}}]]}]]]
 ```
 
 On resonance and with $|\alpha|\gg g$, the corner is $\mathrm{diag}(1,1,1,-1)$, a controlled-Z, and nothing connects it to the other levels. Detuning keeps the corner diagonal but gives $|11\rangle$ a complex phase; a small $|\alpha|$ mixes $|01\rangle$ with $|10\rangle$ inside the corner and leaks $|11\rangle$ into $|20\rangle$.
@@ -4445,10 +4836,11 @@ pointerPanel[r_] := With[{dr = pointerDR[r]},
 pointerOutput[r_] := Plot[pointerSep[r, x], {x, 0, pointerXEnd}, PlotStyle -> ColorData[97][3], PlotRange -> {0, pointerSepMax}, GridLines -> Automatic, GridLinesStyle -> Directive[GrayLevel[0.8], Dashed], AspectRatio -> 1, Frame -> True,
    FrameLabel -> {"|χ| t", Row[{"output separation / ", Sqrt[Row[{2, "|χ|"}]]}]}, ImagePadding -> {{60, 10}, {45, 10}}, ImageSize -> 300];
 pointerPanels = AssociationMap[{pointerPanel[#], pointerOutput[#]} &, pointerRs];
-Manipulate[Grid[{pointerPanels[r]}], Row[{Control[{{r, 0.6, "cavity linewidth over dispersive shift κ/2|χ|"}, pointerRs, SetterBar}], Spacer[20], Dynamic[controlNotes[{
+With[{controlNotes = controlNotes, pointerPanels = pointerPanels, pointerRs = pointerRs},
+ Manipulate[Grid[{pointerPanels[r]}], Row[{Control[{{r, 0.6, "cavity linewidth over dispersive shift κ/2|χ|"}, pointerRs, SetterBar}], Spacer[20], Dynamic[controlNotes[{
       {Row[{"κ/2|χ| = ", r}], <|0.3 -> "Narrow cavity: long spirals, steady states far apart inside.",
         0.6 -> "The output separation ends largest.",
-        2 -> "Wide cavity: the output separation settles soonest."|>[r]}}]]}], SaveDefinitions -> True]
+        2 -> "Wide cavity: the output separation settles soonest."|>[r]}}]]}]]]
 ```
 
 The cavity rings up along a different spiral for each qubit state and settles on its steady state; a narrower cavity spirals more and ends with the two states farther apart inside. The output separation is not ordered the same way: it settles soonest in the widest cavity, but ends largest at the intermediate linewidth.
@@ -4519,11 +4911,12 @@ cpbPanel[ej_] := With[{ref = cpbLevels[ej, 1/2]},
     FrameLabel -> {Subscript["n", "g"], TraditionalForm[HoldForm[Divide[Subscript["E", "m"][Subscript["n", "g"]] - Subscript["E", "0"][1/2], Subscript["E", "01"][1/2]]]]},
     PlotLabel -> Row[{Subscript["E", "J"], "/", Subscript["E", "C"], " = ", ej}]]];
 cpbPanels = AssociationMap[cpbPanel, {1, 5, 10, 50}];
-Manipulate[Legended[First[cpbPanels[ej]], legendBelow[Last[cpbPanels[1]]]], Row[{Control[{{ej, 10, Row[{Subscript["E", "J"], "/", Subscript["E", "C"]}]}, Keys[cpbPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
-      {Row[{Subscript["E", "J"], "/", Subscript["E", "C"], " = ", ej}], <|1 -> "Charge parabolas split at n_g = 1/2; the qubit frequency swings strongly.",
-        5 -> "The bands flatten, but the qubit frequency still moves with n_g.",
+With[{legendBelow = legendBelow, controlNotes = controlNotes, cpbPanels = cpbPanels},
+ Manipulate[Legended[First[cpbPanels[ej]], legendBelow[Last[cpbPanels[1]]]], Row[{Control[{{ej, 10, Row[{Subscript["E", "J"], "/", Subscript["E", "C"]}]}, Keys[cpbPanels], SetterBar}], Spacer[20], Dynamic[controlNotes[{
+      {Row[{Subscript["E", "J"], "/", Subscript["E", "C"], " = ", ej}], <|1 -> Row[{"Charge parabolas split at ", Subscript["n", "g"], " = 1/2; the qubit frequency swings strongly."}],
+        5 -> Row[{"The bands flatten, but the qubit frequency still moves with ", Subscript["n", "g"], "."}],
         10 -> "The qubit band is nearly flat; the m = 2 band still moves.",
-        50 -> "Flat bands; E₁₂ - E₀₁ is small, negative and fixed."|>[ej]}}]]}], SaveDefinitions -> True]
+        50 -> "Flat bands; E₁₂ - E₀₁ is small, negative and fixed."|>[ej]}}]]}]]]
 ```
 
 At $E_J/E_C=1$ the levels are charge parabolas that the junction splits at $n_g=1/2$, and the qubit frequency swings strongly with offset charge. As $E_J/E_C$ grows the bands flatten. The price is the anharmonicity: at $E_J/E_C=50$ the $m=2$ band sits flat just below the gridline at 2, so $E_{12}-E_{01}$ is small, negative and fixed.
@@ -4544,6 +4937,90 @@ Show[ListLogPlot[Table[{Sqrt[8 ej], Abs[cpbE01[ej, 0] - cpbE01[ej, 1/2]]}, {ej, 
 ```
 
 Once the bands are nearly flat, $\epsilon_{01}$ falls on a straight line on this logarithmic scale: it decreases exponentially in $\sqrt{8E_J/E_C}$, the exponent of phase tunneling between neighboring wells of the cosine potential, which is the only way the offset charge reaches the levels. The asymptote overshoots where the bands are still charge parabolas and closes in on the exact dispersion from above in the transmon regime, where offset charge barely moves the qubit frequency; its next-order corrections still keep it visibly above the exact curve at the right edge of the plot.
+
+#| style: SlideShowNavigationBar
+#| tags: SlideShowHeader
+
+&nbsp;
+
+### Active reset on Arbel: a feedback loop inside the controller
+
+Arbel, the IQCC transmon processor driven by Quantum Machines controllers, runs pulse programs rather than gate circuits, and the controller can act on a measurement within the same shot. Measure qubit qA1 and play a π pulse only if it reads excited; repeat. How fast does this empty the qubit, and how low does it go, compared with waiting for it to decay?
+
+Let $p$ be the excited population. In one round the π pulse clears a fraction $\eta$ of it and the readout itself excites the qubit with probability $\varepsilon$, so
+
+$$
+p_{n+1}=a+b\,p_n,\qquad a=\varepsilon,\quad b=(1-\eta)(1-\varepsilon),\qquad p_n=p^\star+b^n\,(p_0-p^\star),\quad p^\star=\frac{a}{1-b}.
+$$
+
+Left alone, the population relaxes as $p(t)=c+A\,e^{-t/T_1}$.
+
+In QUALink the loop is a `"Sequence"`: `"Readout" -> r` stores the demodulated signal in a controller variable `r`, and `If[r > threshold, "x180"]` becomes a branch the controller evaluates in real time, firing the calibrated π pulse. The cell plays qA1's calibrated square readout pulse, sets the threshold from two single-shot readout clouds, and runs 0 to 8 rounds from $|1\rangle$ and from the thermal state and a waiting sweep from $|1\rangle$, 2000 shots each, keeping every shot's demodulated $(I,Q)$; it needs an IQCC cloud token, which QUALink reads from the IQCC client's configuration, and ends with the single-shot assignment fidelity:
+
+```wl
+#| eval: false
+PacletDirectoryLoad[{"/Users/mohammadb/Documents/GitHub/mbahram/TransmonLab/TransmonLab", "/Users/mohammadb/Documents/GitHub/mbahram/QUALink/QUALink"}];
+Needs["WolframQuantumComputation`QUALink`"]; Needs["TransmonLab`"];
+arQM = QUAConnect["arbel", "Mode" -> "Cloud", "Backend" -> "arbel"]; arCal = arQM["Calibration", "qA1"];
+{arAngle0, arReadoutLength} = Lookup[arCal, {"IntegrationWeightsAngle", "ReadoutDuration"}];
+arRun[angle_, opts___] := QUAFetch[QUAExecute[arQM, QUAProgram["Qubit" -> {arCal["XYFrequency"], Exp[-(t - 24)^2/200], {t, 0, 48}},
+     "Resonator" -> arCal["ResonatorFrequency"], opts, "ReadoutShape" -> "Square", "ReadoutAngle" -> angle, "Averages" -> 2000, "Thermalization" -> 100000,
+     "Measurement" -> <|"Resonator" -> <|"Mode" -> "DualDemodFull", "SaveAll" -> True|>|>, "DriveShape" -> "Calibrated",
+     "Hardware" -> arQM, "QubitMap" -> <|"Qubit" -> "qA1.xy", "Resonator" -> "qA1.rr"|>]]];
+arIQ[m_] := Transpose[Normal[m[All, ExtendedKey["Resonator", #]]] & /@ {"I", "Q"}];
+{arG, arE} = arIQ[arRun[arAngle0, "Sequence" -> #]] & /@ {{"Readout"}, {"Qubit", "Readout"}};
+arRO = IQAnalysis[<|"i" -> Join[arG, arE][[All, 1]], "q" -> Join[arG, arE][[All, 2]]|>, "z", "SignConvention" -> "Calibration",
+   "CalibrationData" -> <|"ground" -> <|"i" -> arG[[All, 1]], "q" -> arG[[All, 2]]|>, "excited" -> <|"i" -> arE[[All, 1]], "q" -> arE[[All, 2]]|>|>];
+arAxis = {Cos[#], Sin[#]} &[arRO["ReadoutAngle"]["z"]];
+arThr = Mean[arAxis . # & /@ arRO["BlobCentroids"]["z"]]; arUp = Mean[arE . arAxis] > Mean[arG . arAxis];
+arRound[k_] := With[{r = Symbol["arR" <> ToString[k]]}, {"Readout" -> r, If[If[arUp, r > arThr, r < arThr], "x180"]}];
+arAngle = arAngle0 + arRO["ReadoutAngle"]["z"];
+arNs = {0, 1, 2, 3, 5, 8};
+arShots = AssociationMap[arIQ[arRun[arAngle, "Sequence" -> Flatten[{If[First[#] == 1, "Qubit", {}], arRound /@ Range[Last[#]], "Readout"}]]] &,
+   Tuples[{{1, 0}, arNs}]];
+arPass = arRun[arAngle, "Wait" -> Range[16, 40016, 2500]];
+arWaitShots = GroupBy[Transpose[{Normal[arPass[All, "SweepValue"]], arIQ[arPass]}], First -> Last];
+arRO["AssignmentFidelity"]["z"]
+```
+
+The same connection draws the device's current calibration as a map of the lattice, with the qubits numbered in alphabetical order of their names, so qA1 is 0: an edge's color is its CZ error per gate from randomized benchmarking and its thickness the fidelity of the Bell state it prepares; a qubit's color is its T1 and its size its readout error:
+
+```wl
+#| eval: false
+arQM["ErrorMap"]
+```
+
+The last cell reads each program's shots on one line, the line through the two zero-round centroids, and counts a shot as excited on the $|1\rangle$ side of their midpoint; each round takes one readout plus about 60 ns for the pulse. Its first lines load the shots recorded on 14 August 2026, taken with the square readout pulse, into `arShots` and `arWaitShots`; after a fresh hardware run, drop those lines and the same cell plots the new run. The model is fitted to the data, with $p^\star$ and $b$ shared by the two starting states:
+
+```wl
+arDataDir = "/Users/mohammadb/Documents/GitHub/QuantumMachines/How to Handle Feedback";
+arRaw = Import[FileNameJoin[{arDataDir, "ar_raw.json"}], "RawJSON"]; arReadoutLength = Import[FileNameJoin[{arDataDir, "ar_cal.json"}], "RawJSON"]["roLen"];
+arNs = {0, 1, 2, 3, 5, 8};
+arShots = AssociationMap[Transpose[Lookup[arRaw["ar" <> ToString[First[#]] <> "_N" <> ToString[Last[#]]], {"I", "Q"}]] &, Tuples[{{1, 0}, arNs}]];
+arWaitShots = GroupBy[Transpose[{arRaw["passive"]["SweepValue"], Transpose[Lookup[arRaw["passive"], {"I", "Q"}]]}], First -> Last];
+Block[{pS, b, n, s, c, A, T1, t},
+ With[{mid = Mean[Mean /@ Lookup[arShots, {{0, 0}, {1, 0}}]], dir = Mean[arShots[{1, 0}]] - Mean[arShots[{0, 0}]], tRound = (arReadoutLength + 60)/1000.},
+  With[{excited = N[Mean[Boole[Positive[(# - mid) . dir & /@ #]]]] &},
+   With[{from1 = excited[arShots[{1, #}]] & /@ arNs, from0 = excited[arShots[{0, #}]] & /@ arNs,
+     wait = KeyValueMap[{#1/1000., excited[#2]} &, KeySort[arWaitShots]]},
+    With[{fit = NonlinearModelFit[Join[Thread[{arNs, 1, from1}], Thread[{arNs, 0, from0}]],
+        {pS + (s First[from1] + (1 - s) First[from0] - pS) b^n, 0 <= pS <= 1, 0 <= b <= 1}, {{pS, 0.01}, {b, 0.3}}, {n, s}],
+      decay = NonlinearModelFit[wait, c + A Exp[-t/T1], {{c, 0.02}, {A, 0.9}, {T1, 20}}, t]},
+     ListLogPlot[{Thread[{tRound arNs, from1}], Thread[{tRound arNs, from0}], wait,
+       Table[{tRound k, fit[k, 1]}, {k, 0, 8}], Table[{tRound k, fit[k, 0]}, {k, 0, 8}], Table[{u, decay[u]}, {u, 0, 41, 1/2}]},
+      Joined -> {False, False, False, True, True, True},
+      PlotMarkers -> {{"\[FilledCircle]", 14}, {"\[FilledSquare]", 12}, {"\[FilledDiamond]", 14}, None, None, None},
+      PlotStyle -> {ColorData[97][1], ColorData[97][2], ColorData[97][3], Directive[ColorData[97][1], Dashed], Directive[ColorData[97][2], Dashed], Directive[ColorData[97][3], Dashed]},
+      PlotLegends -> {"Arbel: active reset from |1\[RightAngleBracket]", "Arbel: active reset from thermal", "Arbel: waiting from |1\[RightAngleBracket]",
+        Sequence @@ (Row[{"fit: ", TraditionalForm[#]}] & /@ {HoldForm[Superscript[p, "*"] + b^n (Subscript[p, 0] - Superscript[p, "*"])],
+           HoldForm[Superscript[p, "*"] + b^n (Subscript[p, 0] - Superscript[p, "*"])], HoldForm[c + A E^(-t/Subscript[T, 1])]})},
+      PlotRange -> {{0, 41}, {5*^-4, 1.2}}, Frame -> True, ImageSize -> 480,
+      FrameLabel -> {"time (\[Mu]s)", "fraction of shots read as excited"},
+      PlotLabel -> Style[Row[{"loop settles at ", NumberForm[pS /. fit["BestFitParameters"], 2], ";  ", Subscript["T", 1], " = ",
+          NumberForm[T1 /. decay["BestFitParameters"], 3], " \[Mu]s"}], 13, FontFamily -> "Helvetica"]]]]]]]
+```
+
+From $|1\rangle$ the excited fraction drops about tenfold per round, and from either start the loop reaches the same level of a few parts in a thousand within two or three rounds, lower than the thermal state it started from. Waiting from $|1\rangle$ leaves most of the population excited over the same few microseconds and about a quarter after 40 µs. These are raw fractions of shots read as excited; an excited qubit that decays during the readout is read as ground, so they can only undercount.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
@@ -4677,42 +5154,115 @@ With every pair coupled the count is exactly $n(n-1)$: two $\mathrm{CZ}$ gates p
 
 &nbsp;
 
-### A GHZ state on an IBM processor: where the lost shots go
+### Entanglement held by a pump on an IBM processor: predicted, then measured
 
-A Hadamard on qubit 1 and CNOTs from qubit 1 to 2 and from 2 to 3 prepare the three-qubit GHZ state. Measured in $Z$, it gives $000$ or $111$, each with probability $\frac{1}{2}$, and nothing else. On a real processor some shots land on the six other outcomes. How many, and is the loss spread evenly over the three qubits?
+Two qubits are in the cluster state when both stabilizers $K_1=X_1Z_2$ and $K_2=Z_1X_2$ equal $+1$. A third qubit, the ancilla, can drive them there without anyone reading it: it picks up the value of one stabilizer, flips the pair back into the $+1$ branch when the value is $-1$, and is reset unread. Each reset carries entropy out of the pair, which works against the noise. How much entanglement does it hold on a real processor, and can a model built from the processor's own calibration say so before the run?
 
 $$
-|\mathrm{GHZ}\rangle=\mathrm{CNOT}_{2\to3}\,\mathrm{CNOT}_{1\to2}\,H_1|000\rangle=\frac{|000\rangle+|111\rangle}{\sqrt2},\qquad P(000)=P(111)=\frac{1}{2}.
+K_1K_2=Y_1Y_2,\qquad F=\langle\psi|\rho|\psi\rangle=\frac{1}{4}\left(1+\langle X_1Z_2\rangle+\langle Z_1X_2\rangle+\langle Y_1Y_2\rangle\right),
 $$
 
-In each of the six other outcomes exactly one qubit disagrees with the other two, so the lost shots sort into three groups, one per qubit. The circuit, ending in a measurement of all three qubits, is sent to IBM's ibm_fez processor for 4096 shots; this needs an IBM Quantum account, with its API key and instance CRN in place of "xxx":
+and every separable state has $F\le\frac{1}{2}$, so a fidelity above $\frac{1}{2}$ certifies entanglement. Each expectation value is a parity read from counts after rotating the pair into the matching basis.
+
+One pump cycle (left), and the three jobs sent to the processor (right): the same three cycles, each half drawn as one block, then local rotations $R_{n_1}(\theta_1)$ and $R_{n_2}(\theta_2)$ into a basis $B$ that turns one stabilizer into a plain two-bit readout; the key gives each job's rotations.
+
+```wl
+pumpReset = QuantumOperator[QuantumState["0"], {{2}, {}}];
+pumpHalves = {{"H" -> 2, "CNOT" -> {2, 1}, "CZ" -> {2, 3}, "H" -> 2, "CZ" -> {2, 1}, pumpReset}, {"H" -> 2, "CZ" -> {2, 1}, "CNOT" -> {2, 3}, "H" -> 2, "CZ" -> {2, 3}, pumpReset}};
+pumpCycle = Catenate[pumpHalves];
+pumpBasis = <|"X1Z2" -> {"H" -> 1}, "Z1X2" -> {"H" -> 3}, "Y1Y2" -> {"RZ"[-Pi/2] -> 1, "H" -> 1, "RZ"[-Pi/2] -> 3, "H" -> 3}|>;
+pumpLabels = {Style["K\:2081 = X\:2081Z\:2082", 13], Style["K\:2082 = Z\:2081X\:2082", 13]};
+pumpBox[label_, wires_] := QuantumOperator[IdentityMatrix[2^Length[wires]], wires, "Label" -> label];
+pumpBasisBox[k_] := Row[{Subscript["R", Subscript["n", k]], "(", Subscript["\[Theta]", k], ")"}];
+pumpJobLabels = {Style["K\:2081", 13], Style["K\:2082", 13]};
+pumpJobsShown = QuantumCircuitOperator[Join[Flatten[Table[MapThread[QuantumCircuitOperator, {If[c == 3, {pumpHalves[[1]], Most[pumpHalves[[2]]]}, pumpHalves], pumpJobLabels}], {c, 3}]],
+    {pumpBox[pumpBasisBox[1], {1}], pumpBox[pumpBasisBox[2], {3}], "M" -> 1, "M" -> 3}]];
+pumpJobKey = Style[Row[{"job 1:  B = X\:2081Z\:2082  (H on qubit 1)", "job 2:  B = Z\:2081X\:2082  (H on qubit 2)",
+     Row[{"job 3:  B = Y\:2081Y\:2082  (", Subscript["R", "Z"], "(\[Minus]\[Pi]/2) then H on both)"}]}, Spacer[30]], 13, FontFamily -> "Helvetica"];
+Column[{Grid[{{Show[QuantumCircuitOperator[MapThread[QuantumCircuitOperator, {pumpHalves, pumpLabels}]]["Diagram", "WireLabels" -> {"1", "ancilla", "2"}],
+     PlotRangeClipping -> False, ImagePadding -> {{50, 10}, {10, 40}}, ImageSize -> 350],
+    pumpJobsShown["Diagram", "WireLabels" -> {"1", "ancilla", "2"}, "Expand" -> 0, "RotateGateLabel" -> False, ImageSize -> 450]}}, Spacings -> 3, Alignment -> Center], pumpJobKey}, Spacings -> 2, Alignment -> Center]
+```
+
+The pump runs three cycles on ibm_fez qubits 123, 122 and 121, with the ancilla 122 in the middle; among the ten best-calibrated lines of three neighbors, this one had the highest predicted fidelity in the calibration of 11 November 2026. The three circuits go to ibm_fez for 4096 shots each, on the chosen qubits; this needs an IBM Quantum account, with its API key in place of "xxx":
 
 ```wl
 #| eval: false
-LocalSymbol["ibm_crn"] = "xxx";
 ServiceConnect["IBMQuantumPlatform", "New", Authentication -> {"apikey" -> "xxx"}];
-job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ"[3], {1, 2, 3}}], "ibm_fez", "Shots" -> 4096, "Wait" -> True];
-job["Refresh"]["Counts"]
+pumpJobs = IBMJobSubmit[QuantumCircuitOperator[Join[Most[Catenate[ConstantArray[pumpCycle, 3]]], #, {"M" -> 1, "M" -> 3}]], "ibm_fez",
+     "Shots" -> 4096, "InitialLayout" -> {123, 122, 121}, "OptimizationLevel" -> 1] & /@ pumpBasis
 ```
 
-The counts recorded from one such run (job dah09eb9k43c73ae1a4g, submitted 10 September 2026) are set against the exact distribution, and the lost shots are grouped by the qubit that disagrees:
+The prediction runs the same circuits in QF as IBM compiles them, gate by gate, with QF channels for the noise the calibration lists: each gate's error as depolarizing noise, amplitude and phase damping from $T_1$ and $T_2$ while a qubit waits (the pair waits through every reset of the ancilla), a reset that leaves the ancilla excited with probability equal to its readout error, and each qubit's readout error on the counts. It was recorded before the jobs were submitted. One cycle as the model simulates it, with the channels named and their calibrated strengths left out:
 
 ```wl
-ghzCounts = <|{0, 0, 0} -> 1854, {0, 0, 1} -> 22, {0, 1, 0} -> 31, {0, 1, 1} -> 129, {1, 0, 0} -> 105, {1, 0, 1} -> 42, {1, 1, 0} -> 33, {1, 1, 1} -> 1880|>;
-ghzShots = Total[ghzCounts];
-ghzExact = ghzShots KeyMap[First, QuantumCircuitOperator[{"GHZ"[3], {1, 2, 3}}][]["Probabilities"]];
-ghzOddQubit[b_] := If[Equal @@ b, 0, First[FirstPosition[b, If[Total[b] == 1, 1, 0]]]];
-ghzByQubit[c_] := KeySort[GroupBy[Normal[c], ghzOddQubit @* First -> Last, Total]];
-Grid[{{
-   BarChart[Transpose[{Lookup[ghzExact, Keys[ghzCounts]], Values[ghzCounts]}], ChartLabels -> {Row /@ Keys[ghzCounts], None},
-    ChartLegends -> {"exact", Row[{"ibm_fez, ", ghzShots, " shots"}]}, Frame -> True, FrameLabel -> {"outcome", "shots"}, ImageSize -> 470,
-    PlotLabel -> Style[Row[{"shots on 000 or 111: ", ghzByQubit[ghzCounts][0], " of ", ghzShots}], 13, FontFamily -> "Helvetica"]],
-   BarChart[Transpose[Values[KeyDrop[ghzByQubit[#], 0]] & /@ {ghzExact, ghzCounts}], ChartLabels -> {Row[{"qubit ", #}] & /@ Range[3], None},
-    LabelingFunction -> Above, Frame -> True, FrameLabel -> {"the qubit that disagrees with the other two", "shots"}, ImageSize -> 330, PlotRange -> {0, All}]}},
- Spacings -> 3, Alignment -> Bottom]
+pumpIdle[r_, t_, w_] := If[t <= 0, {}, With[{g = 1 - Exp[-t/r["T1"][w]], c = Min[1, Exp[-t/r["T2"][w] + t/(2 r["T1"][w])]]},
+    {QuantumChannel["AmplitudeDamping"[g] -> {w}], QuantumChannel["PhaseDamping"[1 - c^2] -> {w}]}]];
+pumpPaulis2 = Catenate[Outer[KroneckerProduct, #, #, 1]] &[{IdentityMatrix[2], PauliMatrix[1], PauliMatrix[2], PauliMatrix[3]}];
+pumpDep2[lam_, ws_] := QuantumChannel[Prepend[Sqrt[lam/16] Rest[pumpPaulis2], Sqrt[1 - 15 lam/16] IdentityMatrix[4]], ws];
+pumpGate[r_, {"rz", {t_}, {w_}}] := {QuantumOperator["RZ"[t], {w}]};
+pumpGate[r_, {"sx", _, {w_}}] := {QuantumOperator["V", {w}], QuantumChannel["Depolarizing"[2 r["SX"][w]] -> {w}]};
+pumpGate[r_, {"x", _, {w_}}] := {QuantumOperator["X", {w}], QuantumChannel["Depolarizing"[2 r["SX"][w]] -> {w}]};
+pumpGate[r_, {"cz", _, ws_}] := {QuantumOperator["CZ", ws], pumpDep2[4/3 r["CZ"][Sort[ws]], ws]};
+pumpGate[r_, {"reset", _, {w_}}] := {QuantumChannel["ResetError"[1 - r["Readout"][w], r["Readout"][w]] -> {w}]};
+pumpDuration[r_, {"cz", _, ws_}] := r["CZLength"][Sort[ws]];
+pumpDuration[r_, {"sx" | "x", _, {w_}}] := r["SXLength"][w];
+pumpDuration[r_, {"reset", _, _}] := r["ResetLength"];
+pumpDuration[_, _] := 0.;
+pumpStep[r_][{els_, clock_}, i : {name_, _, ws_}] := If[MemberQ[{"measure", "barrier"}, name], {els, clock},
+   With[{start = Max[clock /@ ws]}, {Join[els, Catenate[pumpIdle[r, start - clock[#], #] & /@ ws], pumpGate[r, i]],
+     Join[clock, AssociationThread[ws, start + pumpDuration[r, i]]]}]];
+pumpElements[r_, ins_] := With[{s = Fold[pumpStep[r], {{}, <|1 -> 0., 2 -> 0., 3 -> 0.|>}, ins]},
+   With[{tEnd = Max[s[[2]] /@ {1, 3}]}, Join[s[[1]], Catenate[pumpIdle[r, tEnd - s[[2]][#], #] & /@ {1, 3}]]]];
+pumpH[w_] := {{"rz", {Pi/2}, {w}}, {"sx", {}, {w}}, {"rz", {Pi/2}, {w}}};
+pumpCNOT[c_, t_] := Join[pumpH[t], {{"cz", {}, {c, t}}}, pumpH[t]];
+pumpNative[b_] := Join[Most[Catenate[ConstantArray[Join[pumpH[2], pumpCNOT[2, 1], {{"cz", {}, {2, 3}}}, pumpH[2], {{"cz", {}, {2, 1}}}, {{"reset", {}, {2}}},
+       pumpH[2], {{"cz", {}, {2, 1}}}, pumpCNOT[2, 3], pumpH[2], {{"cz", {}, {2, 3}}}, {{"reset", {}, {2}}}], 3]]],
+   <|"X1Z2" -> pumpH[1], "Z1X2" -> pumpH[3], "Y1Y2" -> Join[{{"rz", {-Pi/2}, {1}}}, pumpH[1], {{"rz", {-Pi/2}, {3}}}, pumpH[3]]|>[b]];
+pumpShapeOnly = <|"T1" -> <|1 -> 100., 2 -> 100., 3 -> 100.|>, "T2" -> <|1 -> 80., 2 -> 80., 3 -> 80.|>, "SX" -> <|1 -> 0.001, 2 -> 0.001, 3 -> 0.001|>,
+   "CZ" -> <|{1, 2} -> 0.005, {2, 3} -> 0.005|>, "Readout" -> <|1 -> 0.01, 2 -> 0.01, 3 -> 0.01|>,
+   "SXLength" -> <|1 -> 0.03, 2 -> 0.03, 3 -> 0.03|>, "CZLength" -> <|{1, 2} -> 0.07, {2, 3} -> 0.07|>, "ResetLength" -> 1.5|>;
+pumpCycleNative = Join[pumpH[2], pumpCNOT[2, 1], {{"cz", {}, {2, 3}}}, pumpH[2], {{"cz", {}, {2, 1}}}, {{"reset", {}, {2}}},
+   pumpH[2], {{"cz", {}, {2, 1}}}, pumpCNOT[2, 3], pumpH[2], {{"cz", {}, {2, 3}}}, {{"reset", {}, {2}}}];
+pumpModelEls = pumpElements[pumpShapeOnly, pumpCycleNative];
+pumpTwoLine[a_, b_] := Column[{a, b}, Alignment -> Center, Spacings -> 0];
+pumpChannelName[e_] := Which[MatchQ[e["Label"], "AmplitudeDamping"[___]], pumpTwoLine["Amplitude", "Damping"],
+   MatchQ[e["Label"], "PhaseDamping"[___]], pumpTwoLine["Phase", "Damping"], MatchQ[e["Label"], "ResetError"[___]], pumpTwoLine["Reset", "Error"], True, "Depolarizing"];
+pumpNamed = Which[MatchQ[#, _QuantumChannel], QuantumChannel[#, "Label" -> pumpChannelName[#]],
+    MatchQ[#, _QuantumOperator] && #["Label"] === "V", QuantumOperator[#, "Label" -> Sqrt["X"]], True, #] & /@ pumpModelEls;
+pumpHalfEnd = First[FirstPosition[pumpModelEls, e_ /; MatchQ[e, _QuantumChannel] && MatchQ[e["Label"], "ResetError"[___]], Missing[], {1}, Heads -> False]];
+Show[QuantumCircuitOperator[MapThread[QuantumCircuitOperator, {{Take[pumpNamed, pumpHalfEnd], Drop[pumpNamed, pumpHalfEnd]}, pumpLabels}]]["Diagram",
+   "WireLabels" -> {"1", "ancilla", "2"}, "RotateGateLabel" -> False], PlotRangeClipping -> False, ImagePadding -> {{50, 10}, {10, 40}}, ImageSize -> 1700]
 ```
 
-About nine in ten shots stay on $000$ and $111$, split nearly evenly between the two, as in the exact state. The lost shots are not spread evenly: qubit 1 disagrees with the other two three to four times as often as qubit 2 or qubit 3.
+Every step from the calibration to the counts, with the IBM queries written out, is in [pinned-pump-chain.md](/Users/mohammadb/Documents/GitHub/mbahram/qf-paclet-studies/IBM%20Heron%20Device/backbone/nov-pinned/pinned-pump-chain.md). The results saved from one such run (jobs dbqfceujjaos73ah7meg, dbqfcf8k09pc73at6h20 and dbqfcfok09pc73at6h30, 11 November 2026) are decoded by `IBMJob` and set against the exact cluster state and the recorded prediction:
+
+```wl
+pumpDir = "/Users/mohammadb/Documents/GitHub/mbahram/qf-paclet-studies/IBM Heron Device/backbone/nov-pinned";
+pumpCounts = KeySort[IBMJob[<|"ID" -> "saved", "Status" -> "Completed", "Primitive" -> "sampler", "MeasuredQubits" -> {0, 1},
+       "Raw" -> <|"Results" -> #|>|>]["Counts"]] & /@ Get[FileNameJoin[{pumpDir, "pinned_raw_results.m"}]]["raw"];
+pumpPredicted = Get[FileNameJoin[{pumpDir, "prediction_recorded.m"}]]["Prediction"]["Parities"];
+pumpCluster = QuantumState["Graph"[Graph[{1 <-> 2}]]];
+pumpExact = AssociationThread[Keys[pumpCounts], Re[pumpCluster["Dagger"][QuantumOperator[#][pumpCluster]]["Scalar"]] & /@ {"XZ", "ZX", "YY"}];
+pumpParity = Function[c, N[Total[KeyValueMap[(-1)^Total[#1] #2 &, c]]/Total[c]]];
+pumpMeasured = pumpParity /@ pumpCounts;
+pumpF = Function[p, (1 + Total[p])/4];
+pumpFError = Sqrt[Total[(1 - Values[pumpMeasured]^2)/(Total /@ Values[pumpCounts])]]/4;
+pumpColors = ColorData[97] /@ {1, 2, 3};
+pumpLabelStyle = Sequence[13, FontFamily -> "Helvetica"];
+Column[{Grid[{{
+    BarChart[Transpose[Values[{pumpExact, pumpPredicted, pumpMeasured}]], ChartStyle -> pumpColors, ChartLabels -> {{"X\:2081Z\:2082", "Z\:2081X\:2082", "Y\:2081Y\:2082"}, None}, ImagePadding -> {{55, 10}, {30, 30}},
+     Frame -> True, FrameLabel -> {None, "parity"}, PlotRange -> {0.7, 1.02}, PlotRangeClipping -> True, AspectRatio -> Full, ImageSize -> {440, 280},
+     PlotLabel -> Style["the three stabilizers", pumpLabelStyle]],
+    BarChart[{pumpF[pumpExact], pumpF[pumpPredicted], pumpF[pumpMeasured]}, ChartStyle -> pumpColors, Epilog -> {Directive[GrayLevel[0.5], Dashed, AbsoluteThickness[1.5]], Line[{{0.4, 1/2}, {3.6, 1/2}}]}, ImagePadding -> {{55, 10}, {30, 30}}, Frame -> True, FrameLabel -> {None, "fidelity F"}, FrameTicks -> {{Automatic, None}, {None, None}},
+     PlotRange -> {{0.4, 3.6}, {0, 1.05}}, AspectRatio -> Full, ImageSize -> {240, 280},
+     PlotLabel -> Style[Row[{"ibm_fez: F = ", NumberForm[pumpF[pumpMeasured], {3, 3}], " \[PlusMinus] ", NumberForm[pumpFError, 1]}], pumpLabelStyle]]}},
+   Spacings -> 4, Alignment -> {Center, Top}],
+  Row[{SwatchLegend[pumpColors, {"exact cluster state", "predicted before the run", "ibm_fez"}, LegendLayout -> "Row", LabelStyle -> {pumpLabelStyle}],
+    Spacer[30], LineLegend[{Directive[GrayLevel[0.5], Dashed, AbsoluteThickness[1.5]]}, {"separable states: F \[LessEqual] 1/2"}, LabelStyle -> {pumpLabelStyle}]}]}, Spacings -> 1.5, Alignment -> Center]
+```
+
+Prediction and measurement both sit far above the line $F=\frac{1}{2}$, so the pair ends entangled after three pumped rounds of resets that nobody reads. The model gets the order of the three parities right: $Z_1X_2$, pumped last in each cycle, holds best, while $X_1Z_2$ and $Y_1Y_2$ lose more. It is optimistic by far more than the shot noise, so the run loses something the calibration-based model does not capture.
 
 #| style: SlideShowNavigationBar
 #| tags: SlideShowHeader
