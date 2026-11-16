@@ -256,6 +256,27 @@ VerificationTest[
     TestID -> "QBC-Cat-ApproximateOrder"
 ]
 
+(* A named cat decides its large-amplitude limit without Limit: every class sum S_c(a^2)
+   is e^(a^2)/L up to exponentially smaller terms, so a residual tends to zero exactly when
+   its polynomial in a vanishes identically.  The same codewords given as a plain coherent
+   code carry no legs and go through Limit, and both routes must agree. *)
+VerificationTest[
+    Quiet[
+        With[{cat = QECBosonicCode["Cat"[#1, \[Alpha]], Assumptions -> \[Alpha] > 0]},
+            {cat["ApproximateCorrectionOrder", #2],
+             QECBosonicCode[cat["Codewords"], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #2, \[Alpha]]}] & @@@
+        {{2, "Loss"}, {2, "Gain"}, {2, "Dephasing"}, {4, "Loss"}, {4, "Dephasing"}}],
+    {{0, 0}, {0, 0}, {1, 1}, {1, 1}, {2, 2}},
+    TestID -> "QBC-CatLimit-AgreesWithLimit"
+]
+
+(* 2d legs correct d - 1 losses in the limit; with Limit the 6-cat alone took minutes. *)
+VerificationTest[
+    Table[QECBosonicCode["Cat"[l, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"], {l, {6, 8, 10}}],
+    {2, 3, 4},
+    TestID -> "QBC-CatLimit-LargeCats"
+]
+
 (* The residual is the obstruction itself, and vanishes identically for an exact code. *)
 VerificationTest[
     DeleteDuplicates @ Values @ QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeResidual", "Loss"[1]],
@@ -271,16 +292,20 @@ VerificationTest[
     TestID -> "QBC-Residual-KeyedByErrorPair"
 ]
 
-(* Blocks are computed once per code and channel. *)
+(* Matrix elements are cached once per code, error product and codeword pair, so repeated
+   properties add nothing and the next loss order adds only its new products: {I, a} gives
+   4 products x 4 codeword pairs = 16 entries, and {I, a, a^2} adds 5 more products, 20 entries. *)
 VerificationTest[
-    With[{blocks = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`bosonicBlocks"],
+    With[{element = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`bosonicElement"],
           code = QECBosonicCode["Binomial"[2, 1]]},
-        With[{n0 = Length @ DownValues[blocks]},
+        With[{n0 = Length @ DownValues[element]},
             code["CorrectableQ", "Loss"[1]];
             code["KnillLaflammeMatrix", "Loss"[1]];
             code["KnillLaflammeResidual", "Loss"[1]];
-            Length @ DownValues[blocks] - n0]],
-    1,
+            With[{n1 = Length @ DownValues[element]},
+                code["CorrectableQ", "Loss"[2]];
+                {n1 - n0, Length @ DownValues[element] - n1}]]],
+    {16, 20},
     TestID -> "QBC-Blocks-Memoised"
 ]
 

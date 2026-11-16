@@ -39,7 +39,7 @@ $QECMemoisedFunctions := {
     codeEncoderMatrix, codeSyndromeProjectors, codeLogicalClassPaulis, demExactReport,
     codeStabilizerGroup, hierarchyPaulis, codeMatchingGraph, demMatchingGraph, codeNonGraphlikeLetter,
     exRecMalignantCounts, blockTables, cssCorrectionTable, correctionResidualWeights, hadamardIsLogicalQ,
-    bosonicBlocks
+    bosonicElement, bosonicNorm
 };
 
 (* A cached answer is a rule whose left-hand side holds no pattern: its arguments
