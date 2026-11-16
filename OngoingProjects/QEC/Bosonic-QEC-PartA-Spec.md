@@ -4,6 +4,9 @@
 start coding from. The design keeps a single public symbol with a property surface, so the
 API stays small by construction.*
 
+**Status (2026-11-16): ✅ part (a) complete** in `QECCore/Bosonic.wl`, 69 tests in
+`Tests/Bosonic.wlt`. Changes from this spec are marked below.
+
 ## The one public symbol
 
 `QECBosonicCode` is the object. Everything is a property on it; there are no free
@@ -17,6 +20,12 @@ QECBosonicCode["Binomial", N, S]            (* named family, parameters (N, S) *
 QECBosonicCode["Cat", legs, \[Alpha]]       (* 2- or 4-component cat, amplitude \[Alpha] *)
 QECBosonicCode[qs_QuantumState, ...]        (* codewords as QuantumFramework states *)
 ```
+
+✅ As built: `QECBosonicCode[{w0, w1}]`, ~~`QECBosonicCode["Binomial", N, S]`~~
+`QECBosonicCode["Binomial"[N, S]]`, ~~`QECBosonicCode["Cat", legs, α]`~~
+`QECBosonicCode["Cat"[legs, α]]` for any even number of legs (call form, commit `a1ed079c`), and
+`QECBosonicCode[{qs0, qs1}]` from pure single-mode states. Every constructor takes the mode's
+ladder operator as a trailing argument, `QECBosonicCode[spec, b]`, default `\[FormalA]`.
 
 A codeword is given in the Fock basis as an association `<|n -> amplitude, ...|>` of
 occupation number to (possibly symbolic) amplitude, as a `CoherentState` combination, or
@@ -39,12 +48,25 @@ An error channel is named as `"Loss"[L]` (error set `{I, a, ..., a^L}`), `"Depha
 (`{I, n, ..., n^D}`), or an explicit list of bosonic operators built from QuantumFramework
 primitives.
 
+✅ Also `"Gain"[G]` and `"Displacement"[L]`, and a list of named channels is the union of their
+sets (Michael et al., Eq. 6). ~~Explicit errors built from QuantumFramework primitives~~:
+`AnnihilationOperator` is a truncated matrix, which this exact layer avoids. Explicit errors are
+ladder polynomials in the code's own operator (`**`, `GeneralizedPower`, symbolic scalars).
+
 ```
 code["KnillLaflammeMatrix", channel]   (* the Hermitian coefficient matrix h_ab, symbolic *)
 code["CorrectableQ", channel]          (* exact True/False, by symbolic identity *)
 code["CorrectionOrder", "Loss"]        (* largest L with exact correction *)
 code["Signature", channel]             (* the local-unitary invariant read off h (Du et al.) *)
 ```
+
+✅ All four, plus `"KnillLaflammeResidual"`, `"ApproximateCorrectionOrder"` (large-amplitude
+limit), `"CodewordStates"` and `"KnillLaflammeRank"`. ~~`"Signature"` as the local-unitary
+invariant of Du et al.~~: their invariance rests on a fixed Pauli error basis, and bosonic errors
+have none. `"Signature"` is instead their off-diagonal vector after scaling each error to unit
+norm on the code, h_ab/Sqrt[h_aa h_bb], keyed by error pair. That makes it independent of how the
+errors are scaled, but no unitary invariance is claimed. `"KnillLaflammeRank"`, unchanged under
+any invertible change of error basis, counts the syndromes the code can tell apart.
 
 `"CorrectableQ"` returns `True` only when the overlap matrix `<W_i|E_a\[Dagger] E_b|W_j>`
 equals `h_ab \[Delta]_ij` as a symbolic identity under the code's assumptions, decided with
@@ -99,8 +121,9 @@ the cat and binomial overlaps.
 - Codewords are `QuantumState` objects (or convert to them), so `code["Codewords"]` composes
   with the rest of QuantumFramework and with the phase-space tools (`WignerFunction`,
   `HusimiQFunction`).
-- Error operators come from the QuantumFramework bosonic layer (`AnnihilationOperator` and
-  its powers), so an explicit error set is native QuantumFramework, not strings.
+- ~~Error operators come from the QuantumFramework bosonic layer (`AnnihilationOperator` and
+  its powers), so an explicit error set is native QuantumFramework, not strings.~~ Errors are
+  `SecondQuantization` ladder polynomials, evaluated by `BosonicMatrixElement` without truncation.
 - The object is forward-compatible with the qubit `QECCode`: both answer "is this a code,
   and does it correct this error set", one over the Pauli group and GF(2), the other over
   the oscillator and its Fock or coherent-state overlaps.

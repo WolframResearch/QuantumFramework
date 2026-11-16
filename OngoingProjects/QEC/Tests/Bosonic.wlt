@@ -513,4 +513,109 @@ VerificationTest[
     TestID -> "QBC-States-TwoModesRejected"
 ]
 
+(* A state written in another basis is read through its Fock amplitudes: (|+> + |->)/Sqrt[2] is |0>. *)
+VerificationTest[
+    QECBosonicCode[{QuantumState[{1, 1}/Sqrt[2], QuantumBasis["X"]],
+        QuantumState[{1, -1}/Sqrt[2], QuantumBasis["X"]]}]["Codewords"],
+    {<|0 -> 1|>, <|1 -> 1|>},
+    TestID -> "QBC-States-NonFockBasis"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - explicit errors and edge cases"]
+
+(* The adjoint swaps the code's two ladder operators and conjugates every scalar, so h is
+   Hermitian: (2b)^dagger (i b) = 2i n averages to 4i and (i b)^dagger (2b) to -4i, while
+   (b + bd)^2 averages to 2<n> + 1 = 5 because b^2 and bd^2 leave the codewords' parity class. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1], qecB][
+        "KnillLaflammeMatrix", {1, 2 qecB, I qecB, qecB + SuperDagger[qecB]}],
+    {{1, 0, 0, 0}, {0, 8, 4 I, 4}, {0, -4 I, 2, -2 I}, {0, 4, 2 I, 5}},
+    TestID -> "QBC-Explicit-ScalarsAndSums"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1], qecB]["KnillLaflammeMatrix",
+        {1, GeneralizedPower[NonCommutativeMultiply, qecB, 2], GeneralizedPower[NonCommutativeMultiply, SuperDagger[qecB], 2]}],
+    QECBosonicCode["Binomial"[1, 1], qecB]["KnillLaflammeMatrix",
+        {1, qecB ** qecB, SuperDagger[qecB] ** SuperDagger[qecB]}],
+    TestID -> "QBC-Explicit-GeneralizedPower"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1], qecB, Assumptions -> \[Epsilon] > 0][
+        "KnillLaflammeMatrix", {1, \[Epsilon] qecB}],
+    {{1, 0}, {0, 2 \[Epsilon]^2}},
+    TestID -> "QBC-Explicit-SymbolicScalar"
+]
+
+(* The order scan runs until the conditions fail, not to a fixed cap: (N, S) = (5, 5)
+   corrects min(N, S) = 5 losses. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[5, 5]]["CorrectionOrder"],
+    5,
+    TestID -> "QBC-CorrectionOrder-NoFixedCap"
+]
+
+VerificationTest[
+    QECBosonicCode["Binomial"[1, 1]]["ErrorSet", "Foo"[1]],
+    $Failed,
+    {QECBosonicCode::channel},
+    TestID -> "QBC-Channel-Unknown"
+]
+
+(* A bad channel is reported where the error set is built; what follows the message is not checked. *)
+VerificationTest[
+    Quiet @ Check[
+        QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", {"Loss"[1], "Loss"[-1]}],
+        "reported", QECBosonicCode::channel],
+    "reported",
+    TestID -> "QBC-Channel-BadMemberOfList"
+]
+
+VerificationTest[
+    QECBosonicCode["Cat"[4, 2.]]["ApproximateCorrectionOrder"],
+    $Failed,
+    {QECBosonicCode::numvar},
+    TestID -> "QBC-ApproximateOrder-NumericAmplitude"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - rank and signature"]
+
+(* The rank of h counts the error images the code can tell apart. Eq. (5) of Michael et al.
+   separates all three of {I, a, n}; an error set holding b and 2b is degenerate by construction. *)
+VerificationTest[
+    {QECBosonicCode["Binomial"[2, 1]]["KnillLaflammeRank", {"Loss"[1], "Dephasing"[1]}],
+     QECBosonicCode["Binomial"[2, 1], qecB]["KnillLaflammeRank", {1, qecB, 2 qecB}]},
+    {3, 2},
+    TestID -> "QBC-Rank-FullAndDegenerate"
+]
+
+(* The signature of Du et al. (npj QI 2025) is the vector of off-diagonal coefficients of h.
+   Bosonic errors carry no fixed normalization, so each is scaled to unit norm on the code:
+   h(I, n)/Sqrt[h(I, I) h(n, n)] = 3/Sqrt[12] for Eq. (5), and a flips parity so the rest vanish. *)
+VerificationTest[
+    QECBosonicCode["Binomial"[2, 1]]["Signature", {"Loss"[1], "Dephasing"[1]}],
+    <|{1, qecAv} -> 0, {1, qecAdv ** qecAv} -> Sqrt[3]/2, {qecAv, qecAdv ** qecAv} -> 0|>,
+    TestID -> "QBC-Signature-Eq5"
+]
+
+VerificationTest[
+    Values @ QECBosonicCode["Binomial"[2, 1], qecB]["Signature", {1, 2 qecB, 5 SuperDagger[qecB] ** qecB}],
+    Values @ QECBosonicCode["Binomial"[2, 1], qecB]["Signature", {1, qecB, SuperDagger[qecB] ** qecB}],
+    TestID -> "QBC-Signature-ScaleFree"
+]
+
+(* A loss set is graded by photon number, so h is diagonal and the signature vanishes. *)
+VerificationTest[
+    Union @ Values @ QECBosonicCode["Binomial"[2, 2]]["Signature", "Loss"[2]],
+    {0},
+    TestID -> "QBC-Signature-LossVanishes"
+]
+
 EndTestSection[]
