@@ -111,7 +111,9 @@ EndTestSection[]
 BeginTestSection["QECBosonicCode - Knill-Laflamme, binomial"]
 
 (* The milestone: h00 = <W|I|W> = 1, h11 = <W|n|W> = 2, and h01 = 0 because a flips
-   photon-number parity.  Exact, with no Fock cutoff anywhere. *)
+   photon-number parity.  Exact, with no Fock cutoff anywhere.  "Loss"[L] is the idealized
+   span {I, a, ..., a^L}, not the Kraus set of the physical channel, whose no-jump factor
+   eta^(n/2) is not a polynomial in the ladder operators. *)
 VerificationTest[
     QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeMatrix", "Loss"[1]],
     {{1, 0}, {0, 2}},
@@ -256,18 +258,37 @@ VerificationTest[
     TestID -> "QBC-Cat-ApproximateOrder"
 ]
 
-(* A named cat decides its large-amplitude limit without Limit: every class sum S_c(a^2)
-   is e^(a^2)/L up to exponentially smaller terms, so a residual tends to zero exactly when
-   its polynomial in a vanishes identically.  The same codewords given as a plain coherent
-   code carry no legs and go through Limit, and both routes must agree. *)
+(* A coherent code whose amplitudes are the limit variable times fixed numbers, beta_k = a z_k,
+   decides its large-amplitude limit without Limit: |<a z_k|a z_l>| = Exp[-a^2 |z_k - z_l|^2/2]
+   vanishes for distinct z, so only each component paired with itself survives and a residual
+   tends to zero exactly when its polynomial in a vanishes identically.  The cat orders below
+   were also obtained with Limit, including the 4-cat under gain, which took Limit 109 s. *)
 VerificationTest[
-    Quiet[
-        With[{cat = QECBosonicCode["Cat"[#1, \[Alpha]], Assumptions -> \[Alpha] > 0]},
-            {cat["ApproximateCorrectionOrder", #2],
-             QECBosonicCode[cat["Codewords"], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #2, \[Alpha]]}] & @@@
-        {{2, "Loss"}, {2, "Gain"}, {2, "Dephasing"}, {4, "Loss"}, {4, "Dephasing"}}],
-    {{0, 0}, {0, 0}, {1, 1}, {1, 1}, {2, 2}},
-    TestID -> "QBC-CatLimit-AgreesWithLimit"
+    Quiet[QECBosonicCode["Cat"[#1, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #2] & @@@
+        {{2, "Loss"}, {2, "Gain"}, {2, "Dephasing"}, {4, "Loss"}, {4, "Gain"}, {4, "Dephasing"}}],
+    {0, 0, 1, 1, 1, 2},
+    TestID -> "QBC-CoherentLimit-Cats"
+]
+
+(* No symmetry needed.  Code A's four amplitudes are distinct and both codewords give
+   1 + 2^d for <n^d>, so dephasing holds up to the scan's end.  Code B fails at order one:
+   <n> is 1 on one codeword and 5/2 on the other, and the (a, a) entries are a^2 and 5a^2/2. *)
+VerificationTest[
+    Quiet[{
+        QECBosonicCode[{{{1, \[Alpha]}, {1, (1 + I) \[Alpha]}}, {{1, -\[Alpha]}, {1, -(1 + I) \[Alpha]}}},
+            Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #, \[Alpha]] & /@ {"Loss", "Dephasing"},
+        QECBosonicCode[{{{1, \[Alpha]}, {2, -\[Alpha]}, {1, I \[Alpha]}}, {{1, -I \[Alpha]}, {1, 2 \[Alpha]}}},
+            Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #, \[Alpha]] & /@ {"Loss", "Dephasing"}}],
+    {{0, 2}, {0, 0}},
+    TestID -> "QBC-CoherentLimit-Asymmetric"
+]
+
+(* Amplitudes that are not a multiple of the limit variable still go through Limit. *)
+VerificationTest[
+    QECBosonicCode[{{{1, \[Alpha] + 1}, {1, -\[Alpha] - 1}}, {{1, \[Alpha] + 1}, {-1, -\[Alpha] - 1}}},
+        Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", "Loss", \[Alpha]],
+    0,
+    TestID -> "QBC-ApproximateOrder-LimitFallback"
 ]
 
 (* 2d legs correct d - 1 losses in the limit; with Limit the 6-cat alone took minutes. *)

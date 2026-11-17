@@ -113,8 +113,6 @@ bosonicElement[a_Association, i_Integer, j_Integer, expr_] := bosonicElement[a, 
     ]
 
 
-(* The idealized span {I, a, ..., a^L}, not the Kraus set of the physical channel:
-   its no-jump factor eta^(n/2) is not a polynomial in the ladder operators. *)
 bosonicErrorSet[a_, "Loss"[l_Integer ? NonNegative]] := NestList[ncTimes[#, annihilator[a]] &, 1, l]
 
 bosonicErrorSet[a_, "Gain"[g_Integer ? NonNegative]] := NestList[ncTimes[#, creator[a]] &, 1, g]
@@ -122,17 +120,12 @@ bosonicErrorSet[a_, "Gain"[g_Integer ? NonNegative]] := NestList[ncTimes[#, crea
 bosonicErrorSet[a_, "Dephasing"[dd_Integer ? NonNegative]] :=
     NestList[ncTimes[#, creator[a] ** annihilator[a]] &, 1, dd]
 
-(* Every normally ordered monomial up to total degree L, the span a displacement reaches
-   when expanded to that order.  Unlike loss it is not graded by photon number, so the
-   coefficient matrix need not come out diagonal. *)
 bosonicErrorSet[a_, "Displacement"[l_Integer ? NonNegative]] :=
     Flatten @ Table[
         ncTimes[Nest[ncTimes[#, creator[a]] &, 1, p], Nest[ncTimes[#, annihilator[a]] &, 1, t - p]],
         {t, 0, l}, {p, 0, t}
     ]
 
-(* A list of named channels is the union of their error sets, as in Michael et al.,
-   where loss, gain and dephasing errors are corrected together but never multiplied. *)
 bosonicErrorSet[a_, chs : {(_String[_]) ..}] := DeleteDuplicates @ Catenate[bosonicErrorSet[a, #] & /@ chs]
 
 bosonicErrorSet[_, es_List] := es
@@ -150,8 +143,6 @@ bosonicBlocks[a_Association, channel_] :=
 bosonicKLMatrix[a_Association, channel_] :=
     Map[FullSimplify[Tr[#]/2, a["Assumptions"]] &, bosonicBlocks[a, channel], {2}]
 
-(* The obstruction itself: what each block has left over once the codeword-independent
-   part is removed, keyed by the error pair {E_a, E_b}. Zero exactly when the conditions hold. *)
 bosonicResidual[a_Association, channel_] :=
     With[{es = bosonicErrorSet[a, channel]},
         AssociationThread[Tuples[{es, es}],
@@ -177,43 +168,45 @@ scanOrder[a_Association, test_] :=
 
 bosonicCorrectionOrder[a_Association, family_] := scanOrder[a, bosonicCorrectableQ[a, family[#]] &]
 
-(* An approximate code satisfies the conditions only in the limit of large amplitude.
-   Asking whether every residual vanishes there separates a code that is approximately
-   correcting from one that is not correcting at all. *)
 QECBosonicCode::novar = "This code has no amplitude parameter; supply the limit variable as the third argument.";
 QECBosonicCode::numvar = "The amplitude `1` is not a symbol; build the code with a symbolic amplitude to take its large-amplitude limit.";
 
 bosonicApproxOrder[a_Association, family_, var_] :=
-    scanOrder[a,
-        If[ KeyExistsQ[a["Parameters"], "Legs"] && var === a["Parameters"]["Alpha"],
-            catLimitCorrectableQ[a, family[#]] &,
-            AllTrue[Simplify[Flatten @ Values @ bosonicResidual[a, family[#]], a["Assumptions"]],
-                PossibleZeroQ @ Quiet @ Limit[#, var -> Infinity] &] &
+    With[{ws = If[a["Basis"] === "Coherent", limitWord[#, var] & /@ a["Codewords"], {}]},
+        scanOrder[a,
+            If[ ws =!= {} && FreeQ[Keys /@ ws, var],
+                limitCorrectableQ[a, ws, family[#], var] &,
+                AllTrue[Simplify[Flatten @ Values @ bosonicResidual[a, family[#]], a["Assumptions"]],
+                    PossibleZeroQ @ Quiet @ Limit[#, var -> Infinity] &] &
+            ]
         ]
     ]
 
-catLimitElement[a_Association, i_Integer, j_Integer, expr_] :=
-    With[{l = a["Parameters"]["Legs"], al = a["Parameters"]["Alpha"], r = {0, a["Parameters"]["Legs"]/2}},
-        Total[#2 al^Total[#1] Boole[Mod[r[[i]] - #1[[1]] - r[[j]] + #1[[2]], l] == 0] & @@@
-            CoefficientRules[
-                BosonicNormalOrder[expr, a["LadderVariables"]] /. GeneralizedPower[_, x_, n_] :> x^n /. NonCommutativeMultiply -> Times,
-                {creator[a], annihilator[a]}]]
+limitWord[w_, var_] := GroupBy[w, Simplify[Last[#]/var] & -> First, Total]
+
+monomialValue[rules_, b_, bc_] := Total[#2 bc^#1[[1]] b^#1[[2]] & @@@ rules]
+
+limitElement[a_Association, wi_Association, wj_Association, expr_, var_] :=
+    With[{rules = CoefficientRules[
+            BosonicNormalOrder[expr, a["LadderVariables"]] /. GeneralizedPower[_, x_, n_] :> x^n /. NonCommutativeMultiply -> Times,
+            {creator[a], annihilator[a]}]},
+        Total[Conjugate[wi[#]] wj[#] monomialValue[rules, var #, var Conjugate[#]] & /@ Intersection[Keys[wi], Keys[wj]]]/
+            Sqrt[Total[Abs[Values[wi]]^2] Total[Abs[Values[wj]]^2]]
     ]
 
-catLimitCorrectableQ[a_Association, channel_] :=
+limitCorrectableQ[a_Association, ws_, channel_, var_] :=
     With[{es = bosonicErrorSet[a, channel]},
         AllTrue[
             Flatten @ Table[
-                With[{blk = Table[catLimitElement[a, i, j, ncTimes[ncDagger[a, es[[p]]], es[[q]]]], {i, 2}, {j, 2}]},
+                With[{blk = Table[limitElement[a, ws[[i]], ws[[j]], ncTimes[ncDagger[a, es[[p]]], es[[q]]], var], {i, 2}, {j, 2}]},
                     blk - IdentityMatrix[2] Tr[blk]/2],
                 {p, Length[es]}, {q, Length[es]}],
-            PossibleZeroQ]
+            exactZeroPolynomialQ[#, var] &]
     ]
 
+exactZeroPolynomialQ[x_, var_] := AllTrue[Flatten @ CoefficientList[Expand[x], var], PossibleZeroQ[#, Method -> "ExactAlgebraics"] &]
 
-(* The only place a cutoff enters, so codewords can reach the phase-space tools.
-   A Fock codeword is a finite sum and its size is exact; a coherent one needs enough
-   levels to hold the Poisson tail of its largest amplitude. *)
+
 QECBosonicCode::numeric = "Codeword amplitudes must be numeric to choose a Fock space size; give one explicitly as the second argument.";
 
 bosonicFockSpaceSize[a_Association] :=
@@ -312,8 +305,6 @@ codewordForm[a_Association, w_] :=
         Row[parts]
     ]
 
-(* Fixed: the harmonic well and its ladder of levels, the one mode a bosonic code
-   lives in. *)
 $bosonicIcon = With[{hs = {0.18, 0.45, 0.72, 0.99}},
     Graphics[
         {
