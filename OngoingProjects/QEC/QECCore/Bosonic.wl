@@ -160,8 +160,8 @@ bosonicResidual[a_Association, channel_] :=
     ]
 
 bosonicCorrectableQ[a_Association, channel_] :=
-    AllTrue[Flatten @ Values @ bosonicResidual[a, channel],
-        PossibleZeroQ[FullSimplify[#, a["Assumptions"]]] &]
+    AllTrue[Flatten @ Map[# - IdentityMatrix[2] Tr[#]/2 &, bosonicBlocks[a, channel], {2}],
+        PossibleZeroQ[Simplify[#, a["Assumptions"]]] &]
 
 QECBosonicCode::ordcap = "The conditions hold through order `1`, the largest order checked.";
 
