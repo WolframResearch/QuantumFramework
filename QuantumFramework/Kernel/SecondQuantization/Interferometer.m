@@ -1457,14 +1457,25 @@ beamSplitterPrimitive[{x_, p_, q_, t_, f_}, labelQ_] := With[{w = $beamSplitterH
     ]
 ]
 
-phasePrimitive[{x_, p_, a_}, labelQ_] := Tooltip[
-    {
-        EdgeForm[{GrayLevel[0.25], AbsoluteThickness[1]}], FaceForm[GrayLevel[0.95]],
-        Rectangle[{x - 0.11, - p - 0.11}, {x + 0.11, - p + 0.11}],
-        {Black, Text[Style["\[Phi]", 8], {x, - p}]},
-        If[labelQ, {Black, Text[Style[parameterForm[a], 8], {x, - p - 0.3}]}, Nothing]
-    },
-    Row[{"\[Phi] = ", a, ", mode ", p}]
+(* With parameters shown, the box carries the phase itself and widens to fit it;
+   with parameters hidden, it carries the gate symbol \[Phi]. *)
+labelHalfWidth[label_] := Clip[
+    0.035 Max[StringLength /@ StringSplit[ToString[label, OutputForm, CharacterEncoding -> "Unicode"], "\n"]] + 0.06,
+    {0.11, 0.4}
+]
+
+phasePrimitive[{x_, p_, a_}, labelQ_] := With[{
+    label = If[labelQ, parameterForm[a], "\[Phi]"]
+},
+    {hw = If[labelQ, labelHalfWidth[label], 0.11]},
+    Tooltip[
+        {
+            EdgeForm[{GrayLevel[0.25], AbsoluteThickness[1]}], FaceForm[GrayLevel[0.95]],
+            Rectangle[{x - hw, - p - 0.11}, {x + hw, - p + 0.11}],
+            {Black, Text[Style[label, 8], {x, - p}]}
+        },
+        Row[{"\[Phi] = ", a, ", mode ", p}]
+    ]
 ]
 
 squeezerPrimitive[{x_, p_, xi_}, labelQ_] := Tooltip[
