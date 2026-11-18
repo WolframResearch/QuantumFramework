@@ -135,8 +135,21 @@ adjointMatrix[w_, p_, q_] := ArrayFlatten[{{w, -p}, {q, -Transpose[w]}}]
 
 affineShift[m_, ell_, n_] /; AllTrue[ell, PossibleZeroQ] := {ConstantArray[0, n], ConstantArray[0, n], 0}
 
+affineShift[m_, ell_, n_] /; ! PossibleZeroQ[Det[m]] :=
+    With[{e = mexp[-m], mi = Inverse[m]},
+        Simplify @ Append[TakeDrop[mi . (ell - e . ell), n],
+            (e . ell) . (ArrayFlatten[{{0, -IdentityMatrix[n]}, {IdentityMatrix[n], 0}}] . mi . mi . (ell - e . (ell + m . ell))) / 2]
+    ]
+
+(* An exact numeric matrix is exponentiated as z m/tau, z -> tau: MatrixExp of the number form expands nested radicals
+   by orders of magnitude, the symbolic one keeps them in RootSum. *)
+mexp[m_] /; MatrixQ[m, NumericQ] && Precision[m] === Infinity :=
+    Module[{z}, With[{tau = SelectFirst[Flatten[m], ! PossibleZeroQ[#] &, 1]}, MatrixExp[z m / tau] /. z -> tau]]
+
+mexp[m_] := MatrixExp[m]
+
 affineShift[m_, ell_, n_] :=
-    With[{aug = MatrixExp[ArrayFlatten[{
+    With[{aug = mexp[ArrayFlatten[{
             {Transpose[m], ArrayFlatten[{{0, -IdentityMatrix[n]}, {IdentityMatrix[n], 0}}], ConstantArray[0, {2 n, 1}]},
             {ConstantArray[0, {2 n, 2 n}], -m, Transpose[{ell}]},
             {ConstantArray[0, {1, 2 n}], ConstantArray[0, {1, 2 n}], {{0}}}}]]},
@@ -146,15 +159,11 @@ affineShift[m_, ell_, n_] :=
 (* e^(ad P ad/2 + ad W a + a Q a/2 + mu ad + nu a) over coupled modes, from the blocks {{A, B}, {C, D}} of exp[{{W, P}, {-Q, -W^T}}]:
    e^(-Tr W/2) Det[D]^(-1/2) e^(ad B D^-1 ad/2) :e^(ad (D^-T - 1) a): e^(-a D^-1 C a/2), which for P = Q = 0 is
    :e^(ad (e^W - 1) a):; linear terms come in through affineShift and braid to the wings.  Antinormal order is the same
-   under a -> ad, ad -> -a.  An exact numeric matrix is exponentiated as z m/tau, z -> tau: MatrixExp of the number form
-   expands nested radicals twentyfold, the symbolic one keeps them in RootSum. *)
+   under a -> ad, ad -> -a.  Each block is simplified before it becomes an operator: combined first, exact radicals reach
+   10^5 leaves and the rule loop and the final Simplify then spend tens of seconds on them. *)
 multimodeQuadraticExp[g_, lv_, s_] :=
-    Module[{n = Length[ladderModes[lv, g]], x, y, z, xs, ys, cr, an, op, middle, mexp, poly, w, p, q, lam, rho, kap, m, k, e, d, yy, l},
+    Module[{n = Length[ladderModes[lv, g]], x, y, xs, ys, cr, an, op, middle, poly, w, p, q, lam, rho, kap, m, k, e, d, yy, l},
         {xs, ys} = {Array[x, n], Array[y, n]};
-        mexp[mm_] := If[ MatrixQ[mm, NumericQ] && Precision[mm] === Infinity,
-            With[{tau = SelectFirst[Flatten[mm], ! PossibleZeroQ[#] &, 1]}, MatrixExp[z mm / tau] /. z -> tau],
-            MatrixExp[mm]
-        ];
         {cr, an} = If[s == 1, Identity, Reverse] @ ladderVars[lv][[All, ladderModes[lv, g]]];
         op = ncPolynomial[Expand[# /. Thread[ys -> s ys]], Join[xs, ys], Join[cr, an]] &;
         middle = If[ DiagonalMatrixQ[#],
@@ -168,14 +177,14 @@ multimodeQuadraticExp[g_, lv_, s_] :=
         m = ArrayFlatten[{{w, p}, {-q, -Transpose[w]}}];
         {lam, rho, kap} = affineShift[adjointMatrix[w, p, q], Flatten[{D[poly, {xs}], D[poly, {ys}]} /. Thread[Join[xs, ys] -> 0]], n];
         Exp[(poly /. Thread[Join[xs, ys] -> 0]) + kap + lam . rho / 2] If[ AllTrue[Flatten[{p, q}], PossibleZeroQ],
-            k = mexp[w];
+            k = Simplify[mexp[w]];
             ncJoin[Exp[op[Simplify[k . lam] . xs]], middle[k], Exp[op[rho . ys]]],
             e = mexp[m];
-            d = Inverse[e[[n + 1 ;;, n + 1 ;;]]];
-            yy = -d . e[[n + 1 ;;, ;; n]];
+            d = Simplify[Inverse[e[[n + 1 ;;, n + 1 ;;]]]];
+            yy = Simplify[-d . e[[n + 1 ;;, ;; n]]];
             l = rootPhase[m];
-            E^(Simplify[lam . yy . lam] / 2 - (Tr[w] + l) / 2) (E^-l Det[e[[n + 1 ;;, n + 1 ;;]]])^(-1/2) ncJoin[
-                Exp[op[xs . e[[;; n, n + 1 ;;]] . d . xs / 2 + Simplify[Transpose[d] . lam] . xs]],
+            E^(Simplify[lam . yy . lam] / 2 - (Tr[w] + l) / 2) (E^-l Simplify[Det[e[[n + 1 ;;, n + 1 ;;]]]])^(-1/2) ncJoin[
+                Exp[op[xs . Simplify[e[[;; n, n + 1 ;;]] . d] . xs / 2 + Simplify[Transpose[d] . lam] . xs]],
                 middle[Transpose[d]],
                 Exp[op[ys . yy . ys / 2 + Simplify[yy . lam + rho] . ys]]
             ]
@@ -511,7 +520,12 @@ expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
                 ] /. pw_Piecewise :> Refine[pw],
                 tc
             ],
-            r : Except[$Aborted] :> TimeConstrained[Simplify[r, ExcludedForms -> _GeneralizedPower | _Piecewise, Trig -> False], tc, r]
+            r : Except[$Aborted] :> TimeConstrained[Simplify[r, ExcludedForms -> _GeneralizedPower | _Piecewise, Trig -> False], tc / 10,
+                TimeConstrained[
+                    r /. {
+                        Power[E, e_] :> Power[E, Simplify[e, ExcludedForms -> _GeneralizedPower | _Piecewise, Trig -> False]],
+                        s_ /; FreeQ[s, Alternatives @@ lv["Generators"]] :> Simplify[s, ExcludedForms -> _Piecewise, Trig -> False]
+                    }, tc, r]]
         ]
     ]
 
@@ -523,7 +537,6 @@ BosonicExpOrder::ordering = "`1` is not a valid setting for \"Ordering\"; use \"
 
 BosonicExpOrder::time = "Ordering stopped after the TimeConstraint of `1` seconds; the input is returned unordered."
 
-BosonicExpOrder::assum ="`1` reads as assumptions rather than ladder operators; give the ladder operators second and the assumptions as Assumptions -> `1`."
 
 Options[BosonicExpOrder] = {
     "Ordering" -> "Normal",
@@ -533,9 +546,6 @@ Options[BosonicExpOrder] = {
 
 BosonicExpOrder[expr_, opts : OptionsPattern[]] := (Message[BosonicExpOrder::argr, BosonicExpOrder, 2]; $Failed)
 
-With[{p = True | False | _Greater | _GreaterEqual | _Less | _LessEqual | _Equal | _Unequal | _Element | _NotElement | _And | _Or},
-    BosonicExpOrder[expr_, assum : (p | {p ..}), OptionsPattern[]] := (Message[BosonicExpOrder::assum, assum]; $Failed)
-]
 
 BosonicExpOrder[expr_, vars_, opts : OptionsPattern[]] :=
     With[{lv = ResolveLadderVariables[BosonicExpOrder, vars]},

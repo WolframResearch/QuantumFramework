@@ -51,9 +51,6 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 General::ladvars = "`1` does not declare ladder operators; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first, or a WeylAlgebra.";
 General::ladflat = "The list `1` mixes creators and annihilators; give the annihilators alone, `2`, or {{creators}, {annihilators}}.";
 General::ladpairs = "`1` lists one {creator, annihilator} pair per mode; write `2`, the creators of every mode first.";
-General::ladlen = "The creators `1` and the annihilators `2` differ in number.";
-General::ladvar = "`1` cannot name a ladder operator.";
-General::laddup = "`1` is declared more than once in `2`.";
 General::laddagger = "The annihilator `1` carries a dagger; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first.";
 General::ladpair = "The creator `1` is paired with `2` instead of `3`.";
 General::ladalg = "`1` is not a Weyl algebra.";
@@ -74,26 +71,18 @@ ResolveLadderVariables[f_, vars : {Except[_List] ..}] :=
     ]
 
 ResolveLadderVariables[f_, vars : {cs : {__}, as : {__}}] :=
-    With[{
-        bad = SelectFirst[Join[cs, as],
-            NumericQ[#] || ! MatchQ[#, _Symbol | Except[Plus | Times | Power | List | NonCommutativeMultiply | GeneralizedPower, _Symbol][___]] &, None],
-        dup = FirstCase[Tally[Join[cs, as]], {v_, k_ /; k > 1} :> v, None],
-        cross = If[Length[cs] === Length[as],
-            FirstCase[Transpose[{cs, as}], {SuperDagger[x_], a_} /; x =!= a && MemberQ[as, x] :> {SuperDagger[x], a, x}, None], None]
-    },
+    With[{cross = If[Length[cs] === Length[as],
+            FirstCase[Transpose[{cs, as}], {SuperDagger[x_], a_} /; x =!= a && MemberQ[as, x] :> {SuperDagger[x], a, x}, None], None]},
         Which[
             ! FreeQ[vars, {___, x_, ___, SuperDagger[x_], ___} | {___, SuperDagger[x_], ___, x_, ___}],
                 Message[f::ladpairs, vars, daggerVariables[vars]]; $Failed,
-            Length[cs] =!= Length[as], Message[f::ladlen, cs, as]; $Failed,
-            bad =!= None, Message[f::ladvar, bad]; $Failed,
-            dup =!= None, Message[f::laddup, dup, vars]; $Failed,
             MemberQ[as, _SuperDagger], Message[f::laddagger, FirstCase[as, _SuperDagger]]; $Failed,
             cross =!= None, Message[f::ladpair, Sequence @@ cross]; $Failed,
-            True, <|
-                "Creators" -> cs, "Annihilators" -> as, "Generators" -> Join[cs, as],
-                "Algebra" -> WeylAlgebra[vars],
-                "Modes" -> AssociationThread[Join[cs, as], Join[#, #] & @ Range[Length[cs]]]
-            |>
+            True, Replace[Quiet[Check[WeylAlgebra[vars], $Failed]], {
+                $Failed :> (Message[f::ladvars, vars]; $Failed),
+                alg_ :> <|"Creators" -> cs, "Annihilators" -> as, "Generators" -> Join[cs, as], "Algebra" -> alg,
+                    "Modes" -> AssociationThread[Join[cs, as], Join[#, #] & @ Range[Length[cs]]]|>
+            }]
         ]
     ]
 
@@ -141,8 +130,7 @@ ToBosonicOperator::usage =
 
 ToBosonicOperator[expr_] := (Message[ToBosonicOperator::argr, ToBosonicOperator, 2]; $Failed)
 
-(* Modes commute, so each ordered monomial is a Kronecker product of one-mode blocks, a^dagger^i a^j in normal
-   and a^j a^dagger^i in antinormal order. *)
+
 orderedPolynomial[(h : NormalOrdered | AntinormalOrdered)[f_, _], lv_, size_] :=
     Module[{x, t, k = Length[lv["Annihilators"]], xs, p, pow, block},
         xs = Array[x, 2 k];

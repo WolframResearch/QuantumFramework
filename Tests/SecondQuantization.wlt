@@ -212,6 +212,15 @@ VerificationTest[
     TestID -> "SQ-ordering-empty-vars-rejected"
 ]
 
+(* Assumptions given where the ladder operators belong are rejected, not read as operators: a list of them would
+   otherwise declare r > 0 an annihilator and every operator in the expression a scalar. *)
+VerificationTest[
+    {BosonicVEV[Exp[c \[FormalA]], {r > 0, t > 0}], BosonicExpOrder[Exp[r \[FormalA] ** \[FormalA]], r > 0], BosonicMatrixElement[{0, 0}, 5, {r > 0}]},
+    {$Failed, $Failed, $Failed},
+    {BosonicVEV::ladvars, BosonicExpOrder::ladvars, BosonicMatrixElement::ladvars},
+    TestID -> "SQ-assumptions-not-ladder-vars"
+]
+
 (* Phase-space functions at the origin alpha = 0. The closed-form kernels carry a
    base^(m - n) (Wigner) or base^n base^m (Husimi) factor; on the diagonal the
    exponent is 0, so the origin value is the limit base^0 = 1. W(0) = (2/pi) <parity>

@@ -988,6 +988,26 @@ VerificationTest[
     TestID -> "TwoModeDisplacedSqueezerMatchesMatrixExp"
 ]
 
+(* Coupled generators with exact coefficients order inside the default TimeConstraint and give the same operator: a squeezer
+   with unequal frequencies and a drive at t = 7/10, and a hopping-squeezing pair with a drive at symbolic t.  Exact numbers
+   once blew MatrixExp up to 10^6 leaves and the final Simplify past the limit, so both came back unordered. *)
+VerificationTest[
+    Module[{s = 22, ad = SuperDagger[\[FormalA]], bd = SuperDagger[\[FormalB]], am, bm, ks = {{0, 0}, {1, 0}, {0, 1}}, idx},
+        am = N @ KroneckerProduct[Normal[AnnihilationOperator[s]["Matrix"]], IdentityMatrix[s]];
+        bm = N @ KroneckerProduct[IdentityMatrix[s], Normal[AnnihilationOperator[s]["Matrix"]]];
+        idx = s #[[1]] + #[[2]] + 1 & /@ ks;
+        Max @ Table[
+            With[{h = c[[1]], o = N[BosonicExpOrder[Exp[-I c[[2]] c[[1]]], $vAB] /. t -> 7/10]},
+                Max[Abs[Table[BosonicMatrixElement[{m, n}, o, $vAB], {m, ks}, {n, ks}] -
+                    MatrixExp[-0.7 I (h /. NonCommutativeMultiply -> Dot /. {ad -> ConjugateTranspose[am], bd -> ConjugateTranspose[bm], \[FormalA] -> am, \[FormalB] -> bm})][[idx, idx]]]]],
+            {c, {
+                {ad ** \[FormalA] + 2 bd ** \[FormalB] + 1/2 (ad ** bd + \[FormalA] ** \[FormalB]) + 1/3 (ad + \[FormalA]), 7/10},
+                {ad ** \[FormalA] + 3/2 bd ** \[FormalB] + 1/4 (ad ** \[FormalB] + bd ** \[FormalA]) + 1/5 (ad ** bd + \[FormalA] ** \[FormalB]) + 1/3 (ad + \[FormalA]), t}}}]
+    ] < 10^-12,
+    True,
+    TestID -> "ExactCoupledWithDriveOrdersInTime"
+]
+
 EndTestSection[]
 
 
