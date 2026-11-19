@@ -66,7 +66,7 @@ BosonicNormalOrder[expr_, vars_, OptionsPattern[]] :=
         Which[
             lv === $Failed, $Failed,
             ! MatchQ[method, Automatic | "Blasiak"], Message[BosonicNormalOrder::unknownMethod, method]; $Failed,
-            True, ladderOrder[lv, method, BosonicNormalOrder][expr]
+            True, ladderOrder[lv, method, BosonicNormalOrder][expr /. GeneralizedPower[NonCommutativeMultiply, _, 0] -> 1]
         ]
     ]
 
@@ -96,7 +96,7 @@ BosonicAntinormalOrder[expr_, vars_, OptionsPattern[]] :=
         Which[
             lv === $Failed, $Failed,
             ! MatchQ[method, Automatic | "Blasiak"], Message[BosonicAntinormalOrder::unknownMethod, method]; $Failed,
-            True, expandCoefficients[ladderSwap[ladderOrder[lv, method, BosonicAntinormalOrder][ladderSwap[expr, lv]], lv, "Inverse"], lv]
+            True, expandCoefficients[ladderSwap[ladderOrder[lv, method, BosonicAntinormalOrder][ladderSwap[expr /. GeneralizedPower[NonCommutativeMultiply, _, 0] -> 1, lv]], lv, "Inverse"], lv]
         ]
     ]
 

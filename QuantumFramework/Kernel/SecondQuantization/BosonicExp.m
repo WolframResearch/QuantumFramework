@@ -12,7 +12,6 @@ PackageExport["BosonicExpSimplify"]
 
 PackageExport["BosonicExpBraid"]
 
-PackageScope["ncPolynomial"]
 
 
 ladderVars[lv_] := {lv["Creators"], lv["Annihilators"]}
@@ -354,9 +353,12 @@ exponentTerm[t_, g_] :=
 canonicalizeGenerators[expr_, lv_] :=
     With[{g = Alternatives @@ lv["Generators"]},
         (LiftNCScalars[expr, lv["Generators"]] /. Exp[e_] :> Exp[Total @ KeyValueMap[#1 #2 &,
-            GroupBy[exponentTerm[#, g] & /@ Replace[Expand[e], {s_Plus :> List @@ s, s_ :> {s}}], First -> Last, Total]]]) //.
+            GroupBy[exponentTerm[#, g] & /@ Replace[Expand[e], {s_Plus :> List @@ s, s_ :> {s}}], First -> Last, Total]]]) //. {
             NonCommutativeMultiply[l___, x : g, y : g, r___] /; lv["Modes"][x] > lv["Modes"][y] :>
-                NonCommutativeMultiply[l, y, x, r]
+                NonCommutativeMultiply[l, y, x, r],
+            NonCommutativeMultiply[l___, x : (b_ | GeneralizedPower[NonCommutativeMultiply, b_, _]), y : (b_ | GeneralizedPower[NonCommutativeMultiply, b_, _]), r___] /; MatchQ[b, g] :>
+                ncJoin[l, GeneralizedPower[NonCommutativeMultiply, b, getNCPower[x, b] + getNCPower[y, b]], r]
+        }
     ]
 
 
@@ -465,10 +467,14 @@ ladderPolynomialQ[expr_, pair_] :=
         ]
     ]
 
+NormalOrdered[c_ ? NumericQ, _] := c
+
 NormalOrdered[expr_, vars_] :=
     With[{p = Replace[Quiet @ ResolveLadderVariables[NormalOrdered, vars], {lv_Association :> ladderMode[expr, lv], _ -> None}]},
         ncMonomials[NormalOrdered, expr, p] /; p =!= None && ladderPolynomialQ[expr, p]
     ]
+
+AntinormalOrdered[c_ ? NumericQ, _] := c
 
 AntinormalOrdered[expr_, vars_] :=
     With[{p = Replace[Quiet @ ResolveLadderVariables[AntinormalOrdered, vars], {lv_Association :> ladderMode[expr, lv], _ -> None}]},
