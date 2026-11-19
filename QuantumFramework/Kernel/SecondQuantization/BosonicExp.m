@@ -224,14 +224,14 @@ modeRulesNO[{cr_, an_}, vv_, lv_] := {
     expr_ ** Exp[beta_. cr] /; shiftPolynomialQ[expr, lv] :>
         Exp[beta cr] ** BosonicNormalOrder[expr /. {cr -> cr, an -> an + beta}, vv],
 
-    Exp[lambda_*(adagL : (cr | GeneralizedPower[NonCommutativeMultiply, cr, _])) **
+    Exp[lambda_. (adagL : (cr | GeneralizedPower[NonCommutativeMultiply, cr, _])) **
             an ** (adagR : (cr | GeneralizedPower[NonCommutativeMultiply, cr, _]))] :>
         NormalOrdered[thm44RHS[getNCPower[adagL, cr], getNCPower[adagR, cr], lambda, {cr, an}], vv],
 
-    Exp[lambda_*an ** (adagR : GeneralizedPower[NonCommutativeMultiply, cr, _])] :>
+    Exp[lambda_. an ** (adagR : GeneralizedPower[NonCommutativeMultiply, cr, _])] :>
         NormalOrdered[thm44RHS[0, getNCPower[adagR, cr], lambda, {cr, an}], vv],
 
-    Exp[lambda_*(adagL : GeneralizedPower[NonCommutativeMultiply, cr, _]) ** an] :>
+    Exp[lambda_. (adagL : GeneralizedPower[NonCommutativeMultiply, cr, _]) ** an] :>
         NormalOrdered[thm44RHS[getNCPower[adagL, cr], 0, lambda, {cr, an}], vv]
 }
 
@@ -293,14 +293,14 @@ modeRulesAN[{cr_, an_}, vv_, lv_] := {
     Exp[beta_. cr] ** expr_ /; shiftPolynomialQ[expr, lv] :>
         BosonicAntinormalOrder[expr /. {cr -> cr, an -> an - beta}, vv] ** Exp[beta cr],
 
-    Exp[lambda_*(aL : (an | GeneralizedPower[NonCommutativeMultiply, an, _])) **
+    Exp[lambda_. (aL : (an | GeneralizedPower[NonCommutativeMultiply, an, _])) **
             cr ** (aR : (an | GeneralizedPower[NonCommutativeMultiply, an, _]))] :>
         AntinormalOrdered[thm44ANRHS[getNCPower[aL, an], getNCPower[aR, an], lambda, {cr, an}], vv],
 
-    Exp[lambda_*cr ** (aR : GeneralizedPower[NonCommutativeMultiply, an, _])] :>
+    Exp[lambda_. cr ** (aR : GeneralizedPower[NonCommutativeMultiply, an, _])] :>
         AntinormalOrdered[thm44ANRHS[0, getNCPower[aR, an], lambda, {cr, an}], vv],
 
-    Exp[lambda_*(aL : GeneralizedPower[NonCommutativeMultiply, an, _]) ** cr] :>
+    Exp[lambda_. (aL : GeneralizedPower[NonCommutativeMultiply, an, _]) ** cr] :>
         AntinormalOrdered[thm44ANRHS[getNCPower[aL, an], 0, lambda, {cr, an}], vv]
 }
 
@@ -353,7 +353,7 @@ exponentTerm[t_, g_] :=
 
 canonicalizeGenerators[expr_, lv_] :=
     With[{g = Alternatives @@ lv["Generators"]},
-        (expr /. Exp[e_] :> Exp[Total @ KeyValueMap[#1 #2 &,
+        (LiftNCScalars[expr, lv["Generators"]] /. Exp[e_] :> Exp[Total @ KeyValueMap[#1 #2 &,
             GroupBy[exponentTerm[#, g] & /@ Replace[Expand[e], {s_Plus :> List @@ s, s_ :> {s}}], First -> Last, Total]]]) //.
             NonCommutativeMultiply[l___, x : g, y : g, r___] /; lv["Modes"][x] > lv["Modes"][y] :>
                 NonCommutativeMultiply[l, y, x, r]

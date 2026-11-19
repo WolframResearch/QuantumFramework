@@ -121,7 +121,10 @@ LiftNCScalars[expr_, vars_List] := expr //. {
             c^n GeneralizedPower[NonCommutativeMultiply, op, n],
     NonCommutativeMultiply[x___, Times[c_, y__], z___] /;
         FreeQ[c, Alternatives @@ vars] :>
-            c NonCommutativeMultiply[x, y, z]
+            c NonCommutativeMultiply[x, y, z],
+    NonCommutativeMultiply[x___, c_, z___] /;
+        FreeQ[c, Alternatives @@ vars] && Length[{x, z}] > 0 :>
+            c Replace[{x, z}, {{y_} :> y, ys_ :> NonCommutativeMultiply @@ ys}]
 }
 
 

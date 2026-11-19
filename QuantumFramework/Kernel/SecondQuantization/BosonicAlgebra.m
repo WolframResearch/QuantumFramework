@@ -232,7 +232,8 @@ BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts 
             If[ Length[lv["Annihilators"]] === 1, ListQ[m] || ListQ[n],
                 Length[ms] =!= Length[lv["Annihilators"]] || ! coherentBasisQ[opts] && ! MatrixQ[{ms, ns}, IntegerQ]], $Failed,
             True,
-                With[{el = If[Length[lv["Annihilators"]] === 1, normalProductElement[#, pair, m, n, j, coherentBasisQ[opts]] &,
+                With[{el = If[Length[lv["Annihilators"]] === 1,
+                        Replace[normalProductElement[#, pair, m, n, j, coherentBasisQ[opts]], $Failed :> normalSymbolElement[#, pair, m, n, coherentBasisQ[opts]]] &,
                         symbolElement[#, lv, ms, ns, coherentBasisQ[opts]] &]},
                     Replace[sumProductElement[el, expr, lv["Generators"]],
                         $Failed /; ! FreeQ[expr, E] :>
@@ -329,6 +330,19 @@ normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
         ];
         If[FreeQ[r, SeriesCoefficient], r, $Failed]
     ]
+
+normalSymbolElement[s_. NormalOrdered[f_, _], pair_, m_, n_, coherent_] /; FreeQ[s, Alternatives @@ pair] :=
+    Module[{x, y, g, r},
+        g = dequantize[f, Thread[pair -> {x, y}]];
+        r = Which[
+            ! FreeQ[g, Alternatives @@ pair | _NormalOrdered | _AntinormalOrdered], $Failed,
+            coherent, (g /. {x -> Conjugate[m], y -> n}) coherentOverlap[m, n],
+            True, Sqrt[m! n!] SeriesCoefficient[g E^(x y), {x, 0, m}, {y, 0, n}]
+        ];
+        If[FreeQ[r, $Failed | SeriesCoefficient], s r, $Failed]
+    ]
+
+normalSymbolElement[___] := $Failed
 
 sumProductElement[f_, expr_, gens_] :=
     With[{t = Expand[expr /. p_NonCommutativeMultiply :> Distribute[p]] //.
