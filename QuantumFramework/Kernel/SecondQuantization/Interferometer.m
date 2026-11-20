@@ -1130,21 +1130,28 @@ pathConditions[counts_, free_, domain_] := With[{d = Simplify[domain]},
     If[d === False, {}, DeleteCases[Simplify[# >= 0, d] & /@ Select[counts, ! sumRangeQ[#, free] &], True]]
 ]
 
-shellAmplitudes[g_, s_, n_] := AssociationMap[gaussianAmplitude[g, s, #] &, photonPatterns[n, Length[s]]]
+shellAmplitudes[amplitude_, s_, n_] := AssociationMap[amplitude[Join[#, s]] &, photonPatterns[n, Length[s]]]
 
 (* squeezers change the photon number in pairs, so the output shells share the input's parity *)
-gaussianAmplitudes[qi_, s_, cutoff_] := With[{g = gaussianKernel[qi], start = Mod[Total[s], 2]},
+gaussianAmplitudes[qi_, s_, cutoff_] := Module[{k, memo, amplitude, start = Mod[Total[s], 2]},
+    {k, memo} = gaussianKernel[qi];
+    memo = <|ConstantArray[0, Length[k]] -> memo|>;
+    amplitude[x_] := Lookup[memo, Key[x], memo[x] = With[{i = Position[x, _ ? Positive][[-1, 1]]},
+        {p = x - UnitVector[Length[x], i]},
+        {j = Flatten[Position[p, _ ? Positive]]},
+        Total[k[[i, j]] Sqrt[p[[j]]] (amplitude[p - UnitVector[Length[x], #]] & /@ j)] / Sqrt[x[[i]]]
+    ]];
     Which[
-        IntegerQ[cutoff], KeyMap[QuditName, Association[shellAmplitudes[g, s, #] & /@ Range[start, cutoff, 2]]],
-        MatrixQ[N[g[[1]]], NumericQ], KeyMap[QuditName, autoShells[g, s, start]],
+        IntegerQ[cutoff], KeyMap[QuditName, Association[shellAmplitudes[amplitude, s, #] & /@ Range[start, cutoff, 2]]],
+        MatrixQ[N[k], NumericQ], KeyMap[QuditName, autoShells[amplitude, s, start]],
         True, Message[QuantumInterferometer::symcutoff]; $Failed
     ]
 ]
 
-autoShells[g_, s_, start_] := With[{
+autoShells[amplitude_, s_, start_] := With[{
     shells = NestWhile[
-        {#[[1]] + 2, Join[#[[2]], shellAmplitudes[g, s, #[[1]] + 2]]} &,
-        {start, shellAmplitudes[g, s, start]},
+        {#[[1]] + 2, Join[#[[2]], shellAmplitudes[amplitude, s, #[[1]] + 2]]} &,
+        {start, shellAmplitudes[amplitude, s, start]},
         N[Total[Abs[Values[#[[2]]]] ^ 2]] < 1 - 10^-4 && #[[1]] < 16 &
     ]
 },

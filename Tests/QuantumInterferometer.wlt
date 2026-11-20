@@ -1370,6 +1370,28 @@ VerificationTest[
     TestID -> "QI-squeezers-dagger-and-auto-cutoff"
 ]
 
+(* full tables come from the photon-number recurrence, single amplitudes from hafnians: every entry agrees,
+   for numeric, exact and symbolic squeezing, vacuum and Fock inputs *)
+VerificationTest[
+    SeedRandom[5];
+    With[{differences = Table[
+        With[{qi = c[[1]], n = c[[3]]}, Catenate @ Table[KeyValueMap[#2 - qi["Amplitude", s -> #1["Name"]] &, qi[s, "Cutoff" -> n]], {s, c[[2]]}]],
+        {c, {
+            {QuantumInterferometer[Join[{"S"[0.5] -> 1, "S"[0.3 Exp[I]] -> 2, "S"[-0.4] -> 3}, QuantumInterferometer["Random"[3]]["Elements"]], 3], {{0, 0, 0}, {1, 1, 0}, {2, 0, 1}}, 6},
+            {QuantumInterferometer[{"S"[1/2] -> 1, "S"[I/3] -> 2, "BS"[Pi/3, Pi/4] -> {1, 2}, "PS"[Pi/5] -> 2, "BS"[Pi/4, 0] -> {2, 3}}, 3], {{0, 0, 0}, {1, 0, 0}}, 4},
+            {QuantumInterferometer[{"S"[r] -> 1, "S"[r] -> 2, "BS"[Pi/4, phi] -> {1, 2}}, 2], {{0, 0}, {1, 0}}, 4}
+        }}
+    ]},
+        {
+            Max[Abs[differences[[1]]]] < 10^-12,
+            AllTrue[differences[[2]], PossibleZeroQ],
+            AllTrue[Flatten[differences[[3]] /. {{r -> 2/5, phi -> 7/10}, {r -> 11/10, phi -> -2}}], PossibleZeroQ]
+        }
+    ],
+    {True, True, True},
+    TestID -> "QI-squeezed-tables-match-hafnian-amplitudes"
+]
+
 VerificationTest[
     {
         With[{probs = QuantumInterferometer[{"S"[.6] -> 1}, 1]["Probabilities", {0}]},
