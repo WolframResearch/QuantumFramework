@@ -165,10 +165,17 @@ WignerFunction::badopt = "Unknown SymbolicForm `1`. Use Automatic, \"Wirtinger\"
 
 Options[WignerFunction] = {SymbolicForm -> Automatic};
 
+(* the symbols of a state that may be complex, so ComplexExpand takes as real only the coordinates and the symbols
+   the state's facts make real *)
+complexSymbols[state_, coordinates_] := Complement[
+    DeleteDuplicates @ Cases[Normal @ state["DensityMatrix"], sym_Symbol /; ! NumericQ[sym] && Context[sym] =!= "System`", {0, Infinity}],
+    state["Basis"]["RealSymbols"], coordinates
+]
+
 WignerFunction[state_QuantumState, {x_, p_}, opts:OptionsPattern[]] :=
   If[state["Qudits"] =!= 1,
     (Message[WignerFunction::multimode, state["Qudits"]]; $Failed),
-    1/2 ComplexExpand[WignerFunction[state, (x + I p)/Sqrt[2], opts]]];
+    1/2 ComplexExpand[WignerFunction[state, (x + I p)/Sqrt[2], opts], complexSymbols[state, {x, p}]]];
 
 WignerFunction[state_QuantumState, alpha_, opts:OptionsPattern[]] /; !ListQ[alpha] :=
   Block[{
@@ -213,7 +220,7 @@ HusimiQFunction::multimode = "HusimiQFunction is only defined for single-mode st
 HusimiQFunction[state_QuantumState, {x_, p_}] :=
   If[state["Qudits"] =!= 1,
     (Message[HusimiQFunction::multimode, state["Qudits"]]; $Failed),
-    1/2 ComplexExpand[HusimiQFunction[state, (x + I p)/Sqrt[2]]]];
+    1/2 ComplexExpand[HusimiQFunction[state, (x + I p)/Sqrt[2]], complexSymbols[state, {x, p}]]];
 
 HusimiQFunction[state_QuantumState, alpha_] /; !ListQ[alpha] :=
  Block[{
@@ -318,7 +325,7 @@ SOrderedFunction[state_QuantumState, {x_, p_}, s_] :=
   state["Qudits"] =!= 1, Message[SOrderedFunction::multimode, state["Qudits"]]; $Failed,
   TrueQ[s == 1], Message[SOrderedFunction::sunit]; $Failed,
   NumericQ[s] && ! TrueQ[Re[s] < 1], Message[SOrderedFunction::snum, s]; $Failed,
-  True, 1/2 ComplexExpand @ SOrderedWirtinger[state, (x + I p)/Sqrt[2], (x - I p)/Sqrt[2], s]]
+  True, 1/2 ComplexExpand[SOrderedWirtinger[state, (x + I p)/Sqrt[2], (x - I p)/Sqrt[2], s], complexSymbols[state, {x, p}]]]
 
 SOrderedFunction[state_QuantumState, alpha_, s_] /; ! ListQ[alpha] :=
  Which[

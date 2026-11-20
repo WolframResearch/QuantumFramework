@@ -340,5 +340,8 @@ Scan[
     qmo[AssociationThread[Take[qmo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qmo["Parameters"]] :=
-    QuantumMeasurementOperator[qmo["Operator"][rules], qmo["Targets"]]
+    Replace[valueOutsideFacts[qmo, rules], {
+        bad_List :> domainFailure[QuantumMeasurementOperator, bad],
+        None :> QuantumMeasurementOperator[qmo["Operator"][rules], qmo["Targets"]]
+    }]
 

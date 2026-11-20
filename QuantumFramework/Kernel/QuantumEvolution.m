@@ -74,7 +74,8 @@ QuantumEvolve[
     rhs, init, events = {},
     equations, additional, return, param,
     phaseSpaceQ = False,
-    mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
+    mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]],
+    domains
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState["Register"[hamiltonian["InputDimensions"]]]];
@@ -82,6 +83,7 @@ QuantumEvolve[
     ];
     ConfirmAssert[AllTrue[Prepend[lindblad, hamiltonian] , #["OutputDimensions"] == #["InputDimensions"] &]];
     ConfirmAssert[state === None || phaseSpaceQ || hamiltonian["InputDimension"] == state["Dimension"]];
+    domains = MergeSymbolDomains @@ Join[{hamiltonian}, lindblad, If[state === None, {}, {state}]];
     If[ defaultParameter === Automatic,
         parameter = First[Join[hamiltonian["Parameters"], Catenate[Through[lindblad["Parameters"]]]], \[FormalT]];
         parameterSpec = Replace[First[Join[hamiltonian["ParameterSpec"], Catenate[Through[lindblad["ParameterSpec"]]]], {}], {} :> {parameter, 0, 1}],
@@ -263,7 +265,8 @@ QuantumEvolve[
                 ]
             ],
             hamiltonian["Order"],
-            "ParameterSpec" -> DeleteDuplicatesBy[Append[hamiltonian["ParameterSpec"], parameterSpec], First]
+            "ParameterSpec" -> DeleteDuplicatesBy[Append[hamiltonian["ParameterSpec"], parameterSpec], First],
+            "SymbolDomains" -> domains
         ],
         stateQ[solution],
         If[ state =!= None && phaseSpaceQ,
@@ -273,9 +276,10 @@ QuantumEvolve[
                     Sqrt[basis["Dimensions"]]
                 ]["Double"],
                 basis,
-                "ParameterSpec" -> DeleteDuplicatesBy[Append[basis["ParameterSpec"], parameterSpec], First]
+                "ParameterSpec" -> DeleteDuplicatesBy[Append[basis["ParameterSpec"], parameterSpec], First],
+                "SymbolDomains" -> domains
             ],
-            If[hamiltonian["MatrixQ"], #["Undouble"], #] & @ QuantumState[solution, basis, "ParameterSpec" -> DeleteDuplicatesBy[Append[basis["ParameterSpec"], parameterSpec], First]]
+            If[hamiltonian["MatrixQ"], #["Undouble"], #] & @ QuantumState[solution, basis, "ParameterSpec" -> DeleteDuplicatesBy[Append[basis["ParameterSpec"], parameterSpec], First], "SymbolDomains" -> domains]
         ],
         True,
         Message[QuantumEvolve::error];

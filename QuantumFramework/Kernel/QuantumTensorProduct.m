@@ -25,7 +25,7 @@ QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Length"] == 0 ||
 (* basis x basis *)
 
 QuantumTensorProduct[qb1_QuantumBasis, qb2_QuantumBasis] :=
-QuantumBasis[<|
+QuantumBasis @ withRecord[<|
     "Output" -> QuantumTensorProduct[qb1["Output"], qb2["Output"]],
     "Input" -> QuantumTensorProduct[qb1["Input"], qb2["Input"]],
     "Picture" -> If[MemberQ[{qb1["Picture"], qb2["Picture"]}, "PhaseSpace"], "PhaseSpace", qb1["Picture"]],
@@ -41,7 +41,8 @@ QuantumBasis[<|
             }
         ],
     "ParameterSpec" -> Values @ GroupBy[Join[qb1["ParameterSpec"], qb2["ParameterSpec"]], First, First @ TakeLargestBy[#, Last, 1] &]
-|>
+|>,
+    MergeSymbolDomains[qb1, qb2]
 ]
 
 

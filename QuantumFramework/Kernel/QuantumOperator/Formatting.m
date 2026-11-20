@@ -53,11 +53,11 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[
         },
         {
             {
-                BoxForm`SummaryItem[{"Hermitian: ", TimeConstrained[qo["HermitianQ"], 1]}],
+                BoxForm`SummaryItem[{"Hermitian: ", Block[{$verdictMessages = False}, TimeConstrained[qo["HermitianQ"], 1, Indeterminate]]}],
                 BoxForm`SummaryItem[{"Qudits: ", Row[{qo["InputQudits"], "\[RightArrow]", qo["OutputQudits"]}]}]
             },
             {
-                BoxForm`SummaryItem[{"Unitary: ", TimeConstrained[qo["UnitaryQ"], 1]}],
+                BoxForm`SummaryItem[{"Unitary: ", Block[{$verdictMessages = False}, TimeConstrained[qo["UnitaryQ"], 1, Indeterminate]]}],
                 BoxForm`SummaryItem[{"Dimensions: ",
                     Row[{qo["InputDimensions"], "\[RightArrow]", qo["OutputDimensions"]}]}
                 ]

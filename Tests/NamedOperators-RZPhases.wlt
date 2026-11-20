@@ -1,12 +1,9 @@
-(* R_Z(theta) = diag(e^(-i theta/2), e^(i theta/2)). Its phases are passed through
-   FullSimplify except for an inexact angle or, with no $Assumptions, a single parameter
-   (theta, theta[1], Subscript[theta, 1]) times an integer or a rational, where
-   FullSimplify returns them unchanged. So a new symbolic R_Z costs no more than a general 2x2 operator, and every
-   angle keeps the matrix it had.
+(* R_Z(theta) = diag(e^(-i theta/2), e^(i theta/2)). Its phases are stored as written, never
+   simplified when the gate is built, so a new symbolic R_Z costs no more than a general 2x2
+   operator.
 
-   References are independent of the route under test: the phases passed through
-   FullSimplify, which is the stored form for every angle, and MatrixExp of
-   -i theta/2 sigma_z.
+   References are independent of the route under test: the phases as written, which is the
+   stored form for every angle, and MatrixExp of -i theta/2 sigma_z.
 
    Regimes covered:
      general symbolic     theta, -theta, 2 theta, theta/3, -theta/3, theta[1],
@@ -17,8 +14,8 @@
                           derivative in theta
      exactly solvable     0, 1/3, Sqrt[2], Pi/2, Pi/7, ArcCos[1/3], and numeric functions of
                           an integer, ArcCos[2], ArcCos[3], ProductLog[1]; the default Pi/2
-     assumptions          theta under $Assumptions = (theta == Pi) is simplified to
-                          diag(-i, i)
+     assumptions          theta under $Assumptions = (theta == Pi) is stored as written, not
+                          simplified to diag(-i, i)
      mixed                theta + Pi/2, theta + 2 Pi, theta + ArcTan[1/2],
                           theta + Log[3] - Log[3/2], theta/Log[2], i theta, Degree theta,
                           0.5 theta, 0.3 + theta
@@ -31,7 +28,7 @@
 
 rzMatrix[args___] := Normal[QuantumOperator["RZ"[args], {2}]["Matrix"]]
 
-simplifiedForm[angle_] := DiagonalMatrix[FullSimplify[{Exp[- I angle / 2], Exp[I angle / 2]}]]
+storedForm[angle_] := DiagonalMatrix[{Exp[- I angle / 2], Exp[I angle / 2]}]
 
 zeroQ[m_] := AllTrue[Flatten[FullSimplify[m]], # === 0 &]
 
@@ -52,8 +49,8 @@ Scan[
     Function[angle,
         VerificationTest[
             {
-                rzMatrix[angle] === simplifiedForm[angle],
-                Normal[QuantumCircuitOperator[{"RZ"[angle] -> 3}]["Elements"][[1]]["Matrix"]] === simplifiedForm[angle],
+                rzMatrix[angle] === storedForm[angle],
+                Normal[QuantumCircuitOperator[{"RZ"[angle] -> 3}]["Elements"][[1]]["Matrix"]] === storedForm[angle],
                 If[ InexactNumberQ[angle] || ! FreeQ[angle, _Real],
                     numZeroQ[rzMatrix[angle] - MatrixExp[- I angle / 2 PauliMatrix[3]] /. {\[Theta] -> 0.7, \[Phi] -> -0.2}],
                     zeroQ[rzMatrix[angle] - MatrixExp[- I angle / 2 PauliMatrix[3]]]
@@ -67,14 +64,14 @@ Scan[
 ]
 
 VerificationTest[
-    {rzMatrix[] === simplifiedForm[Pi / 2], Precision[rzMatrix[N[1 / 3, 30]]] >= 30},
+    {rzMatrix[] === storedForm[Pi / 2], Precision[rzMatrix[N[1 / 3, 30]]] >= 30},
     {True, True},
     TestID -> "RZPhases-default-angle-and-precision"
 ]
 
 VerificationTest[
-    Block[{$Assumptions = \[Theta] == Pi}, {rzMatrix[\[Theta]], rzMatrix[\[Theta]] === simplifiedForm[\[Theta]]}],
-    {{{-I, 0}, {0, I}}, True},
+    Block[{$Assumptions = \[Theta] == Pi}, {rzMatrix[\[Theta]], rzMatrix[\[Theta]] === storedForm[\[Theta]]}],
+    {{{Exp[- I \[Theta] / 2], 0}, {0, Exp[I \[Theta] / 2]}}, True},
     TestID -> "RZPhases-assumptions"
 ]
 
@@ -90,8 +87,7 @@ VerificationTest[
 ]
 
 (* A distinct symbolic R_Z is one diagonal 2x2 matrix placed on one wire, so it costs less
-   than a general 2x2 operator built through the generic constructor. With its phases
-   passed through FullSimplify it cost about twice as much. *)
+   than a general 2x2 operator built through the generic constructor. *)
 VerificationTest[
     With[{k = 300},
         With[

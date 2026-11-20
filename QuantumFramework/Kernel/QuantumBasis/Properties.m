@@ -31,10 +31,10 @@ $QuantumBasisProperties = {
     "Label", "LabelHead",
     "Picture",
     "Diagram",
-    "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
+    "ParameterArity", "Parameters", "InitialParameters", "FinalParameters", "ParameterAssumptions", "RealSymbols"
 };
 
-QuantumBasis["Properties"] := Union @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
+QuantumBasis["Properties"] := Union @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys, {"SymbolDomains"}]
 
 qb_QuantumBasis["ValidQ"] := quantumBasisQ[qb]
 
@@ -45,7 +45,7 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
     result = QuantumBasisProp[qb, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumBasisProp[qb, prop, args]] &&
-        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters", "ParameterArity"}], prop],
+        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters", "ParameterArity", "SymbolDomains"}], prop],
         cacheProperty[QuantumBasisProp[qb, prop, args], result],
         result
     ] /; !FailureQ[Unevaluated @ result] &&
@@ -62,7 +62,10 @@ QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] 
 
 QuantumBasisProp[QuantumBasis[data_Association], "ParameterArity"] := Length[data["ParameterSpec"]]
 
-QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec"}]]
+QuantumBasisProp[QuantumBasis[data_Association], "SymbolDomains"] := Lookup[data, "SymbolDomains", <||>]
+
+(* a basis with no facts lists no "SymbolDomains", so it reads as one built before the record existed *)
+QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ KeyTake[data, {"Picture", "Label", "ParameterSpec", "SymbolDomains"}]
 
 (* computed *)
 
@@ -262,10 +265,13 @@ QuantumBasisProp[qb_, "Inverse"] := simplifyLabel @ QuantumBasis[qb,
 QuantumBasisProp[qb_, "Permute", perm_Cycles] := With[{
     moved = Pick[Range[qb["Qudits"]], toggleSwap[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]]
 },
-    QuantumBasis @@ Thread[{"Output", "Input"} ->
-        QuantumTensorProduct[qb["Output"], qb["Input"]["Dual"]]["Permute", perm]["Conjugate", moved][
-            "SplitDual", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
-        ]
+    QuantumBasis @@ Append[
+        Thread[{"Output", "Input"} ->
+            QuantumTensorProduct[qb["Output"], qb["Input"]["Dual"]]["Permute", perm]["Conjugate", moved][
+                "SplitDual", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
+            ]
+        ],
+        "SymbolDomains" -> symbolDomainsOf[qb]
     ]
 ]
 
@@ -336,6 +342,12 @@ QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] 
 ]
 
 QuantumBasisProp[qb_, "Parameters"] := qb["ParameterSpec"][[All, 1]]
+
+(* a declared parameter is real unless marked complex; every other symbol lies in the domains its record gives,
+   and may be complex when it has none *)
+QuantumBasisProp[qb_, "ParameterAssumptions"] := symbolDomainsFacts[qb["SymbolDomains"], qb["Parameters"]]
+
+QuantumBasisProp[qb_, "RealSymbols"] := realDomainSymbols[qb["SymbolDomains"], qb["Parameters"]]
 
 QuantumBasisProp[qb_, "InitialParameters"] := qb["ParameterSpec"][[All, 2]]
 
