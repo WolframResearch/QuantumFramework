@@ -168,7 +168,13 @@ params["RawRequests", "RawJobResults"] = {
     "PathParameters"     -> {"JobID"},
     "RequiredParameters" -> {"JobID"},
     "HiddenParameters"  -> {},
-    "HTTPResponseProcessing" -> Function[Enclose[ImportString[SF`ImportResponse[Confirm[#]], "RawJSON"]]]
+    (* a successful response's body is parsed as JSON directly: SF`ImportResponse returns $Failed on
+       some valid result bodies; any other status returns the Failure SF`ImportResponse builds *)
+    "HTTPResponseProcessing" -> Function[Enclose[If[
+        MatchQ[#, _HTTPResponse] && #["StatusCode"] === 200,
+        ConfirmBy[ImportString[ConfirmBy[#["Body"], StringQ], "RawJSON"], AssociationQ],
+        With[{r = SF`ImportResponse[Confirm[#]]}, If[StringQ[r], ImportString[r, "RawJSON"], r]]
+    ]]]
 }
 
 params["RawRequests", "RawJobInterimResults"] = {
