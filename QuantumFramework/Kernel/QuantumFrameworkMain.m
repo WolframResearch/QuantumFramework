@@ -3,8 +3,12 @@ Begin["Wolfram`QuantumFramework`Loader`"]
 
 pacletInstalledQ[paclet_, version_] := AnyTrue[Through[PacletFind[paclet]["Version"]], ResourceFunction["VersionOrder"][#, version] <= 0 &]
 
-If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.4"],
-    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]]
+(* The bundled IBMQuantumPlatform archive installs whenever no installed version
+   is at least its own, so a newer bundled archive replaces an older install. *)
+With[{ibmArchive = PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]},
+    If[ ! pacletInstalledQ["IBMQuantumPlatform", PacletObject[File[ibmArchive]]["Version"]],
+        PacletInstall[ibmArchive]
+    ]
 ]
 
 (* Register the IBM Quantum Platform service connection as part of loading
