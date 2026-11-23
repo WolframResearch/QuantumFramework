@@ -58,7 +58,7 @@ QuantumInterferometer[\"Fourier\"[m]] gives the m-mode discrete Fourier interfer
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
-QuantumInterferometer::lossactive = "loss combined with squeezing needs a Gaussian noise channel and is not supported";
+QuantumInterferometer::lossactive = "loss combined with squeezing needs numeric parameters";
 QuantumInterferometer::lossy = "`1` needs a lossless interferometer; use probability queries or a finite channel for loss";
 QuantumInterferometer::lossoccupation = "mode mixing with loss needs explicit nonnegative integer occupations";
 QuantumInterferometer::losscoherent = "loss supports pure coherent inputs; mixed Fock/coherent transition inputs are not supported";
@@ -148,6 +148,8 @@ normalAngle[x_] := If[NumericQ[x] && Precision[x] =!= Infinity, Mod[x, 2 Pi, - P
 
 
 passiveQ[QuantumInterferometer[data_]] := data["Unitary"] =!= None
+
+squeezedQ[QuantumInterferometer[data_]] := KeyExistsQ[data, "Bogoliubov"]
 
 bogoliubov[element : (("BS"[__] | "PS"[_]) -> _), m_] := {gateMatrix[element, m], ConstantArray[0, {m, m}]}
 
@@ -506,7 +508,12 @@ elementsInterferometer[elements_, layers_, m_, unitary_, extra_Association : <||
                 QuantumInterferometer @ Join[<|"Unitary" -> None, "TransferMatrix" -> channel[[1]], "LossGram" -> channel[[2]],
                     "Modes" -> m, "Method" -> None, "Elements" -> elements, "Layers" -> layers|>, extra]
             ],
-            Message[QuantumInterferometer::lossactive]; $Failed
+            With[{loss = Flatten[Position[elements, "Loss"[_] -> _, {1}, Heads -> False]]},
+                QuantumInterferometer @ Join[<|"Unitary" -> None,
+                    "Bogoliubov" -> gaussianData[ReplacePart[elements, MapThread[#1 -> ("BS"[ArcCos[Sqrt[#2[[1, 1]]]], 0] -> {#2[[2, 1]], #3}) &,
+                        {loss, elements[[loss]], m + Range[Length[loss]]}]], m + Length[loss]],
+                    "LossModes" -> Length[loss], "Modes" -> m, "Method" -> None, "Elements" -> elements, "Layers" -> layers|>, extra]
+            ]
         ],
         losslessElementsInterferometer[elements, layers, m, unitary, extra]
     ]
@@ -563,7 +570,7 @@ QuantumInterferometerProp[qi : QuantumInterferometer[data_], "Unitary"] :=
         If[passiveQ[qi], data["Unitary"], Message[QuantumInterferometer::squeezed, "\"Unitary\""]; $Failed]]
 
 QuantumInterferometerProp[qi : QuantumInterferometer[data_], "TransferMatrix"] :=
-    If[lossyQ[qi], data["TransferMatrix"], qi["Unitary"]]
+    If[lossyQ[qi], If[squeezedQ[qi], Message[QuantumInterferometer::squeezed, "\"TransferMatrix\""]; $Failed, data["TransferMatrix"]], qi["Unitary"]]
 
 QuantumInterferometerProp[qi_, "LossCount"] := Count[qi["Elements"], "Loss"[_] -> _]
 
@@ -583,7 +590,7 @@ QuantumInterferometerProp[qi_, "ElementTable"] := Dataset @ Map[
 QuantumInterferometerProp[qi_, "Diagram", opts : OptionsPattern[]] := interferometerDiagram[qi, opts]
 
 QuantumInterferometerProp[qi_, "MatrixPlot", opts : OptionsPattern[]] := Which[
-    ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "\"MatrixPlot\""]; $Failed,
+    squeezedQ[qi], Message[QuantumInterferometer::squeezed, "\"MatrixPlot\""]; $Failed,
     MatrixQ[qi["TransferMatrix"], NumericQ], With[{w = N[qi["TransferMatrix"]]},
         Row[{
             ArrayPlot[Abs[w] ^ 2, opts,
@@ -664,6 +671,12 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
         ! cutoffQ[OptionValue["Cutoff"]], $Failed,
         ! FreeQ[in, "Coherent"[___]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
         ! occupationQ[qi, in], $Failed,
+        lossyQ[qi] && squeezedQ[qi], With[{g = mixedKernel[qi]}, If[g === $Failed, $Failed,
+            With[{amplitude = fockRecurrence[g], p = Precision[First[g]]}, KeyMap[QuditName, If[IntegerQ[OptionValue["Cutoff"]],
+                Association[mixedShell[amplitude, in, #, p] & /@ Range[0, OptionValue["Cutoff"]]],
+                autoShells[mixedShell[amplitude, in, #, p] &, Identity, 0, 1]
+            ]]]
+        ]],
         lossyQ[qi], KeyMap[QuditName, lossFockProbabilities[qi, in]],
         passiveQ[qi], With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
             Association @ Map[QuditName[#] -> Abs[Lookup[amplitudes, Key[#], 0]] ^ 2 &, photonPatterns[Total[in], qi["Modes"]]]
@@ -690,7 +703,7 @@ QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{
         MatchQ[in, {"Coherent"[_] ..}], coherentSamples[qi, First /@ in, k],
         ! FreeQ[in, "Coherent"[___]], Message[QuantumInterferometer::samplecoherent]; $Failed,
         ! occupationQ[qi, in], $Failed,
-        ! passiveQ[qi] && ! lossyQ[qi], gaussianSamples[qi, in, k],
+        squeezedQ[qi], gaussianSamples[qi, in, k],
         Total[in] == 0, ConstantArray[QuditName[in], k],
         ! MatrixQ[N[qi["TransferMatrix"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
         True, With[{a = samplingColumns[qi, in], m = qi["Modes"]},
@@ -757,7 +770,7 @@ laplaceMinors := laplaceMinors = Compile[{{b, _Complex, 2}},
 
 (* a passive network, lossy or not, sends |a> to the coherent state |K a>: independent Poisson counts *)
 coherentSamples[qi_, a_, k_] := Which[
-    ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
+    squeezedQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
     ! VectorQ[a] || Length[a] != qi["Modes"], Message[QuantumInterferometer::occ, "Coherent"[a], qi["Modes"]]; $Failed,
     ! VectorQ[N[a], NumericQ], Message[QuantumInterferometer::coherentnumeric, a]; $Failed,
     ! MatrixQ[N[qi["TransferMatrix"]], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
@@ -771,10 +784,10 @@ coherentSamples[qi_, a_, k_] := Which[
 gaussianSamples[qi_, in_, k_] := With[{bog = N[First[qi]["Bogoliubov"][[;; 2]]]}, Which[
     Total[in] > 0, Message[QuantumInterferometer::squeezedinput]; $Failed,
     ! MatrixQ[First[bog], NumericQ], Message[QuantumInterferometer::notnumeric, "Sampling"]; $Failed,
-    True, With[{b = Developer`ToPackedArray[vacuumMatrix @@ bog, Complex], m = qi["Modes"]},
+    True, With[{b = Developer`ToPackedArray[vacuumMatrix @@ bog, Complex], m = Length[First[bog]]},
         {s = Inverse[ArrayFlatten[{{IdentityMatrix[m] - Re[b], - Im[b]}, {- Im[b], IdentityMatrix[m] + Re[b]}}]] / 2},
         QuditName /@ MapThread[gaussianSampleChain[b, #1[[;; m]] + I #1[[m + 1 ;;]], #2, 10.^-14] &,
-            {RandomVariate[MultinormalDistribution[ConstantArray[0., 2 m], (s + Transpose[s]) / 2], k], RandomReal[1, {k, m}]}]
+            {RandomVariate[MultinormalDistribution[ConstantArray[0., 2 m], (s + Transpose[s]) / 2], k], RandomReal[1, {k, qi["Modes"]}]}]
     ]
 ]]
 
@@ -838,9 +851,9 @@ gaussianSampleChain := gaussianSampleChain = Compile[{{b, _Complex, 2}, {alpha, 
             j = 0;
             While[j < t && cum + weights[[j + 1]] < u[[k]] total, cum = cum + weights[[j + 1]]; j = j + 1];
             sample[[k]] = j,
-            {k, m}
+            {k, Length[u]}
         ];
-        sample
+        Take[sample, Length[u]]
     ],
     RuntimeOptions -> "Speed"
 ]
@@ -1018,7 +1031,7 @@ coherentInput[_] := {None, None}
 
 (* outputs: a list of photon patterns, "Coherent"[{g1, ..}], or an integer or Automatic cutoff for every pattern up to it *)
 coherentAmplitudes[qi_, s_, outs_, f_] := Enclose[
-    ConfirmAssert[passiveQ[qi] || lossyQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]];
+    ConfirmAssert[! squeezedQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]];
     With[{m = qi["Modes"], n = coherentInput[s][[1]], a = coherentInput[s][[2]], w = qi["TransferMatrix"]},
         ConfirmAssert[VectorQ[a] && Length[a] == m && occupationListQ[n, m], Message[QuantumInterferometer::occ, s, m]];
         ConfirmAssert[! lossyQ[qi] || Total[n] == 0, Message[QuantumInterferometer::losscoherent]];
@@ -1130,32 +1143,35 @@ pathConditions[counts_, free_, domain_] := With[{d = Simplify[domain]},
     If[d === False, {}, DeleteCases[Simplify[# >= 0, d] & /@ Select[counts, ! sumRangeQ[#, free] &], True]]
 ]
 
-shellAmplitudes[amplitude_, s_, n_] := AssociationMap[amplitude[Join[#, s]] &, photonPatterns[n, Length[s]]]
-
-(* squeezers change the photon number in pairs, so the output shells share the input's parity *)
-gaussianAmplitudes[qi_, s_, cutoff_] := Module[{k, memo, amplitude, start = Mod[Total[s], 2]},
-    {k, memo} = gaussianKernel[qi];
-    memo = <|ConstantArray[0, Length[k]] -> memo|>;
+fockRecurrence[{k_, c_}] := Module[{memo = <|ConstantArray[0, Length[k]] -> c|>, amplitude},
     amplitude[x_] := Lookup[memo, Key[x], memo[x] = With[{i = Position[x, _ ? Positive][[-1, 1]]},
         {p = x - UnitVector[Length[x], i]},
         {j = Flatten[Position[p, _ ? Positive]]},
         Total[k[[i, j]] Sqrt[p[[j]]] (amplitude[p - UnitVector[Length[x], #]] & /@ j)] / Sqrt[x[[i]]]
     ]];
+    amplitude
+]
+
+shellAmplitudes[amplitude_, s_, n_] := AssociationMap[amplitude[Join[#, s]] &, photonPatterns[n, Length[s]]]
+
+(* squeezers change the photon number in pairs, so the output shells share the input's parity *)
+gaussianAmplitudes[qi_, s_, cutoff_] := With[{g = gaussianKernel[qi], start = Mod[Total[s], 2]},
+    {amplitude = fockRecurrence[g]},
     Which[
         IntegerQ[cutoff], KeyMap[QuditName, Association[shellAmplitudes[amplitude, s, #] & /@ Range[start, cutoff, 2]]],
-        MatrixQ[N[k], NumericQ], KeyMap[QuditName, autoShells[amplitude, s, start]],
+        MatrixQ[N[First[g]], NumericQ], KeyMap[QuditName, autoShells[shellAmplitudes[amplitude, s, #] &, Abs[#] ^ 2 &, start, 2]],
         True, Message[QuantumInterferometer::symcutoff]; $Failed
     ]
 ]
 
-autoShells[amplitude_, s_, start_] := With[{
+autoShells[shell_, weight_, start_, step_] := With[{
     shells = NestWhile[
-        {#[[1]] + 2, Join[#[[2]], shellAmplitudes[amplitude, s, #[[1]] + 2]]} &,
-        {start, shellAmplitudes[amplitude, s, start]},
-        N[Total[Abs[Values[#[[2]]]] ^ 2]] < 1 - 10^-4 && #[[1]] < 16 &
+        {#[[1]] + step, Join[#[[2]], shell[#[[1]] + step]]} &,
+        {start, shell[start]},
+        N[Total[weight[Values[#[[2]]]]]] < 1 - 10^-4 && #[[1]] < 16 &
     ]
 },
-    {held = N[Total[Abs[Values[shells[[2]]]] ^ 2]]},
+    {held = N[Total[weight[Values[shells[[2]]]]]]},
     If[held < 1 - 10^-4, Message[QuantumInterferometer::autocutoff, shells[[1]], held]];
     shells[[2]]
 ]
@@ -1182,7 +1198,7 @@ autoShells[amplitude_, s_, start_] := With[{
 
 (* a passive network keeps a coherent state coherent: |a> -> |W a> *)
 (qi_QuantumInterferometer ? QuantumInterferometerQ)["Coherent"[a_List]] := Which[
-    ! passiveQ[qi] && ! lossyQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
+    squeezedQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
     Length[a] != qi["Modes"], Message[QuantumInterferometer::occ, "Coherent"[a], qi["Modes"]]; $Failed,
     True, "Coherent"[qi["TransferMatrix"] . a]
 ]
@@ -1234,7 +1250,7 @@ photonSectorState[w_, components_, d_, m_, parameters_] := With[{
 (* Vacuum loss is a channel on the retained modes.  Accumulate the input loss Gram
    G alongside K: K^dag.K + G = I.  The rank-one update preserves weak losses
    without subtracting nearly equal matrices.  No environment state is formed. *)
-lossyQ[QuantumInterferometer[data_]] := KeyExistsQ[data, "LossGram"]
+lossyQ[QuantumInterferometer[data_]] := KeyExistsQ[data, "LossGram"] || KeyExistsQ[data, "LossModes"]
 
 lossParameterQ[eta_] := ! MatchQ[eta, _List | _Quantity | _Association | _String | _Rule |
     _RuleDelayed | _Missing | _Failure | _Function | _DirectedInfinity | Indeterminate | True | False | Null] &&
@@ -1319,11 +1335,29 @@ lossFockProbabilities[qi_, s_] := With[{
     ]
 ]
 
+(* Sum_e <t,e|U|s,0> <t',e|U|s',0>^* = n Exp[v.M.v / 2], v = (x, y, x', y'): the loss outputs e of K (+) K^*,
+   coupled to their copies by Exp[-e^*.e], integrate out to the Schur complement M *)
+mixedKernel[qi_] := With[{k = gaussianKernel[qi], m = qi["Modes"], l = First[qi]["LossModes"]},
+    If[! MatrixQ[N[k[[1]]], NumericQ], Message[QuantumInterferometer::lossactive]; $Failed,
+        With[{w = 2 (m + l), a = Join[Range[m], m + l + Range[m]], e = m + Range[l]},
+            {q = ArrayFlatten[{{k[[1]], #}, {#, Conjugate[k[[1]]]}}] & @ - DiagonalMatrix[SparseArray[Thread[e -> 1], w]],
+             kept = Join[a, w + a], traced = Join[e, w + e]},
+            {Developer`ToPackedArray @ Normal[q[[kept, kept]] - q[[kept, traced]] . LinearSolve[q[[traced, traced]], q[[traced, kept]]]],
+             Abs[k[[2]]] ^ 2 / Sqrt[(-1) ^ l Det[q[[traced, traced]]]]}
+        ]
+    ]
+]
+
+mixedShell[amplitude_, s_, n_, p_] := AssociationMap[lossProbabilityValue[amplitude[Join[#, s, #, s]], p] &, photonPatterns[n, Length[s]]]
+
 (* General symbolic occupations are retained for independent attenuators.  With
    mode mixing, constructing a permanent needs explicit integer occupations. *)
 lossTransitionProbability[qi_, in_, out_, rate_ : Identity] := Which[
     ! FreeQ[{in, out}, "Coherent"[___]],
         Replace[coherentAmplitudes[qi, in, {out}, Abs[#] ^ 2 &], {p_} :> p],
+    squeezedQ[qi] && symbolicPatternsQ[qi, in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed,
+    squeezedQ[qi], If[patternsQ[qi, in, out], With[{g = mixedKernel[qi]},
+        If[g === $Failed, $Failed, lossProbabilityValue[gaussianAmplitude[g, Join[out, in], Join[out, in]], Precision[First[g]]]]], $Failed],
     symbolicPatternsQ[qi, in, out],
         If[FreeQ[qi["Elements"], "BS"[__] -> _],
             Times @@ MapThread[symbolicCountProbability, {in, rate /@ lossRates[qi["Elements"], qi["Modes"]], out}],
@@ -1353,13 +1387,10 @@ lossTransitionValue[qi_, s_ -> t_, assumptions_] := Block[{$Assumptions = True},
     ]
 ]
 
-(* <n-l|A_l|n> = Sqrt[Binomial[n,l] (1-eta)^l eta^(n-l)].
-   Explicit zero powers keep both physical endpoints free of 0^0. *)
-lossKraus[eta_, d_] := Table[
-    SparseArray[Table[{n - l + 1, n + 1} -> Sqrt[Binomial[n, l]]
-        If[l == 0, 1, (1 - eta) ^ (l / 2)] If[n == l, 1, eta ^ ((n - l) / 2)],
-        {n, l, d - 1}], {d, d}],
-    {l, 0, d - 1}
+(* <n-l|A_l|n> = Sqrt[Binomial[n,l] (1-eta)^l eta^(n-l)] on the l-th superdiagonal; the leading 1s keep
+   both physical endpoints free of 0^0 *)
+lossKraus[eta_, d_] := With[{t = Prepend[eta ^ (Range[d - 1] / 2), 1], r = Prepend[(1 - eta) ^ (Range[d - 1] / 2), 1]},
+    Table[SparseArray[Band[{1, l + 1}] -> r[[l + 1]] Sqrt[Binomial[Range[l, d - 1], l]] t[[;; d - l]], {d, d}], {l, 0, d - 1}]
 ]
 
 lossStateStep[qs_, "Loss"[eta_] -> {p_}, d_, m_] := With[{

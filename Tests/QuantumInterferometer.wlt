@@ -2009,17 +2009,58 @@ VerificationTest[
     TestID -> "QI-loss-does-not-pretend-to-support-unitary-remeshing"
 ]
 
+(* squeezed vacuum and squeezed |1> count generating functions (Cosh[r]^2 - z^2 Sinh[r]^2)^(-1/2) and
+   z (Cosh[r]^2 - z^2 Sinh[r]^2)^(-3/2); loss sends z -> 1 - eta + eta z. Loss before the squeezer mixes its input *)
 VerificationTest[
-    {QuantumInterferometer[{"S"[1/5], "Loss"[1/2]}], QuantumInterferometer[{"Loss"[1/2], "S"[1/5]}]},
-    {$Failed, $Failed}, {QuantumInterferometer::lossactive, QuantumInterferometer::lossactive},
-    TestID -> "QI-loss-with-squeezing-is-rejected-in-both-element-orders"
+    With[{r = 1/5, eta = 1/2, s = QuantumInterferometer[{"S"[1/5]}],
+          sl = QuantumInterferometer[{"S"[1/5], "Loss"[1/2]}], ls = QuantumInterferometer[{"Loss"[1/2], "S"[1/5]}]},
+        With[{d = Cosh[r] ^ 2 - (1 - eta) ^ 2 Sinh[r] ^ 2},
+            {
+                FullSimplify[#] === 0 & /@ {sl["Probability", {0} -> {0}] - 1 / Sqrt[d], sl["Probability", {0} -> {1}] - eta (1 - eta) Sinh[r] ^ 2 / d ^ (3/2),
+                    sl["Probability", {1} -> {0}] - (1 - eta) / d ^ (3/2)},
+                AllTrue[Range[0, 5], FullSimplify[ls["Probability", {1} -> {#}] - (1 - eta) s["Probability", {0} -> {#}] - eta s["Probability", {1} -> {#}]] === 0 &]
+            }
+        ]
+    ],
+    {{True, True, True}, True},
+    TestID -> "QI-loss-with-squeezing-matches-single-mode-closed-forms"
 ]
 
 VerificationTest[
-    {QuantumInterferometer[{"S"[1/5]}][QuantumInterferometer[{"Loss"[1/2]}]],
-     QuantumInterferometer[{"Loss"[1/2]}][QuantumInterferometer[{"S"[1/5]}]]},
-    {$Failed, $Failed}, {QuantumInterferometer::lossactive, QuantumInterferometer::lossactive},
-    TestID -> "QI-loss-with-squeezing-is-rejected-in-both-composition-orders"
+    With[{sl = QuantumInterferometer[{"Loss"[1/2]}][QuantumInterferometer[{"S"[1/5]}]], ls = QuantumInterferometer[{"S"[1/5]}][QuantumInterferometer[{"Loss"[1/2]}]]},
+        {sl["Elements"], ls["Elements"], sl["Probability", {1} -> {0}] === QuantumInterferometer[{"S"[1/5], "Loss"[1/2]}]["Probability", {1} -> {0}]}
+    ],
+    {{"S"[1/5] -> {1}, "Loss"[1/2] -> {1}}, {"Loss"[1/2] -> {1}, "S"[1/5] -> {1}}, True},
+    TestID -> "QI-loss-with-squeezing-composes-in-both-orders"
+]
+
+(* losses between squeezers: probabilities against the Fock-space circuit with Kraus loss, no Gaussian
+   machinery, and vacuum samples against the table *)
+VerificationTest[
+    SeedRandom[11];
+    With[{qi = QuantumInterferometer[{"S"[0.5] -> 1, "S"[0.3 Exp[I]] -> 2, "Loss"[0.7] -> 1, "BS"[0.6, 0.4] -> {1, 2}, "Loss"[0.85] -> 2, "S"[0.2] -> 1, "Loss"[0.9] -> 1}, 2],
+          outs = Select[Tuples[Range[0, 4], 2], Total[#] <= 4 &]},
+        {
+            Max @ Table[With[{rho = qi[QuantumState[SparseArray[{FromDigits[in, 30] + 1} -> 1., 900], {30, 30}]]["DensityMatrix"]},
+                {ref = Re[rho[[#, #]]] & /@ (FromDigits[#, 30] + 1 & /@ outs)},
+                Join[Abs[(qi["Probability", in -> #] & /@ outs) - ref], Abs[Lookup[qi["Probabilities", in, "Cutoff" -> 4], QuditName /@ outs] - ref]]],
+                {in, {{0, 0}, {1, 0}}}] < 10^-10,
+            With[{probs = qi["Probabilities", {0, 0}, "Cutoff" -> 12], counts = qi["SampleCounts", {0, 0}, 5000]},
+                Total[Abs[Lookup[counts, Keys[probs], 0] / 5000 - Values[probs]]] / 2 < 0.04]
+        }
+    ],
+    {True, True},
+    TestID -> "QI-lossy-squeezers-match-Kraus-circuit-and-sample-their-table"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"S"[0.3] -> 1, "BS"[Pi/4, 0] -> {1, 2}, "Loss"[0.8] -> 2}, 2]},
+        {qi["TransferMatrix"], qi["Amplitude", {0, 0} -> {1, 1}], qi["Samples", {1, 0}, 2],
+         QuantumInterferometer[{"S"[r] -> 1, "Loss"[eta] -> 1}, 1]["Probability", {0} -> {1}]}
+    ],
+    {$Failed, $Failed, $Failed, $Failed},
+    {QuantumInterferometer::squeezed, QuantumInterferometer::lossy, QuantumInterferometer::squeezedinput, QuantumInterferometer::lossactive},
+    TestID -> "QI-lossy-squeezers-reject-amplitudes-fock-sampling-and-symbolic-parameters"
 ]
 
 VerificationTest[
