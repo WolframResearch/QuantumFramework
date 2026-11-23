@@ -606,4 +606,25 @@ VerificationTest[
     TestID -> "BME-NormalOrder-PowerAboveExpandCap"
 ]
 
+(* a constant inside a wing exponential is a scalar e^c: <al|e^(1 + g ad) e^(h a)|be> = e e^(g albar + h be) <al|be>,
+   and <2|.|1> is e times the element without it *)
+VerificationTest[
+    {
+        Simplify[BosonicMatrixElement[{al, be}, Exp[1 + g adv] ** Exp[h av], $v, "Basis" -> "Coherent"] -
+            E Exp[g Conjugate[al] + h be + Conjugate[al] be - (al Conjugate[al] + be Conjugate[be])/2]],
+        Simplify[BosonicMatrixElement[{2, 1}, Exp[1 + g adv] ** Exp[h av], $v] - E (Sqrt[2] g + g^2 h/Sqrt[2])]
+    },
+    {0, 0},
+    TestID -> "BME-WingConstant"
+]
+
+(* even cat (|2> + |-2>)(<2| + <-2|) as a sum of D(b)|0><0|D(-c): BosonicExpOrder folds e^-4 into a wing;
+   <2|psi><psi|0> = (4 Sqrt[2] e^-2)(2 e^-2) *)
+VerificationTest[
+    BosonicMatrixElement[{2, 0},
+        Sum[DisplacementOperator[b, Infinity, $v] ** NormalOrdered[Exp[-adv ** av], $v] ** DisplacementOperator[-c, Infinity, $v], {b, {2, -2}}, {c, {2, -2}}], $v],
+    8 Sqrt[2]/E^4,
+    TestID -> "BME-CatProjectorSum"
+]
+
 EndTestSection[]

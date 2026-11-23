@@ -270,7 +270,7 @@ wing[m_, k_, g_, x_] := SeriesCoefficient[g, {x, 0, m - k}] Sqrt[m!/k!]
 wingPolynomial[s_, pair_, side_, x_] :=
     Module[{o},
         With[{p = dequantize[s, Thread[pair -> If[side === "Up", {x, o}, {o, x}]]]},
-            If[FreeQ[p, o] && PolynomialQ[p, x] && TrueQ[(p /. x -> 0) == 0], p, $Failed]
+            If[FreeQ[p, o] && PolynomialQ[p, x] && ! FreeQ[p, x], p, $Failed]
         ]
     ]
 
