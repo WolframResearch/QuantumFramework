@@ -201,7 +201,56 @@ chk["Idea1 multimode linear", Module[{t, deq, sym, series, g = bd1 ** bd2/2 + b1
     {same[Sqrt[2] y^(-1/2) Exp[-I ((F . {w1, w2})[[1]] z2 - (F . {w1, w2})[[2]] z1)/2] Exp[-(x^2 + xi^2)/4] Exp[-(xi + I x)^2 w/4]], same[hk]}];
 chk["C-022 coherent el", chk022];
 chk["C-054 Herman-Kluk", chk054];
+chk["Idea3 symbol", Simplify[SOrderedSymbol[Exp[c nn], v, al, 0, Assumptions -> c < 0] - Exp[-c/2] Sech[c/2] Exp[2 Tanh[c/2] Conjugate[al] al], c < 0] === 0];
+gp2 = # //. NonCommutativeMultiply[l___, x_, x_, r___] :> NonCommutativeMultiply[l, GeneralizedPower[NonCommutativeMultiply, x, 2], r] &;
+wqp[op_, opts___] := SOrderedSymbol[op, v, al, 0, opts] /. Conjugate[al] -> (qx - I px)/Sqrt[2] /. al -> (qx + I px)/Sqrt[2];
+wqp2[op_, opts___] := SOrderedSymbol[op, v2, {u1, u2}, 0, opts] /. {Conjugate[u1] -> (q1 - I p1)/Sqrt[2], Conjugate[u2] -> (q2 - I p2)/Sqrt[2]} /. {u1 -> (q1 + I p1)/Sqrt[2], u2 -> (q2 + I p2)/Sqrt[2]};
+gen1[c_, d_] := gp2 @ Sum[c[i, j] If[i + j == 0, 1, NonCommutativeMultiply @@ Join[ConstantArray[bd, i], ConstantArray[b, j]]], {i, 0, d}, {j, 0, d - i}];
+gen2[c_] := gp2 @ Total[MapIndexed[c[First[#2]] If[Total[#1] == 0, 1, NonCommutativeMultiply @@ Flatten[MapThread[ConstantArray, {{bd1, bd2, b1, b2}, #1}]]] &,
+    Select[Tuples[Range[0, 2], 4], Total[#] <= 2 &]]];
+xop2 = {(b1 + bd1)/Sqrt[2], (b2 + bd2)/Sqrt[2], (b1 - bd1)/(I Sqrt[2]), (b2 - bd2)/(I Sqrt[2])};
+J2 = ArrayFlatten[{{0, IdentityMatrix[2]}, {-IdentityMatrix[2], 0}}];
+mCoupled = N[{{2, 1/3, 1/4, 1/5}, {1/3, 3, 1/6, 1/7}, {1/4, 1/6, 5/2, 1/2}, {1/5, 1/7, 1/2, 2}}];
+hCoupled = gp2 @ BosonicNormalOrder[Sum[mCoupled[[i, j]] (xop2[[i]] ** xop2[[j]] + xop2[[j]] ** xop2[[i]])/4, {i, 4}, {j, 4}], v2];
+regimes = {{a2 -> 2, b2 -> 3, g0 -> 1/2, t -> 1/3}, {a2 -> 1, b2 -> 1/2, g0 -> 2, t -> 1/2}, {a2 -> -1, b2 -> 2, g0 -> 0, t -> 2/5}, {a2 -> 3, b2 -> 1, g0 -> -1, t -> 3/4}};
+hGen = gp2[Expand[(a2 q ** q + b2 p ** p + g0 (q ** p + p ** q))/2]];
+fGen = MatrixExp[t {{g0, b2}, {-a2, -g0}}];
+chk["C-053 osc 2 modes", Simplify[SOrderedSymbol[Exp[-I t (bd1 ** b1 + bd2 ** b2 + 1)], v2, {u1, u2}, 0] -
+    4 E^(I t)/(1 + E^(I t))^2 Exp[-2 (E^(I t) - 1)/(E^(I t) + 1) (Conjugate[u1] u1 + Conjugate[u2] u2)]] === 0];
+chk["C-030 Cayley 1 mode", AllTrue[regimes, With[{w = wqp[Exp[-I t hGen] /. #], f = fGen /. #},
+    With[{w0 = w /. {qx -> 0, px -> 0}},
+        FullSimplify[(w/w0 - Exp[-I {qx, px} . {{0, 1}, {-1, 0}} . (IdentityMatrix[2] - f) . Inverse[IdentityMatrix[2] + f] . {qx, px}]) /. {qx -> 2/5, px -> -3/7}] === 0 &&
+        FullSimplify[TrigToExp[Abs[w0]^2 - 4/Abs[Det[IdentityMatrix[2] + f]]]] === 0]] &]];
+chk["C-030 coupled 2 modes", With[{tt = 1.5, xx = {q1, q2, p1, p2}},
+    With[{w = wqp2[Exp[-I tt hCoupled]], f = MatrixExp[tt J2 . mCoupled]},
+        With[{w0 = w /. Thread[xx -> 0]},
+            Abs[w0 - Times @@ (Sec[# tt/2] & /@ Abs[Eigenvalues[J2 . mCoupled]][[{1, 3}]])] < 10^-10 &&
+            Abs[(w/w0 - Exp[-I xx . J2 . (IdentityMatrix[4] - f) . Inverse[IdentityMatrix[4] + f] . xx]) /. Thread[xx -> {1/3, -2/5, 1/2, 1/7}]] < 10^-10]]]];
+chk["C-015 covariance", With[{a3 = gen1[c, 3]}, AllTrue[regimes, With[{h = hGen /. #, f = fGen /. #, tt = t /. #},
+    With[{cs = BosonicExpSimplify[Exp[-I tt h] ** # ** Exp[I tt h], v] & /@ {bd, b}},
+        Simplify[wqp[BosonicNormalOrder[a3 /. Thread[{bd, b} -> cs], v]] - (wqp[a3] /. Thread[{qx, px} -> Inverse[f] . {qx, px}])] === 0]] &]]];
+chk["C-015 coupled 2 modes", With[{tt = 2.5, a = gen2[c], xx = {q1, q2, p1, p2}},
+    With[{cs = BosonicExpSimplify[Exp[-I tt hCoupled] ** # ** Exp[I tt hCoupled], v2] & /@ {bd1, bd2, b1, b2}, f = MatrixExp[tt J2 . mCoupled]},
+        Abs[(wqp2[BosonicNormalOrder[a /. Thread[{bd1, bd2, b1, b2} -> cs], v2]] - (wqp2[a] /. Thread[xx -> Inverse[f] . xx])) /. Thread[xx -> {1/3, -2/5, 1/2, 1/7}] /. c[k_] :> 1/(k + 2)] < 10^-10]]];
+chk["C-016 Moyal 2 modes", With[{wz = SOrderedSymbol[#, v2, {u1, u2}, 0] /. {Conjugate[u1] -> y1, Conjugate[u2] -> y2} /. {u1 -> x1, u2 -> x2} &, a = gen2[c], bb = gen2[d]},
+    With[{wa = wz[a], wb = wz[bb] /. {x1 -> z1, x2 -> z2, y1 -> s1, y2 -> s2}},
+        Expand[wz[BosonicNormalOrder[a ** bb, v2]] - (Sum[(1/2)^k/k! Sum[Multinomial @@ cc (-1)^(cc[[2]] + cc[[4]]) D[wa, Sequence @@ Transpose[{{x1, y1, x2, y2}, cc}]] *
+            D[wb, Sequence @@ Transpose[{{s1, z1, s2, z2}, cc}]], {cc, Select[Tuples[Range[0, k], 4], Total[#] == k &]}], {k, 0, 4}] /. {z1 -> x1, z2 -> x2, s1 -> y1, s2 -> y2})] === 0]]];
+chk["C-016 commutator", With[{w = SOrderedSymbol[#, v, al, 0] /. Conjugate[al] -> alc &, h2 = gen1[h, 2], b3 = gen1[d, 3]},
+    Expand[w[BosonicNormalOrder[h2 ** b3 - b3 ** h2, v]] - (D[w[h2], al] D[w[b3], alc] - D[w[h2], alc] D[w[b3], al])] === 0]];
+chk["C-049 squeezed Wigner", With[{del = (1 - (x + I y))/(1 + (x + I y))},
+    FullSimplify[wqp[Sqrt[1 - (x^2 + y^2)] Exp[(x + I y)/2 GeneralizedPower[NonCommutativeMultiply, bd, 2]] ** NormalOrdered[Exp[-nn], v] ** Exp[(x - I y)/2 GeneralizedPower[NonCommutativeMultiply, b, 2]],
+            Assumptions -> x^2 + y^2 < 1 && Element[{x, y}, Reals]] -
+        2 Exp[-qx^2 ComplexExpand[Re[del]] - (px + qx ComplexExpand[Im[del]])^2/ComplexExpand[Re[del]]], x^2 + y^2 < 1 && Element[{x, y, qx, px}, Reals]] === 0]];
+chk["C-014 symbol traces", With[{proj = Exp[-(#1 Conjugate[#1] + #2 Conjugate[#2])/2] Exp[#1 bd] ** NormalOrdered[Exp[-nn], v] ** Exp[Conjugate[#2] b] &,
+        be = b1r + I b1i, ga = c1r + I c1i, re = Element[{b1r, b1i, c1r, c1i, qx, px}, Reals]},
+    Simplify[Integrate[ComplexExpand[wqp[proj[be, be]] wqp[proj[ga, ga]]], {qx, -Infinity, Infinity}, {px, -Infinity, Infinity}, Assumptions -> re]/(2 Pi) -
+        Exp[-((b1r - c1r)^2 + (b1i - c1i)^2)], re] === 0 &&
+    With[{w = wqp[(1 - E^-beta) Exp[-beta nn], Assumptions -> beta > 0]},
+        Simplify[Integrate[w^2, {qx, -Infinity, Infinity}, {px, -Infinity, Infinity}, Assumptions -> beta > 0]/(2 Pi) - Tanh[beta/2], beta > 0] === 0]]];
+chk["C-014 TMSV purity", With[{w = wqp2[Sech[r]^2 Exp[-Tanh[r] bd1 ** bd2] ** NormalOrdered[Exp[-bd1 ** b1 - bd2 ** b2], v2] ** Exp[-Tanh[r] b1 ** b2], Assumptions -> r > 0]},
+    Simplify[w - 4 Exp[-Cosh[2 r] (q1^2 + q2^2 + p1^2 + p2^2) - 2 Sinh[2 r] (q1 q2 - p1 p2)], r > 0] === 0 &&
+    Simplify[Integrate[w^2, {q1, -Infinity, Infinity}, {q2, -Infinity, Infinity}, {p1, -Infinity, Infinity}, {p2, -Infinity, Infinity}, Assumptions -> r > 0]/(2 Pi)^2, r > 0] === 1]];
 Print["--- ideas still open (expect FAIL / unevaluated) ---"];
-chk["Idea3 symbol", FreeQ[NormalOrdered[Exp[c nn], v]["Symbol", 0], "Symbol"]];
 chk["BME a f(N) direct", FreeQ[BosonicMatrixElement[{1, 2}, b ** (nn + 1)^(-1/2), v], BosonicMatrixElement]];
 chk["mode between",BosonicExpSimplify[(nn + 1)^(-1/2) ** b ** bd2 ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === bd2];

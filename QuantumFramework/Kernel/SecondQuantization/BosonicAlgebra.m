@@ -14,6 +14,8 @@ PackageExport["BosonicVEV"]
 
 PackageExport["BosonicMatrixElement"]
 
+PackageExport["SOrderedSymbol"]
+
 PackageScope["vevPolynomialQ"]
 
 
@@ -215,8 +217,8 @@ BosonicMatrixElement[{m_, n_}, c_ ? NumericQ, opts : OptionsPattern[]] /;
 BosonicMatrixElement[{_, _}, Except[_DisplacementOperator | _SqueezeOperator | _ ? NumericQ], OptionsPattern[]] :=
     (Message[BosonicMatrixElement::argrx, BosonicMatrixElement, 2, 3]; $Failed)
 
-BosonicMatrixElement[{m_, n_}, expr_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
-    Module[{lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, d, r},
+BosonicMatrixElement[{m_, n_}, e_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
+    Module[{expr = e /. GeneralizedPower[NonCommutativeMultiply, _, 0] -> 1, lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, d, r},
         pair = If[AssociationQ[lv], {First[lv["Creators"]], First[lv["Annihilators"]]}];
         r = Which[
             lv === $Failed || ! FreeQ[expr, _QuantumOperator | _QuantumState], $Failed,
@@ -378,4 +380,49 @@ symbolElement[expr_, lv_, ms_, ns_, coherent_] :=
                 ]
             ]
         ]
+    ]
+
+
+SOrderedSymbol::usage =
+"\!\(\*RowBox[{\"SOrderedSymbol\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"s\", \"TI\"]}], \"]\"}]\) gives the s-ordered symbol of expr in the ladder operators vars as a function of \[Alpha], normal for s = 1, Weyl for s = 0 and anti-normal for s = -1.\n\!\(\*RowBox[{\"SOrderedSymbol\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"\[Alpha]\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", StyleBox[\"s\", \"TI\"]}], \"]\"}]\) gives the multimode symbol, one phase-space variable per mode.";
+
+SOrderedSymbol::modes = "`1` gives `2` phase-space variables for `3` modes.";
+
+SOrderedSymbol::sing = "The `1`-ordered symbol of `2` is a distribution, not a function.";
+
+SOrderedSymbol::nosym = "The normal symbol of `1` is not a polynomial times the exponential of a quadratic form; its s-ordered symbol is not computed.";
+
+Options[SOrderedSymbol] = {Assumptions :> $Assumptions};
+
+orderedSymbolTerm[t_, z_, lam_] :=
+    Module[{p, q, m, g, l, zero = Thread[z -> 0]},
+        {p, q} = Replace[t, {c_. Power[E, e_] :> {c, Expand[e]}, c_ :> {c, 0}}];
+        m = D[q, {z, 2}];
+        g = IdentityMatrix[Length[z]] - lam . m;
+        Which[
+            ! PolynomialQ[p, z] || ! PolynomialQ[q, z] || ! FreeQ[m, Alternatives @@ z], $Failed,
+            PossibleZeroQ[Det[g]], Missing["Singular"],
+            True,
+                With[{ls = Array[l, Length[z]], r = Inverse[g]},
+                    Total[#2 D[Exp[(z . m / 2 + ls) . r . z + ls . r . lam . ls / 2], Sequence @@ Transpose[{ls, #1}]] & @@@ CoefficientRules[p, z]] *
+                        Exp[q /. zero] / Times @@ Sqrt[Eigenvalues[g]] /. Thread[ls -> (D[q, {z}] /. zero)]
+                ]
+        ]
+    ]
+
+SOrderedSymbol[expr_, vars_, al_, s_, opts : OptionsPattern[]] :=
+    Module[{lv = ResolveLadderVariables[SOrderedSymbol, vars], als = Flatten[{al}], x, y, xs, ys, f, r},
+        {xs, ys} = Array[#, Length[als]] & /@ {x, y};
+        r = Which[
+            lv === $Failed, $Failed,
+            Length[als] =!= Length[lv["Annihilators"]],
+                Message[SOrderedSymbol::modes, al, Length[als], Length[lv["Annihilators"]]]; $Failed,
+            MatchQ[f = BosonicMatrixElement[{Conjugate[xs], ys}, expr, vars, "Basis" -> "Coherent", Assumptions -> OptionValue[Assumptions]], _BosonicMatrixElement] ||
+                MemberQ[f = orderedSymbolTerm[#, Join[xs, ys], (s - 1)/2 KroneckerProduct[{{0, 1}, {1, 0}}, IdentityMatrix[Length[als]]]] & /@
+                    Replace[Expand[f / Times @@ MapThread[coherentOverlap, {Conjugate[xs], ys}] /. Power[E, e_] :> Power[E, Expand[e]]], {p_Plus :> List @@ p, p_ :> {p}}], $Failed],
+                Message[SOrderedSymbol::nosym, expr]; $Failed,
+            MemberQ[f, _Missing], Message[SOrderedSymbol::sing, s, expr]; $Failed,
+            True, Simplify[Total[f] /. Join[Thread[xs -> Conjugate[als]], Thread[ys -> als]], Assumptions -> OptionValue[Assumptions]]
+        ];
+        r /; lv === $Failed || r =!= $Failed
     ]
