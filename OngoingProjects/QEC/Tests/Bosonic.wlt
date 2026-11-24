@@ -79,10 +79,11 @@ VerificationTest[
     TestID -> "QBC-BadCodewords"
 ]
 
+(* An unknown property, and a channel property asked without its channel. *)
 VerificationTest[
-    QECBosonicCode["Binomial"[1, 1]]["Nonsense"],
-    $Failed,
-    {QECBosonicCode::noprop},
+    {QECBosonicCode["Binomial"[1, 1]]["Nonsense"], QECBosonicCode["Binomial"[1, 1]]["CorrectableQ"]},
+    {$Failed, $Failed},
+    {QECBosonicCode::noprop, QECBosonicCode::nochannel},
     TestID -> "QBC-UndefinedProperty"
 ]
 
@@ -173,15 +174,9 @@ VerificationTest[
    code, exact only as alpha -> infinity; Cat2 is not approximately correcting at all,
    since its off-diagonal block grows with alpha. *)
 VerificationTest[
-    QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]],
-    False,
-    TestID -> "QBC-Cat4-NotExactlyCorrectable"
-]
-
-VerificationTest[
-    QECBosonicCode["Cat"[2, \[Alpha]], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]],
-    False,
-    TestID -> "QBC-Cat2-NotExactlyCorrectable"
+    QECBosonicCode["Cat"[#, \[Alpha]], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]] & /@ {2, 4},
+    {False, False},
+    TestID -> "QBC-Cat-NotExactlyCorrectable"
 ]
 
 (* Cat2 fails in the off-diagonal, not the diagonal: a maps the even cat onto the odd
@@ -213,26 +208,14 @@ lossBlock[legs_, k_] :=
 lossBlockZeroQ[legs_, k_] :=
     TrueQ @ Simplify[lossBlock[legs, k] == {{0, 0}, {0, 0}}, \[Alpha] > 0]
 
-(* d = 1: even/odd cat, a single loss already acts inside the code space *)
+(* d = 1: even/odd cat, a single loss already acts inside the code space.
+   d = 2: one loss leaves, two land back inside.
+   d = 3: the six-component cat, robust to two losses where the four-component one
+   is not, which is the reason the family is generalised past four legs. *)
 VerificationTest[
-    lossBlockZeroQ[2, 1],
-    False,
-    TestID -> "QBC-Cat2-d1-FailsAtOne"
-]
-
-(* d = 2: one loss leaves, two land back inside *)
-VerificationTest[
-    {lossBlockZeroQ[4, 1], lossBlockZeroQ[4, 2]},
-    {True, False},
-    TestID -> "QBC-Cat4-d2-FailsAtTwo"
-]
-
-(* d = 3: the six-component cat, robust to two losses where the four-component one
-   is not, which is the reason the family is generalised past four legs *)
-VerificationTest[
-    {lossBlockZeroQ[6, 1], lossBlockZeroQ[6, 2], lossBlockZeroQ[6, 3]},
-    {True, True, False},
-    TestID -> "QBC-Cat6-d3-FailsAtThree"
+    Table[lossBlockZeroQ[2 d, k], {d, 3}, {k, d}],
+    {{False}, {True, False}, {True, True, False}},
+    TestID -> "QBC-Cat-2dLegs-FailAtD"
 ]
 
 EndTestSection[]
@@ -246,16 +229,6 @@ VerificationTest[
      QECBosonicCode["Binomial"[2, 2]]["ApproximateCorrectionOrder", "Loss", \[Alpha]]},
     {2, 2},
     TestID -> "QBC-Binomial-ExactEqualsApproximate"
-]
-
-(* A cat satisfies the conditions only as alpha grows, so its exact order is 0 while its
-   approximate order is d - 1.  This is the distinction the boolean cannot make: Cat2 is
-   not approximately correcting at all, Cat4 is. *)
-VerificationTest[
-    {QECBosonicCode["Cat"[2, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"],
-     QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"]},
-    {0, 1},
-    TestID -> "QBC-Cat-ApproximateOrder"
 ]
 
 (* A coherent code whose amplitudes are the limit variable times fixed numbers, beta_k = a z_k,
@@ -281,6 +254,24 @@ VerificationTest[
             Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #, \[Alpha]] & /@ {"Loss", "Dephasing"}}],
     {{0, 2}, {0, 0}},
     TestID -> "QBC-CoherentLimit-Asymmetric"
+]
+
+(* A leg is a value, not a form.  The rotated 4-cat, its last leg written E^(I Pi/5) or in
+   radicals, which Simplify keeps apart.  Split in halves within one codeword, the two forms
+   read as orthogonal legs break the norms; written differently in the two codewords, the leg
+   drops out of <W0|W1>.  Either way order 0 fails and gives -1. *)
+VerificationTest[
+    With[{legs = \[Alpha] E^(I Pi/5) I^Range[0, 3],
+          radical = -I \[Alpha] ((1 + Sqrt[5])/4 + I Sqrt[(5 - Sqrt[5])/8]),
+          signs = {1, -1, 1, -1}},
+        QECBosonicCode[#, Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", "Loss", \[Alpha]] & /@ {
+            {{1, #} & /@ legs,
+             Join[Transpose[{Most[signs], Most[legs]}], {{-1/2, Last[legs]}, {-1/2, radical}}]},
+            {{1, #} & /@ legs,
+             Transpose[{signs, Append[Most[legs], radical]}]}}
+    ],
+    {1, 1},
+    TestID -> "QBC-CoherentLimit-EqualLegsInTwoForms"
 ]
 
 (* Amplitudes that are not a multiple of the limit variable still go through Limit. *)
@@ -369,15 +360,10 @@ VerificationTest[
 
 (* The one cutoff in the object, for handing codewords to the phase-space tools. *)
 VerificationTest[
-    #["Dimensions"] & /@ QECBosonicCode["Binomial"[1, 1]]["CodewordStates", 12],
-    {{12}, {12}},
-    TestID -> "QBC-CodewordStates-Dimensions"
-]
-
-VerificationTest[
-    Chop[#["Norm"] - 1] & /@ QECBosonicCode["Cat"[4, 2.]]["CodewordStates", 24],
-    {0, 0},
-    TestID -> "QBC-CodewordStates-Normalized"
+    {#["Dimensions"] & /@ QECBosonicCode["Binomial"[1, 1]]["CodewordStates", 12],
+     Chop[#["Norm"] - 1] & /@ QECBosonicCode["Cat"[4, 2.]]["CodewordStates", 24]},
+    {{{12}, {12}}, {0, 0}},
+    TestID -> "QBC-CodewordStates-ExplicitSize"
 ]
 
 EndTestSection[]
@@ -489,6 +475,45 @@ VerificationTest[
      QECBosonicCode["Binomial"[2, 2]]["CorrectableQ", {"Loss"[1], "Gain"[1], "Dephasing"[1]}]},
     {True, True},
     TestID -> "QBC-Binomial-22-Eq3-Correctable"
+]
+
+(* {f1, f2, ...}[K] is every sequence of up to K jumps drawn from the families, in any order:
+   the errors at order dt^K when the channels act together.  A loss then a dephasing is as
+   likely as two losses, so the union {"Loss"[K], "Dephasing"[K]} is not the same set.  Words
+   that add nothing to the span are dropped (a a\[Dagger] and a\[Dagger] a differ by I), so with
+   all three families K jumps leave (K + 1)^2 independent errors. *)
+VerificationTest[
+    With[{code = QECBosonicCode["Binomial"[1, 1]]},
+        {code["ErrorSet", {"Loss", "Gain"}[1]],
+         code["ErrorSet", {"Loss"}[2]] === code["ErrorSet", "Loss"[2]],
+         Length[code["ErrorSet", {"Loss", "Gain", "Dephasing"}[#]]] & /@ Range[0, 3]}],
+    {{1, qecAv, qecAdv}, True, {1, 4, 9, 16}},
+    TestID -> "QBC-Composed-ErrorSet"
+]
+
+(* Loss and gain together span the normally ordered monomials, which is "Displacement". *)
+VerificationTest[
+    {#["CorrectionOrder", {"Loss", "Gain"}], #["CorrectionOrder", "Displacement"]} & /@
+        {QECBosonicCode["Binomial"[1, 1]], QECBosonicCode["Binomial"[2, 2]]},
+    {{0, 0}, {1, 1}},
+    TestID -> "QBC-Composed-LossGainIsDisplacement"
+]
+
+(* (N, S) = (2, 1) corrects each channel once, but a loss and a gain land on the same occupations,
+   so any family set holding both drops to order 0. *)
+VerificationTest[
+    With[{code = QECBosonicCode["Binomial"[2, 1]]},
+        code["CorrectionOrder", #] & /@
+            {"Loss", "Gain", "Dephasing", {"Loss", "Gain"}, {"Loss", "Dephasing"}, {"Gain", "Dephasing"}, {"Loss", "Gain", "Dephasing"}}],
+    {1, 1, 1, 0, 1, 1, 0},
+    TestID -> "QBC-Composed-CorrectionOrder"
+]
+
+VerificationTest[
+    QECBosonicCode["Cat"[#, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", #2] & @@@
+        {{4, {"Loss"}}, {4, {"Loss", "Gain"}}, {4, {"Loss", "Dephasing"}}, {6, {"Loss", "Gain"}}, {6, {"Loss", "Dephasing"}}},
+    {1, 0, 1, 1, 2},
+    TestID -> "QBC-Composed-ApproximateOrder"
 ]
 
 EndTestSection[]
@@ -605,27 +630,44 @@ VerificationTest[
     TestID -> "QBC-CorrectionOrder-NoFixedCap"
 ]
 
+(* A bad channel is reported where the error set is built, and every property that needs the
+   set fails with it: an empty set would pass the conditions vacuously.  Unknown or misspelled
+   names, orders that are not non-negative integers, a bad member of a list, a channel name
+   among ladder-operator errors, and a bad family in a combined channel. *)
 VerificationTest[
-    QECBosonicCode["Binomial"[1, 1]]["ErrorSet", "Foo"[1]],
-    $Failed,
-    {QECBosonicCode::channel},
-    TestID -> "QBC-Channel-Unknown"
+    With[{code = QECBosonicCode["Binomial"[1, 1]]},
+        Quiet[
+            Outer[code[#1, #2] &,
+                {"ErrorSet", "CorrectableQ", "KnillLaflammeBlocks", "KnillLaflammeMatrix",
+                 "KnillLaflammeResidual", "KnillLaflammeRank", "Signature"},
+                {"Foo"[1], "loss"[1], "Loss"[1.], "Loss"[-1], {"Loss"[1], "Loss"[-1]},
+                 {"Loss"[1], qecAv ** qecAv}, {"Loss", "loss"}[1]},
+                1],
+            {QECBosonicCode::channel, General::stop}]
+    ],
+    ConstantArray[$Failed, {7, 7}],
+    TestID -> "QBC-Channel-Rejected"
 ]
 
-(* A bad channel is reported where the error set is built; what follows the message is not checked. *)
+(* The order scans check the family before scanning, and report it. *)
 VerificationTest[
-    Quiet @ Check[
-        QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", {"Loss"[1], "Loss"[-1]}],
-        "reported", QECBosonicCode::channel],
-    "reported",
-    TestID -> "QBC-Channel-BadMemberOfList"
+    {QECBosonicCode["Binomial"[1, 1]]["CorrectionOrder", "loss"],
+     QECBosonicCode["Binomial"[1, 1]]["CorrectionOrder", {"Loss", "loss"}],
+     QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", "loss"]},
+    {$Failed, $Failed, $Failed},
+    {QECBosonicCode::channel, QECBosonicCode::channel, QECBosonicCode::channel, General::stop},
+    TestID -> "QBC-Channel-RejectedByOrders"
 ]
 
+(* The limit variable can be any symbolic amplitude, not only a bare symbol; a number or a
+   compound expression such as 2 \[Alpha] has no limit to take. *)
 VerificationTest[
-    QECBosonicCode["Cat"[4, 2.]]["ApproximateCorrectionOrder"],
-    $Failed,
-    {QECBosonicCode::numvar},
-    TestID -> "QBC-ApproximateOrder-NumericAmplitude"
+    {QECBosonicCode["Cat"[4, 2.]]["ApproximateCorrectionOrder"],
+     QECBosonicCode["Cat"[4, Subscript[\[Alpha], 0]], Assumptions -> Subscript[\[Alpha], 0] > 0]["ApproximateCorrectionOrder"],
+     QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder", "Loss", 2 \[Alpha]]},
+    {$Failed, 1, $Failed},
+    {QECBosonicCode::numvar, QECBosonicCode::numvar},
+    TestID -> "QBC-ApproximateOrder-AmplitudeVariable"
 ]
 
 EndTestSection[]

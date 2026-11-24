@@ -39,7 +39,7 @@ QECBosonicCode::words = "Codewords must be two associations <|n -> amplitude|> i
 QECBosonicCode::legs = "A cat code needs an even number of at least 2 legs; `1` was given.";
 QECBosonicCode::vars = "`1` does not name the ladder operators of a single mode.";
 QECBosonicCode::states = "QuantumState codewords must be pure states of a single mode.";
-QECBosonicCode::channel = "`1` is not an error channel: use \"Loss\"[L], \"Gain\"[G], \"Dephasing\"[D], \"Displacement\"[L], a list of these, or a list of ladder-operator errors.";
+QECBosonicCode::channel = "`1` is not an error channel: use \"Loss\"[L], \"Gain\"[G], \"Dephasing\"[D], \"Displacement\"[L], a list of these, a list of channel names at a common order such as {\"Loss\", \"Dephasing\"}[K], or a list of ladder-operator errors.";
 
 Options[QECBosonicCode] = {Assumptions -> True};
 
@@ -126,76 +126,107 @@ bosonicErrorSet[a_, "Displacement"[l_Integer ? NonNegative]] :=
         {t, 0, l}, {p, 0, t}
     ]
 
-bosonicErrorSet[a_, chs : {(_String[_]) ..}] := DeleteDuplicates @ Catenate[bosonicErrorSet[a, #] & /@ chs]
+bosonicErrorSet[a_, chs : {(_String[_]) ..}] :=
+    With[{sets = bosonicErrorSet[a, #] & /@ chs},
+        If[MemberQ[sets, $Failed], $Failed, DeleteDuplicates @ Catenate[sets]]]
 
-bosonicErrorSet[_, es_List] := es
+(* Up to k jumps drawn from all the families, in any order: the errors of order dt^k when the
+   channels act together.  Each family's jumps are its order-one errors. *)
+bosonicErrorSet[a_, {fs__String}[k_Integer ? NonNegative]] :=
+    Replace[bosonicErrorSet[a, #[1] & /@ {fs}], single_List :>
+        With[{jumps = DeleteCases[single, 1]},
+            independentErrors[a, Catenate @ NestList[Catenate @ Outer[ncTimes, #, jumps, 1] &, {1}, k]]
+        ]
+    ]
+
+bosonicErrorSet[_, es_List] /; FreeQ[es, _String] := es
 
 bosonicErrorSet[_, ch_] := (Message[QECBosonicCode::channel, ch]; $Failed)
 
 
-bosonicBlocks[a_Association, channel_] :=
-    With[{es = bosonicErrorSet[a, channel]},
-        Table[
-            Table[bosonicElement[a, i, j, ncTimes[ncDagger[a, es[[p]]], es[[q]]]], {i, 2}, {j, 2}],
-            {p, Length[es]}, {q, Length[es]}]
+normalPolynomial[a_Association, expr_] :=
+    BosonicNormalOrder[expr, a["LadderVariables"]] /. GeneralizedPower[_, x_, n_] :> x^n /. NonCommutativeMultiply -> Times
+
+independentErrors[a_Association, es_List] :=
+    With[{rules = Association[CoefficientRules[normalPolynomial[a, #], {creator[a], annihilator[a]}]] & /@ es},
+        es[[pivotColumns[Transpose[Lookup[#, Key /@ Union @@ Keys /@ rules, 0] & /@ rules]]]]
     ]
+
+pivotColumns[m_] := First @ FirstPosition[#, Except[0], Nothing, {1}, Heads -> False] & /@ DeleteCases[RowReduce[m], {0 ..}]
+
+
+klBlocks[a_Association, es_List] :=
+    Table[
+        Table[bosonicElement[a, i, j, ncTimes[ncDagger[a, es[[p]]], es[[q]]]], {i, 2}, {j, 2}],
+        {p, Length[es]}, {q, Length[es]}]
+
+bosonicBlocks[a_Association, channel_] := Replace[bosonicErrorSet[a, channel], es_List :> klBlocks[a, es]]
 
 bosonicKLMatrix[a_Association, channel_] :=
     Map[FullSimplify[Tr[#]/2, a["Assumptions"]] &, bosonicBlocks[a, channel], {2}]
 
 bosonicResidual[a_Association, channel_] :=
-    With[{es = bosonicErrorSet[a, channel]},
+    Replace[bosonicErrorSet[a, channel], es_List :>
         AssociationThread[Tuples[{es, es}],
             Flatten[Map[# - IdentityMatrix[2] FullSimplify[Tr[#]/2, a["Assumptions"]] &,
-                bosonicBlocks[a, channel], {2}], 1]]
+                klBlocks[a, es], {2}], 1]]
     ]
 
 bosonicCorrectableQ[a_Association, channel_] :=
-    AllTrue[Flatten @ Map[# - IdentityMatrix[2] Tr[#]/2 &, bosonicBlocks[a, channel], {2}],
-        PossibleZeroQ[Simplify[#, a["Assumptions"]]] &]
+    Replace[bosonicBlocks[a, channel], blocks_List :>
+        AllTrue[Flatten @ Map[# - IdentityMatrix[2] Tr[#]/2 &, blocks, {2}],
+            PossibleZeroQ[Simplify[#, a["Assumptions"]]] &]
+    ]
 
 QECBosonicCode::ordcap = "The conditions hold through order `1`, the largest order checked.";
 
-scanOrder[a_Association, test_] :=
+
+scanOrder[a_Association, family_, test_] /; bosonicErrorSet[a, family[0]] === $Failed := $Failed
+
+scanOrder[a_Association, family_, test_] :=
     With[{max = If[a["Basis"] === "Fock",
             bosonicFockSpaceSize[a],
             Ceiling[Length[DeleteDuplicates[Catenate[a["Codewords"]][[All, 2]]]]/2]]},
-        With[{k = LengthWhile[Range[0, max], test] - 1},
+        With[{k = LengthWhile[Range[0, max], test[family[#]] &] - 1},
             If[k === max, Message[QECBosonicCode::ordcap, max]];
             k
         ]
     ]
 
-bosonicCorrectionOrder[a_Association, family_] := scanOrder[a, bosonicCorrectableQ[a, family[#]] &]
+bosonicCorrectionOrder[a_Association, family_] := scanOrder[a, family, bosonicCorrectableQ[a, #] &]
 
 QECBosonicCode::novar = "This code has no amplitude parameter; supply the limit variable as the third argument.";
-QECBosonicCode::numvar = "The amplitude `1` is not a symbol; build the code with a symbolic amplitude to take its large-amplitude limit.";
+QECBosonicCode::numvar = "`1` is not a variable; the large-amplitude limit needs a symbolic amplitude such as \[Alpha] or Subscript[\[Alpha], 0].";
 
 bosonicApproxOrder[a_Association, family_, var_] :=
-    With[{ws = If[a["Basis"] === "Coherent", limitWord[#, var] & /@ a["Codewords"], {}]},
-        scanOrder[a,
+    With[{ws = If[a["Basis"] === "Coherent", limitWords[a["Codewords"], var], {}]},
+        scanOrder[a, family,
             If[ ws =!= {} && FreeQ[Keys /@ ws, var],
-                limitCorrectableQ[a, ws, family[#], var] &,
-                AllTrue[Simplify[Flatten @ Values @ bosonicResidual[a, family[#]], a["Assumptions"]],
+                limitCorrectableQ[a, ws, #, var] &,
+                AllTrue[Simplify[Flatten @ Values @ bosonicResidual[a, #], a["Assumptions"]],
                     PossibleZeroQ @ Quiet @ Limit[#, var -> Infinity] &] &
             ]
         ]
     ]
 
-limitWord[w_, var_] := GroupBy[w, Simplify[Last[#]/var] & -> First, Total]
+limitWords[ws_, var_] :=
+    With[{dir = Cancel[Last[#]/var] &},
+        With[{rep = Association @ Catenate[Thread[# -> First[#]] & /@
+                Gather[DeleteDuplicates[dir /@ Catenate[ws]], PossibleZeroQ[#1 - #2, Method -> "ExactAlgebraics"] &]]},
+            GroupBy[#, rep @* dir -> First, Total] & /@ ws
+        ]
+    ]
 
 monomialValue[rules_, b_, bc_] := Total[#2 bc^#1[[1]] b^#1[[2]] & @@@ rules]
 
 limitElement[a_Association, wi_Association, wj_Association, expr_, var_] :=
-    With[{rules = CoefficientRules[
-            BosonicNormalOrder[expr, a["LadderVariables"]] /. GeneralizedPower[_, x_, n_] :> x^n /. NonCommutativeMultiply -> Times,
-            {creator[a], annihilator[a]}]},
+    With[{rules = CoefficientRules[normalPolynomial[a, expr], {creator[a], annihilator[a]}]},
         Total[Conjugate[wi[#]] wj[#] monomialValue[rules, var #, var Conjugate[#]] & /@ Intersection[Keys[wi], Keys[wj]]]/
             Sqrt[Total[Abs[Values[wi]]^2] Total[Abs[Values[wj]]^2]]
     ]
 
 limitCorrectableQ[a_Association, ws_, channel_, var_] :=
-    With[{es = bosonicErrorSet[a, channel]},
+    Replace[bosonicErrorSet[a, channel], es_List :>
         AllTrue[
             Flatten @ Table[
                 With[{blk = Table[limitElement[a, ws[[i]], ws[[j]], ncTimes[ncDagger[a, es[[p]]], es[[q]]], var], {i, 2}, {j, 2}]},
@@ -232,13 +263,20 @@ $bosonicDirectProperties = {
     "Codewords", "Basis", "Modes", "Parameters", "MeanPhotonNumber"
 };
 
-$bosonicParametrizedProperties = {
+$bosonicChannelProperties = {
     "ErrorSet", "KnillLaflammeBlocks", "KnillLaflammeMatrix", "KnillLaflammeResidual", "KnillLaflammeRank", "Signature",
-    "CorrectableQ", "CorrectionOrder", "ApproximateCorrectionOrder", "CodewordStates",
-    "FockSpaceSize"
+    "CorrectableQ"
 };
 
+$bosonicParametrizedProperties = Join[$bosonicChannelProperties, {
+    "CorrectionOrder", "ApproximateCorrectionOrder", "CodewordStates", "FockSpaceSize"
+}];
+
 QECBosonicCode::noprop = "`1` is not a property of QECBosonicCode. Use code[\"Properties\"] for the list.";
+QECBosonicCode::nochannel = "`1` needs an error channel, as in code[\"`1`\", \"Loss\"[1]].";
+
+QECBosonicCode[_Association][prop_String] /; MemberQ[$bosonicChannelProperties, prop] :=
+    (Message[QECBosonicCode::nochannel, prop]; $Failed)
 
 QECBosonicCode[_Association]["Properties"] :=
     Join[$bosonicDirectProperties, $bosonicParametrizedProperties]
@@ -255,13 +293,15 @@ QECBosonicCode[a_Association]["ErrorSet", channel_] := bosonicErrorSet[a, channe
 QECBosonicCode[a_Association]["KnillLaflammeBlocks", channel_] := bosonicBlocks[a, channel]
 QECBosonicCode[a_Association]["KnillLaflammeMatrix", channel_] := bosonicKLMatrix[a, channel]
 QECBosonicCode[a_Association]["KnillLaflammeResidual", channel_] := bosonicResidual[a, channel]
-QECBosonicCode[a_Association]["KnillLaflammeRank", channel_] := MatrixRank[bosonicKLMatrix[a, channel]]
+QECBosonicCode[a_Association]["KnillLaflammeRank", channel_] := Replace[bosonicKLMatrix[a, channel], h_List :> MatrixRank[h]]
 
 QECBosonicCode[a_Association]["Signature", channel_] :=
-    With[{h = bosonicKLMatrix[a, channel], es = bosonicErrorSet[a, channel]},
-        Association[
-            es[[{##}]] -> FullSimplify[h[[##]]/Sqrt[h[[#1, #1]] h[[#2, #2]]], a["Assumptions"]] & @@@
-                Subsets[Select[Range[Length[es]], ! PossibleZeroQ[h[[#, #]]] &], {2}]]
+    Replace[bosonicErrorSet[a, channel], es_List :>
+        With[{h = bosonicKLMatrix[a, es]},
+            Association[
+                es[[{##}]] -> FullSimplify[h[[##]]/Sqrt[h[[#1, #1]] h[[#2, #2]]], a["Assumptions"]] & @@@
+                    Subsets[Select[Range[Length[es]], ! PossibleZeroQ[h[[#, #]]] &], {2}]]
+        ]
     ]
 QECBosonicCode[a_Association]["CorrectableQ", channel_] := bosonicCorrectableQ[a, channel]
 QECBosonicCode[a_Association]["CorrectionOrder", family_ : "Loss"] :=
@@ -271,7 +311,7 @@ QECBosonicCode[a_Association]["ApproximateCorrectionOrder", family_ : "Loss", va
     With[{v = Replace[var, Automatic :> Lookup[a["Parameters"], "Alpha", $Failed]]},
         Which[
             v === $Failed, Message[QECBosonicCode::novar]; $Failed,
-            ! MatchQ[v, _Symbol], Message[QECBosonicCode::numvar, v]; $Failed,
+            NumericQ[v] || ! MatchQ[v, _Symbol | Subscript[_Symbol, __]], Message[QECBosonicCode::numvar, v]; $Failed,
             True, bosonicApproxOrder[a, family, v]
         ]
     ]
