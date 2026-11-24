@@ -252,7 +252,8 @@ BosonicMatrixElement[{m_, n_}, e_, vars : Except[_Rule | _RuleDelayed], opts : O
 numberDiagonal[expr_, {cr_, an_}, k_] :=
     With[{nn = cr ** an},
         With[{f = Replace[expr, {
-                    NormalOrdered[Exp[c_. w_], _] /; w === nn :> (1 + c)^k,
+                    NormalOrdered[s_. Exp[e_], _] :> With[{c = Coefficient[Expand[e], nn]}, {e0 = Expand[e - c nn]},
+                        s Exp[e0] (1 + c)^k /; FreeQ[{s, e0}, cr | an]],
                     e_ :> ReplaceAll[e, nn -> k]
                 }] /. {
                     Power[b_ /; TrueQ[b == 0], p_ /; TrueQ[Simplify[p >= 0, k >= 0]]] :> (1 + b) KroneckerDelta[p, 0],
@@ -392,24 +393,24 @@ SOrderedSymbol::usage =
 
 SOrderedSymbol::modes = "`1` gives `2` phase-space variables for `3` modes.";
 
-SOrderedSymbol::sing = "The `1`-ordered symbol of `2` is a distribution, not a function.";
+SOrderedSymbol::sing = "The `1`-ordered symbol of `2` is not a function.";
 
 SOrderedSymbol::nosym = "The normal symbol of `1` is not a polynomial times the exponential of a quadratic form; its s-ordered symbol is not computed.";
 
 Options[SOrderedSymbol] = {Assumptions :> $Assumptions};
 
-orderedSymbolTerm[t_, z_, lam_] :=
-    Module[{p, q, m, g, l, zero = Thread[z -> 0]},
+orderedSymbolTerm[t_, z_, lam_, assum_] :=
+    Module[{p, q, m, g, l, ev, zero = Thread[z -> 0]},
         {p, q} = Replace[t, {c_. Power[E, e_] :> {c, Expand[e]}, c_ :> {c, 0}}];
         m = D[q, {z, 2}];
         g = IdentityMatrix[Length[z]] - lam . m;
         Which[
             ! PolynomialQ[p, z] || ! PolynomialQ[q, z] || ! FreeQ[m, Alternatives @@ z], $Failed,
-            PossibleZeroQ[Det[g]], Missing["Singular"],
+            AnyTrue[ev = Eigenvalues[g], PossibleZeroQ[#] || TrueQ[Simplify[Element[#, Reals] && # < 0, assum]] &], Missing["Singular"],
             True,
                 With[{ls = Array[l, Length[z]], r = Inverse[g]},
                     Total[#2 D[Exp[(z . m / 2 + ls) . r . z + ls . r . lam . ls / 2], Sequence @@ Transpose[{ls, #1}]] & @@@ CoefficientRules[p, z]] *
-                        Exp[q /. zero] / Times @@ Sqrt[Eigenvalues[g]] /. Thread[ls -> (D[q, {z}] /. zero)]
+                        Exp[q /. zero] / Times @@ Sqrt[ev] /. Thread[ls -> (D[q, {z}] /. zero)]
                 ]
         ]
     ]
@@ -422,7 +423,7 @@ SOrderedSymbol[expr_, vars_, al_, s_, opts : OptionsPattern[]] :=
             Length[als] =!= Length[lv["Annihilators"]],
                 Message[SOrderedSymbol::modes, al, Length[als], Length[lv["Annihilators"]]]; $Failed,
             MatchQ[f = BosonicMatrixElement[{Conjugate[xs], ys}, expr, vars, "Basis" -> "Coherent", Assumptions -> OptionValue[Assumptions]], _BosonicMatrixElement] ||
-                MemberQ[f = orderedSymbolTerm[#, Join[xs, ys], (s - 1)/2 KroneckerProduct[{{0, 1}, {1, 0}}, IdentityMatrix[Length[als]]]] & /@
+                MemberQ[f = orderedSymbolTerm[#, Join[xs, ys], (s - 1)/2 KroneckerProduct[{{0, 1}, {1, 0}}, IdentityMatrix[Length[als]]], OptionValue[Assumptions]] & /@
                     Replace[Expand[f / Times @@ MapThread[coherentOverlap, {Conjugate[xs], ys}] /. Power[E, e_] :> Power[E, Expand[e]]], {p_Plus :> List @@ p, p_ :> {p}}], $Failed],
                 Message[SOrderedSymbol::nosym, expr]; $Failed,
             MemberQ[f, _Missing], Message[SOrderedSymbol::sing, s, expr]; $Failed,

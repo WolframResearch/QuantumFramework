@@ -333,13 +333,23 @@ numberWingRules[lv_, head_] :=
         head[Exp[e_], vv_] ** Exp[p_] :> With[{w = wingThrough[p, e, ops, 1, sg]}, ncJoin[Exp[w], head[Exp[e], vv]] /; w =!= $Failed]
     }]]
 
+numberPowerRules[lv_] := With[{g = Alternatives @@ lv["Generators"]},
+    NonCommutativeMultiply[l___, Power[x_, n_], NormalOrdered[k_. Exp[e_], vv_], r___] |
+            NonCommutativeMultiply[l___, NormalOrdered[k_. Exp[e_], vv_], Power[x_, n_], r___] /; ! FreeQ[n, g] :>
+        With[{ns = MapThread[NonCommutativeMultiply, vv]}, {c = Coefficient[Expand[n], #] & /@ ns, d = Coefficient[Expand[e], #] & /@ ns},
+            {n0 = Expand[n - c . ns], e0 = Expand[e - d . ns]},
+            ncJoin[l, NormalOrdered[k x^n0 Exp[e0 + (x^c (1 + d) - 1) . ns], vv], r] /; FreeQ[{x, k, n0, e0}, g]
+        ]
+]
+
 expRules[lv_, "Normal"] := expRules[lv, "Normal"] = Join[
     Flatten @ Transpose[modeRulesNO[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
     Flatten[pairRulesNO[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, 1]}, d /; d =!= $Failed]},
     {modeSwap[lv, ladderRank[lv]], modeMerge[lv]},
-    numberWingRules[lv, NormalOrdered]
+    numberWingRules[lv, NormalOrdered],
+    {numberPowerRules[lv]}
 ]
 
 expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
