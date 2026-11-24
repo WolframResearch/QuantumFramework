@@ -299,12 +299,14 @@ normalFactor[fac_, pair_, k_, x_] :=
 (* scalar Exp[P[ad]] ad^p f[n] a^q Exp[Q[a]], any factor absent: the up side is x^p Exp[P], the down side x^q Exp[Q],
    and the middle sum runs to Min[m, n].  The closed form vanishes for n < q before f[n - q] is evaluated, so
    a^dagger f[N] a keeps the vacuum when f[n - 1] is singular at n = 0; coherent elements sum the middle before the
-   amplitudes go in, so a zero amplitude meets no 0^j.  Factors must arrive in normal order: an antinormal product
-   would be silently reordered, wrong by the exponential of the commutator. *)
+   amplitudes go in, so a zero amplitude meets no 0^j.  Bare powers beside f[N] shift, a^q f[N] = f[N + q] a^q; otherwise
+   factors must arrive in normal order: an antinormal product would be silently reordered, wrong by the commutator. *)
 normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
     Module[{x, t, scalar, tagged, kinds, u, w, p, q, fu, fd, f, mono, r},
         {scalar, tagged} = Times @@@ Lookup[GroupBy[Replace[expr, {e_Times :> List @@ e, e_ :> {e}}], FreeQ[Alternatives @@ pair]], {True, False}, {}];
-        tagged = normalFactor[#, pair, j, x] & /@ Replace[tagged, {e_NonCommutativeMultiply :> List @@ e, e_ :> {e}}];
+        tagged = normalFactor[#, pair, j, x] & /@ Replace[tagged, {e_NonCommutativeMultiply :> List @@ e, e_ :> {e}}] //. {
+            {a___, c : ("Annihilators" -> s_), "Diagonal" -> g_, b___} :> {a, "Diagonal" -> (g /. j -> j + s), c, b},
+            {a___, "Diagonal" -> g_, c : ("Creators" -> s_), b___} :> {a, c, "Diagonal" -> (g /. j -> j + s), b}};
         If[ MemberQ[tagged, $Failed] || ! OrderedQ[Keys[tagged] /. {"Up" | "Creators" -> 1, "Diagonal" -> 2, "Down" | "Annihilators" -> 3}],
             Return[$Failed, Module]
         ];
@@ -364,7 +366,9 @@ symbolElement[expr_, lv_, ms_, ns_, coherent_] :=
         factors = Replace[FixedPoint[Flatten[Replace[#, p : _Times | _NonCommutativeMultiply :> List @@ p, {1}]] &, {expr}], {
             NormalOrdered[f_, ___] :> {2, toXY[f] /. Thread[ks -> xs ys]},
             f_ :> With[{c = toXY[f]}, {Replace[Union[Cases[c, (h : x | k | y)[_] :> h, {0, Infinity}]], {{} -> 0, {x} -> 1, {k} -> 2, {y} -> 3, _ -> 4}], c}]
-        }, {1}];
+        }, {1}] //. {
+            {a___, c : {3, y[i_]^p_.}, {2, g_}, b___} /; ! FreeQ[g, k] :> {a, {2, g /. k[i] -> k[i] + p}, c, b},
+            {a___, {2, g_}, c : {1, x[i_]^p_.}, b___} /; ! FreeQ[g, k] :> {a, c, {2, g /. k[i] -> k[i] + p}, b}};
         num = Times @@ Select[factors[[All, 2]], ! FreeQ[#, k] &];
         middles = Append[Cases[factors, {2, f_} /; FreeQ[f, k] :> f], num];
         If[ MemberQ[factors[[All, 1]], 4] || ! OrderedQ[DeleteCases[factors[[All, 1]], 0]] ||
@@ -422,7 +426,8 @@ SOrderedSymbol[expr_, vars_, al_, s_, opts : OptionsPattern[]] :=
                     Replace[Expand[f / Times @@ MapThread[coherentOverlap, {Conjugate[xs], ys}] /. Power[E, e_] :> Power[E, Expand[e]]], {p_Plus :> List @@ p, p_ :> {p}}], $Failed],
                 Message[SOrderedSymbol::nosym, expr]; $Failed,
             MemberQ[f, _Missing], Message[SOrderedSymbol::sing, s, expr]; $Failed,
-            True, Simplify[Total[f] /. Join[Thread[xs -> Conjugate[als]], Thread[ys -> als]], Assumptions -> OptionValue[Assumptions]]
+            True, With[{g = Total[f], sub = Join[Thread[xs -> Conjugate[als]], Thread[ys -> als]]},
+                If[PolynomialQ[g, Join[xs, ys]], Collect[g, Join[xs, ys], Together] /. sub, Simplify[g /. sub, Assumptions -> OptionValue[Assumptions]]]]
         ];
         r /; lv === $Failed || r =!= $Failed
     ]

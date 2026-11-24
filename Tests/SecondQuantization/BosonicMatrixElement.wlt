@@ -627,4 +627,22 @@ VerificationTest[
     TestID -> "BME-CatProjectorSum"
 ]
 
+(* a ladder operator on the wrong side of f(N) is shifted, a^q f(N) = f(N + q) a^q:
+   <m|a f(N)|n> = Sqrt[n] f(n) delta[m, n - 1], <m|f(N) a^dagger|n> = Sqrt[n + 1] f(n + 1) delta[m, n + 1], also for f = e^(c N);
+   with two modes only N_i of the ladder operator's mode shifts: <1,1|b2 (N1 + N2 + 1)^-1|1,2> = Sqrt[2]/4 *)
+VerificationTest[
+    {
+        Table[BosonicMatrixElement[{m, n}, av ** (adv ** av + 1)^(-1/2), $v] - KroneckerDelta[m, n - 1] Sqrt[n/(n + 1)], {m, 0, 3}, {n, 0, 3}],
+        Table[BosonicMatrixElement[{m, n}, (adv ** av + 1)^(-1/2) ** adv, $v] - KroneckerDelta[m, n + 1] Sqrt[(n + 1)/(n + 2)], {m, 0, 3}, {n, 0, 3}],
+        Simplify[BosonicMatrixElement[{1, 2}, av ** Exp[c adv ** av], $v] - Sqrt[2] E^(2 c)],
+        Simplify[{
+            BosonicMatrixElement[{{1, 1}, {1, 2}}, b2 ** (bd1 ** b1 + bd2 ** b2 + 1)^-1, {{bd1, bd2}, {b1, b2}}] - Sqrt[2]/4,
+            BosonicMatrixElement[{{3, 0}, {2, 0}}, (bd1 ** b1 + 1)^(-1/2) ** bd1, {{bd1, bd2}, {b1, b2}}] - Sqrt[3]/2,
+            BosonicMatrixElement[{{1, 0}, {2, 0}}, b1 ** Exp[c bd1 ** b1], {{bd1, bd2}, {b1, b2}}] - Sqrt[2] E^(2 c)
+        }]
+    },
+    {ConstantArray[0, {4, 4}], ConstantArray[0, {4, 4}], 0, {0, 0, 0}},
+    TestID -> "BME-LadderBesideNumberFunction"
+]
+
 EndTestSection[]

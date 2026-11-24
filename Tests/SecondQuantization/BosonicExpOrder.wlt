@@ -1129,4 +1129,30 @@ VerificationTest[
     TestID -> "DisplacementTimesNumberExponentialCoherentElement"
 ]
 
+(* A wing of annihilators of any degree passes a number exponential, e^{P(a)} :e^{cN}: = :e^{cN}: e^{P((1+c)a)}:
+   e^{a^2} e^{-2iN} orders to :e^{(e^{-2i}-1)N}: e^{e^{-4i}a^2}, and <0|e^{g a^2} :e^{cN}:|2> = (1+c)^2 Sqrt[2] g. *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        {
+            Replace[BosonicExpOrder[Exp[a ** a] ** Exp[-2 I ad ** a], $vA],
+                NormalOrdered[Exp[n_], _] ** Exp[w_] :> Simplify[{n - (E^(-2 I) - 1) ad ** a, w - E^(-4 I) GeneralizedPower[NonCommutativeMultiply, a, 2]}]],
+            Simplify[BosonicMatrixElement[{0, 2}, Exp[g GeneralizedPower[NonCommutativeMultiply, a, 2]] ** NormalOrdered[Exp[c ad ** a], $vA], $vA] - (1 + c)^2 Sqrt[2] g]
+        }
+    ],
+    {{0, 0}, 0},
+    TestID -> "QuadraticWingPastNumberExponential"
+]
+
+(* A squeezed vacuum written as S|0><0|S^dagger: both wings next to :e^{-N}: collapse,
+   <0|.|0> = sech r and <2|.|0> = -tanh r sech r / Sqrt[2]. *)
+VerificationTest[
+    With[{sq = r/2 (GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2] - GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2])},
+        With[{rho = Exp[sq] ** NormalOrdered[Exp[-SuperDagger[\[FormalA]] ** \[FormalA]], $vA] ** Exp[-sq]},
+            Simplify[{BosonicMatrixElement[{0, 0}, rho, $vA] - Sech[r], BosonicMatrixElement[{2, 0}, rho, $vA] + Tanh[r] Sech[r]/Sqrt[2]}, r > 0]
+        ]
+    ],
+    {0, 0},
+    TestID -> "SqueezedVacuumProjector"
+]
+
 EndTestSection[]

@@ -251,6 +251,6 @@ chk["C-014 symbol traces", With[{proj = Exp[-(#1 Conjugate[#1] + #2 Conjugate[#2
 chk["C-014 TMSV purity", With[{w = wqp2[Sech[r]^2 Exp[-Tanh[r] bd1 ** bd2] ** NormalOrdered[Exp[-bd1 ** b1 - bd2 ** b2], v2] ** Exp[-Tanh[r] b1 ** b2], Assumptions -> r > 0]},
     Simplify[w - 4 Exp[-Cosh[2 r] (q1^2 + q2^2 + p1^2 + p2^2) - 2 Sinh[2 r] (q1 q2 - p1 p2)], r > 0] === 0 &&
     Simplify[Integrate[w^2, {q1, -Infinity, Infinity}, {q2, -Infinity, Infinity}, {p1, -Infinity, Infinity}, {p2, -Infinity, Infinity}, Assumptions -> r > 0]/(2 Pi)^2, r > 0] === 1]];
+chk["BME a f(N) direct", BosonicMatrixElement[{1, 2}, b ** (nn + 1)^(-1/2), v] === Sqrt[2/3]];
 Print["--- ideas still open (expect FAIL / unevaluated) ---"];
-chk["BME a f(N) direct", FreeQ[BosonicMatrixElement[{1, 2}, b ** (nn + 1)^(-1/2), v], BosonicMatrixElement]];
 chk["mode between",BosonicExpSimplify[(nn + 1)^(-1/2) ** b ** bd2 ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === bd2];

@@ -72,6 +72,17 @@ VerificationTest[
     TestID -> "SOrderedSymbol-TwoModes"
 ]
 
+(* a polynomial symbol is collected by monomial, its coefficients left as given: the normal symbol x^2 y cos th + y sin th
+   loses x cos th under e^(-dx dy/2); a a^dagger a = a^dagger a^2 + a gives x y^2 + s y *)
+VerificationTest[
+    {
+        Expand[SOrderedSymbol[Cos[th] $p[adv, 2] ** av + Sin[th] av, $v, al, 0] - (Cos[th] (Conjugate[al]^2 al - Conjugate[al]) + Sin[th] al)],
+        Expand[SOrderedSymbol[av ** adv ** av, $v, al, s] - (Conjugate[al] al^2 + s al)]
+    },
+    {0, 0},
+    TestID -> "SOrderedSymbol-Polynomial"
+]
+
 (* the anti-normal symbol of a Fock projector is a distribution, and a non-Gaussian normal symbol is out of scope *)
 VerificationTest[
     {SOrderedSymbol[$proj[2], $v, al, -1], SOrderedSymbol[Exp[k adv ** av ** adv], $v, al, 0]},

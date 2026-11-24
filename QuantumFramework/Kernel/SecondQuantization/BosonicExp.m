@@ -203,12 +203,6 @@ modeRulesNO[{cr_, an_}, vv_, lv_] := {
     Exp[lambda_. an ** cr] :>
         E^lambda NormalOrdered[Exp[(E^lambda - 1) cr ** an], vv],
 
-    Exp[alpha_. an] ** NormalOrdered[Exp[k_. + c_. cr ** an], vv] /; FreeQ[k, cr | an] :>
-        NormalOrdered[Exp[k + c cr ** an], vv] ** Exp[alpha (1 + c) an],
-
-    NormalOrdered[Exp[k_. + c_. cr ** an], vv] ** Exp[beta_. cr] /; FreeQ[k, cr | an] :>
-        Exp[beta (1 + c) cr] ** NormalOrdered[Exp[k + c cr ** an], vv],
-
     Exp[alpha_. (an ** an | GeneralizedPower[NonCommutativeMultiply, an, 2])] **
             Exp[beta_. (cr ** cr | GeneralizedPower[NonCommutativeMultiply, cr, 2])] :>
         Exp[(beta GeneralizedPower[NonCommutativeMultiply, cr, 2])/(1 - 4 alpha beta)] **
@@ -272,12 +266,6 @@ modeRulesAN[{cr_, an_}, vv_, lv_] := {
     Exp[lambda_. cr ** an] :>
         E^(-lambda) AntinormalOrdered[Exp[(1 - E^(-lambda)) an ** cr], vv],
 
-    Exp[beta_. cr] ** AntinormalOrdered[Exp[k_. + c_. an ** cr], vv] /; FreeQ[k, cr | an] :>
-        AntinormalOrdered[Exp[k + c an ** cr], vv] ** Exp[beta (1 - c) cr],
-
-    AntinormalOrdered[Exp[k_. + c_. an ** cr], vv] ** Exp[alpha_. an] /; FreeQ[k, cr | an] :>
-        Exp[alpha (1 - c) an] ** AntinormalOrdered[Exp[k + c an ** cr], vv],
-
     Exp[beta_. (cr ** cr | GeneralizedPower[NonCommutativeMultiply, cr, 2])] **
             Exp[alpha_. (an ** an | GeneralizedPower[NonCommutativeMultiply, an, 2])] :>
         Exp[(alpha GeneralizedPower[NonCommutativeMultiply, an, 2])/(1 - 4 alpha beta)] **
@@ -328,12 +316,30 @@ pairRulesAN[{cr1_, an1_}, {cr2_, an2_}, vv_] := {
 }
 
 
+wingThrough[p_, e_, ops_, j_, sg_] :=
+    Module[{x, y, xs, ns = MapThread[NonCommutativeMultiply, ops], c, d},
+        xs = Array[x, Length[First[ops]]];
+        c = Coefficient[Expand[e], #] & /@ ns;
+        d = dequantize[p, Join[Thread[ops[[j]] -> xs], Thread[ops[[3 - j]] -> Array[y, Length[xs]]]]];
+        If[ FreeQ[Expand[e - c . ns], Alternatives @@ Flatten[ops]] && FreeQ[d, y] && ! FreeQ[d, x] && PolynomialQ[d, xs],
+            ncPolynomial[Expand[d /. Thread[xs -> (1 + sg c) xs]], xs, ops[[j]]],
+            $Failed
+        ]
+    ]
+
+numberWingRules[lv_, head_] :=
+    With[{sg = If[head === NormalOrdered, 1, -1]}, With[{ops = If[sg > 0, Identity, Reverse] @ ladderVars[lv]}, {
+        Exp[p_] ** head[Exp[e_], vv_] :> With[{w = wingThrough[p, e, ops, 2, sg]}, ncJoin[head[Exp[e], vv], Exp[w]] /; w =!= $Failed],
+        head[Exp[e_], vv_] ** Exp[p_] :> With[{w = wingThrough[p, e, ops, 1, sg]}, ncJoin[Exp[w], head[Exp[e], vv]] /; w =!= $Failed]
+    }]]
+
 expRules[lv_, "Normal"] := expRules[lv, "Normal"] = Join[
     Flatten @ Transpose[modeRulesNO[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
     Flatten[pairRulesNO[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, 1]}, d /; d =!= $Failed]},
-    {modeSwap[lv, ladderRank[lv]], modeMerge[lv]}
+    {modeSwap[lv, ladderRank[lv]], modeMerge[lv]},
+    numberWingRules[lv, NormalOrdered]
 ]
 
 expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
@@ -341,7 +347,8 @@ expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
     Flatten[pairRulesAN[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, -1]}, d /; d =!= $Failed]},
-    {modeSwap[lv, 4 - ladderRank[lv][#] &], modeMerge[lv]}
+    {modeSwap[lv, 4 - ladderRank[lv][#] &], modeMerge[lv]},
+    numberWingRules[lv, AntinormalOrdered]
 ]
 
 
