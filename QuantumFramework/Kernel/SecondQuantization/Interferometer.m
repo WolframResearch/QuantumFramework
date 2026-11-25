@@ -58,7 +58,7 @@ QuantumInterferometer[\"Fourier\"[m]] gives the m-mode discrete Fourier interfer
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::loss = "transmissivities `1` must be real numbers between 0 and 1";
-QuantumInterferometer::lossactive = "loss combined with squeezing needs numeric parameters";
+QuantumInterferometer::lossactive = "squeezing with loss or threshold detection needs numeric parameters";
 QuantumInterferometer::lossy = "`1` needs a lossless interferometer; use probability queries or a finite channel for loss";
 QuantumInterferometer::lossoccupation = "mode mixing with loss needs explicit nonnegative integer occupations";
 QuantumInterferometer::losscoherent = "loss supports pure coherent inputs; mixed Fock/coherent transition inputs are not supported";
@@ -67,6 +67,9 @@ QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"Reck\"
 QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \"S\"[\[Xi]] -> p or \"Loss\"[\[Eta]] -> p.";
 QuantumInterferometer::angles = "beam-splitter and phase-shifter angles `1` must be real";
 QuantumInterferometer::cutoff = "cutoff `1` must be Automatic or a nonnegative integer";
+QuantumInterferometer::detector = "detector `1` must be \"PhotonNumber\" or \"Threshold\"";
+QuantumInterferometer::click = "`1` is not a list of `2` click outcomes, each 0 or 1.";
+QuantumInterferometer::clickinput = "threshold detection takes photon numbers or coherent amplitudes for every mode; mixed Fock and coherent inputs are not supported";
 QuantumInterferometer::modes = "The elements act on mode `1`, outside the `2` modes of the interferometer.";
 QuantumInterferometer::occ = "`1` is not a list of `2` nonnegative photon numbers.";
 QuantumInterferometer::levels = "\"CircuitOperator\" needs the number of Fock levels per mode, as in interferometer[\"CircuitOperator\", d]; n photons need d >= n + 1.";
@@ -621,11 +624,14 @@ QuantumInterferometerProp[qi_, "Channel"] := (Message[QuantumInterferometer::lev
 QuantumInterferometerProp[qi_, "Amplitude", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
     transitionValue[qi, pattern, Identity, OptionValue[Assumptions]]
 
-QuantumInterferometerProp[qi_, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
-    transitionValue[qi, pattern, Abs[#] ^ 2 &, OptionValue[Assumptions]]
-
-QuantumInterferometerProp[qi_ ? lossyQ, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions}]] :=
-    lossTransitionValue[qi, pattern, OptionValue[Assumptions]]
+QuantumInterferometerProp[qi_, "Probability", pattern_Rule, opts : OptionsPattern[{Assumptions :> $Assumptions, "Detector" -> "PhotonNumber"}]] := Which[
+    ! detectorQ[OptionValue["Detector"]], $Failed,
+    OptionValue["Detector"] === "Threshold", With[{c = occupation[Last[pattern]]},
+        If[VectorQ[c, MatchQ[0 | 1]] && Length[c] == qi["Modes"], Replace[clickProbabilities[qi, occupation[First[pattern]]], p_Association :> p[QuditName[c]]],
+            Message[QuantumInterferometer::click, Last[pattern], qi["Modes"]]; $Failed]],
+    lossyQ[qi], lossTransitionValue[qi, pattern, OptionValue[Assumptions]],
+    True, transitionValue[qi, pattern, Abs[#] ^ 2 &, OptionValue[Assumptions]]
+]
 
 (* Build the transition independently of ambient assumptions, then refine it on the physical
    domain of its arguments together with the query assumptions, which replace $Assumptions.
@@ -665,13 +671,15 @@ interferometerAmplitude[qi_, in_, out_, assumptions_] := Which[
     True, $Failed
 ]
 
-QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic, Assumptions :> $Assumptions}]] :=
+QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic, Assumptions :> $Assumptions, "Detector" -> "PhotonNumber"}]] :=
     With[{in = occupation[s], given = And @@ Flatten[{OptionValue[Assumptions]}]},
     {probabilities = Which[
+        ! detectorQ[OptionValue["Detector"]], $Failed,
+        OptionValue["Detector"] === "Threshold", clickProbabilities[qi, in],
         ! cutoffQ[OptionValue["Cutoff"]], $Failed,
         ! FreeQ[in, "Coherent"[___]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
         ! occupationQ[qi, in], $Failed,
-        lossyQ[qi] && squeezedQ[qi], With[{g = mixedKernel[qi]}, If[g === $Failed, $Failed,
+        lossyQ[qi] && squeezedQ[qi], With[{g = mixedKernel[gaussianKernel[qi], qi["Modes"], First[qi]["LossModes"], Range[qi["Modes"]]]}, If[g === $Failed, $Failed,
             With[{amplitude = fockRecurrence[g], p = Precision[First[g]]}, KeyMap[QuditName, If[IntegerQ[OptionValue["Cutoff"]],
                 Association[mixedShell[amplitude, in, #, p] & /@ Range[0, OptionValue["Cutoff"]]],
                 autoShells[mixedShell[amplitude, in, #, p] &, Identity, 0, 1]
@@ -697,8 +705,10 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
     ]
 ]
 
-QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{in = occupation[s]},
-    Which[
+QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative, opts : OptionsPattern[{"Detector" -> "PhotonNumber"}]] := Which[
+    ! detectorQ[OptionValue["Detector"]], $Failed,
+    OptionValue["Detector"] === "Threshold", Replace[qi["Samples", s, k], samples_List :> (QuditName[Unitize[#["Name"]]] & /@ samples)],
+    True, With[{in = occupation[s]}, Which[
         MatchQ[in, "Coherent"[_]], coherentSamples[qi, First[in], k],
         MatchQ[in, {"Coherent"[_] ..}], coherentSamples[qi, First /@ in, k],
         ! FreeQ[in, "Coherent"[___]], Message[QuantumInterferometer::samplecoherent]; $Failed,
@@ -709,10 +719,10 @@ QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{
         True, With[{a = samplingColumns[qi, in], m = qi["Modes"]},
             Table[QuditName @ Lookup[Counts[photonRows[a[[All, RandomSample[Range[Total[in]]]]]]], Range[m], 0], k]
         ]
-    ]
+    ]]
 ]
 
-QuantumInterferometerProp[qi_, "SampleCounts", s_, k_Integer ? NonNegative] := Replace[qi["Samples", s, k],
+QuantumInterferometerProp[qi_, "SampleCounts", s_, k_Integer ? NonNegative, opts : OptionsPattern[{"Detector" -> "PhotonNumber"}]] := Replace[qi["Samples", s, k, opts],
     samples_List :> KeyMap[QuditName, Reverse @ KeySort @ Counts[#["Name"] & /@ samples]]
 ]
 
@@ -942,6 +952,11 @@ patternsQ[qi_, s_, t_] := (symbolicOccupationListQ[s, qi["Modes"]] || occupation
 cutoffQ[cutoff_] := If[MatchQ[cutoff, Automatic | _Integer ? NonNegative],
     True,
     Message[QuantumInterferometer::cutoff, cutoff]; False
+]
+
+detectorQ[detector_] := If[MatchQ[detector, "PhotonNumber" | "Threshold"],
+    True,
+    Message[QuantumInterferometer::detector, detector]; False
 ]
 
 modeList[occupation_] := Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, occupation]
@@ -1335,20 +1350,43 @@ lossFockProbabilities[qi_, s_] := With[{
     ]
 ]
 
-(* Sum_e <t,e|U|s,0> <t',e|U|s',0>^* = n Exp[v.M.v / 2], v = (x, y, x', y'): the loss outputs e of K (+) K^*,
-   coupled to their copies by Exp[-e^*.e], integrate out to the Schur complement M *)
-mixedKernel[qi_] := With[{k = gaussianKernel[qi], m = qi["Modes"], l = First[qi]["LossModes"]},
-    If[! MatrixQ[N[k[[1]]], NumericQ], Message[QuantumInterferometer::lossactive]; $Failed,
-        With[{w = 2 (m + l), a = Join[Range[m], m + l + Range[m]], e = m + Range[l]},
-            {q = ArrayFlatten[{{k[[1]], #}, {#, Conjugate[k[[1]]]}}] & @ - DiagonalMatrix[SparseArray[Thread[e -> 1], w]],
-             kept = Join[a, w + a], traced = Join[e, w + e]},
+(* Sum_e <t,e|U|s,0> <t',e|U|s',0>^* = n Exp[v.M.v / 2], v = (x, y, x', y') over the outputs in out: the other
+   outputs and the l loss modes e of K (+) K^*, coupled to their copies by Exp[-e^*.e], integrate out to the Schur complement M *)
+mixedKernel[{k_, c_}, m_, l_, out_] := If[! MatrixQ[N[k], NumericQ], Message[QuantumInterferometer::lossactive]; $Failed,
+    With[{w = 2 (m + l), a = Join[out, m + l + Range[m]], e = Join[Complement[Range[m], out], m + Range[l]]},
+        {q = ArrayFlatten[{{k, #}, {#, Conjugate[k]}}] & @ - DiagonalMatrix[SparseArray[Thread[e -> 1], w]],
+         kept = Join[a, w + a], traced = Join[e, w + e]},
+        If[e === {}, {Developer`ToPackedArray @ Normal[q[[kept, kept]]], Abs[c] ^ 2},
             {Developer`ToPackedArray @ Normal[q[[kept, kept]] - q[[kept, traced]] . LinearSolve[q[[traced, traced]], q[[traced, kept]]]],
-             Abs[k[[2]]] ^ 2 / Sqrt[(-1) ^ l Det[q[[traced, traced]]]]}
+             Abs[c] ^ 2 / Sqrt[(-1) ^ Length[e] Det[q[[traced, traced]]]]}
         ]
     ]
 ]
 
 mixedShell[amplitude_, s_, n_, p_] := AssociationMap[lossProbabilityValue[amplitude[Join[#, s, #, s]], p] &, photonPatterns[n, Length[s]]]
+
+(* from the vacuum probabilities of every mode subset, for coherent light and squeezers; summed from finite photon tables otherwise *)
+clickProbabilities[qi_, in_] := With[{m = qi["Modes"]}, Which[
+    ! FreeQ[in, "Coherent"[___]], With[{n = coherentInput[in][[1]], a = coherentInput[in][[2]]}, Which[
+        squeezedQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
+        ! (VectorQ[a] && Length[a] == m && VectorQ[n, # === 0 &]), Message[QuantumInterferometer::clickinput]; $Failed,
+        True, clickTable[Exp[- Tuples[{0, 1}, m] . Abs[qi["TransferMatrix"] . a] ^ 2], m]
+    ]],
+    ! occupationQ[qi, in], $Failed,
+    squeezedQ[qi], With[{g = gaussianKernel[qi], l = Lookup[First[qi], "LossModes", 0], tuples = Tuples[{0, 1}, m]}, If[MatrixQ[N[First[g]], NumericQ],
+        clickTable[lossProbabilityValue[#, Precision[First[g]]] & /@ If[Total[in] == 0,
+            With[{b = First[g][[;; m + l, ;; m + l]]}, Abs[Last[g]] ^ 2 / Sqrt[Det[IdentityMatrix[m + l] - # . ConjugateTranspose[#]]] & /@ (b Outer[Times, #, #] & /@ Join[1 - tuples, ConstantArray[1, {2 ^ m, l}], 2])],
+            With[{r = Pick[Range[m], #, 1]}, {z = Join[ConstantArray[0, Length[r]], in]}, gaussianAmplitude[mixedKernel[g, m, l, r], z, z]] & /@ tuples
+        ], m],
+        Message[QuantumInterferometer::lossactive]; $Failed
+    ]],
+    True, Replace[qi["Probabilities", in], p_Association :> With[{clicks = Merge[KeyValueMap[QuditName[Unitize[#1["Name"]]] -> #2 &, p], Total]},
+        AssociationMap[Lookup[clicks, #, 0] &, QuditName /@ Tuples[{0, 1}, m]]]]
+]]
+
+clickTable[vacuum_, m_] := AssociationThread[QuditName /@ Tuples[{0, 1}, m],
+    Flatten @ Nest[Transpose[# . {{0, 1}, {1, -1}}, RotateLeft[Range[m]]] &, ArrayReshape[vacuum, ConstantArray[2, m]], m]
+]
 
 (* General symbolic occupations are retained for independent attenuators.  With
    mode mixing, constructing a permanent needs explicit integer occupations. *)
@@ -1356,7 +1394,7 @@ lossTransitionProbability[qi_, in_, out_, rate_ : Identity] := Which[
     ! FreeQ[{in, out}, "Coherent"[___]],
         Replace[coherentAmplitudes[qi, in, {out}, Abs[#] ^ 2 &], {p_} :> p],
     squeezedQ[qi] && symbolicPatternsQ[qi, in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed,
-    squeezedQ[qi], If[patternsQ[qi, in, out], With[{g = mixedKernel[qi]},
+    squeezedQ[qi], If[patternsQ[qi, in, out], With[{g = mixedKernel[gaussianKernel[qi], qi["Modes"], First[qi]["LossModes"], Range[qi["Modes"]]]},
         If[g === $Failed, $Failed, lossProbabilityValue[gaussianAmplitude[g, Join[out, in], Join[out, in]], Precision[First[g]]]]], $Failed],
     symbolicPatternsQ[qi, in, out],
         If[FreeQ[qi["Elements"], "BS"[__] -> _],
@@ -1387,8 +1425,6 @@ lossTransitionValue[qi_, s_ -> t_, assumptions_] := Block[{$Assumptions = True},
     ]
 ]
 
-(* <n-l|A_l|n> = Sqrt[Binomial[n,l] (1-eta)^l eta^(n-l)] on the l-th superdiagonal; the leading 1s keep
-   both physical endpoints free of 0^0 *)
 lossKraus[eta_, d_] := With[{t = Prepend[eta ^ (Range[d - 1] / 2), 1], r = Prepend[(1 - eta) ^ (Range[d - 1] / 2), 1]},
     Table[SparseArray[Band[{1, l + 1}] -> r[[l + 1]] Sqrt[Binomial[Range[l, d - 1], l]] t[[;; d - l]], {d, d}], {l, 0, d - 1}]
 ]
