@@ -297,3 +297,28 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicExpOrder - number powers beside an anti-normal middle"]
+
+(* x^(c.M) AN[s e^(k + d.M)] = AN[s x^m e^(k + (1 - (1 - d) x^-c).M)], M_i = a_i a_i^dagger, on either side;
+   a power written with a^dagger a converts through a a^dagger = a^dagger a + 1. The merged middle is read
+   on the Fock diagonal by hand, <n|AN[s e^(k + c.M)]|n> = s e^k Prod (1 - c_i)^-(n_i + 1). *)
+anDiag[AntinormalOrdered[f_, _], ms_, ns_] :=
+    With[{e = Expand[FirstCase[f, Power[E, x_] :> x, 0, {0, Infinity}]]},
+        With[{c = Coefficient[e, #] & /@ ms}, (f /. Power[E, _] -> 1) Exp[e - c . ms] Times @@ ((1 - c)^-(ns + 1))]];
+
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        With[{r1 = BosonicExpOrder[x^(ad ** a) ** AntinormalOrdered[Exp[d a ** ad], $v1], $v1, "Ordering" -> "Antinormal"],
+              r2 = BosonicExpOrder[AntinormalOrdered[Exp[k + d a ** ad], $v1] ** x^(a ** ad), $v1, "Ordering" -> "Antinormal"]},
+            {MatchQ[r1, _AntinormalOrdered], MatchQ[r2, _AntinormalOrdered],
+             Simplify @ Table[anDiag[r1, {a ** ad}, {n}] - x^n (1 - d)^-(n + 1), {n, 0, 4}],
+             Simplify @ Table[anDiag[r2, {a ** ad}, {n}] - E^k x^(n + 1) (1 - d)^-(n + 1), {n, 0, 4}]}
+        ]
+    ],
+    {True, True, ConstantArray[0, 5], ConstantArray[0, 5]},
+    TestID -> "BosonicExpAnti-NumberPowerIntoMiddle"
+]
+
+EndTestSection[]

@@ -331,32 +331,52 @@ numberWingRules[lv_, head_] :=
         head[Exp[e_], vv_] ** Exp[p_] :> With[{w = wingThrough[p, e, ops, 1, sg]}, ncJoin[Exp[w], head[Exp[e], vv]] /; w =!= $Failed]
     }]]
 
-numberPowerRules[lv_] := With[{g = Alternatives @@ lv["Generators"]},
-    NonCommutativeMultiply[l___, Power[x_, n_], NormalOrdered[k_. Exp[e_], vv_], r___] |
-            NonCommutativeMultiply[l___, NormalOrdered[k_. Exp[e_], vv_], Power[x_, n_], r___] /; ! FreeQ[n, g] :>
-        With[{ns = MapThread[NonCommutativeMultiply, vv]}, {c = Coefficient[Expand[n], #] & /@ ns, d = Coefficient[Expand[e], #] & /@ ns},
-            {n0 = Expand[n - c . ns], e0 = Expand[e - d . ns]},
-            ncJoin[l, NormalOrdered[k x^n0 Exp[e0 + (x^c (1 + d) - 1) . ns], vv], r] /; FreeQ[{x, k, n0, e0}, g]
+numberPowerRules[lv_, head_] := With[{g = Alternatives @@ lv["Generators"], sg = If[head === NormalOrdered, 1, -1]},
+    NonCommutativeMultiply[l___, Power[x_, n_], head[k_. Exp[e_], vv_], r___] |
+            NonCommutativeMultiply[l___, head[k_. Exp[e_], vv_], Power[x_, n_], r___] /; ! FreeQ[n, g] :>
+        With[{ns = MapThread[NonCommutativeMultiply, If[sg > 0, vv, Reverse[vv]]], ms = MapThread[NonCommutativeMultiply, If[sg > 0, Reverse[vv], vv]]},
+            {m = Expand[n /. Thread[ms -> ns + sg]]}, {c = Coefficient[m, #] & /@ ns, d = Coefficient[Expand[e], #] & /@ ns},
+            {n0 = Expand[m - c . ns], e0 = Expand[e - d . ns]},
+            ncJoin[l, head[k x^n0 Exp[e0 + sg (x^(sg c) (1 + sg d) - 1) . ns], vv], r] /; FreeQ[{x, k, n0, e0}, g]
         ]
 ]
 
+(* AN[f] = Integral f(b) |b><b| d^2b/Pi, so its normal symbol is the Gaussian smoothing of f,
+   the s = -1 -> 1 heat step; requantized with every creator left of every annihilator. *)
+antinormalToNormal[f_, vv_] :=
+    Module[{x, y, xs, ys, z, ts},
+        {xs, ys} = Array[#, Length[First[vv]]] & /@ {x, y};
+        z = Join[xs, ys];
+        ts = orderedSymbolTerm[#, z, KroneckerProduct[{{0, 1}, {1, 0}}, IdentityMatrix[Length[xs]]], $Assumptions] & /@
+            Replace[Expand[dequantize[f, Thread[Flatten[vv] -> z]] /. Power[E, e_] :> Power[E, Expand[e]]], {p_Plus :> List @@ p, p_ :> {p}}];
+        If[ MemberQ[ts, $Failed | _Missing],
+            $Failed,
+            NormalOrdered[Total[With[{q = Expand[FirstCase[#, Power[E, e_] /; ! FreeQ[e, Alternatives @@ z] :> e, 0, {0, Infinity}]]},
+                ncPolynomial[Expand[# Exp[-q]], z, Flatten[vv]] Exp[ncPolynomial[q, z, Flatten[vv]]]] & /@ ts], vv]
+        ]
+    ]
+
 expRules[lv_, "Normal"] := expRules[lv, "Normal"] = Join[
+    {AntinormalOrdered[f_, vv_] :> With[{w = antinormalToNormal[f, vv]}, w /; w =!= $Failed],
+     n : (_NormalOrdered | _AntinormalOrdered) :> n},
     Flatten @ Transpose[modeRulesNO[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
     Flatten[pairRulesNO[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, 1]}, d /; d =!= $Failed]},
     {modeSwap[lv, ladderRank[lv]], modeMerge[lv]},
     numberWingRules[lv, NormalOrdered],
-    {numberPowerRules[lv]}
+    {numberPowerRules[lv, NormalOrdered]}
 ]
 
 expRules[lv_, "Antinormal"] := expRules[lv, "Antinormal"] = Join[
+    {n : (_NormalOrdered | _AntinormalOrdered) :> n},
     Flatten @ Transpose[modeRulesAN[#, ladderVars[lv], lv] & /@ ladderPairs[lv]],
     Flatten[pairRulesAN[##, ladderVars[lv]] & @@@ Permutations[ladderPairs[lv], {2}]],
     {Exp[g_Plus] :> With[{d = splitModes[g, lv]}, d /; d =!= $Failed],
      Exp[g_Plus] :> With[{d = multimodeQuadraticExp[g, lv, -1]}, d /; d =!= $Failed]},
     {modeSwap[lv, 4 - ladderRank[lv][#] &], modeMerge[lv]},
-    numberWingRules[lv, AntinormalOrdered]
+    numberWingRules[lv, AntinormalOrdered],
+    {numberPowerRules[lv, AntinormalOrdered]}
 ]
 
 
@@ -534,7 +554,7 @@ expApplyRules[expr_, assum_, rules_, lv_, tc_] :=
         Replace[
             TimeConstrained[
                 FixedPoint[
-                    (# /. Prepend[rules, n : (_NormalOrdered | _AntinormalOrdered) :> n]) //.
+                    (# /. rules) //.
                         (NonCommutativeMultiply[l___, Times[s_, m_NonCommutativeMultiply], r___] /; FreeQ[s, Alternatives @@ lv["Generators"]] :>
                             s NonCommutativeMultiply[l, m, r]) &,
                     canonicalizeGenerators[expr, lv]

@@ -1156,3 +1156,19 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicExpOrder - anti-normal heads"]
+
+(* AN[f] = Integral f(b) |b><b| d^2b/Pi, so normal ordering it is the Gaussian smoothing of its symbol:
+   the thermal state from its P function e^(-|b|^2/nb)/(Pi nb) is :e^(-N/(1 + nb)):/(1 + nb). *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        Replace[BosonicExpOrder[AntinormalOrdered[Exp[-a ** ad/nb]/nb, $vA], $vA, Assumptions -> nb > 0],
+            NormalOrdered[f_, _] :> Simplify[f - Exp[-ad ** a/(1 + nb)]/(1 + nb), nb > 0]]
+    ],
+    0,
+    TestID -> "AntinormalThermalFromP"
+]
+
+EndTestSection[]

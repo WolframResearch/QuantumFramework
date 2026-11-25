@@ -645,4 +645,18 @@ VerificationTest[
     TestID -> "BME-LadderBesideNumberFunction"
 ]
 
+(* anti-normal forms are read through their normal order: the thermal state from its P function has the
+   Bose-Einstein diagonal nb^n/(1 + nb)^(n + 1); x^N AN[e^(d a a^dagger)] has x^n (1 - d)^-(n + 1), the series
+   Sum d^k (n + 1)_k / k!; with two modes AN[e^(k + d1 M1 + d2 M2)] has e^k (1 - d1)^-(n1 + 1) (1 - d2)^-(n2 + 1) *)
+VerificationTest[
+    {
+        Simplify[Table[BosonicMatrixElement[{n, n}, AntinormalOrdered[Exp[-av ** adv/nb]/nb, $v], $v] - nb^n/(1 + nb)^(n + 1), {n, 0, 3}], nb > 0],
+        Simplify[Table[BosonicMatrixElement[{n, n}, x^(adv ** av) ** AntinormalOrdered[Exp[d av ** adv], $v], $v] - x^n (1 - d)^-(n + 1), {n, 0, 3}]],
+        Simplify[Table[BosonicMatrixElement[{{n1, n2}, {n1, n2}}, AntinormalOrdered[Exp[k + d1 b1 ** bd1 + d2 b2 ** bd2], {{bd1, bd2}, {b1, b2}}], {{bd1, bd2}, {b1, b2}}] -
+            E^k (1 - d1)^-(n1 + 1) (1 - d2)^-(n2 + 1), {n1, 0, 2}, {n2, 0, 2}]]
+    },
+    {ConstantArray[0, 4], ConstantArray[0, 4], ConstantArray[0, {3, 3}]},
+    TestID -> "BME-AntinormalForms"
+]
+
 EndTestSection[]

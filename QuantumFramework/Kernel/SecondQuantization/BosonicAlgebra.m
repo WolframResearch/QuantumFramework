@@ -18,6 +18,8 @@ PackageExport["SOrderedSymbol"]
 
 PackageScope["vevPolynomialQ"]
 
+PackageScope["orderedSymbolTerm"]
+
 
 BosonicNormalOrder::usage =
 "\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"a\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"]\"}]\) brings expr into normal order in the annihilators \!\(\*SubscriptBox[StyleBox[\"a\", \"TI\"], \"i\"]\) and creators \!\(\*SubsuperscriptBox[StyleBox[\"a\", \"TI\"], \"i\", \"\[Dagger]\"]\).\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"c\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"a\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}]}], \"]\"}]\) takes the creators \!\(\*SubscriptBox[StyleBox[\"c\", \"TI\"], \"i\"]\).\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"alg\", \"TI\"]}], \"]\"}]\) uses the WeylAlgebra alg.";
