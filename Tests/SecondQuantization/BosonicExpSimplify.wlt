@@ -366,3 +366,20 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicExpSimplify - other modes in between"]
+
+(* A mode-2 operator between mode-1 factors commutes out of the way, so
+   (N+1)^(-1/2) b b2^dagger b^dagger (N+1)^(-1/2) = b2^dagger and b2 (N+1)^(-1/2) b b^dagger (N+1)^(-1/2) = b2. *)
+VerificationTest[
+    Module[{b, bd, b2, bd2, nn},
+        nn = bd ** b;
+        {BosonicExpSimplify[(nn + 1)^(-1/2) ** b ** bd2 ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === bd2,
+         BosonicExpSimplify[b2 ** (nn + 1)^(-1/2) ** b ** bd ** (nn + 1)^(-1/2), {{bd, bd2}, {b, b2}}] === b2}
+    ],
+    {True, True},
+    TestID -> "BosonicExpSimplify-ModeInBetween"
+]
+
+EndTestSection[]

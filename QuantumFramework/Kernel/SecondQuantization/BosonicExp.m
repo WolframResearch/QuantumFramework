@@ -27,8 +27,7 @@ ladderRank[lv_][f_] := Which[
 
 ladderModes[lv_, f_] := Union @ Lookup[lv["Modes"], Cases[f, Alternatives @@ lv["Generators"], {0, Infinity}]]
 
-modeSwap[lv_, rank_] := NonCommutativeMultiply[l___,
-        x : (_Power | _NormalOrdered | _AntinormalOrdered), y : (_Power | _NormalOrdered | _AntinormalOrdered), r___] /;
+modeSwap[lv_, rank_, f_ : (_Power | _NormalOrdered | _AntinormalOrdered)] := NonCommutativeMultiply[l___, x : f, y : f, r___] /;
     ! FreeQ[x, Alternatives @@ lv["Generators"]] && ! FreeQ[y, Alternatives @@ lv["Generators"]] && rank[x] > rank[y] &&
         DisjointQ[ladderModes[lv, x], ladderModes[lv, y]] :>
     NonCommutativeMultiply[l, y, x, r];
@@ -239,6 +238,10 @@ pairRulesNO[{cr1_, an1_}, {cr2_, an2_}, vv_] := {
                 Exp[(alpha Tan[Omega]/Omega) an1 ** an2])
         ],
 
+    Exp[alpha_. an1 ** an2] ** Exp[beta_. cr1 ** cr2] :>
+        Exp[(beta/(1 - alpha beta)) cr1 ** cr2] ** Exp[-Log[1 - alpha beta] (cr1 ** an1 + cr2 ** an2)] **
+            Exp[(alpha/(1 - alpha beta)) an1 ** an2] / (1 - alpha beta),
+
     Exp[w1_. cr1 ** an1 + w2_. cr2 ** an2 + alpha_. cr1 ** cr2 + beta_. an1 ** an2 + c_.] /;
             FreeQ[{w1, w2, alpha, beta, c}, cr1 | an1 | cr2 | an2] && ! (PossibleZeroQ[alpha] && PossibleZeroQ[beta]) :>
         With[{s = (w1 + w2)/2, d = (w1 - w2)/2, mu = Sqrt[alpha beta - (w1 + w2)^2/4]},
@@ -302,6 +305,10 @@ pairRulesAN[{cr1_, an1_}, {cr2_, an2_}, vv_] := {
                 Exp[(beta Tan[Omega]/Omega) cr1 ** cr2])
         ],
 
+    Exp[beta_. cr1 ** cr2] ** Exp[alpha_. an1 ** an2] :>
+        Exp[(alpha/(1 - alpha beta)) an1 ** an2] ** Exp[Log[1 - alpha beta] (an1 ** cr1 + an2 ** cr2)] **
+            Exp[(beta/(1 - alpha beta)) cr1 ** cr2] / (1 - alpha beta),
+
     Exp[w1_. cr1 ** an1 + w2_. cr2 ** an2 + alpha_. cr1 ** cr2 + beta_. an1 ** an2 + c_.] /;
             FreeQ[{w1, w2, alpha, beta, c}, cr1 | an1 | cr2 | an2] && ! (PossibleZeroQ[alpha] && PossibleZeroQ[beta]) :>
         With[{s = (w1 + w2)/2, d = (w1 - w2)/2, mu = Sqrt[alpha beta - (w1 + w2)^2/4]},
@@ -314,22 +321,30 @@ pairRulesAN[{cr1_, an1_}, {cr2_, an2_}, vv_] := {
 }
 
 
-wingThrough[p_, e_, ops_, j_, sg_] :=
-    Module[{x, y, xs, ns = MapThread[NonCommutativeMultiply, ops], c, d},
+(* coefficients c of e = k + c.ns in the head's number operators ns, the other order rewritten as ns + sg *)
+numberCoefficients[e_, ops_, sg_] :=
+    With[{ns = MapThread[NonCommutativeMultiply, ops]}, {m = Expand[e /. Thread[MapThread[NonCommutativeMultiply, Reverse[ops]] -> ns + sg]]},
+        {c = Coefficient[m, #] & /@ ns}, If[FreeQ[Expand[m - c . ns], Alternatives @@ Flatten[ops]], c, $Failed]]
+
+(* a wing of ops[[j]] alone passes a middle that scales each mode's ladder operator by s *)
+wingThrough[p_, s_, ops_, j_] :=
+    Module[{x, y, xs, d},
         xs = Array[x, Length[First[ops]]];
-        c = Coefficient[Expand[e], #] & /@ ns;
         d = dequantize[p, Join[Thread[ops[[j]] -> xs], Thread[ops[[3 - j]] -> Array[y, Length[xs]]]]];
-        If[ FreeQ[Expand[e - c . ns], Alternatives @@ Flatten[ops]] && FreeQ[d, y] && ! FreeQ[d, x] && PolynomialQ[d, xs],
-            ncPolynomial[Expand[d /. Thread[xs -> (1 + sg c) xs]], xs, ops[[j]]],
-            $Failed
-        ]
+        If[ListQ[s] && FreeQ[d, y] && ! FreeQ[d, x] && PolynomialQ[d, xs], ncPolynomial[Expand[d /. Thread[xs -> s xs]], xs, ops[[j]]], $Failed]
     ]
 
 numberWingRules[lv_, head_] :=
-    With[{sg = If[head === NormalOrdered, 1, -1]}, With[{ops = If[sg > 0, Identity, Reverse] @ ladderVars[lv]}, {
-        Exp[p_] ** head[Exp[e_], vv_] :> With[{w = wingThrough[p, e, ops, 2, sg]}, ncJoin[head[Exp[e], vv], Exp[w]] /; w =!= $Failed],
-        head[Exp[e_], vv_] ** Exp[p_] :> With[{w = wingThrough[p, e, ops, 1, sg]}, ncJoin[Exp[w], head[Exp[e], vv]] /; w =!= $Failed]
-    }]]
+    With[{sg = If[head === NormalOrdered, 1, -1]}, {ops = If[sg > 0, Identity, Reverse] @ ladderVars[lv]}, {g = Alternatives @@ Flatten[ops]}, {
+        Exp[p_] ** head[k_. Exp[e_], vv_] :> With[{w = wingThrough[p, Replace[numberCoefficients[e, ops, sg], c_List :> 1 + sg c], ops, 2]},
+            ncJoin[head[k Exp[e], vv], Exp[w]] /; w =!= $Failed],
+        head[k_. Exp[e_], vv_] ** Exp[p_] :> With[{w = wingThrough[p, Replace[numberCoefficients[e, ops, sg], c_List :> 1 + sg c], ops, 1]},
+            ncJoin[Exp[w], head[k Exp[e], vv]] /; w =!= $Failed],
+        Exp[p_] ** Power[x_ /; x =!= E && FreeQ[x, g], n_ /; ! FreeQ[n, g]] :> With[{w = wingThrough[p, Replace[numberCoefficients[n, ops, sg], c_List :> x^(sg c)], ops, 2]},
+            ncJoin[Power[x, n], Exp[w]] /; w =!= $Failed],
+        Power[x_ /; x =!= E && FreeQ[x, g], n_ /; ! FreeQ[n, g]] ** Exp[p_] :> With[{w = wingThrough[p, Replace[numberCoefficients[n, ops, sg], c_List :> x^(sg c)], ops, 1]},
+            ncJoin[Exp[w], Power[x, n]] /; w =!= $Failed]
+    }]
 
 numberPowerRules[lv_, head_] := With[{g = Alternatives @@ lv["Generators"], sg = If[head === NormalOrdered, 1, -1]},
     NonCommutativeMultiply[l___, Power[x_, n_], head[k_. Exp[e_], vv_], r___] |
@@ -696,20 +711,20 @@ numberPolynomial[w_List, {cr_, an_}] :=
    A word with as many ad as a beside a function of N is itself a polynomial in N, ad^k a^k
    = N (N - 1) ... (N - k + 1). Ladder powers only move outward, never into ad f(N) a = N f(N - 1),
    whose cancellation would lose the vacuum. *)
-shiftRules[{cr_, an_}] := {
-    NonCommutativeMultiply[l___, f_, w__, r___] /; numberFunctionQ[f, {cr, an}] && balancedWordQ[{w}, {cr, an}] :>
+shiftRules[{cr_, an_}] := With[{u = Except[_NonCommutativeMultiply]}, {
+    NonCommutativeMultiply[l___, f : u, w__, r___] /; numberFunctionQ[f, {cr, an}] && balancedWordQ[{w}, {cr, an}] :>
         ncJoin[l, Together[f numberPolynomial[{w}, {cr, an}]], r],
-    NonCommutativeMultiply[l___, w__, f_, r___] /; numberFunctionQ[f, {cr, an}] && balancedWordQ[{w}, {cr, an}] :>
+    NonCommutativeMultiply[l___, w__, f : u, r___] /; numberFunctionQ[f, {cr, an}] && balancedWordQ[{w}, {cr, an}] :>
         ncJoin[l, Together[numberPolynomial[{w}, {cr, an}] f], r],
-    NonCommutativeMultiply[l___, f_, g_, r___] /; numberFunctionQ[f, {cr, an}] && numberFunctionQ[g, {cr, an}] :>
+    NonCommutativeMultiply[l___, f : u, g : u, r___] /; numberFunctionQ[f, {cr, an}] && numberFunctionQ[g, {cr, an}] :>
         ncJoin[l, Together[f g], r],
-    NonCommutativeMultiply[l___, x : (an | GeneralizedPower[NonCommutativeMultiply, an, _Integer ? Positive]), f_, r___] /;
+    NonCommutativeMultiply[l___, x : (an | GeneralizedPower[NonCommutativeMultiply, an, _Integer ? Positive]), f : u, r___] /;
             numberFunctionQ[f, {cr, an}] :>
         ncJoin[l, f /. cr ** an -> cr ** an + getNCPower[x, an], x, r],
-    NonCommutativeMultiply[l___, f_, x : (cr | GeneralizedPower[NonCommutativeMultiply, cr, _Integer ? Positive]), r___] /;
+    NonCommutativeMultiply[l___, f : u, x : (cr | GeneralizedPower[NonCommutativeMultiply, cr, _Integer ? Positive]), r___] /;
             numberFunctionQ[f, {cr, an}] :>
         ncJoin[l, x, f /. cr ** an -> cr ** an + getNCPower[x, cr], r]
-}
+}]
 
 expReduceRules[lv_] := Join[{
     NonCommutativeMultiply[l___, 1, r___] :> ncJoin[l, r],
@@ -736,7 +751,7 @@ expReduceRules[lv_] := Join[{
                 ncJoin[l, Exp[b], op - cmt, r] /; zeroQ[cmt2]
             ]
         ]
-}, Catenate[shiftRules /@ ladderPairs[lv]]]
+}, Catenate[shiftRules /@ ladderPairs[lv]], {modeSwap[lv, Min[ladderModes[lv, #]] &, _]}]
 
 BosonicExpSimplify[expr_, opts : OptionsPattern[]] := (Message[BosonicExpSimplify::argr, BosonicExpSimplify, 2]; $Failed)
 
