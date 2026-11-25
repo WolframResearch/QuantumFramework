@@ -147,6 +147,14 @@ VerificationTest[
     TestID -> "CM-PureState-VectorVsMatrixStorage"
 ]
 
+VerificationTest[
+    With[{ket = QuantumTensorProduct[CoherentState[6][0.4 + 0.1 I], FockState[1, 6], SqueezeOperator[0.2, 6] @ FockState[0, 6]]},
+        Chop[Quiet[CovarianceMatrix[ket, {3, 1}] - CovarianceMatrix[QuantumState[ket["DensityMatrix"], ket["Basis"]], {3, 1}]]]
+    ],
+    ConstantArray[0, {4, 4}],
+    TestID -> "CM-MultiMode-Subset-VectorVsMatrixStorage"
+]
+
 (* sigma is a ratio of moments, so it must not depend on the overall scale of the state *)
 VerificationTest[
     Chop[Quiet@CovarianceMatrix[QuantumState[3 UnitVector[8, 2], {8}]] -

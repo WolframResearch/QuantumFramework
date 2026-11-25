@@ -46,6 +46,28 @@ VerificationTest[
     TestID -> "SQ-coherent-g2-is-one"
 ]
 
+VerificationTest[
+    With[{a = AnnihilationOperator[], ket = SqueezeOperator[0.4] @ CoherentState[][0.3 + 0.2 I]},
+        Chop[
+            {OperatorVariance[ket, #] & /@ {a["Dagger"] @ a, a + a["Dagger"], a}, G2Coherence[ket]} -
+            {OperatorVariance[QuantumState[ket["DensityMatrix"], ket["Basis"]], #] & /@ {a["Dagger"] @ a, a + a["Dagger"], a}, G2Coherence[QuantumState[ket["DensityMatrix"], ket["Basis"]]]},
+            1*^-10
+        ]
+    ],
+    {{0, 0, 0}, 0},
+    TestID -> "SQ-ket-and-density-matrix-moments-agree"
+]
+
+VerificationTest[
+    {
+        Simplify[OperatorVariance[QuantumState[{c0, c1, 0, 0, 0, 0, 0, 0}, 8], AnnihilationOperator[]["Dagger"] @ AnnihilationOperator[]], Element[c1, Reals]],
+        G2Coherence[QuantumState[{c0, Sqrt[2]/2, 0, z, 0, 0, 0, 0}, 8]]
+    },
+    {c1^2 - c1^4, 6 z Conjugate[z] / (1/2 + 3 z Conjugate[z])^2},
+    TimeConstraint -> 30,
+    TestID -> "SQ-symbolic-ket-moments"
+]
+
 (* BosonicVEV with the annihilators alone as vars, {a}, must agree with the full form
    {{a^dag}, {a}}.  Single mode: [a, a^dag] = 1 gives <0|a a^dag|0> = 1, and a
    annihilates the vacuum so <0|a^dag a|0> = 0. *)

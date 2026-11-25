@@ -44,8 +44,13 @@ SetFockSpaceSize[size:_Integer?Positive:16]:= $FockSize = size;
 OperatorVariance::usage =
 "\!\(\*RowBox[{\"OperatorVariance\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", StyleBox[\"op\", \"TI\"]}], \"]\"}]\) computes \[LeftAngleBracket]\!\(\*SuperscriptBox[\"O\", \"2\"]\)\[RightAngleBracket] - \!\(\*SuperscriptBox[\"\[LeftAngleBracket]O\[RightAngleBracket]\", \"2\"]\) of \!\(\*StyleBox[\"op\", \"TI\"]\) in \!\(\*StyleBox[\"state\", \"TI\"]\).";
 
-OperatorVariance[state_QuantumState, op_QuantumOperator]:= 
-	Tr[state["Operator"]@(op^2)]-Tr[state["Operator"]@op]^2
+OperatorVariance[state_QuantumState, op_QuantumOperator] :=
+	If[ state["VectorQ"],
+		With[{opState = op @ state},
+			(state["Dagger"] @ op @ opState)["Scalar"] - (state["Dagger"] @ opState)["Scalar"]^2
+		],
+		Tr[state["Operator"]@(op^2)]-Tr[state["Operator"]@op]^2
+	]
 
 
 General::ladvars = "`1` does not declare ladder operators; give {{c1, \[Ellipsis], cn}, {a1, \[Ellipsis], an}}, creators first, or a WeylAlgebra.";
@@ -182,19 +187,10 @@ G2Coherence[\[Psi]_QuantumState] := Block[{aOp, nOp, a2Op, numerator, denominato
     
     a2Op = SuperDagger[aOp] @ SuperDagger[aOp] @ aOp @ aOp;
     
-    Switch[ TimeConstrained[\[Psi]["PureStateQ"], 3, $Aborted],
-        True,
-        (* pure state: inner product formula *)
+    If[ \[Psi]["VectorQ"],
         numerator   = (\[Psi]["Dagger"] @ a2Op @ \[Psi])["Scalar"];
         denominator = (\[Psi]["Dagger"] @ nOp  @ \[Psi])["Scalar"],
 
-        False,
-        (* mixed state: trace formula Tr(rho O) *)
-        numerator   = Tr[a2Op @ \[Psi]["Operator"]];
-        denominator = Tr[nOp @ \[Psi]["Operator"]],
-
-        _,
-        (* unclassified state: trace formula on the density matrix *)
         numerator   = Tr[a2Op["Matrix"] . \[Psi]["DensityMatrix"]];
         denominator = Tr[nOp["Matrix"] . \[Psi]["DensityMatrix"]]
     ];
@@ -236,7 +232,7 @@ CovarianceMatrix[state_QuantumState, opts : OptionsPattern[]] :=
     CovarianceMatrix[state, Range[state["Qudits"]], opts]
 
 CovarianceMatrix[state_QuantumState, order_?orderQ, OptionsPattern[]] :=
-    Block[{s = OptionValue["QuadratureScaling"], dims = state["Dimensions"], R, A, norm, means, sigma},
+    Block[{s = OptionValue["QuadratureScaling"], dims = state["Dimensions"], R, A, M, rho, norm, means, sigma},
         If[ ! AllTrue[order, 1 <= # <= Length[dims] &],
             Message[CovarianceMatrix::order, order, Length[dims]];
             Return[$Failed]
@@ -247,10 +243,13 @@ CovarianceMatrix[state_QuantumState, order_?orderQ, OptionsPattern[]] :=
             norm  = Re[Conjugate[#] . #] & @ state["StateVector"];
             means = Re[Conjugate[A] . state["StateVector"]];
             sigma = Re[Conjugate[A] . Transpose[A]],
-            A     = # @ state["Operator"] & /@ R;
-            norm  = Re @ Tr @ state["DensityMatrix"];
+            rho   = state["Computational"];
+            M     = #["Ordered", Range[Length[dims]], rho["Output"]]["Matrix"] & /@ R;
+            rho   = rho["DensityMatrix"];
+            A     = # . rho & /@ M;
+            norm  = Re @ Tr @ rho;
             means = Re[Tr /@ A];
-            sigma = Re @ Outer[Tr[#1 @ #2] &, R, A, 1]
+            sigma = Re @ Outer[Total[Transpose[#1] #2, 2] &, M, A, 1]
         ];
         If[ TrueQ[Abs[norm - 1] > 10^-8], Message[CovarianceMatrix::norm, norm]];
         means /= norm;
