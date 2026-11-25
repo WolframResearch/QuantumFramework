@@ -400,19 +400,60 @@ canonicalizeGenerators[expr_, lv_] :=
 ladderPower[op_, 0] := 1
 ladderPower[op_, p_] := GeneralizedPower[NonCommutativeMultiply, op, p]
 
-ladderMonomial[adag_, m_, a_, k_] := ncJoin[ladderPower[adag, m], ladderPower[a, k]]
+(* creators -> x_i, annihilators -> y_i, and the symbol variables listed in the order the head writes its words *)
+orderFrame[ord_, lv_, x_, y_] :=
+    With[{xs = Array[x, Length[lv["Creators"]]], ys = Array[y, Length[lv["Creators"]]]},
+        {Thread[Join @@ ladderVars[lv] -> Join[xs, ys]],
+         If[ord === NormalOrdered, {Join[xs, ys], Join @@ ladderVars[lv]}, {Join[ys, xs], Join @@ Reverse[ladderVars[lv]]}]}
+    ]
 
-orderedMonomial[NormalOrdered, {cr_, an_}, {m_, k_}] := ladderMonomial[cr, m, an, k]
-orderedMonomial[AntinormalOrdered, {cr_, an_}, {m_, k_}] := ladderMonomial[an, k, cr, m]
+orderedPolynomial[ord_, expr_, lv_] :=
+    Module[{x, y},
+        With[{fr = orderFrame[ord, lv, x, y]}, {d = dequantize[expr, First[fr]], z = fr[[2, 1]]},
+            If[! FreeQ[d, x | y] && PolynomialQ[d, z] && AllTrue[Variables[d], MemberQ[z, #] || FreeQ[#, x | y] &], ncPolynomial[Expand[d], z, fr[[2, 2]]], $Failed]
+        ]
+    ]
 
 MakeBoxes[SeriesIndex[s_String], StandardForm | TraditionalForm] ^:= InterpretationBox[s, SeriesIndex[s]]
 
-expSeriesTerm[ord_, coeff_, pair_] := With[{k = SeriesIndex["k"]},
-    Inactivate[Sum[
-        (coeff^k/k!) orderedMonomial[ord, pair, {k, k}],
-        {k, 0, Infinity}
-    ], Sum]
-]
+(* An ordered operator is the Taylor series of its symbol, requantized in its order. e^(c0 + Sum c_r z^alpha_r) gets
+   one index k_r per monomial; spec {} is that exact series, {K} truncates at ladder degree K, {lambda} gives the
+   general term in a parameter and {lambda, n} truncates in it. *)
+seriesTerm[t_, z_, ops_] :=
+    With[{q = Expand[FirstCase[t, Power[E, e_] /; ! FreeQ[e, Alternatives @@ z] :> e, 0, {0, Infinity}]]},
+        {p = Expand[t Exp[-q]], rs = Select[CoefficientRules[q, z], Total[First[#]] > 0 &]},
+        {ks = If[Length[rs] == 1, {SeriesIndex["k"]}, Array[SeriesIndex["k" <> ToString[#]] &, Length[rs]]]},
+        If[ PolynomialQ[q, z] && PolynomialQ[p, z],
+            Exp[q /. Thread[z -> 0]] If[rs === {}, ncPolynomial[p, z, ops], Total[(#2 Inactive[Sum][(Times @@ ((Last /@ rs)^ks / ks!)) *
+                ncJoin @@ MapThread[ladderPower, {ops, ks . (First /@ rs) + #1}], Sequence @@ ({#, 0, Infinity} & /@ ks)]) & @@@ CoefficientRules[p, z]]],
+            $Failed
+        ]
+    ]
+
+(* c z^e with symbolic exponents e written as the word in the head's order *)
+symbolWord[t_, z_, ops_] :=
+    With[{e = Exponent[t, #] & /@ z}, {c = t / Times @@ (z^e)}, If[FreeQ[c, Alternatives @@ z], c ncJoin @@ MapThread[ladderPower, {ops, e}], $Failed]]
+
+orderedSeries[ord_, expr_, lv_, spec___] :=
+    Module[{x, y, t, n = SeriesIndex["n"]},
+        With[{fr = orderFrame[ord, lv, x, y]}, {sub = First[fr], z = fr[[2, 1]], ops = fr[[2, 2]]}, {f = dequantize[expr, sub]},
+            Replace[{spec}, {
+                {} :> With[{ts = seriesTerm[#, z, ops] & /@ Replace[Expand[f /. Power[E, e_] :> Power[E, Expand[e]]], {s_Plus :> List @@ s, s_ :> {s}}]},
+                    If[MemberQ[ts, $Failed], $Failed, Total[ts]]],
+                {k_Integer} :> ncPolynomial[Expand[Normal[Series[f /. Thread[z -> t z], {t, 0, k}]] /. t -> 1], z, ops],
+                {lambda_Symbol} :> With[{g = PowerExpand[Refine[SeriesCoefficient[f, {lambda, 0, n}], Element[n, Integers] && n >= 0], z]},
+                    {ws = symbolWord[#, z, ops] & /@ Replace[Expand[g], {s_Plus :> List @@ s, s_ :> {s}}]},
+                    If[ MemberQ[ws, $Failed],
+                        ord[Inactive[Sum][lambda^n g /. (Reverse /@ sub), {n, 0, Infinity}], ladderVars[lv]],
+                        Inactive[Sum][lambda^n Total[ws], {n, 0, Infinity}]
+                    ]
+                ],
+                {lambda_Symbol, k_Integer} :> With[{g = Expand[Normal[Series[f, {lambda, 0, k}]]]},
+                    If[PolynomialQ[g, z], ncPolynomial[g, z, ops], ord[g /. (Reverse /@ sub), ladderVars[lv]]]],
+                _ -> $Failed
+            }]
+        ]
+    ]
 
 
 
@@ -433,88 +474,22 @@ AntinormalOrdered /: Times[s_, AntinormalOrdered[expr_, vars_]] :=
     ]
 
 
-NormalOrdered[expr_, vars_]["Series"] :=
-    With[{lv = ResolveLadderVariables[NormalOrdered, vars]},
-        (expr /. ((Exp[s_. + coeff_ #1 ** #2] /; FreeQ[s, Alternatives @@ lv["Generators"]] :>
-            Exp[s] expSeriesTerm[NormalOrdered, coeff, {#1, #2}]) & @@@ ladderPairs[lv])) /; AssociationQ[lv]
-    ]
+NormalOrdered[expr_, vars_]["Series", spec___] :=
+    With[{lv = ResolveLadderVariables[NormalOrdered, vars]}, {r = If[AssociationQ[lv], orderedSeries[NormalOrdered, expr, lv, spec], $Failed]}, r /; r =!= $Failed]
 
-AntinormalOrdered[expr_, vars_]["Series"] :=
-    With[{lv = ResolveLadderVariables[AntinormalOrdered, vars]},
-        (expr /. ((Exp[s_. + coeff_ #2 ** #1] /; FreeQ[s, Alternatives @@ lv["Generators"]] :>
-            Exp[s] expSeriesTerm[AntinormalOrdered, coeff, {#1, #2}]) & @@@ ladderPairs[lv])) /; AssociationQ[lv]
-    ]
+AntinormalOrdered[expr_, vars_]["Series", spec___] :=
+    With[{lv = ResolveLadderVariables[AntinormalOrdered, vars]}, {r = If[AssociationQ[lv], orderedSeries[AntinormalOrdered, expr, lv, spec], $Failed]}, r /; r =!= $Failed]
 
-
-ladderMode[expr_, lv_] :=
-    Replace[Select[ladderPairs[lv], ! FreeQ[expr, Alternatives @@ #] &], {{p_} :> p, _ :> None}]
-
-
-orderedSeries[ord_, expr_, lambda_, lv_] := Module[{v, x, y, n, coefN},
-    v = ladderMode[expr, lv];
-    If[v === None, Return[$Failed, Module]];
-    n = SeriesIndex["n"];
-    coefN = SeriesCoefficient[dequantize[expr, Thread[v -> {x, y}]], {lambda, 0, n}];
-
-    coefN = coefN /. Piecewise[{{val_, _}}, _] :> val;
-    ord[
-        Inactivate[Sum[lambda^n (coefN /. {x -> First[v], y -> Last[v]}), {n, 0, Infinity}], Sum],
-        ladderVars[lv]
-    ]
-]
-
-NormalOrdered[expr_, vars_]["Series", lambda_Symbol] :=
-    With[{lv = ResolveLadderVariables[NormalOrdered, vars]}, orderedSeries[NormalOrdered, expr, lambda, lv] /; AssociationQ[lv]]
-
-AntinormalOrdered[expr_, vars_]["Series", lambda_Symbol] :=
-    With[{lv = ResolveLadderVariables[AntinormalOrdered, vars]}, orderedSeries[AntinormalOrdered, expr, lambda, lv] /; AssociationQ[lv]]
-
-
-orderedSeriesOrder[ord_, expr_, lambda_, order_, lv_] := Module[{v, x, y},
-    v = ladderMode[expr, lv];
-    If[v === None, Return[$Failed, Module]];
-    ord[
-        Normal @ Series[dequantize[expr, Thread[v -> {x, y}]], {lambda, 0, order}] /. {x -> First[v], y -> Last[v]},
-        ladderVars[lv]
-    ]
-]
-
-NormalOrdered[expr_, vars_]["Series", lambda_Symbol, order_Integer] :=
-    With[{lv = ResolveLadderVariables[NormalOrdered, vars]}, orderedSeriesOrder[NormalOrdered, expr, lambda, order, lv] /; AssociationQ[lv]]
-
-AntinormalOrdered[expr_, vars_]["Series", lambda_Symbol, order_Integer] :=
-    With[{lv = ResolveLadderVariables[AntinormalOrdered, vars]}, orderedSeriesOrder[AntinormalOrdered, expr, lambda, order, lv] /; AssociationQ[lv]]
-
-
-
-ncMonomials[ord_, expr_, pair_] := Module[{x, y},
-    Total[
-        (#[[2]] orderedMonomial[ord, pair, #[[1]]]) & /@
-        CoefficientRules[Expand[dequantize[expr, Thread[pair -> {x, y}]]], {x, y}]
-    ]
-]
-
-
-ladderPolynomialQ[expr_, pair_] :=
-    Module[{x, y},
-        With[{d = dequantize[expr, Thread[pair -> {x, y}]]},
-            PolynomialQ[d, {x, y}] && AllTrue[Variables[d], MatchQ[#, x | y] || FreeQ[#, x | y] &]
-        ]
-    ]
 
 NormalOrdered[c_ ? NumericQ, _] := c
 
 NormalOrdered[expr_, vars_] :=
-    With[{p = Replace[Quiet @ ResolveLadderVariables[NormalOrdered, vars], {lv_Association :> ladderMode[expr, lv], _ -> None}]},
-        ncMonomials[NormalOrdered, expr, p] /; p =!= None && ladderPolynomialQ[expr, p]
-    ]
+    With[{lv = Quiet @ ResolveLadderVariables[NormalOrdered, vars]}, {r = If[AssociationQ[lv], orderedPolynomial[NormalOrdered, expr, lv], $Failed]}, r /; r =!= $Failed]
 
 AntinormalOrdered[c_ ? NumericQ, _] := c
 
 AntinormalOrdered[expr_, vars_] :=
-    With[{p = Replace[Quiet @ ResolveLadderVariables[AntinormalOrdered, vars], {lv_Association :> ladderMode[expr, lv], _ -> None}]},
-        ncMonomials[AntinormalOrdered, expr, p] /; p =!= None && ladderPolynomialQ[expr, p]
-    ]
+    With[{lv = Quiet @ ResolveLadderVariables[AntinormalOrdered, vars]}, {r = If[AssociationQ[lv], orderedPolynomial[AntinormalOrdered, expr, lv], $Failed]}, r /; r =!= $Failed]
 
 
 

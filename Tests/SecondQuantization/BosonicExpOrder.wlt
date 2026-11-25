@@ -1172,3 +1172,35 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicExpOrder - Series"]
+
+(* One index per monomial of the exponent, words with all creators left: :e^(x N_a + y N_b): has the
+   diagonal (1 + x)^n (1 + y)^m, read here from the series cut at k1, k2 <= 2. *)
+VerificationTest[
+    With[{s = NormalOrdered[Exp[x SuperDagger[\[FormalA]] ** \[FormalA] + y SuperDagger[\[FormalB]] ** \[FormalB]], $vAB]["Series"]},
+        Simplify @ Table[BosonicMatrixElement[{{n, m}, {n, m}}, Activate[s /. Infinity -> 2], $vAB] - (1 + x)^n (1 + y)^m, {n, 0, 1}, {m, 0, 1}]
+    ],
+    ConstantArray[0, {2, 2}],
+    TestID -> "SeriesTwoModes"
+]
+
+(* Truncating at ladder degree 2 gives an operator; :D(al): has <m|.|n> = e^(-|al|^2/2) {{1, -Conjugate[al]}, {al, 1 - |al|^2}} for m, n <= 1. *)
+VerificationTest[
+    With[{s = NormalOrdered[Exp[-al Conjugate[al]/2 + al SuperDagger[\[FormalA]] - Conjugate[al] \[FormalA]], $vA]["Series", 2]},
+        Simplify[Table[BosonicMatrixElement[{m, n}, s, $vA], {m, 0, 1}, {n, 0, 1}] - E^(-al Conjugate[al]/2) {{1, -Conjugate[al]}, {al, 1 - al Conjugate[al]}}]
+    ],
+    ConstantArray[0, {2, 2}],
+    TestID -> "SeriesLadderDegree"
+]
+
+(* The general term in a parameter is written as words, not as a symbol inside the head. *)
+VerificationTest[
+    normalizeIndex[NormalOrdered[Exp[\[Lambda] SuperDagger[\[FormalA]] ** \[FormalB]], $vAB]["Series", \[Lambda]], n],
+    Inactive[Sum][\[Lambda]^n GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], n] **
+        GeneralizedPower[NonCommutativeMultiply, \[FormalB], n]/n!, {n, 0, Infinity}],
+    TestID -> "SeriesGeneralTermWords"
+]
+
+EndTestSection[]
