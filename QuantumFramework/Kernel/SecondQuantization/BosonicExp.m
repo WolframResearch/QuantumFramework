@@ -10,8 +10,6 @@ PackageExport["AntinormalOrdered"]
 
 PackageExport["BosonicExpSimplify"]
 
-PackageExport["BosonicExpBraid"]
-
 
 
 ladderVars[lv_] := {lv["Creators"], lv["Annihilators"]}
@@ -612,8 +610,11 @@ ncCommutator[a_, b_, lv_, assum_] :=
     ncCommutator[a, b, lv, assum] =
         Simplify[BosonicNormalOrder[Commutator[a, b], ladderVars[lv]], assum]
 
+expTrigSimplify[e_] := Simplify[e, TransformationFunctions -> {Automatic, TrigToExp}] /. $nonuls
+
+(* cosh w and sin w / w are even in w, so any branch of the root gives the same image. *)
 adRotate[op_, cmt_, lam_, lv_] /; cNumberQ[lam, lv["Generators"]] :=
-    With[{w = I Sqrt[lam]}, Simplify[Cos[w] op + Sin[w] / w cmt] /. $nonuls]
+    With[{w = I PowerExpand[Sqrt[lam]]}, expTrigSimplify[Cos[w] op + Sin[w] / w cmt]]
 
 adRotate[___] := $Failed
 
@@ -623,7 +624,8 @@ adAction[b_, op_, lv_] :=
             Which[
                 cmt === 0,                                      op,
                 cNumberQ[cmt, lv["Generators"]] || zeroQ[cmt2], op + cmt,
-                True,                                           Replace[adRotate[op, cmt, Simplify[cmt2 / op], lv], $Failed :> linearConjugate[b, op, lv]]
+                True,                                           Replace[adRotate[op, cmt, Simplify[cmt2 / op], lv], $Failed :>
+                    Replace[adRules[b, lv], {r_List :> expTrigSimplify[adApply[r, op, lv]], _ :> linearConjugate[b, op, lv]}]]
             ]
         ]
     ]
@@ -662,6 +664,9 @@ expConjugate[b_, Exp[g_], lv_] /; ncPolyQ[{b, g}, lv] :=
 
 expConjugate[b_, op_, lv_] /; ncPolyQ[{b, op}, lv] :=
     Replace[adAction[b, op, lv], $Failed :> conjugateParts[b, op, lv]]
+
+expConjugate[b_, op_, lv_] /; ncPolyQ[{b}, lv] :=
+    With[{r = adRules[b, lv]}, expTrigSimplify[adApply[r, op, lv]] /; ListQ[r]]
 
 expConjugate[___] := $Failed
 
@@ -756,7 +761,7 @@ adFamilyRules[cr_, {cre_, ann_}, _] /; Keys[cr] === {{1, 1}} :=
 adFamilyRules[cr_, {cre_, ann_}, _] /; SubsetQ[{{2, 0}, {0, 2}, {1, 1}, {1, 0}, {0, 1}}, Keys[cr]] :=
     With[{w = Lookup[cr, Key[{1, 1}], 0], p = Lookup[cr, Key[{2, 0}], 0], q = Lookup[cr, Key[{0, 2}], 0],
             mu = Lookup[cr, Key[{1, 0}], 0], nu = Lookup[cr, Key[{0, 1}], 0]},
-        With[{lam = Sqrt[4 p q - w^2]},
+        With[{lam = PowerExpand[Sqrt[4 p q - w^2]]},
             {cre -> Cos[lam] cre + Sinc[lam] (w cre + 2 q ann + nu) + (w nu - 2 q mu) Sinc[lam/2]^2/2,
              ann -> Cos[lam] ann - Sinc[lam] (2 p cre + w ann + mu) + (w mu - 2 p nu) Sinc[lam/2]^2/2}
         ]
@@ -784,38 +789,3 @@ adRules[gen_, lv_] :=
 adRules[___] := $Failed
 
 adApply[rules_, expr_, lv_] := LiftNCScalars[expr /. rules, lv["Generators"]]
-
-rulesBraidRight[lv_] := {
-    NonCommutativeMultiply[l___, Exp[bA_], Exp[bB_], r___] :>
-        With[{ar = adRules[bA, lv]},
-            ncJoin[l, Exp[adApply[ar, bB, lv]], Exp[bA], r] /; ar =!= $Failed
-        ]
-}
-
-rulesBraidLeft[lv_] := {
-    NonCommutativeMultiply[l___, Exp[bA_], Exp[bB_], r___] :>
-        With[{br = adRules[-bB, lv]},
-            ncJoin[l, Exp[bB], Exp[adApply[br, bA, lv]], r] /; br =!= $Failed
-        ]
-}
-
-BosonicExpBraid::usage =
-"\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) moves the left exponential of an adjacent pair past the right one, \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) \[Rule] \!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{\"A\", \",\", \"B\"}], \"]\"}]]\)\!\(\*SuperscriptBox[\"e\", \"A\"]\).\n\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Direction\\\"->\", \"\\\"Left\\\"\"}], \"]\"}]\) moves the right one left, \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) \[Rule] \!\(\*SuperscriptBox[\"e\", \"B\"]\)\!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{RowBox[{\"-\", \"B\"}], \",\", \"A\"}], \"]\"}]]\).";
-
-BosonicExpBraid::direction = "`1` is not a valid setting for \"Direction\"; use \"Right\" or \"Left\"."
-
-Options[BosonicExpBraid] = {"Direction" -> "Right"};
-
-BosonicExpBraid[expr_, opts : OptionsPattern[]] := (Message[BosonicExpBraid::argr, BosonicExpBraid, 2]; $Failed)
-
-BosonicExpBraid[expr_, vars_, opts : OptionsPattern[]] :=
-    With[{lv = ResolveLadderVariables[BosonicExpBraid, vars]},
-        If[ lv === $Failed,
-            $Failed,
-            Replace[OptionValue["Direction"], {
-                "Right" :> expr /. rulesBraidRight[lv],
-                "Left" :> expr /. rulesBraidLeft[lv],
-                other_ :> (Message[BosonicExpBraid::direction, other]; $Failed)
-            }]
-        ]
-    ]

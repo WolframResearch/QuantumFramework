@@ -92,13 +92,11 @@ VerificationTest[
     TestID -> "BosonicExpSimplify-ConjugationPhaseRotation"
 ]
 
-(* Several factors inside one sandwich conjugate independently. Here the
-   grouped middle a**a has no closed ad-action (\[Lambda] would be operator-valued),
-   so only the per-factor distribution can finish it:
-   e^(\[Alpha] a\[Dagger]) a a e^(-\[Alpha] a\[Dagger]) = (a - \[Alpha])(a - \[Alpha]). *)
+(* A linear generator shifts every ladder operator in the middle at once:
+   e^(\[Alpha] a\[Dagger]) a a e^(-\[Alpha] a\[Dagger]) = (a - \[Alpha])^2. *)
 VerificationTest[
     BosonicExpSimplify[Exp[\[Alpha] $ad] ** $a ** $a ** Exp[-\[Alpha] $ad], $vars],
-    ($a - \[Alpha]) ** ($a - \[Alpha]),
+    GeneralizedPower[NonCommutativeMultiply, $a - \[Alpha], 2],
     {},
     TestID -> "BosonicExpSimplify-ConjugationDistributesOverFactors"
 ]
@@ -269,6 +267,102 @@ VerificationTest[
     0,
     {},
     TestID -> "BosonicExpSimplify-NoAssumptionsUnchanged"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["BosonicExpSimplify - moving one exponential past another"]
+
+(* e^A e^B = e^(Ad_A B) e^A, with the conjugated generator read off the sandwich
+   e^A e^B e^-A. Operators are compared after normal ordering. *)
+conj[A_, B_, vars_ : $vars] := BosonicExpSimplify[Exp[A] ** Exp[B] ** Exp[-A], vars];
+sameOperatorQ[x_, y_, vars_ : $vars] := FullSimplify[BosonicNormalOrder[x - y, vars]] === 0;
+
+VerificationTest[
+    sameGeneratorQ[conj[\[Beta] $n, $disp], \[Alpha] Exp[\[Beta]] $ad - Conjugate[\[Alpha]] Exp[-\[Beta]] $a],
+    True,
+    {},
+    TestID -> "BosonicExpSimplify-MoveNumberPastDisplacement"
+]
+
+(* Each a\[Dagger] picks up e^\[Lambda], each a picks up e^-\[Lambda], in any partner. *)
+VerificationTest[
+    {conj[\[Lambda] $n, \[Xi] GeneralizedPower[NonCommutativeMultiply, $ad, 2]], conj[\[Lambda] $n, \[Xi] GeneralizedPower[NonCommutativeMultiply, $a, 3]]},
+    {Exp[\[Xi] Exp[2 \[Lambda]] GeneralizedPower[NonCommutativeMultiply, $ad, 2]],
+        Exp[\[Xi] Exp[-3 \[Lambda]] GeneralizedPower[NonCommutativeMultiply, $a, 3]]},
+    {},
+    TestID -> "BosonicExpSimplify-MoveNumberPastPowers"
+]
+
+VerificationTest[
+    sameOperatorQ[exponentOf[conj[\[Alpha] $ad, \[Lambda] $n]], \[Lambda] $ad ** ($a - \[Alpha])],
+    True,
+    {},
+    TestID -> "BosonicExpSimplify-MoveCreationPastNumber"
+]
+
+(* Moving left, e^A e^B = e^B e^(Ad_-B A), is the sandwich with -B. *)
+VerificationTest[
+    sameOperatorQ[exponentOf[conj[-\[Alpha] $ad, \[Beta] $n]], \[Beta] $ad ** ($a + \[Alpha])],
+    True,
+    {},
+    TestID -> "BosonicExpSimplify-MoveLeft"
+]
+
+(* Squeeze generator: Ad is the Bogoliubov rotation a\[Dagger] -> Cosh[r] a\[Dagger] - Sinh[r] a at r = 1/2. *)
+VerificationTest[
+    sameGeneratorQ[conj[(GeneralizedPower[NonCommutativeMultiply, $ad, 2] - GeneralizedPower[NonCommutativeMultiply, $a, 2])/4, \[Alpha] $ad],
+        \[Alpha] (Cosh[1/2] $ad - Sinh[1/2] $a)],
+    True,
+    {},
+    TestID -> "BosonicExpSimplify-MoveSqueezePastCreation"
+]
+
+(* Any one-mode generator of degree two, H = q a^2 + p a^dagger^2 + w N + mu a^dagger + nu a: the image of
+   a^dagger and of a matches sum_k t^k/k! ad_H^k to order t^5. *)
+VerificationTest[
+    Module[{p, q, w, mu, nu, t, s, h, ad, img},
+        ad[op_] := BosonicNormalOrder[h ** op - op ** h, $vars];
+        img[op_] := exponentOf[conj[t h, s op]] / s;
+        Table[
+            h = gen;
+            Table[Simplify[Normal[Series[img[op], {t, 0, 5}]] - Sum[t^k/k! Nest[ad, op, k], {k, 0, 5}]], {op, {$ad, $a}}],
+            {gen, {q $a ** $a + p $ad ** $ad + w $n + mu $ad + nu $a, w $n + mu $ad}}
+        ]
+    ],
+    {{0, 0}, {0, 0}},
+    {},
+    TestID -> "BosonicExpSimplify-MoveQuadraticPastLadder"
+]
+
+VerificationTest[
+    Module[{b = \[FormalB], bd = SuperDagger[\[FormalB]], v2},
+        v2 = {{$ad, bd}, {$a, b}};
+        {conj[\[Lambda] $n + \[Mu] bd ** b, \[Alpha] $ad ** b, v2],
+         sameGeneratorQ[conj[\[Theta] ($ad ** b - bd ** $a), \[Alpha] $ad, v2], \[Alpha] (Cos[\[Theta]] $ad - Sin[\[Theta]] bd)],
+         sameGeneratorQ[conj[r ($a ** b - $ad ** bd), \[Alpha] $ad, v2], \[Alpha] (Cosh[r] $ad + Sinh[r] b)]}
+    ],
+    {Exp[\[Alpha] Exp[\[Lambda] - \[Mu]] SuperDagger[\[FormalA]] ** \[FormalB]], True, True},
+    {},
+    TestID -> "BosonicExpSimplify-MoveMultimode"
+]
+
+(* For number, linear and one-mode quadratic generators Ad is a substitution of the
+   ladder operators, so it also moves past functions that are not polynomials. *)
+VerificationTest[
+    {conj[\[Lambda] $n, x $ad/(1 - y $ad)], conj[\[Lambda] $n, Sin[$a]], conj[$disp, 1/(1 + $a)]},
+    {Exp[Exp[\[Lambda]] x $ad/(1 - Exp[\[Lambda]] y $ad)], Exp[Sin[Exp[-\[Lambda]] $a]], Exp[1/(1 + $a - \[Alpha])]},
+    {},
+    SameTest -> (FullSimplify[#1 - #2] === {0, 0, 0} &),
+    TestID -> "BosonicExpSimplify-MovePastNonPolynomial"
+]
+
+VerificationTest[
+    Exp[\[Lambda] $ad ** $a ** $a] ** Exp[\[Alpha] $ad] ** Exp[-\[Lambda] $ad ** $a ** $a] // BosonicExpSimplify[#, $vars] &,
+    Exp[\[Lambda] $ad ** $a ** $a] ** Exp[\[Alpha] $ad] ** Exp[-\[Lambda] $ad ** $a ** $a],
+    {},
+    TestID -> "BosonicExpSimplify-MoveUnrecognizedGeneratorIsInert"
 ]
 
 EndTestSection[]
