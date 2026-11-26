@@ -8,9 +8,8 @@
    Three things are pinned.  QECPauli is one object whose properties are the seven
    former verbs, and returns what they returned.  The renamed heads and the
    properties that replace free functions give the same answers under the new
-   spelling.  And every retired name still works, returns the same value, and
-   warns exactly once per session -- the one-release deprecation the plan
-   promises.
+   spelling.  The retired names, kept for one release with a
+   warning, are gone.
    ============================================================================ *)
 
 Needs["Wolfram`QuantumFramework`"];
@@ -101,15 +100,15 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECPauli["XQ"],
-    $Failed,
+    FailureQ[QECPauli["XQ"]],
+    True,
     {QECPauli::invalid},
     TestID -> "QEC-Surface-Pauli-refuses-a-bad-string"
 ]
 
 VerificationTest[
-    QECPauli[{1, 2, 0}],
-    $Failed,
+    FailureQ[QECPauli[{1, 2, 0}]],
+    True,
     {QECPauli::badrow},
     TestID -> "QEC-Surface-Pauli-refuses-a-bad-row"
 ]
@@ -120,20 +119,20 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    Head[QECFaultTolerantCircuit[{{"R", 1}, {"H", 1}, {"M", 1}}, steane]],
+    Head[QECFaultTolerantCircuit[{"Reset" -> 1, "H" -> 1, "Measurement" -> 1}, steane]],
     QECFaultTolerantCircuit,
     TestID -> "QEC-Surface-fault-tolerant-circuit-head"
 ]
 
 VerificationTest[
-    StringQ[QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/100], 1]],
+    StringQ[QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[1/100]], 1]],
     True,
     TestID -> "QEC-Surface-Stim-writer"
 ]
 
 VerificationTest[
-    With[{bf = QECCode["BitFlipCode"], noise = QECNoiseModel["Circuit", 1/100]},
-        QECDetectorModel[bf, noise, 2]["StimString"] === QECStim[bf, noise, 2]
+    With[{bf = QECCode["BitFlipCode"], noise = QECNoiseModel["Circuit"[1/100]]},
+        QECDetectorModel[bf, noise, 2]["Stim"] === QECStim[bf, noise, 2]
     ],
     True,
     TestID -> "QEC-Surface-detector-model-gives-its-Stim-source"
@@ -162,103 +161,37 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECCode["CSS", {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}]["Parameters"],
+    QECCode["CSS"[{{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}]]["Parameters"],
     {7, 1, 3},
     TestID -> "QEC-Surface-Hamming-matrix-is-an-ordinary-matrix"
 ]
 
 
 (* ============================================================================
-   The retired names: same value, one warning
+   The retired names are gone (they were kept for one release, with a warning)
    ============================================================================ *)
 
 VerificationTest[
-    QECPauliVector["XZ"],
-    qecPauliVector["XZ"],
-    {QECPauliVector::qecdeprecated},
-    TestID -> "QEC-Surface-alias-PauliVector-works-and-warns"
-]
-
-(* Second use in the same session: the same value and no message. *)
-VerificationTest[
-    QECPauliVector["ZX"],
-    qecPauliVector["ZX"],
-    TestID -> "QEC-Surface-alias-warns-once"
+    Select[
+        {"QECPauliVector", "QECPauliString", "QECPauliWeight", "QECPauliCommuteQ", "QECPauliProduct",
+         "QECPauliPhase", "QECFaultTolerant", "QECStimCircuit", "QECCodeCatalog", "QECClassicalHammingMatrix"},
+        Names["Wolfram`QuantumFramework`QEC`" <> #] =!= {} &
+    ],
+    {},
+    TestID -> "QEC-Surface-retired-names-are-gone"
 ]
 
 VerificationTest[
-    QECPauliString[{1, 1, 0}],
-    "Y",
-    {QECPauliString::qecdeprecated},
-    TestID -> "QEC-Surface-alias-PauliString-works-and-warns"
+    {MatchQ[QECCode["BitFlipCode"]["StimCircuit"], _[_]["StimCircuit"]],
+     MatchQ[QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[1/100]], 1]["StimString"], _[_]["StimString"]]},
+    {True, True},
+    {QECCode::undefprop, QECDetectorModel::undefprop},
+    TestID -> "QEC-Surface-retired-properties-are-gone"
 ]
 
 VerificationTest[
-    QECPauliWeight["XIZ"],
-    2,
-    {QECPauliWeight::qecdeprecated},
-    TestID -> "QEC-Surface-alias-PauliWeight-works-and-warns"
-]
-
-VerificationTest[
-    QECPauliCommuteQ["X", "Z"],
-    False,
-    {QECPauliCommuteQ::qecdeprecated},
-    TestID -> "QEC-Surface-alias-PauliCommuteQ-works-and-warns"
-]
-
-VerificationTest[
-    QECPauliProduct["X", "Z"],
-    {1, 1, 3},
-    {QECPauliProduct::qecdeprecated},
-    TestID -> "QEC-Surface-alias-PauliProduct-works-and-warns"
-]
-
-VerificationTest[
-    QECPauliPhase["-iX"],
-    3,
-    {QECPauliPhase::qecdeprecated},
-    TestID -> "QEC-Surface-alias-PauliPhase-works-and-warns"
-]
-
-VerificationTest[
-    Head[QECFaultTolerant[{{"R", 1}, {"M", 1}}, steane]],
-    QECFaultTolerantCircuit,
-    {QECFaultTolerant::qecdeprecated},
-    TestID -> "QEC-Surface-alias-FaultTolerant-works-and-warns"
-]
-
-VerificationTest[
-    QECStimCircuit[QECCode["BitFlipCode"]],
-    QECStim[QECCode["BitFlipCode"]],
-    {QECStimCircuit::qecdeprecated},
-    TestID -> "QEC-Surface-alias-StimCircuit-works-and-warns"
-]
-
-VerificationTest[
-    QECCode["BitFlipCode"]["StimCircuit"],
-    QECCode["BitFlipCode"]["Stim"],
-    {QECCode::qecdeprecated},
-    TestID -> "QEC-Surface-alias-StimCircuit-property-works-and-warns"
-]
-
-VerificationTest[
-    QECCode["BitFlipCode"]["Stim", QECNoiseModel["Circuit", 1/100], 2] ===
-        QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/100], 2],
+    QECCode["BitFlipCode"]["Stim", QECNoiseModel["Circuit"[1/100]], 2] ===
+        QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[1/100]], 2],
     True,
     TestID -> "QEC-Surface-Stim-as-a-code-property"
-]
-
-VerificationTest[
-    QECCodeCatalog[] === QECCode["Catalog"],
-    True,
-    {QECCodeCatalog::qecdeprecated},
-    TestID -> "QEC-Surface-alias-CodeCatalog-works-and-warns"
-]
-
-VerificationTest[
-    QECClassicalHammingMatrix[3],
-    qecHammingMatrix[3],
-    {QECClassicalHammingMatrix::qecdeprecated},
-    TestID -> "QEC-Surface-alias-ClassicalHammingMatrix-works-and-warns"
 ]

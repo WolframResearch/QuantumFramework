@@ -181,7 +181,7 @@ VerificationTest[
 
 VerificationTest[
     With[{c = QECCode["BitFlipCode"]},
-        Length[qecMechanisms[qecCodeData[c], First[QECNoiseModel["Circuit", p]], 1]]
+        Length[qecMechanisms[qecCodeData[c], First[QECNoiseModel["Circuit"[p]]], 1]]
     ],
     64,
     TestID -> "QEC-Idle-default-mechanism-count-unchanged"
@@ -294,10 +294,10 @@ VerificationTest[
     With[
         {c = QECCode["BitFlipCode"]},
         With[
-            {without = Length[qecMechanisms[qecCodeData[c], First[QECNoiseModel["Circuit", p]], 1]],
+            {without = Length[qecMechanisms[qecCodeData[c], First[QECNoiseModel["Circuit"[p]]], 1]],
              with = Length[qecMechanisms[qecCodeData[c],
-                 First[QECNoiseModel["Circuit", <|"OneQubit" -> p, "TwoQubit" -> p,
-                     "Measurement" -> p, "Reset" -> p, "Idle" -> p|>]], 1]]},
+                 First[QECNoiseModel["Circuit"[<|"OneQubit" -> p, "TwoQubit" -> p,
+                     "Measurement" -> p, "Reset" -> p, "Idle" -> p|>]]], 1]]},
             with - without ===
                 Length[qecIdleMech[qecInstr[c], qecNq[c], <|"Idle" -> p|>]]
         ]
@@ -385,8 +385,8 @@ VerificationTest[
 VerificationTest[
     With[
         {c = QECCode["BitFlipCode"],
-         noise = QECNoiseModel["Circuit", <|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
-             "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>]},
+         noise = QECNoiseModel["Circuit"[<|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
+             "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>]]},
         With[
             {slots = Length[qecSlots[qecInstr[c, 2], qecNq[c]]],
              dem = Length[Select[qecMechanisms[qecCodeData[c], First[noise], 2],
@@ -405,7 +405,7 @@ VerificationTest[
    mean idle noise leaked into a circuit that did not ask for it. *)
 VerificationTest[
     StringCount[
-        QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/1000], 2],
+        QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[1/1000]], 2],
         "DEPOLARIZE1"],
     0,
     TestID -> "QEC-Idle-stim-clean-when-rate-is-zero"
@@ -416,8 +416,8 @@ VerificationTest[
 VerificationTest[
     With[
         {src = QECStim[QECCode["BitFlipCode"],
-            QECNoiseModel["Circuit", <|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
-                "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>], 2]},
+            QECNoiseModel["Circuit"[<|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
+                "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>]], 2]},
         StringFreeQ[Last[StringSplit[src, "# --- final noiseless round ---"]], "DEPOLARIZE"]
     ],
     True,

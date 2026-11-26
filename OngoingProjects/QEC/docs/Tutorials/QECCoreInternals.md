@@ -319,7 +319,7 @@ worth watching happen.
 Find the CNOT ladder of generator 1, which runs into ancilla 6:
 
 ```wl
-ladder = Select[Range[circ["InstructionCount"]], MatchQ[circ["Instructions"][[#]], {"CNOT", _, 6}] &]
+ladder = Select[Range[circ["InstructionCount"]], MatchQ[circ["Instructions"][[#]], "CNOT" -> {_, 6}] &]
 ```
 
 ---
@@ -473,7 +473,7 @@ circLocations
 Code capacity: the data is hit once, the checks are perfect.
 
 ```wl
-nCap = QECNoiseModel["BitFlip", p]
+nCap = QECNoiseModel["BitFlip"[p]]
 ```
 
 ---
@@ -482,7 +482,7 @@ Phenomenological: the data is hit between rounds and the readout can lie, but th
 itself is a black box.
 
 ```wl
-nPhen = QECNoiseModel["BitFlip", p, "MeasurementError" -> q]
+nPhen = QECNoiseModel["BitFlip"[p], "MeasurementError" -> q]
 ```
 
 ---
@@ -490,7 +490,7 @@ nPhen = QECNoiseModel["BitFlip", p, "MeasurementError" -> q]
 Circuit level: every gate, reset and readout can fail.
 
 ```wl
-nCirc = QECNoiseModel["Circuit", p]
+nCirc = QECNoiseModel["Circuit"[p]]
 ```
 
 ---
@@ -498,7 +498,7 @@ nCirc = QECNoiseModel["Circuit", p]
 Rates may be given per location type, and anything omitted is filled with zero:
 
 ```wl
-nMix = QECNoiseModel["Circuit", <|"OneQubit" -> p, "TwoQubit" -> 2 p, "Measurement" -> q|>];
+nMix = QECNoiseModel["Circuit"[<|"OneQubit" -> p, "TwoQubit" -> 2 p, "Measurement" -> q|>]];
 noiseCircRates[First[nMix]]
 ```
 
@@ -509,7 +509,7 @@ The accessors that the rest of the layer dispatches on:
 ```wl
 {noiseLevel[First[nCap]], noiseLevel[First[nPhen]], noiseLevel[First[nCirc]],
  noiseMeasErr[First[nPhen]], noiseMeasErr[First[nCap]],
- noiseSymbolicQ[First[nCirc]], noiseSymbolicQ[First[QECNoiseModel["Circuit", 0.001]]]}
+ noiseSymbolicQ[First[nCirc]], noiseSymbolicQ[First[QECNoiseModel["Circuit"[0.001]]]]}
 ```
 
 `Idle` is **modelled** — see the schedule above — but it still **defaults to zero**, and that
@@ -557,7 +557,7 @@ The `"Location"` is the key to everything downstream: it groups mechanisms that 
 of the same physical location.
 
 ```wl
-mechC = faultMechanisms[bfData, First[QECNoiseModel["Circuit", p]], 1];
+mechC = faultMechanisms[bfData, First[QECNoiseModel["Circuit"[p]]], 1];
 {Length[mechC], First[mechC]}
 ```
 
@@ -579,8 +579,7 @@ Turn it on and three Paulis appear per idle slot:
 
 ```wl
 idleMech = sym["idleMechanisms"];
-withIdle = QECNoiseModel["Circuit",
-    <|"OneQubit" -> p, "TwoQubit" -> p, "Measurement" -> p, "Reset" -> p, "Idle" -> pIdle|>];
+withIdle = QECNoiseModel["Circuit"[<|"OneQubit" -> p, "TwoQubit" -> p, "Measurement" -> p, "Reset" -> p, "Idle" -> pIdle|>]];
 {
   Length[mechC],
   Length[faultMechanisms[bfData, First[withIdle], 1]],
@@ -597,7 +596,7 @@ Phenomenological instead puts three Paulis on each data qubit at the start of ea
 flip per readout:
 
 ```wl
-mechP = faultMechanisms[bfData, First[QECNoiseModel["BitFlip", p, "MeasurementError" -> q]], 1];
+mechP = faultMechanisms[bfData, First[QECNoiseModel["BitFlip"[p], "MeasurementError" -> q]], 1];
 {Length[mechP], Counts[First /@ Lookup[mechP, "Location"]]}
 ```
 
@@ -643,7 +642,7 @@ recordDetectors[{1, 0, 1, 0}, {1, 0}, 2, 2]
 ### The model object
 
 ```wl
-dem = QECDetectorModel[bitFlip, QECNoiseModel["Circuit", p], 1]
+dem = QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[p]], 1]
 ```
 
 ---
@@ -718,7 +717,7 @@ compares, detector by detector.
 Numerically:
 
 ```wl
-QECDetectorModel[bitFlip, QECNoiseModel["Circuit", 0.001], 1]["DetectorRates"]
+QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[0.001]], 1]["DetectorRates"]
 ```
 
 ### The rows that get dropped
@@ -726,7 +725,7 @@ QECDetectorModel[bitFlip, QECNoiseModel["Circuit", 0.001], 1]["DetectorRates"]
 `codeDetectorModel` is the raw builder underneath the constructor. It drops two kinds of row:
 
 ```wl
-nP = First[QECNoiseModel["BitFlip", p, "MeasurementError" -> q]];
+nP = First[QECNoiseModel["BitFlip"[p], "MeasurementError" -> q]];
 raw = codeDetModel[bfData, nP, 1];
 {Length[faultMechanisms[bfData, nP, 1]], Length[raw["Probabilities"]]}
 ```
@@ -757,7 +756,7 @@ Detector and observable patterns are only ever XORed and compared, so they are c
 integers: one `BitXor` replaces a vector `Mod`.
 
 ```wl
-a = codeDetModel[bfData, First[QECNoiseModel["Circuit", p]], 1];
+a = codeDetModel[bfData, First[QECNoiseModel["Circuit"[p]]], 1];
 Take[#, UpTo[10]] & /@ demRowKeys[a]
 ```
 
@@ -824,7 +823,10 @@ answer is a circuit-level logical error rate in closed form:
 Simplify[demExactFailure[a, 2]]
 ```
 
-This is the move a sampling simulator structurally cannot make.
+This is the move a sampling simulator structurally cannot make. Since November 2026 the fold is no longer what
+`demExactFailure` runs: [Transform.wl](#transformwl--the-exact-route-through-the-walshhadamard-transform)
+computes the same sum through the Walsh–Hadamard transform, and the fold stays as
+`demExactFailureFold`, the reference it is tested against.
 
 ### The sampled route
 
@@ -833,7 +835,7 @@ One draw per location, all shots at once: the group's own probabilities plus the
 leftover, which is why the weights still add up.
 
 ```wl
-aN = codeDetModel[bfData, First[QECNoiseModel["Circuit", 0.01]], 1];
+aN = codeDetModel[bfData, First[QECNoiseModel["Circuit"[0.01]]], 1];
 {demSampled[aN, 200000, 2], N[Simplify[demExactFailure[aN, 2]]]}
 ```
 
@@ -845,8 +847,8 @@ exact one.
 `count === None` picks the exact fold; an integer picks the sampler:
 
 ```wl
-{Simplify[demRate[bfData, First[QECNoiseModel["Circuit", p]], 1, None, 2]],
- demRate[bfData, First[QECNoiseModel["Circuit", 0.01]], 1, 100000, 2]}
+{Simplify[demRate[bfData, First[QECNoiseModel["Circuit"[p]]], 1, None, 2]],
+ demRate[bfData, First[QECNoiseModel["Circuit"[0.01]]], 1, 100000, 2]}
 ```
 
 ## The public entry point
@@ -861,7 +863,7 @@ Options[QECLogicalErrorRate]
 ---
 
 ```wl
-Expand[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", p]]]
+Expand[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[p]]]]
 ```
 
 ### The consistency identity
@@ -872,8 +874,8 @@ have to produce the same polynomial:
 
 ```wl
 Simplify[
-    QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", p]] ==
-    QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", p, "MeasurementError" -> 0],
+    QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[p]]] ==
+    QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[p], "MeasurementError" -> 0],
         "Rounds" -> 1]
 ]
 ```
@@ -884,13 +886,13 @@ Let the readout lie and a second parameter appears:
 
 ```wl
 Simplify[QECLogicalErrorRate[bitFlip,
-    QECNoiseModel["BitFlip", p, "MeasurementError" -> q], "Rounds" -> 1]]
+    QECNoiseModel["BitFlip"[p], "MeasurementError" -> q], "Rounds" -> 1]]
 ```
 
 ### What circuit-level noise costs
 
 ```wl
-Series[QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", p], "Rounds" -> 1], {p, 0, 1}]
+Series[QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[p]], "Rounds" -> 1], {p, 0, 1}]
 ```
 
 The leading term is $O(p)$, not $O(p^2)$. That is the hook error from the top of the page, priced.
@@ -903,8 +905,8 @@ The bit-flip and phase-flip codes are related by a Hadamard on every qubit, so a
 with the dual channel they give the same polynomial. At circuit level they do not:
 
 ```wl
-{Series[QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", p], "Rounds" -> 1], {p, 0, 1}],
- Series[QECLogicalErrorRate[QECCode["PhaseFlipCode"], QECNoiseModel["Circuit", p],
+{Series[QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[p]], "Rounds" -> 1], {p, 0, 1}],
+ Series[QECLogicalErrorRate[QECCode["PhaseFlipCode"], QECNoiseModel["Circuit"[p]],
     "Rounds" -> 1], {p, 0, 1}]}
 ```
 
@@ -914,7 +916,7 @@ The whole difference is that the $X$-type checks need eight extra Hadamards. Swi
 one-qubit-gate noise and the duality comes back:
 
 ```wl
-nNoGates = QECNoiseModel["Circuit", <|"TwoQubit" -> p, "Measurement" -> p, "Reset" -> p|>];
+nNoGates = QECNoiseModel["Circuit"[<|"TwoQubit" -> p, "Measurement" -> p, "Reset" -> p|>]];
 {Series[QECLogicalErrorRate[bitFlip, nNoGates, "Rounds" -> 1], {p, 0, 1}],
  Series[QECLogicalErrorRate[QECCode["PhaseFlipCode"], nNoGates, "Rounds" -> 1], {p, 0, 1}]}
 ```
@@ -926,7 +928,7 @@ That is a statement about a circuit, not about a code, and it is awkward to make
 Sampling, when the state space is too large or the rates are numeric anyway:
 
 ```wl
-QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", 0.01], 100000, "Rounds" -> 1]
+QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[0.01]], 100000, "Rounds" -> 1]
 ```
 
 ## Stim.wl — the bridge
@@ -954,8 +956,8 @@ the exported circuit carries exactly one idle channel per slot where the model c
 mechanisms, and the two cannot drift:
 
 ```wl
-noisyIdle = QECNoiseModel["Circuit", <|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
-    "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>];
+noisyIdle = QECNoiseModel["Circuit"[<|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
+    "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>]];
 {
   Length[circuitIdleSlots[codeCircInstr[bfData, 2], 5]],
   StringCount[QECStim[bitFlip, noisyIdle, 2], "DEPOLARIZE1(0.002)"]
@@ -975,7 +977,7 @@ $|0\ldots0\rangle$, which is not a codeword for a general code, and a memory exp
 start inside the code space or its first round of detectors means nothing.
 
 ```wl
-Column[StringSplit[QECStim[bitFlip, QECNoiseModel["Circuit", 0.001], 2], "\n"]]
+Column[StringSplit[QECStim[bitFlip, QECNoiseModel["Circuit"[0.001]], 2], "\n"]]
 ```
 
 ---
@@ -985,7 +987,7 @@ noise, because there the extraction is a black box:
 
 ```wl
 Column[StringSplit[
-    QECStim[bitFlip, QECNoiseModel["BitFlip", 0.01, "MeasurementError" -> 0.02], 1],
+    QECStim[bitFlip, QECNoiseModel["BitFlip"[0.01], "MeasurementError" -> 0.02], 1],
     "\n"]]
 ```
 
@@ -997,7 +999,7 @@ memory experiment is single-basis by construction: prepare $|0_L\rangle$, keep i
 $\bar{Z}$. The detector part is basis-independent, and is where the two models are compared.
 
 ```wl
-StringTake[QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit", 0.001], 3,
+StringTake[QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit"[0.001]], 3,
     "Observable" -> "X"], -60]
 ```
 
@@ -1006,8 +1008,8 @@ StringTake[QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit", 0.001], 3,
 The shorthand on the code object, and the internal builder:
 
 ```wl
-{StringCount[bitFlip["Stim", QECNoiseModel["Circuit", 0.001]], "\n"],
- StringLength[codeStimCircuit[bfData, First[QECNoiseModel["Circuit", 0.001]], 1, "Z"]]}
+{StringCount[bitFlip["Stim", QECNoiseModel["Circuit"[0.001]]], "\n"],
+ StringLength[codeStimCircuit[bfData, First[QECNoiseModel["Circuit"[0.001]]], 1, "Z"]]}
 ```
 
 ---
@@ -1016,7 +1018,7 @@ Code capacity is refused, because Stim has no notion of a model whose checks are
 assumption:
 
 ```wl
-QECStim[bitFlip, QECNoiseModel["BitFlip", 0.01]]
+QECStim[bitFlip, QECNoiseModel["BitFlip"[0.01]]]
 ```
 
 ## Cat.wl — a probe a single fault cannot spread
@@ -1191,7 +1193,7 @@ error that anticommutes with $P$:
 ```wl
 parities[m_, f_] := Mod[Total /@ Partition[framePropagate[m["Instructions"], m["Qubits"], f]["Record"], m["Weight"]], 2];
 
-With[{i = FirstPosition[mz["Instructions"], {"M", 6}][[1]]},
+With[{i = FirstPosition[mz["Instructions"], "Measurement" -> 6][[1]]},
     {parities[mz, {{i - 1, 6, {1, 0}}}], parities[mz, {{0, 1, {1, 0}}}], parities[mz, {{0, 1, {0, 1}}}]}]
 ```
 
@@ -1389,7 +1391,7 @@ condition is visible in the model itself:
 
 ```wl
 Module[{dem, d, o, h, keep, grouped},
-    dem = QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1, "Extraction" -> "Transversal"];
+    dem = QECDetectorModel[five, QECNoiseModel["Circuit"[1/1000]], 1, "Extraction" -> "Transversal"];
     d = dem["DetectorMatrix"]; o = dem["ObservableMatrix"]; h = dem["HeraldMatrix"];
     keep = Select[Range[Length[d]], Total[h[[#]]] === 0 &];
     grouped = GroupBy[keep, d[[#]] &, DeleteDuplicates[o[[#]] & /@ #] &];
@@ -1763,7 +1765,7 @@ syndrome → class table only for the syndromes a rate actually meets.
 
 ```wl
 With[{m = Wolfram`QuantumFramework`QEC`PackageScope`demMatching[
-        First @ QECDetectorModel[QECCode["Surface", 3], QECNoiseModel["Circuit", 1/500], 3]]},
+        First @ QECDetectorModel[QECCode["Surface"[3]], QECNoiseModel["Circuit"[1/500]], 3]]},
     {m["Detectors"], Length[m["Edges"]], m["DroppedMechanisms"]}]
 ```
 
@@ -1773,22 +1775,98 @@ With[{m = Wolfram`QuantumFramework`QEC`PackageScope`demMatching[
 
 The comparison with PyMatching is also what found the missing **check order**. `generatorInstructions`
 takes the order in which a check's CNOTs touch its qubits, `codeCheckOrder` supplies it — the
-code's `"CheckOrder"` key when it has one, qubit order otherwise — and `QECCode["Surface", d]` stores
+code's `"CheckOrder"` key when it has one, qubit order otherwise — and `QECCode["Surface"[d]]` stores
 row-major order for X checks and column-major for Z checks, so that the hook pair of
 [The hook error](#the-hook-error) is perpendicular to the logical of its own letter. In qubit order
 the Z checks' hooks lay along logical Z and cost $\bar{X}$ a distance. Every consumer of the
 instruction list — the frame propagator, the detector model, the Stim writer — goes through
 `codeCircuitInstructions`, so all of them follow the order at once.
 
-## Deprecated.wl — the names that were retired
+## Transform.wl — the exact route through the Walsh–Hadamard transform
+
+`demExactFailure` no longer folds. It hands the model and the decoder table to
+`demTransformFailure`, which works on the other side of Parseval's identity:
+
+$$\sum_x W(x)\,P(x) \;=\; 2^{-N}\sum_k \widehat{W}(k)\,\widehat{P}(k),\qquad
+\widehat{P}(k) = \prod_{\text{locations}}\Bigl(1 - 2\!\!\sum_{r\,:\,k\cdot\sigma_r\ \text{odd}}\!\! p_r\Bigr).$$
+
+Four pieces make it fast.
+
+- **The failure indicator** is a 0/1 vector over $x = $ (detectors, observables, heralds), built
+  from the decoder as a vector over all syndromes (`demTableVector`; a table, a matching lookup or
+  a `syndromeVector`). `whtTransform` is `DiscreteHadamardTransform` in natural order with its
+  $2^{-N/2}$ undone, and on a 0/1 input the result is an exact integer vector.
+- **One location** depends on $k$ only through the parities of $k$ against a basis of the span of
+  its effects. `whtSpan` finds that basis by elimination on the integers and gives every effect's
+  coordinates as a bit mask, and `whtLocationTables` gives the factor for each of the $2^r$ parity
+  codes, $r \le 4$ for a CNOT.
+- **Many locations at once.** A parity of $k$ is the XOR of a parity of its high half and one of
+  its low half. A batch of locations up to ten code bits gets two short code tables, one `Outer`
+  and one lookup into a table over (high code, low code). Batches are walked over $k$ in blocks of
+  `$QECTransformChunk`, so no per-$k$ array but $\widehat{W}$ is ever held whole.
+- **Grouping.** With symbolic rates, the $k$ are keyed by how many locations contribute each
+  distinct factor (a mixed-radix integer). $\widehat{W}$ is summed per key with a `SparseArray`
+  whose repeated entries add, and the polynomial is one monomial per key.
+
+The fold is kept as `demExactFailureFold`. It is the reference the transform is tested against,
+and the fallback for a model whose rates are so varied that the keys would not fit in a machine
+integer:
+
+```wl
+{fold, transform} = Symbol[qec <> #] & /@ {"demExactFailureFold", "demExactFailure"};
+Simplify[fold[a, 2] - transform[a, 2]]
+```
+
+<!-- => 0 -->
+
+The factors of the circuit-level model of the distance-3 surface code are the two the argument
+predicts: $1 - 16p/15$ for a CNOT, under which none or eight of the fifteen Paulis are odd, and
+$1 - 2q$ for a readout.
+
+```wl
+With[{s = First @ QECDetectorModel[QECCode["Surface"[3]],
+        QECNoiseModel["Circuit"[<|"TwoQubit" -> p, "Measurement" -> q|>]], 1]},
+    Union @ Flatten[Last /@ Symbol[qec <> "whtLocationTables"][
+        Symbol[qec <> "demSignatures"][s], s["Probabilities"], Symbol[qec <> "demGroups"][s]]]
+]
+```
+
+<!-- => {1 - 2 q, 1 - (16 p)/15, 1} -->
+
+---
+
+`demDistribution` is the same walk with numeric factors multiplied together. That product is
+$\widehat{P}$ itself, and one inverse transform gives the probability of every pattern.
+`demMaximumLikelihoodTable` reshapes it to (syndrome, observables, heralds), keeps the accepted
+slice, and takes the most probable class of each syndrome, the first on ties. It is memoised on the
+model and the reference point. In machine arithmetic the distribution is accurate to about
+$10^{-16}$ absolute, so for syndromes rarer than that the choice is noise. They carry no weight at
+the rate the table is built for.
+
+`demRestrictBasis` (DetectorModel.wl) is the one-basis memory, `"Basis" -> "X" | "Z"`. It keeps the
+checks of one type in every round and the observables of the same letter, projects every row onto
+them, and drops the rows left empty. `demMatchingGraph` skips its X/Z split on such a model, since
+there is only one kind of detector left. The Stim writer refuses it, because the circuit it would
+write measures both bases.
+
+### Every fault at once
+
+`codeDetectorModel` used to call `framePropagate` once per mechanism. `framePropagateBatch`
+(Circuit.wl) gives mechanism $j$ the bit $2^{j-1}$ of every frame entry, so the same XORs carry all
+of them through the circuit as Wolfram integers as wide as the mechanism list. The records,
+heralds and residual frame come back as one row per mechanism, and `faultEffectsBatch` does the
+rest exactly as `faultEffect` did. The effects are identical, compared row by row on the surface,
+Steane and Shor codes, and the time to build the model of the distance-5 code over five rounds goes
+from 15 s to 1.3 s.
+
+## The names that were retired
 
 Ten names were retired in step 5 of the redesign: the six `QECPauli*` verbs (now `QECPauli`'s
 properties, with the verbs themselves as `PackageScope` row functions under their old definitions),
-`QECFaultTolerant`, `QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix` — and one property,
-`code["StimCircuit"]`, now `code["Stim"]`. Each alias calls
-the function that now does the job and warns once per session through `General::qecdeprecated`; the
-set of warned names is reset on every load, which is what makes the warning testable in every test
-file that reloads the package. The file goes one release after the rename.
+`QECFaultTolerant`, `QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix`, and the property
+`code["StimCircuit"]`, now `code["Stim"]`. They lived for one release in `Deprecated.wl`, each calling
+the function that does the job and warning once per session. The file was removed in November 2026,
+with the detector model's `"StimString"`; a test checks that none of the names is defined.
 
 ## WeightEnumerator.wl — the stabilizer group, counted
 
@@ -1856,7 +1934,7 @@ with `AroundReplace`. With no such interval, whichever code is ahead at the top 
 between `Missing["AboveRange"]` and `Missing["BelowRange"]`.
 
 ```wl
-With[{th = QECThreshold[{"Repetition", {3, 5}}, QECNoiseModel["BitFlip", p]]},
+With[{th = QECThreshold["Repetition"[{3, 5}], QECNoiseModel["BitFlip"[p]]]},
     {th["Value"], th["Method"], th["Rates"]}]
 ```
 
@@ -1904,6 +1982,32 @@ still needs in $|0\rangle$. `magicTestInstructions` is the cat measurement of fi
 how the encoder, the test and the injection are checked: the frame cannot follow a $T$, and
 `framePropagate` refuses one with `QECDetectorModel::nonclifford` rather than letting it pass as
 the identity.
+
+## Objects.wl — what every object shares
+
+Loaded after every head is defined, `Objects.wl` writes once what `QuantumChannel.m` writes for
+each of the framework's objects. A table gives each head its predicate and the keys a valid
+object carries; `QECCode` needs `"CheckMatrix"`, `"Phases"` and `"Qubits"`. The first time an
+object with those keys evaluates, a rule on the head marks it with
+`System`Private`HoldSetValid`, and the predicate then reads the flag:
+
+```wl
+{QECCodeQ[QECCode["SteaneCode"]], QECCodeQ[QECCode[<|"Qubits" -> 7|>]]}
+```
+
+<!-- => {True, False} -->
+
+The same loop adds `"ValidQ"`, `"AllProperties"` and the catch-all, a rule whose condition
+issues `H::undefprop` and fails, so the call stays as it was written. A rule whose property is a
+pattern is not always ordered after the named ones, so the loop finishes by moving every
+catch-all to the end of its head's `SubValues`; otherwise the message would be issued before a
+named property is tried, even though that property still answers.
+
+Two helpers in `Code.wl` and `Cache.wl` carry the rest. `qecMessageFailure[H::tag, args]` issues the
+message and returns `Failure["tag", ...]` with it, and every internal check of a result asks
+`FailureQ`, which is true of `$Failed` too. `qecMemoKey` is the store of every memoised function,
+`f[a_] := qecMemoKey[f[a]] = rhs`: an upvalue on `Set` keeps the answer only while
+`$QuantumFrameworkPropCache` is on.
 
 ## Where this comes from
 

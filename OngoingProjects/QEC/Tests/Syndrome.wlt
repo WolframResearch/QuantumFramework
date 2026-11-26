@@ -29,7 +29,7 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
@@ -64,9 +64,9 @@ VerificationTest[
     TestID -> "QEC-Syndrome-sign-irrelevant"
 ]
 
-VerificationTest[Quiet[QECCode["BitFlipCode"]["Syndrome", "XIII"]], $Failed, TestID -> "QEC-Syndrome-wrong-size"]
+VerificationTest[FailureQ[Quiet[QECCode["BitFlipCode"]["Syndrome", "XIII"]]], True, TestID -> "QEC-Syndrome-wrong-size"]
 
-VerificationTest[Quiet[QECCode["BitFlipCode"]["Syndrome", "XQI"]], $Failed, TestID -> "QEC-Syndrome-bad-letter"]
+VerificationTest[FailureQ[Quiet[QECCode["BitFlipCode"]["Syndrome", "XQI"]]], True, TestID -> "QEC-Syndrome-bad-letter"]
 
 (* The five-qubit code is perfect: its fifteen weight-one errors have fifteen
    distinct nonzero syndromes, which with the trivial one fill all sixteen. *)
@@ -152,9 +152,9 @@ VerificationTest[
     TestID -> "QEC-Syndrome-decode-unknown"
 ]
 
-VerificationTest[Quiet[QECCode["BitFlipCode"]["Decode", {1, 0, 1}]], $Failed, TestID -> "QEC-Syndrome-decode-wrong-length"]
+VerificationTest[FailureQ[Quiet[QECCode["BitFlipCode"]["Decode", {1, 0, 1}]]], True, TestID -> "QEC-Syndrome-decode-wrong-length"]
 
-VerificationTest[Quiet[QECCode["BitFlipCode"]["Decode", {1, 2}]], $Failed, TestID -> "QEC-Syndrome-decode-not-binary"]
+VerificationTest[FailureQ[Quiet[QECCode["BitFlipCode"]["Decode", {1, 2}]]], True, TestID -> "QEC-Syndrome-decode-not-binary"]
 
 (* The table reaches the weight the code can actually correct.  On a distance-5
    code that is weight two, which the prototype's weight-one-only table could not
@@ -172,7 +172,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Module[{code = QECCode["Repetition", 5]},
+    Module[{code = QECCode["Repetition"[5]]},
         {code["Distance"], Wolfram`QuantumFramework`QEC`PackageScope`codeCorrectableWeight[First[code]]}
     ],
     {1, 0},

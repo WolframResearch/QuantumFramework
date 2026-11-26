@@ -3,6 +3,7 @@
 Package["Wolfram`QuantumFramework`QEC`"]
 
 PackageExport[QECNoiseModel]
+PackageExport[$QECNoiseNames]
 
 PackageScope[noiseProbabilities]
 PackageScope[noiseSymbolicQ]
@@ -45,17 +46,21 @@ PackageScope[$channelPaulis]
 (* of weight profiles.  Both the decoder and the error rate lean on this.        *)
 (* ============================================================================ *)
 
-QECNoiseModel::usage = "QECNoiseModel[name, p] represents independent identically distributed Pauli noise on each qubit: \"Depolarizing\", \"BitFlip\", \"PhaseFlip\" or \"BitPhaseFlip\" at rate p, with perfect checks (code-capacity level).\nQECNoiseModel[<|\"X\" -> px, \"Y\" -> py, \"Z\" -> pz|>] gives a general Pauli channel.\nQECNoiseModel[name, p, \"MeasurementError\" -> q] adds check outcomes that are misreported with probability q (phenomenological level).\nQECNoiseModel[\"Circuit\", p] puts depolarizing noise on every gate, measurement and reset of the syndrome-extraction circuit at rate p; QECNoiseModel[\"Circuit\", <|\"OneQubit\" -> p1, ...|>] sets the locations separately (circuit level).\nThe rates may be symbolic, in which case downstream quantities come back as exact expressions in them.\nnoise[prop] gives a property; noise[\"Properties\"] lists them.";
+QECNoiseModel::usage = "QECNoiseModel[name[p]] represents independent identically distributed Pauli noise on each qubit: \"Depolarizing\"[p], \"BitFlip\"[p], \"PhaseFlip\"[p] or \"BitPhaseFlip\"[p], with perfect checks (code-capacity level). The bare name takes p = 1/100.\nQECNoiseModel[<|\"X\" -> px, \"Y\" -> py, \"Z\" -> pz|>] gives a general Pauli channel.\nQECNoiseModel[name[p], \"MeasurementError\" -> q] adds check outcomes that are misreported with probability q (phenomenological level).\nQECNoiseModel[\"Circuit\"[p]] puts depolarizing noise on every gate, measurement and reset of the syndrome-extraction circuit at rate p; QECNoiseModel[\"Circuit\"[<|\"OneQubit\" -> p1, ...|>]] sets the locations separately (circuit level).\nThe rates may be symbolic, in which case downstream quantities come back as exact expressions in them.\nnoise[prop] gives a property; noise[\"Properties\"] lists them; $QECNoiseNames lists the names.";
 
 QECNoiseModel::rates = "Error probabilities must be non-negative and sum to at most 1; got `1`.";
-QECNoiseModel::unknown = "`1` is not a known noise model. Available: `2`.";
-QECNoiseModel::noprop = "`1` is not a property of QECNoiseModel. Use noise[\"Properties\"] for the list.";
+QECNoiseModel::invalidName = "`1` is not a recognized QECNoiseModel constructor. The names are `2`.";
+QECNoiseModel::invalidArgs = "QECNoiseModel constructor `1` did not match any rule.";
+QECNoiseModel::oldform = "The rate goes inside the name: `1`, not `2`.";
 
 QECNoiseModel::level = "`1` is not a noise level. Available: `2`.";
 QECNoiseModel::circuitrates = "Circuit-level rates must be given as a number or an Association over `1`; got `2`.";
 QECNoiseModel::wronglevel = "This is a `1` noise model; `2` is only defined at the `3` level.";
 
-$QECNoiseNames = {"Depolarizing", "BitFlip", "PhaseFlip", "BitPhaseFlip"};
+$QECNoiseNames = {"Depolarizing", "BitFlip", "PhaseFlip", "BitPhaseFlip", "Circuit"};
+
+(* The rate a bare name takes. *)
+$QECNoiseDefaultRate = 1/100;
 
 (* The three levels, in the order the roadmap builds them.  Each drops an
    assumption the one before it made, but they are NOT three estimates of the same
@@ -135,33 +140,34 @@ fromRates[rates_List, name_, params_, measurementError_] := If[
         "Level" -> If[TrueQ[measurementError === 0], "CodeCapacity", "Phenomenological"],
         "MeasurementError" -> measurementError
     |>],
-    Message[QECNoiseModel::rates, rates]; $Failed
+    qecFailure["InvalidArguments", QECNoiseModel::rates, rates]
 ]
 
-QECNoiseModel["Depolarizing", p_, opts : OptionsPattern[]] :=
+QECNoiseModel["Depolarizing"[p_ : $QECNoiseDefaultRate], opts : OptionsPattern[]] :=
     fromRates[{1 - p, p/3, p/3, p/3}, "Depolarizing", {p}, OptionValue[QECNoiseModel, {opts}, "MeasurementError"]]
 
-QECNoiseModel["BitFlip", p_, opts : OptionsPattern[]] :=
+QECNoiseModel["BitFlip"[p_ : $QECNoiseDefaultRate], opts : OptionsPattern[]] :=
     fromRates[{1 - p, p, 0, 0}, "BitFlip", {p}, OptionValue[QECNoiseModel, {opts}, "MeasurementError"]]
 
-QECNoiseModel["PhaseFlip", p_, opts : OptionsPattern[]] :=
+QECNoiseModel["PhaseFlip"[p_ : $QECNoiseDefaultRate], opts : OptionsPattern[]] :=
     fromRates[{1 - p, 0, 0, p}, "PhaseFlip", {p}, OptionValue[QECNoiseModel, {opts}, "MeasurementError"]]
 
-QECNoiseModel["BitPhaseFlip", p_, opts : OptionsPattern[]] :=
+QECNoiseModel["BitPhaseFlip"[p_ : $QECNoiseDefaultRate], opts : OptionsPattern[]] :=
     fromRates[{1 - p, 0, p, 0}, "BitPhaseFlip", {p}, OptionValue[QECNoiseModel, {opts}, "MeasurementError"]]
 
 (* Circuit level.  A single number spreads the same rate over every location
    except idling, which stays at zero until the emitter produces parallel layers
    to idle in; an Association sets them one by one.  Missing keys are zero, so
-   QECNoiseModel["Circuit", <|"Measurement" -> q|>] is a clean way to ask what
+   QECNoiseModel["Circuit"[<|"Measurement" -> q|>]] is a clean way to ask what
    readout noise alone does. *)
-QECNoiseModel["Circuit", p_ ? (! AssociationQ[#] && (NumericQ[#] || ! FreeQ[#, _Symbol]) &)] := QECNoiseModel["Circuit",
-    <|"OneQubit" -> p, "TwoQubit" -> p, "Measurement" -> p, "Reset" -> p, "Idle" -> 0|>
-]
+QECNoiseModel["Circuit"[p : _ ? (! AssociationQ[#] && (NumericQ[#] || ! FreeQ[#, _Symbol]) &) : $QECNoiseDefaultRate]] :=
+    QECNoiseModel["Circuit"[<|"OneQubit" -> p, "TwoQubit" -> p, "Measurement" -> p, "Reset" -> p, "Idle" -> 0|>]]
 
-QECNoiseModel["Circuit", rates_Association] := If[
+QECNoiseModel["Circuit"[]] := QECNoiseModel["Circuit"[$QECNoiseDefaultRate]]
+
+QECNoiseModel["Circuit"[rates_Association]] := If[
     ! ContainsOnly[Keys[rates], $QECCircuitLocations],
-    Message[QECNoiseModel::circuitrates, $QECCircuitLocations, rates]; $Failed,
+    qecFailure["InvalidArguments", QECNoiseModel::circuitrates, $QECCircuitLocations, rates],
     QECNoiseModel[<|
         "Name" -> "Circuit",
         "Level" -> "Circuit",
@@ -170,15 +176,27 @@ QECNoiseModel["Circuit", rates_Association] := If[
     |>]
 ]
 
-QECNoiseModel["Circuit", spec___] := (
-    Message[QECNoiseModel::circuitrates, $QECCircuitLocations, {spec}];
-    $Failed
-)
+(* A bare name is its default member; options pass through. *)
+QECNoiseModel[name_String, opts : OptionsPattern[]] /; MemberQ[$QECNoiseNames, name] := QECNoiseModel[name[], opts]
 
-QECNoiseModel[name_String, ___] := (
-    Message[QECNoiseModel::unknown, name, StringRiffle[$QECNoiseNames, ", "]];
-    $Failed
-)
+(* The old form, the rate after the name, says where it goes now. *)
+QECNoiseModel[name_String, rate : Except[_Rule | _RuleDelayed], rest___] /; MemberQ[$QECNoiseNames, name] := qecFailure[
+    "InvalidArguments", QECNoiseModel::oldform,
+    "QECNoiseModel[" <> StringRiffle[Prepend[ToString[#, InputForm] & /@ {rest}, ToString[name[rate], InputForm]], ", "] <> "]",
+    "QECNoiseModel[" <> StringRiffle[ToString[#, InputForm] & /@ {name, rate, rest}, ", "] <> "]"
+]
+
+QECNoiseModel["Circuit"[spec___], ___] :=
+    qecFailure["InvalidArguments", QECNoiseModel::circuitrates, $QECCircuitLocations, {spec}]
+
+QECNoiseModel[name_String[args___], ___] /; MemberQ[$QECNoiseNames, name] :=
+    qecFailure["InvalidArguments", QECNoiseModel::invalidArgs, Defer[name[args]]]
+
+QECNoiseModel[name_String[args___], ___] :=
+    qecFailure["InvalidName", QECNoiseModel::invalidName, Defer[name[args]], StringRiffle[$QECNoiseNames, ", "]]
+
+QECNoiseModel[name_String, ___] /; ! MemberQ[{"Properties"}, name] :=
+    qecFailure["InvalidName", QECNoiseModel::invalidName, name, StringRiffle[$QECNoiseNames, ", "]]
 
 QECNoiseModel[rates_Association, opts : OptionsPattern[]] /; ContainsOnly[Keys[rates], {"I", "X", "Y", "Z"}] :=
     With[{px = Lookup[rates, "X", 0], py = Lookup[rates, "Y", 0], pz = Lookup[rates, "Z", 0]},
@@ -241,11 +259,27 @@ channelPauliProbabilities[qc_] := Module[{ks, params, assume, q, rates, same},
 
 QECNoiseModel[qc_Wolfram`QuantumFramework`QuantumChannel, opts : OptionsPattern[]] := With[
     {rates = channelPauliProbabilities[qc]},
-    If[ rates === $Failed,
-        Message[QECNoiseModel::notpauli, qc]; $Failed,
+    If[ FailureQ[rates],
+        qecMessageFailure[QECNoiseModel::notpauli, qc],
         QECNoiseModel[rates, opts]
     ]
 ]
+
+
+(* ---- equality ---- *)
+
+(* Two noise models are equal when they put the same probabilities on the same
+   locations, whatever they are called: a depolarizing model and the Pauli rates it
+   stands for are the same noise. *)
+noiseEqualQ[n1_Association, n2_Association] := n1 === n2 || (
+    n1["Level"] === n2["Level"] && With[{diff = If[n1["Level"] === "Circuit",
+            Values[n1["Rates"]] - Values[n2["Rates"]],
+            Append[n1["Probabilities"] - n2["Probabilities"], Lookup[n1, "MeasurementError", 0] - Lookup[n2, "MeasurementError", 0]]]},
+        AllTrue[diff, PossibleZeroQ]]
+)
+
+QECNoiseModel /: Equal[n1_QECNoiseModel, n2_QECNoiseModel] := noiseEqualQ[First[n1], First[n2]]
+QECNoiseModel /: Unequal[n1_QECNoiseModel, n2_QECNoiseModel] := ! Equal[n1, n2]
 
 
 (* ---- accessors ---- *)
@@ -376,7 +410,6 @@ QECNoiseModel[a_Association]["QuantumChannel", qubits_ : {1}] := With[
     ]
 ]
 
-QECNoiseModel[a_Association][prop_String] := (Message[QECNoiseModel::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

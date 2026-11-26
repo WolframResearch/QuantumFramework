@@ -200,8 +200,8 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    With[{ft = QECFaultTolerantCircuit[{{"R", 1}, {"H", 1}, {"M", 1}}, steane, "Ancilla" -> "Verified"]},
-        {ft["Ancilla"], Length[ft["HeraldChecks"]], Count[ft["Instructions"], {"MH", _}], ft["Qubits"],
+    With[{ft = QECFaultTolerantCircuit[{"Reset" -> 1, "H" -> 1, "Measurement" -> 1}, steane, "Ancilla" -> "Verified"]},
+        {ft["Ancilla"], Length[ft["HeraldChecks"]], Count[ft["Instructions"], _QuantumMeasurementOperator], ft["Qubits"],
          StringContainsQ[First[ft["OpenAssumptions"]], "verified"]}
     ],
     {"Verified", 5, 35, 35, True},
@@ -209,15 +209,15 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECExtendedRectangle[QECCode["5QubitCode"], "H"],
-    $Failed,
+    FailureQ[QECExtendedRectangle[QECCode["5QubitCode"], "H"]],
+    True,
     {QECExtendedRectangle::css},
     TestID -> "QEC-ExRec-refuses-a-non-CSS-code"
 ]
 
 VerificationTest[
-    QECExtendedRectangle[steane, "Toffoli"],
-    $Failed,
+    FailureQ[QECExtendedRectangle[steane, "Toffoli"]],
+    True,
     {QECExtendedRectangle::location},
     TestID -> "QEC-ExRec-refuses-a-location-without-a-gadget"
 ]
@@ -299,8 +299,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    qecSym["framePropagate"][{{"H", 1}, {"T", 1}}, 1, {}],
-    $Failed,
+    FailureQ[qecSym["framePropagate"][{{"H", 1}, {"T", 1}}, 1, {}]],
+    True,
     {QECDetectorModel::nonclifford},
     TestID -> "QEC-ExRec-the-frame-refuses-T"
 ]

@@ -45,12 +45,12 @@ qecMatchingLookup = Symbol[qecScope <> "matchingLookup"];
 qecPauliVector = Symbol[qecScope <> "pauliVector"];
 qecPauliString = Symbol[qecScope <> "pauliString"];
 
-rep5 = QECCode["Repetition", 5];
-surface3 = QECCode["Surface", 3];
-bitFlip = QECNoiseModel["BitFlip", qecP];
-circuit500 = QECNoiseModel["Circuit", 1/500];
+rep5 = QECCode["Repetition"[5]];
+surface3 = QECCode["Surface"[3]];
+bitFlip = QECNoiseModel["BitFlip"[qecP]];
+circuit500 = QECNoiseModel["Circuit"[1/500]];
 
-surfaceDecoder = QECDecoder[surface3, QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"];
+surfaceDecoder = QECDecoder[surface3, QECNoiseModel["Depolarizing"[1/100]], "Method" -> "Matching"];
 surfaceModel = QECDetectorModel[surface3, circuit500, 3];
 
 (* Sample a detector model the way demSampledFailure does, decode with matching,
@@ -186,23 +186,23 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    QECDecoder[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"],
-    $Failed,
+    FailureQ[QECDecoder[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[1/100]], "Method" -> "Matching"]],
+    True,
     {QECDecoder::notgraphlike},
     TestID -> "QEC-Matching-refuses-Steane-at-code-capacity"
 ]
 
 VerificationTest[
-    QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Circuit", 1/500], 1000, "Rounds" -> 2, "Decoder" -> "Matching"],
-    $Failed,
+    FailureQ[QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Circuit"[1/500]], 1000, "Rounds" -> 2, "Decoder" -> "Matching"]],
+    True,
     {QECDecoder::notgraphlike},
     TestID -> "QEC-Matching-refuses-Steane-at-circuit-level"
 ]
 
 (* Its X's and Z's trip two checks each; its Y's trip three. *)
 VerificationTest[
-    QECDecoder[QECCode["5QubitCode"], QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"],
-    $Failed,
+    FailureQ[QECDecoder[QECCode["5QubitCode"], QECNoiseModel["Depolarizing"[1/100]], "Method" -> "Matching"]],
+    True,
     {QECDecoder::notgraphlike},
     TestID -> "QEC-Matching-refuses-the-5-qubit-code-for-its-Y"
 ]
@@ -217,7 +217,7 @@ VerificationTest[
 VerificationTest[
     BlockRandom[SeedRandom[13];
         Table[
-            Less @@ Table[QECLogicalErrorRate[QECCode["Surface", d], QECNoiseModel["BitFlip", p], 20000, "Decoder" -> "Matching"], {d, {5, 3}}],
+            Less @@ Table[QECLogicalErrorRate[QECCode["Surface"[d]], QECNoiseModel["BitFlip"[p]], 20000, "Decoder" -> "Matching"], {d, {5, 3}}],
             {p, {1/25, 4/25}}
         ]
     ],

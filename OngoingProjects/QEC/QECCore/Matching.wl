@@ -7,6 +7,7 @@ PackageScope[decoderLookup]
 PackageScope[codeMatching]
 PackageScope[demMatching]
 PackageScope[codeGraphlikeQ]
+PackageScope[notGraphlikeFailure]
 PackageScope[codeMatchingGraph]
 PackageScope[demMatchingGraph]
 PackageScope[codeNonGraphlikeLetter]
@@ -122,7 +123,7 @@ matchingFromMechanisms[nd_Integer, mechs_List] := Module[
             Catch[
                 Scan[
                     Function[t, With[{r = go[t[[2]], Append[acc, {t[[1]], edges[t[[1]]]["Observable"]}]]},
-                        If[r =!= $Failed, Throw[r, "decomposed"]]]],
+                        If[! FailureQ[r], Throw[r, "decomposed"]]]],
                     tries
                 ];
                 $Failed,
@@ -133,7 +134,7 @@ matchingFromMechanisms[nd_Integer, mechs_List] := Module[
     ];
     Scan[
         Function[h, With[{parts = decompose[h[[1]], h[[2]]]},
-            If[ parts === $Failed,
+            If[ FailureQ[parts],
                 dropped++,
                 Scan[(extra[#[[1]]] = oddParity[Lookup[extra, Key[#[[1]]], 0], h[[3]]]) &, parts]
             ]
@@ -224,9 +225,9 @@ numericProbabilities[noise_Association] := With[{p = noise["Probabilities"]},
 
 (* The test comes first and is not memoised with the graph, so a refused code says
    why every time it is asked, not only the first. *)
-codeMatching[a_Association, noise_Association] := If[codeGraphlikeQ[a], codeMatchingGraph[a, noise], $Failed]
+codeMatching[a_Association, noise_Association] := If[codeGraphlikeQ[a], codeMatchingGraph[a, noise], notGraphlikeFailure[a]]
 
-codeMatchingGraph[a_Association, noise_Association] := codeMatchingGraph[a, noise] = Module[
+codeMatchingGraph[a_Association, noise_Association] := qecMemoKey[codeMatchingGraph[a, noise]] = Module[
     {n = a["Qubits"], p, mechs, bad},
     p = numericProbabilities[noise];
     mechs = Flatten[Table[
@@ -250,14 +251,14 @@ codeMatchingGraph[a_Association, noise_Association] := codeMatchingGraph[a, nois
    X's and Z's trip two checks each but whose Y's trip three.  This is a property of
    the code, not of the noise or the circuit, so both the code-capacity and the
    detector-model decoders ask it, and refuse the same codes for the same reason. *)
-codeGraphlikeQ[a_Association] := With[{bad = codeNonGraphlikeLetter[a]},
-    If[ bad === None,
-        True,
-        Message[QECDecoder::notgraphlike, pauliString[bad], Total[codeSyndromeVector[a, bad]]]; False
-    ]
+codeGraphlikeQ[a_Association] := codeNonGraphlikeLetter[a] === None
+
+(* What matching says on a code it cannot pair: the letter that trips too many checks. *)
+notGraphlikeFailure[a_Association] := With[{bad = codeNonGraphlikeLetter[a]},
+    qecMessageFailure[QECDecoder::notgraphlike, pauliString[bad], Total[codeSyndromeVector[a, bad]]]
 ]
 
-codeNonGraphlikeLetter[a_Association] := codeNonGraphlikeLetter[a] = With[
+codeNonGraphlikeLetter[a_Association] := qecMemoKey[codeNonGraphlikeLetter[a]] = With[
     {n = a["Qubits"]},
     SelectFirst[
         Flatten[Table[
@@ -289,16 +290,17 @@ splitByBasis[mech_List, zCheckQ_List, k_Integer] := Module[
     Select[{xPart, zPart}, #[[1]] =!= {} &]
 ]
 
-demMatching[a_Association] := If[codeGraphlikeQ[a["Code"]], demMatchingGraph[a], $Failed]
+demMatching[a_Association] := If[codeGraphlikeQ[a["Code"]], demMatchingGraph[a], notGraphlikeFailure[a["Code"]]]
 
-demMatchingGraph[a_Association] := demMatchingGraph[a] = Module[
+demMatchingGraph[a_Association] := qecMemoKey[demMatchingGraph[a]] = Module[
     {d, o, h, p, rows, mechs, code = a["Code"], m, zCheck},
     {d, o, h} = demRowKeys[a];
     p = If[AllTrue[a["Probabilities"], NumericQ], N[a["Probabilities"]],
         N[a["Probabilities"] /. Thread[DeleteDuplicates[Cases[a["Probabilities"], _Symbol, Infinity]] -> $QECDecoderProbeRate]]];
     rows = Select[Range[Length[d]], h[[#]] === 0 &];
     mechs = Table[{Flatten @ Position[a["DetectorMatrix"][[r]], 1], o[[r]], p[[r]], 0}, {r, rows}];
-    If[ codeCSSQ[code],
+    (* a model kept to one basis has one kind of detector already *)
+    If[ codeCSSQ[code] && Lookup[a, "Basis", All] === All,
         m = codeStabilizerCount[code];
         (* a Z check is one with no X part *)
         zCheck = With[{n = code["Qubits"]}, Total[#[[1 ;; n]]] === 0 & /@ code["CheckMatrix"]];

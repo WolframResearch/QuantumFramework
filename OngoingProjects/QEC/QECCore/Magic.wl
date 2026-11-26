@@ -50,7 +50,7 @@ $nonCliffordOps = {"T", "Tdg"};
 
 (* A logical X representative with no support on the pivots of the row-reduced X
    checks, so the fan-out never writes into a qubit the checks still need in |0>. *)
-magicWire[a_Association] := magicWire[a] = With[{n = a["Qubits"]},
+magicWire[a_Association] := qecMemoKey[magicWire[a]] = With[{n = a["Qubits"]},
     With[{basis = gf2Basis[Select[a["CheckMatrix"], Total[#[[n + 1 ;; 2 n]]] === 0 &][[All, 1 ;; n]]],
           xbar = First[codeLogicalVectors[a]["X"]][[1 ;; n]]},
         Flatten @ Position[gf2Reduce[basis, xbar], 1]
@@ -103,6 +103,9 @@ magicTestHeraldChecks[a_Association] := With[{n = a["Qubits"], k = Length[catChe
 (* The state an instruction list leaves, from |0...0>, as a vector over the 2^nq
    basis states, qubit 1 most significant.  Resets at the start are no-ops;
    measurements are not supported.  It exists to check what the frame cannot. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+instructionStateVector[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := instructionStateVector[instructionTuples[instr], rest]
+
 instructionStateVector[instr_List, nq_Integer] := Module[
     {v = UnitVector[2^nq, 1] + 0. I, one, bit, idx0, idx1, apply1},
     bit[q_] := 2^(nq - q);

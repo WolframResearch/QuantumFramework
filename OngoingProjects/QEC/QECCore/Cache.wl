@@ -5,6 +5,7 @@ Package["Wolfram`QuantumFramework`QEC`"]
 PackageExport[QECClearCache]
 
 PackageScope[$QECMemoisedFunctions]
+PackageScope[qecMemoKey]
 
 
 (* ============================================================================ *)
@@ -23,6 +24,15 @@ PackageScope[$QECMemoisedFunctions]
 (* drops the cached answers and keeps the definitions, so a reload takes effect.  *)
 (* ============================================================================ *)
 
+(* The store every memoised function goes through:  f[a_] := qecMemoKey[f[a]] = rhs.
+   It keeps the answer only while the framework's property cache is on, so
+   Block[{$QuantumFrameworkPropCache = False}, ...] turns off the QEC layer's caching
+   together with the framework's, as QuantumState and QuantumOperator do.  Set holds
+   its left side, so the key reaches the upvalue as written, with the arguments
+   already substituted. *)
+qecMemoKey /: Set[qecMemoKey[key_], value_] :=
+    If[ TrueQ[Wolfram`QuantumFramework`PackageScope`$QuantumFrameworkPropCache], key = value, value]
+
 QECClearCache::usage = "QECClearCache[] clears the memoised results of the QEC core (standard forms, logical operators, distances, decoder tables, encoders). Definitions are left intact. Call it after reloading the package during development, or to release memory held by cached results.";
 
 (* Every function that caches its result on the code's data association. *)
@@ -35,10 +45,11 @@ $QECMemoisedFunctions := {
     cosetProbabilities, codeMinimumWeightDecoder, codeLogicalWires,
     transversalAction, transversalPairCode, transversalPairLogicals,
     transversalCliffordWords, transversalGateNames, transversalPatterns,
-    ftGateWord,
+    ftGateWord, codeExtraction, magicWire, registerLabelMatrix, registerLogicalVectors,
     codeEncoderMatrix, codeSyndromeProjectors, codeLogicalClassPaulis, demExactReport,
     codeStabilizerGroup, hierarchyPaulis, codeMatchingGraph, demMatchingGraph, codeNonGraphlikeLetter,
     exRecMalignantCounts, blockTables, cssCorrectionTable, correctionResidualWeights, hadamardIsLogicalQ,
+    demRestrictBasis, demMaximumLikelihoodTable,
     bosonicElement, bosonicNorm
 };
 

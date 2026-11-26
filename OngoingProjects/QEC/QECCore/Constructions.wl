@@ -43,10 +43,10 @@ embedPauli[v_List, before_Integer, after_Integer] :=
 QECCode::cssdims = "HX and HZ must have the same number of columns (qubits).";
 QECCode::cssorth = "HX and HZ must satisfy HX.Transpose[HZ] = 0 (mod 2) so that X-type and Z-type stabilizers commute.";
 
-QECCode["CSS", hx_ ? MatrixQ, hz_ ? MatrixQ] := Module[{n = Dimensions[hx][[2]]},
-    If[Dimensions[hz][[2]] =!= n, Message[QECCode::cssdims]; Return[$Failed]];
+QECCode["CSS"[hx_ ? MatrixQ, hz_ ? MatrixQ]] := Module[{n = Dimensions[hx][[2]]},
+    If[Dimensions[hz][[2]] =!= n, Return[qecFailure["InvalidArguments", QECCode::cssdims], Module]];
     If[ ! AllTrue[Flatten[Mod[hx . Transpose[hz], 2]], # === 0 &],
-        Message[QECCode::cssorth]; Return[$Failed]
+        Return[qecFailure["InvalidArguments", QECCode::cssorth], Module]
     ];
     QECCode[Join[
         Join[#, gf2Zero[n], {0}] & /@ hx,
@@ -54,7 +54,29 @@ QECCode["CSS", hx_ ? MatrixQ, hz_ ? MatrixQ] := Module[{n = Dimensions[hx][[2]]}
     ]]
 ]
 
-QECCode["CSS", h_ ? MatrixQ] := QECCode["CSS", h, h]
+QECCode["CSS"[h_ ? MatrixQ]] := QECCode["CSS"[h, h]]
+
+
+(* ---- tensor product ---- *)
+
+(* Two codes side by side, each on its own qubits: the framework's QuantumTensorProduct,
+   which already joins bases, states, operators and channels, joins codes too.  The
+   check matrix is block diagonal, the parameters are [[n1 + n2, k1 + k2, min(d1, d2)]],
+   and an extraction order carries over when both codes have one. *)
+Wolfram`QuantumFramework`QuantumTensorProduct[QECCode[a1_Association], QECCode[a2_Association]] := Module[
+    {n1 = a1["Qubits"], n2 = a2["Qubits"], rows, code},
+    rows = Join[
+        MapThread[Join[#1[[1 ;; n1]], ConstantArray[0, n2], #1[[n1 + 1 ;; 2 n1]], ConstantArray[0, n2], {#2}] &,
+            {a1["CheckMatrix"], a1["Phases"]}],
+        MapThread[Join[ConstantArray[0, n1], #1[[1 ;; n2]], ConstantArray[0, n1], #1[[n2 + 1 ;; 2 n2]], {#2}] &,
+            {a2["CheckMatrix"], a2["Phases"]}]
+    ];
+    code = QECCode[rows];
+    If[ KeyExistsQ[a1, "CheckOrder"] && KeyExistsQ[a2, "CheckOrder"] && MatchQ[code, QECCode[_Association]],
+        QECCode[Append[First[code], "CheckOrder" -> Join[a1["CheckOrder"], a2["CheckOrder"] + n1]]],
+        code
+    ]
+]
 
 
 (* ---- concatenation ---- *)
@@ -66,7 +88,7 @@ QECConcatenate::inner = "The inner code must encode exactly one logical qubit.";
 QECConcatenate[QECCode[outer_Association], QECCode[inner_Association]] := Module[
     {n1, n2, logical, xbar, zbar, translate, innerGens, outerGens},
 
-    If[codeLogicalQubits[inner] =!= 1, Message[QECConcatenate::inner]; Return[$Failed]];
+    If[codeLogicalQubits[inner] =!= 1, Return[qecMessageFailure[QECConcatenate::inner]]];
 
     n1 = outer["Qubits"];
     n2 = inner["Qubits"];
@@ -135,12 +157,12 @@ removeQubitAt[a_Association, q_Integer] := Module[{n = a["Qubits"], rows, xrow, 
 ]
 
 QECRemoveQubit[QECCode[a_Association], q_Integer] := With[{result = removeQubitAt[a, q]},
-    If[result === $Failed, Message[QECRemoveQubit::nopivot]; $Failed, result]
+    If[FailureQ[result], qecMessageFailure[QECRemoveQubit::nopivot], result]
 ]
 
 QECRemoveQubit[QECCode[a_Association]] := Module[{q},
-    q = SelectFirst[Reverse[Range[a["Qubits"]]], removeQubitAt[a, #] =!= $Failed &];
-    If[MissingQ[q], Message[QECRemoveQubit::nopivot]; Return[$Failed]];
+    q = SelectFirst[Reverse[Range[a["Qubits"]]], ! FailureQ[removeQubitAt[a, #]] &];
+    If[MissingQ[q], Return[qecMessageFailure[QECRemoveQubit::nopivot]]];
     removeQubitAt[a, q]
 ]
 
@@ -155,8 +177,8 @@ QECPasteCodes::solo = "Solo counts must lie between 0 and the number of generato
 QECPasteCodes[QECCode[a1_Association], QECCode[a2_Association], solo1_Integer, solo2_Integer] := Module[
     {m1 = codeStabilizerCount[a1], m2 = codeStabilizerCount[a2], n1 = a1["Qubits"], n2 = a2["Qubits"], g1, g2, solo, paired},
 
-    If[ ! (0 <= solo1 <= m1 && 0 <= solo2 <= m2), Message[QECPasteCodes::solo]; Return[$Failed]];
-    If[ m1 - solo1 =!= m2 - solo2, Message[QECPasteCodes::pairing, m1 - solo1, m2 - solo2]; Return[$Failed]];
+    If[ ! (0 <= solo1 <= m1 && 0 <= solo2 <= m2), Return[qecMessageFailure[QECPasteCodes::solo]]];
+    If[ m1 - solo1 =!= m2 - solo2, Return[qecMessageFailure[QECPasteCodes::pairing, m1 - solo1, m2 - solo2]]];
 
     g1 = codeVectors[a1];
     g2 = codeVectors[a2];

@@ -38,10 +38,10 @@ qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 qecCodeDetectorModel = Symbol[qecScope <> "codeDetectorModel"];
 qecDemSampledReport = Symbol[qecScope <> "demSampledReport"];
 
-bitFlip = QECNoiseModel["BitFlip", qecP];
-phenomenological = QECNoiseModel["BitFlip", qecP, "MeasurementError" -> qecP];
+bitFlip = QECNoiseModel["BitFlip"[qecP]];
+phenomenological = QECNoiseModel["BitFlip"[qecP], "MeasurementError" -> qecP];
 
-exactRepetition = QECThreshold[{"Repetition", {3, 5, 7}}, bitFlip];
+exactRepetition = QECThreshold["Repetition"[{3, 5, 7}], bitFlip];
 
 
 (* ============================================================================
@@ -55,14 +55,14 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Simplify[exactRepetition["Rates"][5] - QECLogicalErrorRate[QECCode["Repetition", 5], bitFlip]],
+    Simplify[exactRepetition["Rates"][5] - QECLogicalErrorRate[QECCode["Repetition"[5]], bitFlip]],
     0,
     TestID -> "QEC-Threshold-exact-curves-are-the-rates"
 ]
 
 (* Codes given directly are put in order of size. *)
 VerificationTest[
-    With[{th = QECThreshold[{QECCode["Repetition", 5], QECCode["Repetition", 3]}, bitFlip]},
+    With[{th = QECThreshold[{QECCode["Repetition"[5]], QECCode["Repetition"[3]]}, bitFlip]},
         {th["Sizes"], th["Value"], th["Family"]}
     ],
     {{3, 5}, 1/2, None},
@@ -76,7 +76,7 @@ VerificationTest[
 
 VerificationTest[
     BlockRandom[SeedRandom[3];
-        With[{th = QECThreshold[{"Repetition", {3, 5, 7}}, bitFlip, "Shots" -> 20000, "Range" -> {0.3, 0.7}]},
+        With[{th = QECThreshold["Repetition"[{3, 5, 7}], bitFlip, "Shots" -> 20000, "Range" -> {0.3, 0.7}]},
             {th["Method"], Head[th["Value"]], Abs[th["Value"]["Value"] - 1/2] < 3 th["Value"]["Uncertainty"],
              th["Value"]["Uncertainty"] < 0.03}
         ]
@@ -89,7 +89,7 @@ VerificationTest[
    matching threshold of the random-bond Ising model, 10.3 %. *)
 VerificationTest[
     BlockRandom[SeedRandom[4];
-        With[{th = QECThreshold[{"Repetition", {3, 5}}, phenomenological, "Shots" -> 4000, "Points" -> 5]},
+        With[{th = QECThreshold["Repetition"[{3, 5}], phenomenological, "Shots" -> 4000, "Points" -> 5]},
             {th["Level"], th["Rounds"], th["Decoder"], 0.08 < th["Value"]["Value"] < 0.13}
         ]
     ],
@@ -99,7 +99,7 @@ VerificationTest[
 
 VerificationTest[
     BlockRandom[SeedRandom[1];
-        With[{th = QECThreshold[{"Surface", {3, 5}}, bitFlip, "Shots" -> 5000]},
+        With[{th = QECThreshold["Surface"[{3, 5}], bitFlip, "Shots" -> 5000]},
             {th["Decoder"], 0.06 < th["Value"]["Value"] < 0.12}
         ]
     ],
@@ -111,7 +111,7 @@ VerificationTest[
    object says so instead of inventing a crossing. *)
 VerificationTest[
     BlockRandom[SeedRandom[2];
-        With[{th = QECThreshold[{"Surface", {3, 5}}, bitFlip, "Shots" -> 4000, "Range" -> {0.01, 0.04}, "Points" -> 4]},
+        With[{th = QECThreshold["Surface"[{3, 5}], bitFlip, "Shots" -> 4000, "Range" -> {0.01, 0.04}, "Points" -> 4]},
             {th["Value"], AnyTrue[th["Caveats"], StringContainsQ[#, "above the range"] &]}
         ]
     ],
@@ -122,7 +122,7 @@ VerificationTest[
 (* Building the model once with p symbolic and substituting gives the very samples
    that building it at the point gives. *)
 VerificationTest[
-    With[{r5 = QECCode["Repetition", 5], noise = QECNoiseModel["BitFlip", 1/20, "MeasurementError" -> 1/20]},
+    With[{r5 = QECCode["Repetition"[5]], noise = QECNoiseModel["BitFlip"[1/20], "MeasurementError" -> 1/20]},
         {BlockRandom[SeedRandom[5]; QECLogicalErrorRate[r5, noise, 3000, "Rounds" -> 5, "Decoder" -> "Matching"]],
          BlockRandom[SeedRandom[5];
             qecDemSampledReport[qecCodeDetectorModel[First[r5], First[phenomenological], 5, "BareAncilla"] /. qecP -> 1/20,
@@ -156,29 +156,37 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    QECThreshold[{"Repetition", {3}}, bitFlip],
-    $Failed,
+    FailureQ[QECThreshold["Repetition"[{3}], bitFlip]],
+    True,
     {QECThreshold::codes},
     TestID -> "QEC-Threshold-needs-two-codes"
 ]
 
 VerificationTest[
-    QECThreshold[{"Repetition", {3, 5}}, QECNoiseModel["BitFlip", qecP, "MeasurementError" -> qecQ]],
-    $Failed,
+    FailureQ[QECThreshold["Repetition"[{3, 5}], QECNoiseModel["BitFlip"[qecP], "MeasurementError" -> qecQ]]],
+    True,
     {QECThreshold::params},
     TestID -> "QEC-Threshold-needs-one-symbolic-rate"
 ]
 
 VerificationTest[
-    QECThreshold[{"Steane", {3, 5}}, bitFlip],
-    $Failed,
+    FailureQ[QECThreshold["Steane"[{3, 5}], bitFlip]],
+    True,
     {QECThreshold::family},
     TestID -> "QEC-Threshold-unknown-family"
 ]
 
 VerificationTest[
-    QECThreshold[{"Surface", {3, 5}}, bitFlip, "Shots" -> 1000, "Range" -> {0.2, 0.1}],
-    $Failed,
+    FailureQ[QECThreshold["Surface"[{3, 5}], bitFlip, "Shots" -> 1000, "Range" -> {0.2, 0.1}]],
+    True,
     {QECThreshold::range},
     TestID -> "QEC-Threshold-refuses-a-bad-range"
+]
+
+
+VerificationTest[
+    FailureQ[QECThreshold[{"Surface", {3, 5}}, bitFlip]],
+    True,
+    {QECThreshold::oldform},
+    TestID -> "QEC-Threshold-old-member-form-refused"
 ]

@@ -27,7 +27,7 @@ PackageExport[QECPseudothreshold]
 (*                                                                              *)
 (* A THRESHOLD SURFACE, in this layer's terms, is the same question asked along *)
 (* rays: give the noise as a direction with one free parameter                  *)
-(* (QECNoiseModel["Circuit", <|"TwoQubit" -> p, "OneQubit" -> c p|>]) and map    *)
+(* (QECNoiseModel["Circuit"[<|"TwoQubit" -> p, "OneQubit" -> c p|>]]) and map    *)
 (* over c.  Each ray is one root.  It is a pseudothreshold surface -- one level *)
 (* against none -- and is reported as one.                                      *)
 (*                                                                              *)
@@ -38,7 +38,6 @@ QECPseudothreshold::usage = "QECPseudothreshold[code, noise] gives the pseudothr
 
 QECPseudothreshold::params = "The noise must carry exactly one symbolic rate; the logical error rate depends on `1`.";
 QECPseudothreshold::rate = "The logical error rate could not be computed exactly for this code and noise.";
-QECPseudothreshold::noprop = "`1` is not a property of QECPseudothreshold. Use ps[\"Properties\"] for the list.";
 
 Options[QECPseudothreshold] = Options[QECLogicalErrorRate];
 
@@ -46,17 +45,17 @@ Options[QECPseudothreshold] = Options[QECLogicalErrorRate];
 (* ---- construction ---- *)
 
 QECPseudothreshold[code_QECCode, qc_Wolfram`QuantumFramework`QuantumChannel, opts : OptionsPattern[]] :=
-    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECPseudothreshold[code, noise, opts], _ -> $Failed}]
+    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECPseudothreshold[code, noise, opts], f_ ? FailureQ :> f, _ -> $Failed}]
 
 QECPseudothreshold[code : QECCode[a_Association], noise : QECNoiseModel[n_Association], opts : OptionsPattern[]] := Module[
     {report, rate, params, p, roots, slope, crossing, level, postSelected},
 
     report = QECLogicalErrorRate[code, noise, All, opts];
-    If[ ! AssociationQ[report], Message[QECPseudothreshold::rate]; Return[$Failed]];
+    If[ ! AssociationQ[report], Return[qecMessageFailure[QECPseudothreshold::rate]]];
     rate = Simplify[report["Rate"]];
 
     params = DeleteDuplicates @ Cases[rate, s_Symbol /; ! NumericQ[s] && Context[s] =!= "System`", {0, Infinity}];
-    If[ Length[params] =!= 1, Message[QECPseudothreshold::params, params]; Return[$Failed]];
+    If[ Length[params] =!= 1, Return[qecMessageFailure[QECPseudothreshold::params, params]]];
     p = First[params];
 
     roots = p /. Solve[rate == p && 0 < p < 1, p, Reals];
@@ -154,8 +153,6 @@ QECPseudothreshold[d_Association]["Plot", opts___] := With[
     ]
 ]
 
-QECPseudothreshold[_Association][prop_String, ___] :=
-    (Message[QECPseudothreshold::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

@@ -25,7 +25,7 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 
@@ -86,15 +86,15 @@ VerificationTest[
    Validation
    ============================================================================ *)
 
-VerificationTest[Quiet[QECCode[{"XXX", "ZZZ"}]], $Failed, TestID -> "QEC-Code-reject-noncommuting"]
+VerificationTest[FailureQ[Quiet[QECCode[{"XXX", "ZZZ"}]]], True, TestID -> "QEC-Code-reject-noncommuting"]
 
-VerificationTest[Quiet[QECCode[{"ZZI", "IZZ", "ZIZ"}]], $Failed, TestID -> "QEC-Code-reject-dependent"]
+VerificationTest[FailureQ[Quiet[QECCode[{"ZZI", "IZZ", "ZIZ"}]]], True, TestID -> "QEC-Code-reject-dependent"]
 
-VerificationTest[Quiet[QECCode[{"ZQI", "IZZ"}]], $Failed, TestID -> "QEC-Code-reject-bad-letter"]
+VerificationTest[FailureQ[Quiet[QECCode[{"ZQI", "IZZ"}]]], True, TestID -> "QEC-Code-reject-bad-letter"]
 
-VerificationTest[Quiet[QECCode[{"ZZI", "IZZZ"}]], $Failed, TestID -> "QEC-Code-reject-ragged"]
+VerificationTest[FailureQ[Quiet[QECCode[{"ZZI", "IZZZ"}]]], True, TestID -> "QEC-Code-reject-ragged"]
 
-VerificationTest[Quiet[QECCode[{"ZI", "IZ", "ZZ"}]], $Failed, TestID -> "QEC-Code-reject-overcomplete"]
+VerificationTest[FailureQ[Quiet[QECCode[{"ZI", "IZ", "ZZ"}]]], True, TestID -> "QEC-Code-reject-overcomplete"]
 
 (* Each rejection issues its own message, and the non-commuting one names the
    offending pair.  Check fires only for the message it is given, so these assert
@@ -135,13 +135,13 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Quiet[QECCode[{"ZZI", "IZZ"}]["NoSuchKey"]],
-    Missing["NotFound", "NoSuchKey"],
+    MatchQ[Quiet[QECCode[{"ZZI", "IZZ"}]["NoSuchKey"]], _[_]["NoSuchKey"]],
+    True,
     TestID -> "QEC-Code-unknown-property"
 ]
 
 VerificationTest[
-    Quiet[Check[QECCode[{"ZZI", "IZZ"}]["NoSuchKey"], "fired", QECCode::noprop]],
+    Quiet[Check[QECCode[{"ZZI", "IZZ"}]["NoSuchKey"], "fired", QECCode::undefprop]],
     "fired",
     TestID -> "QEC-Code-unknown-property-message"
 ]

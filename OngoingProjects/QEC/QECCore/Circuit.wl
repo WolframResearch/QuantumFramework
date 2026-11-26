@@ -10,6 +10,7 @@ PackageScope[circuitQubitCount]
 PackageScope[codeCircuitInstructions]
 PackageScope[generatorInstructions]
 PackageScope[framePropagate]
+PackageScope[framePropagateBatch]
 PackageScope[frameZero]
 PackageScope[circuitSchedule]
 PackageScope[circuitIdleQubits]
@@ -133,7 +134,6 @@ PackageScope[rotation]
 QECSyndromeCircuit::usage = "QECSyndromeCircuit[code] gives the syndrome-extraction circuit of a stabilizer code: one ancilla per generator, measured once.\nQECSyndromeCircuit[code, r] repeats the extraction for r rounds, resetting the ancillas between them.\ncirc[prop] gives a property; circ[\"Properties\"] lists them.";
 
 QECSyndromeCircuit::rounds = "The number of rounds must be a positive integer; got `1`.";
-QECSyndromeCircuit::noprop = "`1` is not a property of QECSyndromeCircuit. Use circ[\"Properties\"] for the list.";
 
 
 (* ---- instructions ---- *)
@@ -198,7 +198,7 @@ generatorInstructions[v_List, n_Integer, ancilla_Integer, support_List] := Join[
     {{"M", ancilla}}
 ]
 
-codeCircuitInstructions[a_Association, rounds_Integer] := codeCircuitInstructions[a, rounds] = With[
+codeCircuitInstructions[a_Association, rounds_Integer] := qecMemoKey[codeCircuitInstructions[a, rounds]] = With[
     {n = a["Qubits"], mat = a["CheckMatrix"], order = codeCheckOrder[a]},
     Catenate @ Table[
         Catenate @ Table[generatorInstructions[mat[[j]], n, n + j, order[[j]]], {j, Length[mat]}],
@@ -213,7 +213,7 @@ QECSyndromeCircuit[QECCode[a_Association]] := QECSyndromeCircuit[QECCode[a], 1]
 
 QECSyndromeCircuit[QECCode[a_Association], rounds_] := If[
     ! (IntegerQ[rounds] && rounds > 0),
-    Message[QECSyndromeCircuit::rounds, rounds]; $Failed,
+    qecMessageFailure[QECSyndromeCircuit::rounds, rounds],
     QECSyndromeCircuit[<|
         "Instructions" -> codeCircuitInstructions[a, rounds],
         "DataQubits" -> a["Qubits"],
@@ -268,6 +268,9 @@ circuitMeasurementLabels[a_Association] := Catenate @ Table[
 
 frameZero[nq_Integer] := {ConstantArray[0, nq], ConstantArray[0, nq]}
 
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+framePropagate[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := framePropagate[instructionTuples[instr], rest]
+
 framePropagate[instr_List, nq_Integer, faults_List] := Module[
     {x, z, out, heralds, byIndex, step, q, c, t, f},
 
@@ -307,7 +310,7 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
                gate the noise model cannot see is a fault location silently lost. *)
             "X" | "Z" | "Y", Null,
             (* a Pauli pushed through T is not a Pauli: refuse rather than drop it *)
-            "T" | "Tdg", Message[QECDetectorModel::nonclifford, First[step], i]; Return[$Failed, Module],
+            "T" | "Tdg", Return[qecMessageFailure[QECDetectorModel::nonclifford, First[step], i], Module],
             "M",    Internal`StuffBag[out, x[[step[[2]]]]],
             "MH",   Internal`StuffBag[heralds, x[[step[[2]]]]]
         ];
@@ -324,6 +327,70 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
         "Record" -> Internal`BagPart[out, All],
         "Heralds" -> Internal`BagPart[heralds, All],
         "Frame" -> {x, z}
+    |>
+]
+
+
+(* All the faults at once.  The frame is linear, so nothing ties a bit to one fault:
+   give fault set j the bit 2^(j-1) of every x and z, and the same XORs push all of
+   them through the circuit together, as integers as wide as the number of fault
+   sets.  This is Stim's bit-parallel frame simulation, done with Wolfram's big
+   integers.  Returns the per-set record, heralds and frame as 0/1 matrices, one row
+   per fault set, in the same shape framePropagate gives for one. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+framePropagateBatch[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := framePropagateBatch[instructionTuples[instr], rest]
+
+framePropagateBatch[instr_List, nq_Integer, faultSets_List] := Module[
+    {x, z, out, heralds, byIndex, step, q, c, t, nf = Length[faultSets], bits, inject},
+
+    x = ConstantArray[0, nq];
+    z = ConstantArray[0, nq];
+    out = Internal`Bag[];
+    heralds = Internal`Bag[];
+    byIndex = GroupBy[
+        Catenate[MapIndexed[Function[{set, j}, {#[[1]], #[[2]], #[[3]], First[j]} & /@ set], faultSets]],
+        First
+    ];
+    inject[i_] := Do[
+        q = f[[2]];
+        If[f[[3, 1]] == 1, x[[q]] = BitXor[x[[q]], 2^(f[[4]] - 1)]];
+        If[f[[3, 2]] == 1, z[[q]] = BitXor[z[[q]], 2^(f[[4]] - 1)]],
+        {f, Lookup[byIndex, i, {}]}
+    ];
+
+    inject[0];
+    Do[
+        step = instr[[i]];
+        Switch[First[step],
+            "R",    q = step[[2]]; x[[q]] = 0; z[[q]] = 0,
+            "H",    q = step[[2]]; {x[[q]], z[[q]]} = {z[[q]], x[[q]]},
+            "S" | "Sdg", q = step[[2]]; z[[q]] = BitXor[z[[q]], x[[q]]],
+            "V",    q = step[[2]]; x[[q]] = BitXor[x[[q]], z[[q]]],
+            "Vdg",  q = step[[2]]; x[[q]] = BitXor[x[[q]], z[[q]]],
+            "CNOT", c = step[[2]]; t = step[[3]];
+                    x[[t]] = BitXor[x[[t]], x[[c]]];
+                    z[[c]] = BitXor[z[[c]], z[[t]]],
+            "CZ",   c = step[[2]]; t = step[[3]];
+                    z[[t]] = BitXor[z[[t]], x[[c]]];
+                    z[[c]] = BitXor[z[[c]], x[[t]]],
+            "SWAP", c = step[[2]]; t = step[[3]];
+                    {x[[c]], x[[t]]} = {x[[t]], x[[c]]};
+                    {z[[c]], z[[t]]} = {z[[t]], z[[c]]},
+            "X" | "Z" | "Y", Null,
+            "T" | "Tdg", Return[qecMessageFailure[QECDetectorModel::nonclifford, First[step], i], Module],
+            "M",    Internal`StuffBag[out, x[[step[[2]]]]],
+            "MH",   Internal`StuffBag[heralds, x[[step[[2]]]]]
+        ];
+        inject[i],
+        {i, Length[instr]}
+    ];
+
+    (* one row per fault set: bit j - 1 of every integer, least significant first *)
+    bits[v_List] := If[v === {}, ConstantArray[{}, nf], Transpose[Reverse /@ IntegerDigits[v, 2, nf]]];
+    <|
+        "Record" -> bits[Internal`BagPart[out, All]],
+        "Heralds" -> bits[Internal`BagPart[heralds, All]],
+        "Frame" -> {bits[x], bits[z]}
     |>
 ]
 
@@ -353,6 +420,9 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
    Layers are lists of instruction indices in emission order, and the layers
    themselves are in time order. *)
 
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+circuitSchedule[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := circuitSchedule[instructionTuples[instr], rest]
+
 circuitSchedule[instr_List, nq_Integer] := Module[
     {ready = ConstantArray[1, nq], byLayer = <||>, qs, layer},
     Do[
@@ -366,10 +436,16 @@ circuitSchedule[instr_List, nq_Integer] := Module[
 ]
 
 (* The qubits no instruction of a layer touches. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+circuitIdleQubits[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := circuitIdleQubits[instructionTuples[instr], rest]
+
 circuitIdleQubits[instr_List, nq_Integer, layer_List] :=
     Complement[Range[nq], Union @@ (Rest[instr[[#]]] & /@ layer)]
 
 (* Which layer each instruction landed in, as a flat list indexed by instruction. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+circuitInstructionLayers[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := circuitInstructionLayers[instructionTuples[instr], rest]
+
 circuitInstructionLayers[instr_List, nq_Integer] := Module[
     {layers = circuitSchedule[instr, nq], out = ConstantArray[0, Length[instr]]},
     Do[Do[out[[i]] = L, {i, layers[[L]]}], {L, Length[layers]}];
@@ -396,6 +472,9 @@ circuitInstructionLayers[instr_List, nq_Integer] := Module[
    That is correct rather than a collapse -- they are four independent chances to
    decohere during a wait that the propagator sees as a single gap, so they stay four
    separate locations with one shared insertion point. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+circuitIdleAnchor[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := circuitIdleAnchor[instructionTuples[instr], rest]
+
 circuitIdleAnchor[instr_List, layerOf_List, q_Integer, L_Integer] := With[
     {earlier = Select[
         Range[Length[instr]],
@@ -411,6 +490,9 @@ circuitIdleAnchor[instr_List, layerOf_List, q_Integer, L_Integer] := With[
    slot into a DEPOLARIZE1 at the same anchor.  If the two computed their own the
    exported circuit could drift from the model it is supposed to cross-check, which
    would break the one thing the bridge is for. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+circuitIdleSlots[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := circuitIdleSlots[instructionTuples[instr], rest]
+
 circuitIdleSlots[instr_List, nq_Integer] := With[
     {layers = circuitSchedule[instr, nq], layerOf = circuitInstructionLayers[instr, nq]},
     Catenate @ Table[
@@ -426,6 +508,9 @@ circuitIdleSlots[instr_List, nq_Integer] := With[
    the emitted circuit really measures the generators we think it does.  "R" has no
    unitary form and is dropped -- validation runs a single round from ancillas
    already in |0>.  "M" is not a gate either and is handled by the caller. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+instructionEngineGates[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := instructionEngineGates[instructionTuples[instr], rest]
+
 instructionEngineGates[instr_List] := Catenate[
     Replace[instr, {
         {"R", _} -> {},
@@ -462,7 +547,7 @@ $circuitProperties = {
 
 QECSyndromeCircuit[_Association]["Properties"] := $circuitProperties
 
-QECSyndromeCircuit[a_Association]["Instructions"] := a["Instructions"]
+QECSyndromeCircuit[a_Association]["Instructions"] := instructionRules[a["Instructions"]]
 QECSyndromeCircuit[a_Association]["DataQubits"] := a["DataQubits"]
 QECSyndromeCircuit[a_Association]["Ancillas"] := a["Ancillas"]
 QECSyndromeCircuit[a_Association]["Qubits"] := circuitQubitCount[a]
@@ -480,13 +565,12 @@ QECSyndromeCircuit[a_Association]["InstructionCount"] := Length[a["Instructions"
 QECSyndromeCircuit[a_Association]["QuantumCircuitOperator"] :=
     gadgetCircuitOperator[a["Instructions"]]
 QECSyndromeCircuit[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
-QECSyndromeCircuit[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
+QECSyndromeCircuit[a_Association]["GateCounts"] := gadgetGateCounts[a["Instructions"]]
 (* What the circuit implements, stated as the instrument it implements: one projector
    per syndrome on the data qubits.  The circuit is one way to realize it; the code
    owns the object (Operational.wl), so this only delegates. *)
 QECSyndromeCircuit[a_Association]["SyndromeMeasurement"] := QECCode[a["Code"]]["SyndromeMeasurement"]
 
-QECSyndromeCircuit[a_Association][prop_String] := (Message[QECSyndromeCircuit::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)
@@ -495,8 +579,8 @@ QECSyndromeCircuit /: MakeBoxes[obj : QECSyndromeCircuit[a_Association] /; KeyEx
     BoxForm`ArrangeSummaryBox[
         QECSyndromeCircuit,
         obj,
-        BarChart[Values[Counts[First /@ a["Instructions"]]],
-            ChartLabels -> Keys[Counts[First /@ a["Instructions"]]],
+        BarChart[Values[gadgetGateCounts[a["Instructions"]]],
+            ChartLabels -> Keys[gadgetGateCounts[a["Instructions"]]],
             ImageSize -> {Automatic, 34}, Axes -> False, ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
         {
             BoxForm`SummaryItem[{"Data qubits: ", a["DataQubits"]}],
@@ -506,7 +590,7 @@ QECSyndromeCircuit /: MakeBoxes[obj : QECSyndromeCircuit[a_Association] /; KeyEx
         {
             BoxForm`SummaryItem[{"Instructions: ", Length[a["Instructions"]]}],
             BoxForm`SummaryItem[{"Measurements: ", a["Rounds"] a["Ancillas"]}],
-            BoxForm`SummaryItem[{"Gate counts: ", Counts[First /@ a["Instructions"]]}]
+            BoxForm`SummaryItem[{"Gate counts: ", gadgetGateCounts[a["Instructions"]]}]
         },
         form,
         "Interpretable" -> False

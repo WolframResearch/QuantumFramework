@@ -31,7 +31,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
@@ -78,8 +78,8 @@ VerificationTest[
 
 (* A single-block instruction list moves into a block; ops and arity untouched. *)
 VerificationTest[
-    reg["Lift", {{"R", 1}, {"H", 2}, {"CNOT", 1, 2}, {"CZ", 3, 7}}, 2],
-    {{"R", 8}, {"H", 9}, {"CNOT", 8, 9}, {"CZ", 10, 14}},
+    reg["Lift", {"Reset" -> 1, "H" -> 2, "CNOT" -> {1, 2}, "CZ" -> {3, 7}}, 2],
+    {"Reset" -> 8, "H" -> 9, "CNOT" -> {8, 9}, "CZ" -> {10, 14}},
     TestID -> "QEC-Register-lifts-a-circuit-into-a-block"
 ]
 
@@ -88,7 +88,7 @@ VerificationTest[
 VerificationTest[
     With[{one = QECRegister[steane, 1]},
         {one["Qubits"] === steane["Qubits"],
-         one["Lift", {{"H", 1}, {"CNOT", 1, 2}}, 1] === {{"H", 1}, {"CNOT", 1, 2}},
+         one["Lift", {"H" -> 1, "CNOT" -> {1, 2}}, 1] === {"H" -> 1, "CNOT" -> {1, 2}},
          one["LabelMatrix"] === qecLabelM[qecCodeData[steane]],
          one["Generators"] === steane["Generators"]}
     ],
@@ -122,7 +122,7 @@ VerificationTest[
    and nothing else. *)
 VerificationTest[
     reg["TransversalCNOT", 1, 2],
-    Table[{"CNOT", q, q + 7}, {q, 7}],
+    Table["CNOT" -> {q, q + 7}, {q, 7}],
     TestID -> "QEC-Register-transversal-CNOT-is-qubit-by-qubit"
 ]
 
@@ -186,29 +186,29 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    QECRegister[steane, 0],
-    $Failed,
+    FailureQ[QECRegister[steane, 0]],
+    True,
     {QECRegister::blocks},
     TestID -> "QEC-Register-needs-a-positive-block-count"
 ]
 
 VerificationTest[
-    reg["TransversalCNOT", 1, 3],
-    $Failed,
+    FailureQ[reg["TransversalCNOT", 1, 3]],
+    True,
     {QECRegister::block},
     TestID -> "QEC-Register-refuses-a-block-it-does-not-have"
 ]
 
 VerificationTest[
-    reg["TransversalCNOT", 2, 2],
-    $Failed,
+    FailureQ[reg["TransversalCNOT", 2, 2]],
+    True,
     {QECRegister::same},
     TestID -> "QEC-Register-a-CNOT-needs-two-different-blocks"
 ]
 
 VerificationTest[
-    reg["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECRegister::noprop},
+    MatchQ[reg["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECRegister::undefprop},
     TestID -> "QEC-Register-unknown-property-is-refused"
 ]

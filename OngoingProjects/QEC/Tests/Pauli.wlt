@@ -32,7 +32,7 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
@@ -84,9 +84,9 @@ VerificationTest[qecPauliVector["iZI"], {0, 0, 1, 0, 1}, TestID -> "QEC-Pauli-ve
 
 VerificationTest[qecPauliVector["-iZI"], {0, 0, 1, 0, 3}, TestID -> "QEC-Pauli-vector-minus-i"]
 
-VerificationTest[Quiet[qecPauliVector["XQZ"]], $Failed, TestID -> "QEC-Pauli-vector-bad-letter"]
+VerificationTest[FailureQ[Quiet[qecPauliVector["XQZ"]]], True, TestID -> "QEC-Pauli-vector-bad-letter"]
 
-VerificationTest[Quiet[qecPauliVector[""]], $Failed, TestID -> "QEC-Pauli-vector-empty"]
+VerificationTest[FailureQ[Quiet[qecPauliVector[""]]], True, TestID -> "QEC-Pauli-vector-empty"]
 
 VerificationTest[qecPauliString[{1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0}], "XZZXI", TestID -> "QEC-Pauli-string-XZZXI"]
 
@@ -244,7 +244,7 @@ VerificationTest[
     TestID -> "QEC-Pauli-commute-five-qubit-error"
 ]
 
-VerificationTest[Quiet[qecPauliCommuteQ["XI", "XXX"]], $Failed, TestID -> "QEC-Pauli-commute-size-mismatch"]
+VerificationTest[FailureQ[Quiet[qecPauliCommuteQ["XI", "XXX"]]], True, TestID -> "QEC-Pauli-commute-size-mismatch"]
 
 VerificationTest[
     Module[{samples},
@@ -284,7 +284,7 @@ VerificationTest[qecPauliString[qecPauliProduct["XX", "ZZ"]], "-YY", TestID -> "
 
 VerificationTest[qecPauliString[qecPauliProduct["X", "Y", "Z"]], "iI", TestID -> "QEC-Pauli-product-three-factors"]
 
-VerificationTest[Quiet[qecPauliProduct["XI", "XXX"]], $Failed, TestID -> "QEC-Pauli-product-size-mismatch"]
+VerificationTest[FailureQ[Quiet[qecPauliProduct["XI", "XXX"]]], True, TestID -> "QEC-Pauli-product-size-mismatch"]
 
 VerificationTest[
     Module[{samples},

@@ -126,6 +126,9 @@ idleLines[rates_Association, qs_List] := If[
     "DEPOLARIZE1(" <> num[rates["Idle"]] <> ") " <> qb[#] & /@ qs
 ]
 
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+instructionLines[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := instructionLines[instructionTuples[instr], rest]
+
 instructionLines[instr_List, rates_Association] := instructionLines[instr, rates, <||>, 0]
 
 (* offset is where this block starts in the whole circuit's instruction list, so a
@@ -224,7 +227,7 @@ codeStimCircuit[a_Association, noise_Association, rounds_Integer, basis_String] 
 Options[QECStim] = {"Observable" -> "Z"};
 
 QECStim[code_QECCode, opts : OptionsPattern[]] :=
-    QECStim[code, QECNoiseModel["Circuit", <||>], 1, opts]
+    QECStim[code, QECNoiseModel["Circuit"[<||>]], 1, opts]
 
 QECStim[code_QECCode, noise_QECNoiseModel, opts : OptionsPattern[]] :=
     QECStim[code, noise, defaultRounds[First[code]], opts]
@@ -233,14 +236,14 @@ QECStim[code_QECCode, noise_QECNoiseModel, rounds_, opts : OptionsPattern[]] := 
     {basis = OptionValue[QECStim, {opts}, "Observable"]},
     Which[
         ! MemberQ[{"X", "Z"}, basis],
-            Message[QECStim::observable, basis]; $Failed,
+            qecMessageFailure[QECStim::observable, basis],
         ! (IntegerQ[rounds] && rounds > 0),
-            Message[QECSyndromeCircuit::rounds, rounds]; $Failed,
+            qecMessageFailure[QECSyndromeCircuit::rounds, rounds],
         noiseLevel[First[noise]] === "CodeCapacity",
-            Message[QECStim::level]; $Failed,
+            qecMessageFailure[QECStim::level],
         Count[codeCircuitInstructions[First[code], 1], {"MH", ___}] > 0,
-            Message[QECStim::herald,
-                Count[codeCircuitInstructions[First[code], 1], {"MH", ___}]]; $Failed,
+            qecMessageFailure[QECStim::herald,
+                Count[codeCircuitInstructions[First[code], 1], {"MH", ___}]],
         True,
             codeStimCircuit[First[code], First[noise], rounds, basis]
     ]
@@ -250,13 +253,6 @@ QECStim[code_QECCode, noise_QECNoiseModel, rounds_, opts : OptionsPattern[]] := 
    with the catch-all code[prop_String] and lose to it. *)
 QECCode[a_Association]["Stim"] := QECStim[QECCode[a]]
 QECCode[a_Association]["Stim", rest__] := QECStim[QECCode[a], rest]
-QECCode[a_Association]["StimCircuit"] := codeStimAlias[a]
-QECCode[a_Association]["StimCircuit", rest__] := codeStimAlias[a, rest]
-
-codeStimAlias[a_Association, rest___] := (
-    deprecatedProperty[QECCode, "StimCircuit", "code[\"Stim\", ...]"];
-    QECStim[QECCode[a], rest]
-)
 
 
 (* The detector model's own circuit, in Stim's language: the same code, noise and
@@ -265,13 +261,18 @@ codeStimAlias[a_Association, rest___] := (
    extraction says so rather than handing back a different circuit. *)
 QECDetectorModel::stimextraction = "The Stim writer emits the bare-ancilla extraction; this model was built with \"`1`\".";
 
-QECDetectorModel[a_Association]["StimString"] := detectorStimString[a]
-QECDetectorModel[a_Association]["StimString", opts__] := detectorStimString[a, opts]
+(* "Stim", as a circuit's "Qiskit" and "QASM" are properties in the framework. *)
+QECDetectorModel[a_Association]["Stim"] := detectorStimString[a]
+QECDetectorModel[a_Association]["Stim", opts__] := detectorStimString[a, opts]
 
 detectorStimString[a_Association, opts___] := With[
     {mode = Lookup[a, "Extraction", "BareAncilla"]},
-    If[ mode === "BareAncilla",
+    Which[
+        Lookup[a, "Basis", All] =!= All,
+            Message[QECDetectorModel::stimbasis, a["Basis"]]; Missing["NotAvailable", a["Basis"]],
+        mode === "BareAncilla",
         QECStim[QECCode[a["Code"]], QECNoiseModel[a["Noise"]], a["Rounds"], opts],
+        True,
         Message[QECDetectorModel::stimextraction, mode]; Missing["NotAvailable", mode]
     ]
 ]

@@ -104,6 +104,28 @@ QECCode["SteaneCode"]["Generators"]
 
 <!-- => {"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ"} -->
 
+
+---
+
+Names follow the framework's convention for named objects, the one of `QuantumState["GHZ"[3]]` and
+`QuantumChannel["BitFlip"[p]]`: a family's parameters go inside its name, `QECCode["Surface"[5]]`,
+`QECCode["Repetition"[7]]`, `QECCode["CSS"[hx, hz]]`, and the same holds for noise,
+`QECNoiseModel["Depolarizing"[p]]`. A bare family name is its default member, and `$QECCodeNames`
+lists every name:
+
+```wl
+{QECCode["Surface"]["Parameters"], $QECCodeNames}
+```
+
+<!-- => {{9, 1, 3}, {"BitFlipCode", "PhaseFlipCode", "ShorCode", "5QubitCode", "SteaneCode", "Repetition", "PhaseRepetition", "DistanceTwo", "Hamming", "CSS", "Surface", "Toric"}} -->
+
+A name that is not a code, or a family given the wrong parameters, comes back as a `Failure`, as
+it would from `QuantumState`:
+
+```wl
+QECCode["Surface"[1]]
+```
+
 ---
 
 Its parameters are the $[[n, k, d]]$ of the literature — physical qubits, logical qubits, distance:
@@ -517,7 +539,7 @@ of the other Z-type, and they commute exactly when the matrices are orthogonal o
 classical Hamming matrix, the construction reproduces the Steane code:
 
 ```wl
-QECCode["CSS", {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}]["Parameters"]
+QECCode["CSS"[{{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}]]["Parameters"]
 ```
 
 <!-- => {7, 1, 3} -->
@@ -528,7 +550,7 @@ QECCode["CSS", {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0,
 the stabilizer *group*, checked in both directions and with signs:
 
 ```wl
-Module[{css = QECCode["CSS", {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}], steane = QECCode["SteaneCode"]},
+Module[{css = QECCode["CSS"[{{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}]], steane = QECCode["SteaneCode"]},
     AllTrue[steane["GeneratorVectors"], css["StabilizerMemberQ", #] &] &&
     AllTrue[css["GeneratorVectors"], steane["StabilizerMemberQ", #] &]
 ]
@@ -571,6 +593,17 @@ QECRemoveQubit[QECCode["5QubitCode"]]["Generators"]
 
 <!-- => {"XZZX", "YXXY"} -->
 
+---
+
+Two codes side by side, each on its own qubits, is the framework's `QuantumTensorProduct`, which
+joins codes as it joins states and operators. The distance is the smaller of the two:
+
+```wl
+QuantumTensorProduct[QECCode["SteaneCode"], QECCode["5QubitCode"]]["Parameters"]
+```
+
+<!-- => {12, 2, 3} -->
+
 ## Codes that scale
 
 Every code so far has a fixed size. The codes used in practice come in **families** whose distance
@@ -578,16 +611,17 @@ grows with the number of qubits, and whose checks stay local — each touches a 
 qubits, whatever the size — which is what lets them be built on a chip. The two families of
 Got26 ch. 17 are constructors of the same code object, so everything above works on them.
 
-`QECCode["Surface", d]` is the rotated surface code, $[[d^2, 1, d]]$: data qubits on a
+`QECCode["Surface"[d]]` is the rotated surface code, $[[d^2, 1, d]]$: data qubits on a
 $d \times d$ grid, a check on each corner of a $2 \times 2$ block, alternating X and Z like a
 checkerboard, and half-checks of weight two on the boundary — X on the top and bottom, Z on the
 left and right. Those are the two kinds of boundary of sec. 17.1.4, and they are why the code
-holds one logical qubit: logical X runs between the Z-checked sides and logical Z between the
-X-checked ones. Drawn at $d = 5$, with data qubits as dots, red X checks, blue Z checks, and the
-weight-two boundary checks as triangles pointing out of the grid:
+holds one logical qubit: logical X runs down a column, from one X-checked side to the other, and
+logical Z along a row, between the Z-checked sides. Drawn at $d = 5$, with data qubits as dots,
+red X checks, blue Z checks, and the weight-two boundary checks as triangles pointing out of the
+grid:
 
 ```wl
-With[{d = 5, code = QECCode["Surface", 5]},
+With[{d = 5, code = QECCode["Surface"[5]]},
     Graphics[{
         Table[
             With[{cells = QuotientRemainder[# - 1, d] & /@ QECPauli[g]["Support"], x = StringContainsQ[g, "X"]},
@@ -609,7 +643,7 @@ With[{d = 5, code = QECCode["Surface", 5]},
 
 ---
 
-`QECCode["Toric", L]` is the toric code of sec. 17.1.1, $[[2L^2, 2, L]]$: qubits on the edges of
+`QECCode["Toric"[L]]` is the toric code of sec. 17.1.1, $[[2L^2, 2, L]]$: qubits on the edges of
 an $L \times L$ lattice on a torus, Z on the four edges of each face, X on the four edges of each
 vertex. The product of all faces is the identity, and so is the product of all vertices
 (eq. 17.3), so one of each is left out; two logical qubits remain, one per way around the torus.
@@ -619,8 +653,8 @@ exact distance search:
 
 ```wl
 Dataset @ Association @ Join[
-    Table["Surface " <> ToString[d] -> QECCode["Surface", d]["Parameters"], {d, 2, 4}],
-    Table["Toric " <> ToString[l] -> QECCode["Toric", l]["Parameters"], {l, 2, 4}]]
+    Table["Surface " <> ToString[d] -> QECCode["Surface"[d]]["Parameters"], {d, 2, 4}],
+    Table["Toric " <> ToString[l] -> QECCode["Toric"[l]]["Parameters"], {l, 2, 4}]]
 ```
 
 <!-- => Surface 2, 3, 4 -> {4,1,2}, {9,1,3}, {16,1,4}; Toric 2, 3, 4 -> {8,2,2}, {18,2,3}, {32,2,4} -->
@@ -632,9 +666,9 @@ exact logical error rate — leading order $p^2$, as a distance-3 code owes — 
 pseudothreshold:
 
 ```wl
-With[{s3 = QECCode["Surface", 3]},
-    <|"bit-flip rate" -> Expand[QECLogicalErrorRate[s3, QECNoiseModel["BitFlip", p]]],
-      "pseudothreshold, depolarizing" -> N[QECPseudothreshold[s3, QECNoiseModel["Depolarizing", p]]["Value"]]|>]
+With[{s3 = QECCode["Surface"[3]]},
+    <|"bit-flip rate" -> Expand[QECLogicalErrorRate[s3, QECNoiseModel["BitFlip"[p]]]],
+      "pseudothreshold, depolarizing" -> N[QECPseudothreshold[s3, QECNoiseModel["Depolarizing"[p]]]["Value"]]|>]
 ```
 
 <!-- => <|"bit-flip rate" -> 18 p^2 - 70 p^3 + 99 p^4 - 6 p^5 - 168 p^6 + 240 p^7 - 144 p^8 + 32 p^9, "pseudothreshold, depolarizing" -> 0.0974664|> -->
@@ -661,7 +695,7 @@ last assumption is a real one, and the sections after the next give it up.
 Depolarizing noise, with the rate left symbolic:
 
 ```wl
-QECNoiseModel["Depolarizing", p]["Probabilities"]
+QECNoiseModel["Depolarizing"[p]]["Probabilities"]
 ```
 
 <!-- => {1 - p, p/3, p/3, p/3} -->
@@ -674,7 +708,7 @@ sum over $4^n$ errors into a sum over the far smaller set of weight profiles, an
 everything in the next section exact rather than sampled:
 
 ```wl
-QECNoiseModel["Depolarizing", p]["ErrorProbability", "XIIIIII"]
+QECNoiseModel["Depolarizing"[p]]["ErrorProbability", "XIIIIII"]
 ```
 
 <!-- => ((1 - p)^6 p)/3 -->
@@ -688,7 +722,7 @@ of it, this model spreads its rate over three — so the constructor converts, a
 that the conversion is right:
 
 ```wl
-Module[{noise = QECNoiseModel["Depolarizing", p]},
+Module[{noise = QECNoiseModel["Depolarizing"[p]]},
     Simplify[Sort[noise["QuantumChannel", {1}][PauliStabilizer[1]][[All, 1]]] == Sort[noise["Probabilities"]]]
 ]
 ```
@@ -701,7 +735,7 @@ For codes too large to enumerate, the model samples. A bit-flip channel can only
 and does:
 
 ```wl
-BlockRandom[SeedRandom[7]; QECNoiseModel["BitFlip", 1/3]["RandomErrors", 6, 5]]
+BlockRandom[SeedRandom[7]; QECNoiseModel["BitFlip"[1/3]]["RandomErrors", 6, 5]]
 ```
 
 ## The logical error rate
@@ -719,7 +753,7 @@ algebra per trial — the label already decides it.
 The exact logical error rate of the five-qubit code under depolarizing noise:
 
 ```wl
-Expand[QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing", p]]]
+Expand[QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing"[p]]]]
 ```
 
 <!-- => 10 p^2 - (200 p^3)/9 + (160 p^4)/9 - (128 p^5)/27 -->
@@ -733,7 +767,7 @@ probability $(p/3)^2(1-p)^3$, giving exactly $10p^2$. The polynomial is checkabl
 The Steane code, which is not perfect, so some weight-two errors survive:
 
 ```wl
-Normal[Series[QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", p]], {p, 0, 3}]]
+Normal[Series[QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[p]]], {p, 0, 3}]]
 ```
 
 <!-- => (49 p^2)/3 - 56 p^3 -->
@@ -746,7 +780,7 @@ binomial tail:
 
 ```wl
 Simplify[
-    QECLogicalErrorRate[QECCode["Repetition", 5], QECNoiseModel["BitFlip", p]] ==
+    QECLogicalErrorRate[QECCode["Repetition"[5]], QECNoiseModel["BitFlip"[p]]] ==
         Sum[Binomial[5, j] p^j (1 - p)^(5 - j), {j, 3, 5}]
 ]
 ```
@@ -761,7 +795,7 @@ repetition codes under bit flips it sits at exactly one half:
 
 ```wl
 Plot[
-    Evaluate[Table[QECLogicalErrorRate[QECCode["Repetition", n], QECNoiseModel["BitFlip", p]], {n, {3, 5, 7}}]],
+    Evaluate[Table[QECLogicalErrorRate[QECCode["Repetition"[n]], QECNoiseModel["BitFlip"[p]]], {n, {3, 5, 7}}]],
     {p, 0, 1},
     PlotLegends -> {"n = 3", "n = 5", "n = 7"},
     AxesLabel -> {"physical error rate", "logical error rate"},
@@ -780,8 +814,8 @@ routes are independent implementations that check each other:
 
 ```wl
 BlockRandom[SeedRandom[3];
-    {N[QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/20]]],
-     QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/20], 100000]}
+    {N[QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[1/20]]]],
+     QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[1/20]], 100000]}
 ]
 ```
 
@@ -814,7 +848,7 @@ Because the rate is an exact polynomial, the point where encoding stops paying �
 crossing the physical one, $p_L(p) = p$ — is a root, found exactly:
 
 ```wl
-ps = QECPseudothreshold[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", p]];
+ps = QECPseudothreshold[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[p]]];
 {ps["Value"], N[ps["Value"]]}
 ```
 
@@ -847,7 +881,7 @@ where encoding *starts* to help, not where it stops, and it is reported as a cro
 pseudothreshold:
 
 ```wl
-With[{ps = QECPseudothreshold[QECCode["BitFlipCode"], QECNoiseModel["Circuit", p], "Rounds" -> 1]},
+With[{ps = QECPseudothreshold[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[p]], "Rounds" -> 1]},
     <|"value" -> ps["Value"], "low-noise ratio" -> ps["LowNoiseRatio"], "crossings" -> N[ps["Crossings"]]|>]
 ```
 
@@ -927,7 +961,7 @@ $4^k$ weights, and those weights are exactly the coset probabilities the maximum
 already computes. So it comes out exact and symbolic:
 
 ```wl
-QECCode["BitFlipCode"]["LogicalPauliProbabilities", QECNoiseModel["BitFlip", p]]
+QECCode["BitFlipCode"]["LogicalPauliProbabilities", QECNoiseModel["BitFlip"[p]]]
 ```
 
 <!-- => <|"I" -> (1 - p)^2 (1 + 2 p), "X" -> (3 - 2 p) p^2, "Y" -> 0, "Z" -> 0|> -->
@@ -938,7 +972,7 @@ and the logical error rate is nothing but one minus its identity weight — on t
 last coefficient:
 
 ```wl
-With[{steane = QECCode["SteaneCode"], noise = QECNoiseModel["Depolarizing", p]},
+With[{steane = QECCode["SteaneCode"], noise = QECNoiseModel["Depolarizing"[p]]},
     Simplify[1 - steane["LogicalPauliProbabilities", noise]["I"] - QECLogicalErrorRate[steane, noise]]
 ]
 ```
@@ -958,7 +992,7 @@ against the channel's superoperator — and is accepted wherever a noise model i
 
 ```wl
 {QECNoiseModel[QuantumChannel["Depolarizing"[q]]]["Probabilities"],
- Expand[QECLogicalErrorRate[QECCode["Repetition", 3], QuantumChannel["BitFlip"[p]]]]}
+ Expand[QECLogicalErrorRate[QECCode["Repetition"[3]], QuantumChannel["BitFlip"[p]]]]}
 ```
 
 <!-- => {{1 - 3 q/4, q/4, q/4, q/4}, 3 p^2 - 2 p^3} -->
@@ -1007,7 +1041,7 @@ The decoders behind the rate can be held. `QECDecoder[code]` is the minimum-weig
 two is the matching decoder of [Decoding by matching](#decoding-by-matching):
 
 ```wl
-With[{d = QECDecoder[QECCode["SteaneCode"]]}, {d["Method"], d["Decode", {0, 0, 0, 1, 1, 1}]}]
+With[{d = QECDecoder[QECCode["SteaneCode"]]}, {d["Method"], d[{0, 0, 0, 1, 1, 1}]}]
 ```
 
 <!-- => {"MinimumWeight", "IIIIIIX"} -->
@@ -1020,7 +1054,7 @@ and the rate scores it with the same machinery as the built-ins, through `"Decod
 decoder that never corrects anything, on the bit-flip code, fails whenever anything happened:
 
 ```wl
-Simplify[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p],
+Simplify[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p]],
     "Decoder" -> QECDecoder[QECCode["BitFlipCode"], If[# === {0, 0}, "III", Missing[]] &]]]
 ```
 
@@ -1033,7 +1067,7 @@ probability of acceptance, and the joint failure probability — is one argument
 keys whether or not anything was post-selected:
 
 ```wl
-QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/10], All]
+QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[1/10]], All]
 ```
 
 <!-- => <|"Rate" -> 13147289/113906250, "Acceptance" -> 1, "Failure" -> 13147289/113906250|> -->
@@ -1063,9 +1097,9 @@ not of a more realistic one.
 The level is derived from what you set, not declared:
 
 ```wl
-{QECNoiseModel["Depolarizing", p]["Level"],
- QECNoiseModel["Depolarizing", p, "MeasurementError" -> q]["Level"],
- QECNoiseModel["Circuit", p]["Level"]}
+{QECNoiseModel["Depolarizing"[p]]["Level"],
+ QECNoiseModel["Depolarizing"[p], "MeasurementError" -> q]["Level"],
+ QECNoiseModel["Circuit"[p]]["Level"]}
 ```
 
 <!-- => {"CodeCapacity", "Phenomenological", "Circuit"} -->
@@ -1077,7 +1111,7 @@ an Association sets them separately, and a missing key is zero, which is a clean
 one kind of failure does on its own:
 
 ```wl
-QECNoiseModel["Circuit", <|"TwoQubit" -> p, "Measurement" -> q|>]["Rates"]
+QECNoiseModel["Circuit"[<|"TwoQubit" -> p, "Measurement" -> q|>]]["Rates"]
 ```
 
 <!-- => <|"OneQubit" -> 0, "TwoQubit" -> p, "Measurement" -> q, "Reset" -> 0, "Idle" -> 0|> -->
@@ -1107,7 +1141,7 @@ shows every case at once:
 QECCode[{"XYZ"}]["SyndromeCircuit"]["Instructions"]
 ```
 
-<!-- => {{"R", 4}, {"H", 1}, {"V", 2}, {"CNOT", 1, 4}, {"CNOT", 2, 4}, {"CNOT", 3, 4}, {"H", 1}, {"Vdg", 2}, {"M", 4}} -->
+<!-- => {"Reset" -> 4, "H" -> 1, "V" -> 2, "CNOT" -> {1, 4}, "CNOT" -> {2, 4}, "CNOT" -> {3, 4}, "H" -> 1, SuperDagger["V"] -> 2, "Measurement" -> 4} -->
 
 ---
 
@@ -1118,7 +1152,7 @@ measurements — one ancilla per generator, reset before use:
 QECCode["BitFlipCode"]["SyndromeCircuit"]["Instructions"]
 ```
 
-<!-- => {{"R", 4}, {"CNOT", 1, 4}, {"CNOT", 2, 4}, {"M", 4}, {"R", 5}, {"CNOT", 2, 5}, {"CNOT", 3, 5}, {"M", 5}} -->
+<!-- => {"Reset" -> 4, "CNOT" -> {1, 4}, "CNOT" -> {2, 4}, "Measurement" -> 4, "Reset" -> 5, "CNOT" -> {2, 5}, "CNOT" -> {3, 5}, "Measurement" -> 5} -->
 
 ---
 
@@ -1140,7 +1174,7 @@ What the whole thing costs, which is also the number of places a fault can happe
 QECCode["SteaneCode"]["SyndromeCircuit", 3]["GateCounts"]
 ```
 
-<!-- => <|"R" -> 18, "H" -> 72, "CNOT" -> 72, "M" -> 18|> -->
+<!-- => <|"Reset" -> 18, "H" -> 72, "CNOT" -> 72, "Measurement" -> 18|> -->
 
 ---
 
@@ -1203,7 +1237,7 @@ detectors:
 
 ```wl
 Module[{dem, bits},
-    dem = QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p, "MeasurementError" -> q], 1];
+    dem = QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p], "MeasurementError" -> q], 1];
     bits[v_] := StringJoin[ToString /@ v];
     Grid[
         Prepend[
@@ -1231,7 +1265,7 @@ difference against the next one: two fired detectors, and nothing left on the da
 failures no longer look alike.
 
 ```wl
-Module[{dem = QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p, "MeasurementError" -> q], 1]},
+Module[{dem = QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p], "MeasurementError" -> q], 1]},
     {dem["DetectorMatrix"][[1]], dem["DetectorMatrix"][[4]]}
 ]
 ```
@@ -1245,7 +1279,7 @@ the cheapest check there is that the circuit measures what it claims to:
 
 ```wl
 Module[{code = QECCode["SteaneCode"], dem},
-    dem = QECDetectorModel[code, QECNoiseModel["BitFlip", p, "MeasurementError" -> q], 1];
+    dem = QECDetectorModel[code, QECNoiseModel["BitFlip"[p], "MeasurementError" -> q], 1];
     dem["DetectorMatrix"][[1, 1 ;; 6]] == code["Syndrome", "XIIIIII"]
 ]
 ```
@@ -1260,7 +1294,7 @@ code has exactly three of them — the single $Z$ errors — which is the circui
 it has no phase protection:
 
 ```wl
-QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["Depolarizing", p, "MeasurementError" -> q], 1]["UndetectableFaults"]
+QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["Depolarizing"[p], "MeasurementError" -> q], 1]["UndetectableFaults"]
 ```
 
 <!-- => {{"Data", 1, 1}, {"Data", 1, 2}, {"Data", 1, 3}} -->
@@ -1272,7 +1306,7 @@ an external simulator against — it is basis-free and every detector is a separ
 data noise switched off, each detector fires exactly when its own readout lies:
 
 ```wl
-Simplify @ QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", 0, "MeasurementError" -> q], 1]["DetectorRates"]
+Simplify @ QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[0], "MeasurementError" -> q], 1]["DetectorRates"]
 ```
 
 <!-- => {q, q, q, q} -->
@@ -1297,8 +1331,8 @@ and it is:
 
 ```wl
 Simplify[
-    QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p, "MeasurementError" -> 0], "Rounds" -> 1] ==
-        QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p]]
+    QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p], "MeasurementError" -> 0], "Rounds" -> 1] ==
+        QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p]]]
 ]
 ```
 
@@ -1316,7 +1350,7 @@ single readout lie is recognised by its two-detector signature and corrected, so
 two of them:
 
 ```wl
-Expand @ QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p, "MeasurementError" -> q], "Rounds" -> 1]
+Expand @ QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p], "MeasurementError" -> q], "Rounds" -> 1]
 ```
 
 <!-- => 3 p^2 - 2 p^3 + 6 p q - 12 p^2 q + 6 p^3 q + q^2 - 6 p q^2 + 9 p^2 q^2 - 4 p^3 q^2 -->
@@ -1333,15 +1367,17 @@ $$P'[s] = P[s]\left(1 - \sum_i p_i\right) + \sum_i p_i \, P[s \oplus \sigma_i]$$
 the inner sum running over the mutually exclusive outcomes of a single location, so a three-way
 depolarizing channel is handled exactly rather than as three independent coins. The cost is
 locations times state space rather than $2^{\text{faults}}$, and the state space —
-$2^{(r+1)m + 2k}$ — is what bounds it, through `$QECExactDetectorLimit`.
+$2^{(r+1)m + 2k}$ — is what bounds it, through `$QECExactDetectorLimit`. The fold is how the exact route
+started; [Exact rates at scale](#exact-rates-at-scale) shows the transform that replaced it, which
+gives the same polynomial and moves that bound from $2^{16}$ to $2^{24}$.
 
 Past that bound the same quantity is sampled, and the two routes check each other. The Steane
 code at circuit level, exactly and then over two hundred thousand shots:
 
 ```wl
 BlockRandom[SeedRandom[11];
-    {N @ QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1],
-     QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Circuit", 1/1000], 200000, "Rounds" -> 1]}
+    {N @ QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1],
+     QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Circuit"[1/1000]], 200000, "Rounds" -> 1]}
 ]
 ```
 
@@ -1352,9 +1388,9 @@ than an argument. The same code, the same rate $p$, three noise models:
 
 ```wl
 Module[{bf = QECCode["BitFlipCode"], capacity, phenomenological, circuit},
-    capacity = QECLogicalErrorRate[bf, QECNoiseModel["BitFlip", p]];
-    phenomenological = QECLogicalErrorRate[bf, QECNoiseModel["BitFlip", p, "MeasurementError" -> p], "Rounds" -> 1];
-    circuit = QECLogicalErrorRate[bf, QECNoiseModel["Circuit", p], "Rounds" -> 1];
+    capacity = QECLogicalErrorRate[bf, QECNoiseModel["BitFlip"[p]]];
+    phenomenological = QECLogicalErrorRate[bf, QECNoiseModel["BitFlip"[p], "MeasurementError" -> p], "Rounds" -> 1];
+    circuit = QECLogicalErrorRate[bf, QECNoiseModel["Circuit"[p]], "Rounds" -> 1];
     Plot[
         Evaluate[{capacity, phenomenological, circuit}], {p, 0, 1/5},
         PlotLegends -> {"code capacity", "phenomenological", "circuit"},
@@ -1386,8 +1422,8 @@ depolarizing noise at code capacity their rates are identical. At circuit level 
 
 ```wl
 Module[{lead = Normal[Series[#, {p, 0, 1}]] &},
-    {lead @ QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["Circuit", p], "Rounds" -> 1],
-     lead @ QECLogicalErrorRate[QECCode["PhaseFlipCode"], QECNoiseModel["Circuit", p], "Rounds" -> 1]}
+    {lead @ QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[p]], "Rounds" -> 1],
+     lead @ QECLogicalErrorRate[QECCode["PhaseFlipCode"], QECNoiseModel["Circuit"[p]], "Rounds" -> 1]}
 ]
 ```
 
@@ -1401,7 +1437,7 @@ depolarizing location sitting on a data qubit. Switch the one-qubit-gate noise o
 codes agree again, to the coefficient:
 
 ```wl
-Module[{noise = QECNoiseModel["Circuit", <|"TwoQubit" -> p, "Measurement" -> p, "Reset" -> p|>],
+Module[{noise = QECNoiseModel["Circuit"[<|"TwoQubit" -> p, "Measurement" -> p, "Reset" -> p|>]],
         lead = Normal[Series[#, {p, 0, 1}]] &},
     {lead @ QECLogicalErrorRate[QECCode["BitFlipCode"], noise, "Rounds" -> 1],
      lead @ QECLogicalErrorRate[QECCode["PhaseFlipCode"], noise, "Rounds" -> 1]}
@@ -1418,7 +1454,7 @@ starts at $p^2$: any one error is corrected. With this circuit it starts at $p$:
 
 ```wl
 Normal @ Series[
-    QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Circuit", p], "Rounds" -> 1],
+    QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Circuit"[p]], "Rounds" -> 1],
     {p, 0, 1}
 ]
 ```
@@ -1459,8 +1495,8 @@ Module[{ambiguity},
           "ambiguous signatures" -> Count[grouped, alternatives_ /; Length[alternatives] > 1]|>
     ];
     Dataset @ <|
-        "phenomenological" -> ambiguity[QECCode["5QubitCode"], QECNoiseModel["Depolarizing", 1/1000, "MeasurementError" -> 1/1000]],
-        "circuit" -> ambiguity[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000]]
+        "phenomenological" -> ambiguity[QECCode["5QubitCode"], QECNoiseModel["Depolarizing"[1/1000], "MeasurementError" -> 1/1000]],
+        "circuit" -> ambiguity[QECCode["5QubitCode"], QECNoiseModel["Circuit"[1/1000]]]
     |>
 ]
 ```
@@ -1502,7 +1538,7 @@ parity checks that verify it.
 QECCatState[4]["Instructions"]
 ```
 
-<!-- => {{"R", 1}, {"R", 2}, {"R", 3}, {"R", 4}, {"H", 1}, {"CNOT", 1, 2}, {"CNOT", 2, 3}, {"CNOT", 3, 4}, {"R", 5}, {"CNOT", 2, 5}, {"CNOT", 3, 5}, {"MH", 5}} -->
+<!-- => {"Reset" -> 1, "Reset" -> 2, "Reset" -> 3, "Reset" -> 4, "H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}, "CNOT" -> {3, 4}, "Reset" -> 5, "CNOT" -> {2, 5}, "CNOT" -> {3, 5}, "MH" -> 5} -->
 
 ---
 
@@ -1656,7 +1692,7 @@ Everything above measures the bare-ancilla circuit, because that is the circuit
 changes it, and it is on both:
 
 ```wl
-QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000], 1,
+QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit"[1/1000]], 1,
     "Extraction" -> "Transversal"]["Faults"]
 ```
 
@@ -1688,8 +1724,8 @@ Module[{ambiguity},
         <|"faults" -> Length[d], "signatures" -> Length[grouped],
           "ambiguous" -> Count[grouped, alt_ /; Length[alt] > 1]|>];
     Dataset @ <|
-        "bare ancilla" -> ambiguity[QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000], 1]],
-        "transversal" -> ambiguity[QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000], 1,
+        "bare ancilla" -> ambiguity[QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit"[1/1000]], 1]],
+        "transversal" -> ambiguity[QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit"[1/1000]], 1,
             "Extraction" -> "Transversal"]]|>]
 ```
 
@@ -1702,7 +1738,7 @@ no single fault is ambiguous at all:
 
 ```wl
 Module[{dem, d, o, h, keep, grouped},
-    dem = QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000], 1,
+    dem = QECDetectorModel[QECCode["5QubitCode"], QECNoiseModel["Circuit"[1/1000]], 1,
         "Extraction" -> "Transversal"];
     d = dem["DetectorMatrix"]; o = dem["ObservableMatrix"]; h = dem["HeraldMatrix"];
     keep = Select[Range[Length[d]], Total[h[[#]]] === 0 &];
@@ -1732,8 +1768,8 @@ two physical rates a factor of two apart and reading the slope off:
 ```wl
 Module[{exponent, five = QECCode["5QubitCode"]},
     exponent[opts___] := N @ Log[
-        QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1, opts] /
-        QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/2000], "Rounds" -> 1, opts]
+        QECLogicalErrorRate[five, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1, opts] /
+        QECLogicalErrorRate[five, QECNoiseModel["Circuit"[1/2000]], "Rounds" -> 1, opts]
     ] / Log[2];
     Dataset @ <|"bare ancilla" -> exponent[],
                 "transversal" -> exponent["Extraction" -> "Transversal"]|>]
@@ -1747,7 +1783,7 @@ Two things that number is not. It is a **post-selected** rate, and the acceptanc
 about 0.98 at $p = 10^{-3}$, and the layer reports it rather than quietly dividing it out:
 
 ```wl
-N @ QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000], All,
+N @ QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Circuit"[1/1000]], All,
     "Rounds" -> 1, "Extraction" -> "Transversal"]
 ```
 
@@ -1784,10 +1820,10 @@ A single-block circuit moves into a block with `"Lift"`, which touches the qubit
 else:
 
 ```wl
-QECRegister[QECCode["SteaneCode"], 2]["Lift", {{"R", 1}, {"H", 2}, {"CNOT", 1, 2}}, 2]
+QECRegister[QECCode["SteaneCode"], 2]["Lift", {"Reset" -> 1, "H" -> 2, "CNOT" -> {1, 2}}, 2]
 ```
 
-<!-- => {{"R", 8}, {"H", 9}, {"CNOT", 8, 9}} -->
+<!-- => {"Reset" -> 8, "H" -> 9, "CNOT" -> {8, 9}} -->
 
 A register of one block is the identity on all of it — same label matrix, same generators, same
 circuits — which is what keeps the rest of the layer unaffected by this existing.
@@ -2014,7 +2050,7 @@ qubits, Hadamard one, CNOT them, measure both — made fault tolerant on the sev
 
 ```wl
 QECFaultTolerantCircuit[
-    {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}},
+    {"Reset" -> 1, "Reset" -> 2, "H" -> 1, "CNOT" -> {1, 2}, "Measurement" -> 1, "Measurement" -> 2},
     QECCode["SteaneCode"]]["Gadgets"]
 ```
 
@@ -2034,7 +2070,7 @@ something you assemble yourself:
 
 ```wl
 QECFaultTolerantCircuit[
-    {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}},
+    {"Reset" -> 1, "Reset" -> 2, "H" -> 1, "CNOT" -> {1, 2}, "Measurement" -> 1, "Measurement" -> 2},
     QECCode["SteaneCode"]]["Overheads"]
 ```
 
@@ -2053,7 +2089,7 @@ transversal $S$:
 
 ```wl
 Union @ Map[First,
-    QECFaultTolerantCircuit[{{"R", 1}, {"S", 1}}, QECCode["SteaneCode"]]["GadgetInstructions", "Gate"]]
+    QECFaultTolerantCircuit[{"Reset" -> 1, "S" -> 1}, QECCode["SteaneCode"]]["GadgetInstructions", "Gate"]]
 ```
 
 <!-- => {"Sdg"} -->
@@ -2074,7 +2110,7 @@ decoder has to be told *where*:
 
 ```wl
 Module[{ft = QECFaultTolerantCircuit[
-        {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}},
+        {"Reset" -> 1, "Reset" -> 2, "H" -> 1, "CNOT" -> {1, 2}, "Measurement" -> 1, "Measurement" -> 2},
         QECCode["SteaneCode"]]},
     <|"measurements in the whole circuit" -> ft["Measurements"],
       "the ones that make logical qubit 1" -> ft["Readouts"][1]|>]
@@ -2108,7 +2144,7 @@ meaningless first round of detectors — then runs the noisy rounds, then a nois
 
 ```wl
 Column @ Take[
-    StringSplit[QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/200], 2], "\n"],
+    StringSplit[QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[1/200]], 2], "\n"],
     14
 ]
 ```
@@ -2120,7 +2156,7 @@ round, and a single logical observable. Three noisy rounds of the Steane code's 
 four layers of six:
 
 ```wl
-Module[{source = QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit", 1/500], 3]},
+Module[{source = QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit"[1/500]], 3]},
     {StringCount[source, "DETECTOR"], StringCount[source, "OBSERVABLE_INCLUDE"]}
 ]
 ```
@@ -2160,8 +2196,8 @@ shortest-path distances. That is Edmonds' problem, solved exactly here by the bu
 `FindIndependentEdgeSet`.
 
 ```wl
-With[{dec = QECDecoder[QECCode["Surface", 3], QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"]},
-    {dec["Method"], dec["Decode", {0, 0, 0, 0, 1, 0, 0, 0}], dec["Graph"]}]
+With[{dec = QECDecoder[QECCode["Surface"[3]], QECNoiseModel["Depolarizing"[1/100]], "Method" -> "Matching"]},
+    {dec["Method"], dec[{0, 0, 0, 0, 1, 0, 0, 0}], dec["Graph"]}]
 ```
 
 <!-- => {"Matching", "XIIIIIIII", Graph[...]}: the fifth check is the Z check on qubits 1 and 4, lit alone,
@@ -2174,7 +2210,7 @@ and on the surface code under bit flips — where the X errors are exactly a gra
 the maximum-likelihood decoder's equal, polynomial for polynomial:
 
 ```wl
-With[{s3 = QECCode["Surface", 3], noise = QECNoiseModel["BitFlip", p]},
+With[{s3 = QECCode["Surface"[3]], noise = QECNoiseModel["BitFlip"[p]]},
     Simplify[QECLogicalErrorRate[s3, noise, "Decoder" -> "Matching"] - QECLogicalErrorRate[s3, noise]]]
 ```
 
@@ -2189,7 +2225,7 @@ $d = 3, 5, 7$ at four noise levels:
 BlockRandom[SeedRandom[1];
     Dataset @ AssociationMap[
         Function[p, AssociationMap[
-            QECLogicalErrorRate[QECCode["Surface", #], QECNoiseModel["BitFlip", p], 20000, "Decoder" -> "Matching"] &,
+            QECLogicalErrorRate[QECCode["Surface"[#]], QECNoiseModel["BitFlip"[p]], 20000, "Decoder" -> "Matching"] &,
             {3, 5, 7}]],
         {1/20, 2/25, 3/25, 4/25}]]
 ```
@@ -2216,7 +2252,7 @@ Matching against the lightest-fault table on the distance-3 surface code, circui
 three rounds, two hundred thousand shots:
 
 ```wl
-With[{s3 = QECCode["Surface", 3], noise = QECNoiseModel["Circuit", 1/500]},
+With[{s3 = QECCode["Surface"[3]], noise = QECNoiseModel["Circuit"[1/500]]},
     BlockRandom[SeedRandom[1];
         <|"lightest-fault table" -> QECLogicalErrorRate[s3, noise, 200000, "Rounds" -> 3],
           "matching" -> QECLogicalErrorRate[s3, noise, 200000, "Rounds" -> 3, "Decoder" -> "Matching"]|>]]
@@ -2237,11 +2273,11 @@ touches a check's qubits one CNOT at a time, so a fault on the ancilla halfway t
 check's letter on the qubits not yet touched — the *hook error* of sec. 12.1.1, a pair of data
 errors from one fault. If the pair lies along the logical operator of the same letter, the
 circuit's distance drops in that basis. Logical X runs down a column and logical Z along a row,
-so `QECCode["Surface", d]` carries a **check order**: X checks row by row, Z checks column by column,
+so `QECCode["Surface"[d]]` carries a **check order**: X checks row by row, Z checks column by column,
 every hook perpendicular to the logical it could have helped build.
 
 ```wl
-QECCode["Surface", 3]["CheckOrder"]
+QECCode["Surface"[3]]["CheckOrder"]
 ```
 
 <!-- => {{2,3}, {1,2,4,5}, {5,6,8,9}, {7,8}, {1,4}, {2,5,3,6}, {4,7,5,8}, {6,9}} -->
@@ -2259,17 +2295,127 @@ code, whose $Y$'s trip three, are hypergraphs; pairing their defects is not deco
 decoder says so instead, at code capacity and at circuit level alike:
 
 ```wl
-QECDecoder[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/100], "Method" -> "Matching"]
+QECDecoder[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[1/100]], "Method" -> "Matching"]
 ```
 
 <!-- => QECDecoder::notgraphlike: Matching needs every single-qubit error to trip at most two checks;
-     on this code "IIIIIIX" trips 3. ... -> $Failed -->
+     on this code "IIIIIIX" trips 3. ... -> Failure["notgraphlike", ...] -->
 
 The matching is exact but not yet fast. Each distinct syndrome costs one call to
 `FindIndependentEdgeSet` on its lit nodes, remembered afterwards, so a sample pays per distinct
 syndrome rather than per shot; that covers $d \le 7$ comfortably and is no rival to PyMatching's
 sparse blossom at $d = 25$. For that scale the seam of [Decoders as objects](#decoders-as-objects) —
 `QECDecoder[code, f]` around PyMatching itself — is still the way.
+
+## Exact rates at scale
+
+The fold of [The memory experiment](#the-memory-experiment) carries one polynomial for every
+detector-and-observable pattern and expands all of them at every fault location. That is what
+stopped it at $2^{16}$ patterns. The exact route now takes the other side of the same sum. The fold
+is a convolution over bit patterns, and the Walsh–Hadamard transform turns a convolution into a
+product: a location whose mutually exclusive outcomes have probabilities $p_r$ and effects
+$\sigma_r$ contributes, at frequency $k$, the factor
+
+$$f(k) = 1 - 2\sum_{r\,:\,k\cdot\sigma_r\ \text{odd}} p_r ,$$
+
+and a decoder that fails on the patterns of an indicator $W$ fails with probability
+
+$$P_{\text{fail}} = 2^{-N}\sum_k \widehat{W}(k)\prod_{\text{locations}} f(k).$$
+
+$\widehat{W}$ is the transform of a 0/1 vector, an integer vector computed exactly in machine
+arithmetic. The symbols are all in the product, and it takes very few distinct values: under any
+$k$, exactly none or exactly eight of the fifteen two-qubit Paulis are odd, so a CNOT contributes
+$1$ or $1 - 16p/15$. The $k$ are grouped by how many of each factor they collect, the integers are
+summed within a group, and the symbolic work is a short sum of monomials. The answer is the same
+polynomial the fold gives, symbol for symbol, and `$QECExactDetectorLimit` is now $2^{24}$.
+
+The setting of the `surface-code.nb` study (November 2026): the distance-3 surface code, one
+noisy round of extraction, every CNOT followed by one of the fifteen two-qubit Paulis with
+probability $p_C/15$ each, and every readout flipped with probability $p_M$:
+
+```wl
+surfNoise = QECNoiseModel["Circuit"[<|"TwoQubit" -> pC, "Measurement" -> pM|>]];
+surfModel = QECDetectorModel[QECCode["Surface"[3]], surfNoise, 1];
+{surfModel["Faults"], surfModel["Detectors"], surfModel["Observables"]}
+```
+
+<!-- => {352, 16, 2} -->
+
+Sixteen detectors and both logical observables make $2^{18}$ patterns, past the old bound. Two
+decoders: the default, which knows every single fault, and maximum likelihood over the whole
+detector history, its table chosen at $p_C = p_M = 1/1000$:
+
+```wl
+surfRates = {
+    QECLogicalErrorRate[QECCode["Surface"[3]], surfNoise, "Rounds" -> 1],
+    QECLogicalErrorRate[QECCode["Surface"[3]], surfNoise, "Rounds" -> 1, "Decoder" -> {"MaximumLikelihood", 1/1000}]
+};
+Expand[Normal[Series[# /. {pC -> t pC, pM -> t pM}, {t, 0, 2}]] /. t -> 1] & /@ surfRates
+```
+
+<!-- => {(48326 pC^2)/225 + (2213 pC pM)/15 + 28 pM^2, (2438 pC^2)/45 + (pC pM)/5} -->
+
+Neither has a linear term, so every single fault is corrected. The single-fault decoder's
+polynomial is the one in `surface-code.nb`. The maximum-likelihood decoder's leading terms are
+those of that study's second decoder, which also knew every pair of faults, and its rate is lower
+at every $p$ shown:
+
+```wl
+LogLogPlot[
+    Evaluate[Append[surfRates /. {pC -> p, pM -> p}, p]], {p, 10^-4, 10^-1.5},
+    PlotStyle -> {Automatic, Automatic, Dotted},
+    PlotLegends -> {"knows every single fault", "maximum likelihood", "logical = physical"},
+    AxesLabel -> {"p", "logical error rate"},
+    ImageSize -> 420
+]
+```
+
+---
+
+`"Decoder" -> "MaximumLikelihood"` uses the same machinery the other way round. With numeric rates
+the product of factors *is* the transform of the distribution over patterns, so one inverse
+transform gives the probability of every (syndrome, observables) outcome. For each syndrome it
+keeps the most probable observable class, which is the best any decoder of this model can do. With
+symbolic rates the table is chosen at `$QECDecoderProbeRate`, or at a point given as
+`{"MaximumLikelihood", p0}`.
+
+`"Basis" -> "Z"` keeps a memory in one basis: the $\bar{Z}$ observable and the detectors of the Z
+checks, the usual memory experiment. On a CSS code that is an exact marginal of the full model,
+and it halves the bits. One round of the distance-5 code is $24 + 1 = 25$ bits in one basis
+against $50$ in both. That is one bit past the default bound, which is there to keep the memory
+below about 2 GB, so it is raised for this one call:
+
+```wl
+surf5 = Block[{$QECExactDetectorLimit = 2^25},
+    QECLogicalErrorRate[QECCode["Surface"[5]], QECNoiseModel["Circuit"[<|"TwoQubit" -> p, "Measurement" -> p|>]],
+        "Rounds" -> 1, "Basis" -> "Z", "Decoder" -> {"MaximumLikelihood", 1/1000}]
+];
+Normal[Series[surf5, {p, 0, 3}]]
+```
+
+<!-- => (42320 p^3)/27 -->
+
+The leading power is $p^3$, as distance 5 requires.
+
+---
+
+What it costs, on a laptop:
+
+| model | patterns | exact rate, maximum likelihood |
+|---|---|---|
+| $d = 3$, one round, both bases | $2^{18}$ | 0.3 s |
+| $d = 3$, three rounds, one basis | $2^{17}$ | 0.8 s |
+| $d = 3$, four rounds, one basis | $2^{21}$ | 3 s |
+| $d = 3$, five rounds, one basis | $2^{25}$ | 23 s, with the bound raised |
+| $d = 5$, one round, one basis | $2^{25}$ | 19 s, with the bound raised |
+| $d = 3$, two rounds, both bases | $2^{26}$ | 37 s, with the bound raised |
+
+Every step of the transform is a pass over the $2^N$ patterns, so the time doubles with each bit,
+and the memory does too: about 3 GB at 25 bits. `$QECExactDetectorLimit` is $2^{24}$ by default
+and can be raised when the memory is there. Past that the rate is sampled, and the model behind the sampler
+is built with every fault carried through the circuit at once, as the bits of one wide integer.
+That is Stim's bit-parallel frame simulation, and it builds the model of the distance-7 code over
+seven rounds in seconds where one pass per fault took two minutes.
 
 ## Thresholds of a family
 
@@ -2284,7 +2430,7 @@ and each crossing a root. The repetition code under bit flips crosses at exactly
 pair, since $p_L^{(5)} - p_L^{(3)} = 3p^2(1-p)^2(2p-1)$:
 
 ```wl
-th = QECThreshold[{"Repetition", {3, 5, 7}}, QECNoiseModel["BitFlip", p]];
+th = QECThreshold["Repetition"[{3, 5, 7}], QECNoiseModel["BitFlip"[p]]];
 {th["Value"], th["Crossings"], th["Method"]}
 ```
 
@@ -2300,7 +2446,7 @@ with a fifth of the shots finds the bracket first, and the full pass is laid aro
 
 ```wl
 BlockRandom[SeedRandom[1];
-    thSurface = QECThreshold[{"Surface", {3, 5, 7}}, QECNoiseModel["BitFlip", p]]];
+    thSurface = QECThreshold["Surface"[{3, 5, 7}], QECNoiseModel["BitFlip"[p]]]];
 {thSurface["Value"], thSurface["Crossings"]}
 ```
 
@@ -2322,7 +2468,7 @@ code at code capacity in disguise, so its matching threshold is the same $10.3\%
 
 ```wl
 BlockRandom[SeedRandom[1];
-    QECThreshold[{"Repetition", {3, 5, 7}}, QECNoiseModel["BitFlip", p, "MeasurementError" -> p], "Shots" -> 10000]["Crossings"]]
+    QECThreshold["Repetition"[{3, 5, 7}], QECNoiseModel["BitFlip"[p], "MeasurementError" -> p], "Shots" -> 10000]["Crossings"]]
 ```
 
 <!-- => <|{3, 5} -> Around[0.091, 0.0027], {5, 7} -> Around[0.111, 0.0074]|> -->
@@ -2335,7 +2481,7 @@ gives. The distance-3 and distance-5 surface codes on the bare-ancilla circuit:
 
 ```wl
 BlockRandom[SeedRandom[2];
-    QECThreshold[{"Surface", {3, 5}}, QECNoiseModel["Circuit", p], "Shots" -> 4000, "Points" -> 5]["Value"]]
+    QECThreshold["Surface"[{3, 5}], QECNoiseModel["Circuit"[p]], "Shots" -> 4000, "Points" -> 5]["Value"]]
 ```
 
 <!-- => Around[0.0027, 0.00025] -->

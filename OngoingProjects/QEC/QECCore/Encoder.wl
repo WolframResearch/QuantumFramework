@@ -108,14 +108,14 @@ invertGate["S" -> q_] := {"S" -> q, "S" -> q, "S" -> q}
    prepares a state stabilized by +-each generator; the fixup solves over GF(2)
    for the Pauli whose symplectic products with the completed generators match the
    pattern of wrong signs, and applying it flips exactly those. *)
-codeEncodingGates[a_Association] := codeEncodingGates[a] = Module[
+codeEncodingGates[a_Association] := qecMemoKey[codeEncodingGates[a]] = Module[
     {n = a["Qubits"], encoder, prepared, completed, system, wrong, fix},
 
     encoder = Flatten[invertGate /@ Reverse[codeReductionGates[a]], 1];
     prepared = applyGates[Wolfram`QuantumFramework`PauliStabilizer[n], encoder];
 
     completed = codeCompletedGenerators[a];
-    If[completed === $Failed, Return[$Failed]];
+    If[FailureQ[completed], Return[completed]];
 
     wrong = Boole[prepared["Expectation", #] === -1] & /@ (pauliString /@ completed);
     If[Total[wrong] === 0, Return[encoder]];
@@ -124,7 +124,7 @@ codeEncodingGates[a_Association] := codeEncodingGates[a] = Module[
        system . p = the vector of symplectic products of p with the generators. *)
     system = With[{v = symplecticPart[#]}, Join[v[[n + 1 ;; 2 n]], v[[1 ;; n]]]] & /@ completed;
     fix = gf2Solve[system, wrong];
-    If[fix === $Failed, Return[encoder]];
+    If[FailureQ[fix], Return[encoder]];
 
     Join[
         encoder,

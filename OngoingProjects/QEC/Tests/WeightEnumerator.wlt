@@ -72,20 +72,20 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Table[c["DualWeightEnumerator"] === normalizerWeights[c], {c, {bitFlip, five, steane, QECCode["DistanceTwo", 4]}}],
+    Table[c["DualWeightEnumerator"] === normalizerWeights[c], {c, {bitFlip, five, steane, QECCode["DistanceTwo"[4]]}}],
     {True, True, True, True},
     TestID -> "QEC-WeightEnumerator-MacWilliams-matches-the-normalizer"
 ]
 
 (* Theorem 7.7(c): A_j = B_j exactly below the distance. *)
 VerificationTest[
-    Table[{firstDifference[c], c["Distance"]}, {c, {bitFlip, five, steane, shor, QECCode["DistanceTwo", 4]}}],
+    Table[{firstDifference[c], c["Distance"]}, {c, {bitFlip, five, steane, shor, QECCode["DistanceTwo"[4]]}}],
     {{1, 1}, {3, 3}, {3, 3}, {3, 3}, {2, 2}},
     TestID -> "QEC-WeightEnumerator-distance-from-the-enumerators"
 ]
 
 VerificationTest[
-    Length[QECCode["Hamming", 4]["DualWeightEnumerator"]],
+    Length[QECCode["Hamming"[4]]["DualWeightEnumerator"]],
     16,
     TestID -> "QEC-WeightEnumerator-dual-without-the-normalizer"
 ]
@@ -145,15 +145,15 @@ VerificationTest[
 ]
 
 VerificationTest[
-    five["CodespaceProbability", QuantumState["00"]],
-    $Failed,
+    FailureQ[five["CodespaceProbability", QuantumState["00"]]],
+    True,
     {QECCode::blochstate},
     TestID -> "QEC-WeightEnumerator-refuses-a-two-qubit-state"
 ]
 
 VerificationTest[
-    Block[{$QECStabilizerGroupLimit = 8}, steane["WeightEnumerator"]],
-    $Failed,
+    FailureQ[Block[{$QECStabilizerGroupLimit = 8}, steane["WeightEnumerator"]]],
+    True,
     {QECCode::groupbig},
     TestID -> "QEC-WeightEnumerator-respects-the-group-limit"
 ]

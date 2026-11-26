@@ -32,7 +32,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 
@@ -202,7 +202,7 @@ VerificationTest[
 (* A fault inside one repetition corrupts that repetition and no other, which is
    the whole point of a fresh cat each time -- so the majority survives it. *)
 VerificationTest[
-    With[{i = FirstPosition[mz["Instructions"], {"M", 6}][[1]]},
+    With[{i = FirstPosition[mz["Instructions"], "Measurement" -> 6][[1]]},
         {qecParities[mz, {{i - 1, 6, {1, 0}}}],
          qecOutcome[qecFrame[mz["Instructions"], mz["Qubits"], {{i - 1, 6, {1, 0}}}]["Record"], 5, 3]}
     ],
@@ -251,36 +251,36 @@ VerificationTest[
    message: something that is not a Pauli at all, a Pauli on the wrong number of qubits,
    and a Pauli carrying a phase, whose Hermitian representative is what would be measured. *)
 VerificationTest[
-    QECPauliMeasurement[five, "XYZW"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "XYZW"]],
+    True,
     {QECPauliMeasurement::pauli},
     TestID -> "QEC-Measure-refuses-what-is-not-a-Pauli"
 ]
 
 VerificationTest[
-    QECPauliMeasurement[five, "XZZX"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "XZZX"]],
+    True,
     {QECPauliMeasurement::pauli},
     TestID -> "QEC-Measure-refuses-a-Pauli-of-the-wrong-size"
 ]
 
 VerificationTest[
-    QECPauliMeasurement[five, "-XZZXI"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "-XZZXI"]],
+    True,
     {QECPauliMeasurement::pauli},
     TestID -> "QEC-Measure-refuses-a-Pauli-carrying-a-phase"
 ]
 
 VerificationTest[
-    QECPauliMeasurement[five, "IIIII"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "IIIII"]],
+    True,
     {QECPauliMeasurement::identity},
     TestID -> "QEC-Measure-the-identity-has-no-eigenvalue"
 ]
 
 VerificationTest[
-    QECPauliMeasurement[five, "ZZZZZ", 0],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "ZZZZZ", 0]],
+    True,
     {QECPauliMeasurement::reps},
     TestID -> "QEC-Measure-repetitions-must-be-positive"
 ]
@@ -288,8 +288,8 @@ VerificationTest[
 (* Steane EC exists now (ErrorCorrection.wl), but it is CSS-only, and the 5-qubit
    code is not CSS -- so the refusal here is the CSS one, not "not built yet". *)
 VerificationTest[
-    QECPauliMeasurement[five, "ZZZZZ", "ErrorCorrection" -> "Steane"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "ZZZZZ", "ErrorCorrection" -> "Steane"]],
+    True,
     {QECPauliMeasurement::eccss},
     TestID -> "QEC-Measure-Steane-error-correction-needs-a-CSS-code"
 ]
@@ -297,15 +297,15 @@ VerificationTest[
 (* And a gadget that is not built at all is refused by name.  Shor EC is the one
    with no CSS restriction, which is exactly why its absence is worth a message. *)
 VerificationTest[
-    QECPauliMeasurement[five, "ZZZZZ", "ErrorCorrection" -> "Shor"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "ZZZZZ", "ErrorCorrection" -> "Shor"]],
+    True,
     {QECPauliMeasurement::ec},
     TestID -> "QEC-Measure-an-unbuilt-error-correction-gadget-is-refused"
 ]
 
 VerificationTest[
-    QECPauliMeasurement[five, "ZZZZZ"]["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECPauliMeasurement::noprop},
+    MatchQ[QECPauliMeasurement[five, "ZZZZZ"]["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECPauliMeasurement::undefprop},
     TestID -> "QEC-Measure-unknown-property-is-refused"
 ]

@@ -33,26 +33,26 @@ gf2Zero[n_Integer] := ConstantArray[0, n]
 
 gf2Basis[{}] := {{}, {}}
 
-gf2Basis[m_ ? MatrixQ] := With[{rows = DeleteCases[RowReduce[m, Modulus -> 2], {(0) ..}]},
-    {rows, If[rows === {}, {}, First[FirstPosition[#, 1]] & /@ rows]}
+gf2Basis[m_ ? MatrixQ] := With[{rows = DeleteCases[RowReduce[m, Modulus -> 2], {0 ..}]},
+    {rows, Flatten[FirstPosition[#, 1] & /@ rows]}
 ]
 
 
 gf2Rank[{}] := 0
 
-gf2Rank[m_ ? MatrixQ] := Length[First[gf2Basis[m]]]
+gf2Rank[m_ ? MatrixQ] := MatrixRank[m, Modulus -> 2]
 
 
 (* ---- queries against a precomputed basis ---- *)
 
 (* Residual of v after subtracting off every basis row whose pivot v occupies. *)
 gf2Reduce[{rows_, pivots_}, v_List] := Fold[
-    If[#1[[pivots[[#2]]]] === 1, Mod[#1 + rows[[#2]], 2], #1] &,
+    If[#1[[Last[#2]]] == 1, BitXor[#1, First[#2]], #1] &,
     v,
-    Range[Length[rows]]
+    Transpose[{rows, pivots}]
 ]
 
-gf2MemberQ[basis_, v_List] := gf2Reduce[basis, v] === gf2Zero[Length[v]]
+gf2MemberQ[basis_, v_List] := FreeQ[gf2Reduce[basis, v], 1]
 
 (* True if v is outside the span, i.e. it would extend the basis. *)
 gf2IndependentQ[basis_, v_List] := ! gf2MemberQ[basis, v]

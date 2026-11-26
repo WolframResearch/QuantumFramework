@@ -23,15 +23,19 @@ magic state that makes the protocol universal.
 The public surface was redesigned after an API audit
 ([`QEC-API-Audit-and-Redesign.md`](QEC-API-Audit-and-Redesign.md)); what was done, and the
 four decisions taken provisionally, are in [`QEC-API-Redesign-Plan.md`](QEC-API-Redesign-Plan.md).
-Retired names (`QECPauliVector` and the other `QECPauli*` verbs, `QECFaultTolerant`,
-`QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix`) still work for one release
-and say what replaced them.
+The names retired by that redesign (`QECPauliVector` and the other `QECPauli*` verbs,
+`QECFaultTolerant`, `QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix`) were kept
+for one release and have now been removed; `docs/Tutorials/APIRedesignChanges.md` lists what
+replaced each.
 
 ## What is here
 
 ```
-QECCore/           the layer: 33 files and a loader, ~9,600 lines, 23 public functions
-Tests/             790 tests in 29 MUnit files, plus a local runner
+QECCore/           the layer: 34 files and a loader, ~10,400 lines, 22 public functions
+                   and a predicate for each object
+Tests/             828 tests in 31 MUnit files, plus a local runner
+examples/          two evaluated studies: the surface code at circuit level, and the
+                   toric-code review, both on the current layer
 StimCrossCheck/    the external oracle: emit the circuits, compare against Stim
 docs/              markdown sources, the build script, and the built notebook
 References/        an index of the source material (the PDFs are not in the repo)
@@ -57,8 +61,8 @@ resolve:
 ```wl
 code = QECCode["SteaneCode"];
 code["Parameters"]                                        (* {7, 1, 3} *)
-QECLogicalErrorRate[code, QECNoiseModel["Depolarizing", p]]
-QECLogicalErrorRate[code, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1]
+QECLogicalErrorRate[code, QECNoiseModel["Depolarizing"[p]]]
+QECLogicalErrorRate[code, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1]
 ```
 
 The tests run in a fresh kernel and print a machine-readable summary:
@@ -143,8 +147,9 @@ standard errors. It needs a Python install, which is why it sits outside the `.w
   one.
 - **Exactness is bounded, in two different ways.** The code-capacity route enumerates 4ⁿ
   errors (`$QECExactEnumerationLimit`); the circuit-level route costs 2^((r+1)m + 2k)
-  (`$QECExactDetectorLimit`), which grows in the number of rounds. Past either, the same
-  quantity is sampled.
+  (`$QECExactDetectorLimit`, 2^24 by default since the Walsh-Hadamard route), which grows
+  in the number of rounds; `"Basis" -> "X" | "Z"` halves it for a memory in one basis. Past
+  either, the same quantity is sampled.
 - **Not in the paclet yet.** The files are written to move verbatim into
   `QuantumFramework/Kernel/QEC/`; until they do, there is a transitional loader, the tests
   carry a `Get`, and there are no reference pages behind `?QECCode` or F1.

@@ -25,13 +25,13 @@ Get[FileNameJoin[{
 QECClearCache[];
 
 steane = QECCode["SteaneCode"];
-rep3 = QECCode["Repetition", 3];
+rep3 = QECCode["Repetition"[3]];
 
-steanePs = QECPseudothreshold[steane, QECNoiseModel["Depolarizing", qecP]];
+steanePs = QECPseudothreshold[steane, QECNoiseModel["Depolarizing"[qecP]]];
 
 
 VerificationTest[
-    QECPseudothreshold[rep3, QECNoiseModel["BitFlip", qecP]]["Value"],
+    QECPseudothreshold[rep3, QECNoiseModel["BitFlip"[qecP]]]["Value"],
     1/2,
     TestID -> "QEC-Pseudothreshold-repetition-code-crosses-at-one-half"
 ]
@@ -51,13 +51,13 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Simplify[steanePs["LogicalErrorRate"] - QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing", qecP]]],
+    Simplify[steanePs["LogicalErrorRate"] - QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing"[qecP]]]],
     0,
     TestID -> "QEC-Pseudothreshold-carries-the-rate-it-came-from"
 ]
 
 VerificationTest[
-    QECPseudothreshold[rep3, QECNoiseModel["PhaseFlip", qecP]]["Value"],
+    QECPseudothreshold[rep3, QECNoiseModel["PhaseFlip"[qecP]]]["Value"],
     Missing["EncodingDoesNotHelp"],
     TestID -> "QEC-Pseudothreshold-no-value-when-encoding-does-not-help"
 ]
@@ -66,7 +66,7 @@ VerificationTest[
    noise.  The polynomial does cross p, further up -- that is reported as a
    crossing, not as the pseudothreshold. *)
 VerificationTest[
-    With[{ps = QECPseudothreshold[QECCode["BitFlipCode"], QECNoiseModel["Circuit", qecP], "Rounds" -> 1]},
+    With[{ps = QECPseudothreshold[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[qecP]], "Rounds" -> 1]},
         {ps["Value"], ps["LowNoiseRatio"], Length[ps["Crossings"]], ps["Rounds"], ps["Extraction"]}
     ],
     {Missing["EncodingDoesNotHelp"], 32/15, 1, 1, "BareAncilla"},
@@ -92,8 +92,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECPseudothreshold[steane, QECNoiseModel["Depolarizing", 1/10]],
-    $Failed,
+    FailureQ[QECPseudothreshold[steane, QECNoiseModel["Depolarizing"[1/10]]]],
+    True,
     {QECPseudothreshold::params},
     TestID -> "QEC-Pseudothreshold-needs-a-symbolic-rate"
 ]

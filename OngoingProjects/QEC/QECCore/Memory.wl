@@ -10,6 +10,8 @@ PackageScope[demGroups]
 PackageScope[demDecoderTable]
 PackageScope[demSampledFailure]
 PackageScope[demExactFailure]
+PackageScope[demExactFailureFold]
+PackageScope[maximumLikelihoodSpecQ]
 PackageScope[demRate]
 PackageScope[demSampledReport]
 
@@ -60,13 +62,14 @@ PackageScope[demSampledReport]
 (* here is the error rate of a stated protocol, not a fault-tolerance proof.        *)
 (* ============================================================================ *)
 
-$QECExactDetectorLimit = 2^16;
+$QECExactDetectorLimit = 2^24;
 
 $QECDecoderSubsetLimit = 2 * 10^6;
 
 QECLogicalErrorRate::detbig = "The detector model has `1` detectors and `2` observables, so an exact sum needs a state space of `3`, past $QECExactDetectorLimit (`4`). Give a shot count to sample instead, or use fewer rounds.";
 QECLogicalErrorRate::subsets = "Stopping the decoder table at weight `1`: weight `2` would need `3` fault subsets, past $QECDecoderSubsetLimit (`4`).";
 QECLogicalErrorRate::symbolicshots = "A sampled rate needs numeric noise rates.";
+QECLogicalErrorRate::decoder = "`1` is not a decoder for a detector model; the choices are `2`.";
 QECLogicalErrorRate::allrejected = "Every one of the `1` shots was rejected by a herald, so there is no accepted sample to take a rate from. Raise the shot count or lower the noise.";
 QECLogicalErrorRate::noacceptance = "The heralds reject with certainty, so the accepted probability is zero and there is no conditional rate to report. \"Rate\" comes back Indeterminate; \"Acceptance\" and \"Failure\" are still exact.";
 
@@ -77,7 +80,7 @@ QECLogicalErrorRate::noacceptance = "The heralds reject with certainty, so the a
    compared, so they are carried as integers: one BitXor replaces a vector Mod. *)
 bitsToInteger[bits_List] := If[bits === {}, 0, FromDigits[bits, 2]]
 
-demRowKeys[a_Association] := demRowKeys[a] = {
+demRowKeys[a_Association] := qecMemoKey[demRowKeys[a]] = {
     bitsToInteger /@ a["DetectorMatrix"],
     bitsToInteger /@ a["ObservableMatrix"],
     bitsToInteger /@ Lookup[a, "HeraldMatrix", ConstantArray[{}, Length[a["Probabilities"]]]]
@@ -86,7 +89,7 @@ demRowKeys[a_Association] := demRowKeys[a] = {
 (* Mechanisms that belong to the same physical location are alternatives, not
    independent coins: at most one of the three Paulis of a depolarizing channel
    happens.  The location label already carries that grouping. *)
-demGroups[a_Association] := demGroups[a] = Values @ GroupBy[
+demGroups[a_Association] := qecMemoKey[demGroups[a]] = Values @ GroupBy[
     Range[Length[a["Probabilities"]]],
     a["Locations"][[#]] &
 ]
@@ -108,7 +111,7 @@ demGroups[a_Association] := demGroups[a] = Values @ GroupBy[
    This is the decoder-side twin of the filter QECPauliMeasurement applies when it
    reports its residual data weight: both statements are conditional on acceptance,
    and both are wrong if the condition is dropped on one side only. *)
-demDecoderTable[a_Association, reach_Integer] := demDecoderTable[a, reach] = Module[
+demDecoderTable[a_Association, reach_Integer] := qecMemoKey[demDecoderTable[a, reach]] = Module[
     {d, o, h, rows, nf, table, stop},
 
     {d, o, h} = demRowKeys[a];
@@ -207,7 +210,43 @@ demSampledFailure[a_Association, count_Integer, reach_Integer, dec_ : Automatic]
    denominator are slices of the same fold.  That makes the space 2^(det+obs+heralds),
    so $QECExactDetectorLimit bites sooner on a post-selected circuit -- which is
    honest, since post-selection is exactly where sampling is the better route. *)
+(* The exact failure probability, through the Walsh-Hadamard transform (Transform.wl):
+   the same number the fold below gives, at a fraction of the cost and for state
+   spaces up to $QECExactDetectorLimit = 2^24 rather than 2^16.  The fold is kept as
+   the reference the transform is tested against, and as the fallback for the rare
+   model whose rates are too varied to group. *)
 demExactFailure[a_Association, reach_Integer, dec_ : Automatic] := Module[
+    {nd, no, nh, dim, table, r, num, den},
+
+    nd = a["Detectors"];
+    no = a["Observables"];
+    nh = Lookup[a, "Heralds", 0];
+    dim = 2^(nd + no + nh);
+
+    If[ dim > $QECExactDetectorLimit,
+        Return[qecMessageFailure[QECLogicalErrorRate::detbig, nd, no + nh, dim, $QECExactDetectorLimit]]
+    ];
+
+    table = If[dec === Automatic, demDecoderTable[a, reach], dec];
+    r = demTransformFailure[a, table];
+    If[FailureQ[r], Return[demExactFailureFold[a, reach, dec]]];
+
+    If[ nh === 0, Return[First[r]] ];
+
+    {num, den} = r;
+    If[ TrueQ[PossibleZeroQ[den]],
+        Message[QECLogicalErrorRate::noacceptance];
+        Return[<|"Rate" -> Indeterminate, "Acceptance" -> den, "Failure" -> num|>]
+    ];
+    <|
+        "Rate" -> Simplify[num / den],
+        "Acceptance" -> den,
+        "Failure" -> num
+    |>
+]
+
+(* The fold: the distribution itself, one location at a time. *)
+demExactFailureFold[a_Association, reach_Integer, dec_ : Automatic] := Module[
     {d, o, h, no, nd, nh, dim, sigs, groups, dist, idx, table, wrong, accept, num, den},
 
     nd = a["Detectors"];
@@ -216,8 +255,7 @@ demExactFailure[a_Association, reach_Integer, dec_ : Automatic] := Module[
     dim = 2^(nd + no + nh);
 
     If[ dim > $QECExactDetectorLimit,
-        Message[QECLogicalErrorRate::detbig, nd, no + nh, dim, $QECExactDetectorLimit];
-        Return[$Failed]
+        Return[qecMessageFailure[QECLogicalErrorRate::detbig, nd, no + nh, dim, $QECExactDetectorLimit]]
     ];
 
     {d, o, h} = demRowKeys[a];
@@ -287,14 +325,18 @@ demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
 (* The decoder at the two noisy levels: the detector model's own lightest-fault table
    unless matching is asked for, by name or by a matching QECDecoder. *)
 demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
-    mode_String, spec_] := Module[{dem, dec},
-    dem = codeDetectorModel[a, noise, rounds, mode];
+    mode_String, spec_] := demRate[a, noise, rounds, count, reach, mode, spec, All]
+
+demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
+    mode_String, spec_, basis_] := Module[{dem, dec},
+    dem = demRestrictBasis[codeDetectorModel[a, noise, rounds, mode], basis];
+    If[ FailureQ[dem], Return[dem]];
     dec = demDecoderFor[dem, spec];
-    If[ dec === $Failed, Return[$Failed]];
+    If[ FailureQ[dec], Return[dec]];
     If[ count === None,
         demExactFailure[dem, reach, dec],
         If[ noiseSymbolicQ[noise],
-            Message[QECLogicalErrorRate::symbolicshots]; $Failed,
+            qecMessageFailure[QECLogicalErrorRate::symbolicshots],
             demSampledFailure[dem, count, reach, dec]
         ]
     ]
@@ -308,8 +350,8 @@ demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
    whether or not anything was post-selected. *)
 demSampledReport[dem_Association, count_Integer, spec_, reachSpec_] := Module[{dec, reach, r},
     dec = demDecoderFor[dem, spec];
-    If[dec === $Failed, Return[$Failed]];
-    reach = If[matchingSpecQ[spec], 1, decoderReachFor[dem["Code"], reachSpec]];
+    If[FailureQ[dec], Return[dec]];
+    reach = If[matchingSpecQ[spec] || maximumLikelihoodSpecQ[spec], 1, decoderReachFor[dem["Code"], reachSpec]];
     r = demSampledFailure[dem, count, reach, dec];
     If[ AssociationQ[r], r, <|"Rate" -> r, "Acceptance" -> 1., "Accepted" -> count, "Shots" -> count|>]
 ]
@@ -317,4 +359,18 @@ demSampledReport[dem_Association, count_Integer, spec_, reachSpec_] := Module[{d
 demDecoderFor[dem_Association, "Matching"] := Replace[demMatching[dem], m_Association :> matchingLookup[m]]
 demDecoderFor[dem_Association, QECDecoder[d_Association]] /; d["Method"] === "Matching" :=
     demDecoderFor[dem, "Matching"]
-demDecoderFor[_, _] := Automatic
+(* Maximum likelihood over the whole detector history, from the exact distribution
+   (Transform.wl): at the model's own rates, at $QECDecoderProbeRate when they are
+   symbolic, or at a reference point given as {"MaximumLikelihood", p0} or
+   {"MaximumLikelihood", rules}. *)
+maximumLikelihoodSpecQ["MaximumLikelihood" | {"MaximumLikelihood", _}] := True
+maximumLikelihoodSpecQ[_] := False
+
+demDecoderFor[dem_Association, "MaximumLikelihood"] := demMaximumLikelihoodTable[dem, Automatic]
+demDecoderFor[dem_Association, {"MaximumLikelihood", ref_}] := demMaximumLikelihoodTable[dem, ref]
+demDecoderFor[_, Automatic | "MinimumWeight"] := Automatic
+demDecoderFor[_, QECDecoder[d_Association]] /; MemberQ[{"MinimumWeight", "DetectorModel"}, d["Method"]] := Automatic
+demDecoderFor[_, spec_] := (
+    qecMessageFailure[QECLogicalErrorRate::decoder, spec,
+        "Automatic, \"MinimumWeight\", \"Matching\", \"MaximumLikelihood\", {\"MaximumLikelihood\", p0}"]
+)

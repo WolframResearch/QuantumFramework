@@ -77,17 +77,17 @@ PackageScope[$ftGadgetKinds]
 (* this is aimed at reproducing).                                                *)
 (* ============================================================================ *)
 
-QECFaultTolerantCircuit::usage = "QECFaultTolerantCircuit[circuit, code] gives the fault-tolerant simulation FT(C) of an ideal Clifford circuit, with each logical qubit encoded in a block of the code, each location replaced by its gadget, and an error correction gadget after every preparation, gate and storage gadget.\nThe circuit is a list of instructions on logical qubits, such as {{\"R\", 1}, {\"H\", 1}, {\"CNOT\", 1, 2}, {\"M\", 1}}.\nft[prop] gives a property; ft[\"Properties\"] lists them.";
+QECFaultTolerantCircuit::usage = "QECFaultTolerantCircuit[circuit, code] gives the fault-tolerant simulation FT(C) of an ideal Clifford circuit, with each logical qubit encoded in a block of the code, each location replaced by its gadget, and an error correction gadget after every preparation, gate and storage gadget.\nThe circuit is a list of gates on logical qubits, written as for QuantumCircuitOperator: {\"Reset\" -> 1, \"H\" -> 1, \"CNOT\" -> {1, 2}, \"Measurement\" -> 1}.\nft[prop] gives a property; ft[\"Properties\"] lists them.";
 
 QECFaultTolerantCircuit::css = "The fault-tolerant protocol assembled here uses Steane error correction, which needs a CSS code.";
 QECFaultTolerantCircuit::logical = "This protocol encodes one logical qubit per block; the code given carries `1`.";
-QECFaultTolerantCircuit::location = "`1` is not a location this protocol has a gadget for. Locations are {\"R\", j}, {\"M\", j}, a one-qubit Clifford {g, j}, or a two-qubit gate {g, j, l}.";
+QECFaultTolerantCircuit::location = "`1` is not a location this protocol has a gadget for. Locations are \"Reset\" -> j, \"Measurement\" -> j, a one-qubit Clifford g -> j, or a two-qubit gate g -> {j, l}.";
+QECFaultTolerantCircuit::oldform = "Gates are written as for QuantumCircuitOperator, gate -> qubits: `1`, not `2`.";
 QECFaultTolerantCircuit::gate = "The code has no transversal gadget for a logical `1`. Transversal gates are limited to the Clifford group, and to the Cliffords this code's symmetry admits; QECTransversalGate[code, All] lists them.";
 QECFaultTolerantCircuit::qubit = "`1` is not a logical qubit of a circuit on `2`.";
-QECFaultTolerantCircuit::unprepared = "Logical qubit `1` is used before it is prepared. Start the circuit with {\"R\", `1`}.";
+QECFaultTolerantCircuit::unprepared = "Logical qubit `1` is used before it is prepared. Start the circuit with \"Reset\" -> `1`.";
 QECFaultTolerantCircuit::measured = "Logical qubit `1` is used after it has been measured.";
 QECFaultTolerantCircuit::readout = "The code's logical Z is not a product of Z operators, so a transversal Z measurement does not read it.";
-QECFaultTolerantCircuit::noprop = "`1` is not a property of QECFaultTolerantCircuit. Use ft[\"Properties\"] for the list.";
 
 
 $ftGadgetKinds = {"Preparation", "Gate", "Storage", "Measurement", "ErrorCorrection"};
@@ -97,6 +97,9 @@ $ftGadgetKinds = {"Preparation", "Gate", "Storage", "Measurement", "ErrorCorrect
 
 (* A location is an instruction OR a wait, and the waits come from the schedule
    rather than from the instruction list -- which is why this is not Length. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+ftLocations[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := ftLocations[instructionTuples[instr], rest]
+
 ftLocations[instr_List, nq_Integer] := gadgetLocations[instr, nq]
 
 
@@ -106,6 +109,9 @@ ftLocations[instr_List, nq_Integer] := gadgetLocations[instr, nq]
    because that is all it ever needed.  Here the data is block b.  Every
    instruction of that gadget touches either a data qubit (<= n) or an ancilla
    qubit (> offset), so relocating it is a two-branch map and not a rewrite. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+ftRelocate[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := ftRelocate[instructionTuples[instr], rest]
+
 ftRelocate[instr_List, n_Integer, offset_Integer, dataBase_Integer, ancillaBase_Integer] :=
     With[{move = If[# <= n, dataBase + #, ancillaBase + # - offset] &},
         Replace[instr, {
@@ -147,7 +153,7 @@ ftMeasurement[a_Association, b_Integer] := With[{n = a["Qubits"], base = (b - 1)
 ftReadoutSupport[a_Association] := With[
     {n = a["Qubits"], z = First[codeLogicalVectors[a]["Z"]]},
     If[ Total[z[[1 ;; n]]] =!= 0,
-        Message[QECFaultTolerantCircuit::readout]; $Failed,
+        qecMessageFailure[QECFaultTolerantCircuit::readout],
         Flatten @ Position[z[[n + 1 ;; 2 n]], 1]
     ]
 ]
@@ -173,7 +179,7 @@ ftCorrection[a_Association, b_Integer, blocks_Integer, order_String, mode_String
    thing with three times the locations.  The words are the fallback, and they are
    what makes the search exhaustive: they cover all 24 one-qubit Cliffords, named
    or not. *)
-ftGateWord[a_Association, g_String] := ftGateWord[a, g] = SelectFirst[
+ftGateWord[a_Association, g_String] := qecMemoKey[ftGateWord[a, g]] = SelectFirst[
     Join[$transversalOneQubitGates, transversalCliffordWords[1]],
     transversalValidQ[a, #, 1] &&
         transversalName[transversalLogicalAction[a, #, 1], 1] === g &,
@@ -214,7 +220,7 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String, mode_Strin
     {n = a["Qubits"], support, layers, status, out, rows, readouts, records, emit, touched, heralds, checks},
 
     support = ftReadoutSupport[a];
-    If[support === $Failed, Throw[$Failed, "QECFaultTolerantCircuit"]];
+    If[FailureQ[support], Throw[support, "QECFaultTolerantCircuit"]];
 
     layers = circuitSchedule[circuit, blocks];
     status = ConstantArray["Unprepared", blocks];
@@ -249,8 +255,7 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String, mode_Strin
             Module[{step = circuit[[i]], op = First[circuit[[i]]], qs, instr},
                 qs = Rest[step];
                 If[ ! AllTrue[qs, 1 <= # <= blocks &],
-                    Message[QECFaultTolerantCircuit::qubit, First[Select[qs, ! (1 <= # <= blocks) &]], blocks];
-                    Throw[$Failed, "QECFaultTolerantCircuit"]
+                    Throw[qecMessageFailure[QECFaultTolerantCircuit::qubit, First[Select[qs, ! (1 <= # <= blocks) &]], blocks], "QECFaultTolerantCircuit"]
                 ];
                 touched = Join[touched, qs];
                 Which[
@@ -260,12 +265,10 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String, mode_Strin
                         status[[First[qs]]] = "Live",
 
                     AnyTrue[qs, status[[#]] === "Unprepared" &],
-                        Message[QECFaultTolerantCircuit::unprepared, First[Select[qs, status[[#]] === "Unprepared" &]]];
-                        Throw[$Failed, "QECFaultTolerantCircuit"],
+                        Throw[qecMessageFailure[QECFaultTolerantCircuit::unprepared, First[Select[qs, status[[#]] === "Unprepared" &]]], "QECFaultTolerantCircuit"],
 
                     AnyTrue[qs, status[[#]] === "Measured" &],
-                        Message[QECFaultTolerantCircuit::measured, First[Select[qs, status[[#]] === "Measured" &]]];
-                        Throw[$Failed, "QECFaultTolerantCircuit"],
+                        Throw[qecMessageFailure[QECFaultTolerantCircuit::measured, First[Select[qs, status[[#]] === "Measured" &]]], "QECFaultTolerantCircuit"],
 
                     op === "M",
                         emit["Measurement", step, qs, ftMeasurement[a, First[qs]]];
@@ -274,17 +277,16 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String, mode_Strin
 
                     Length[qs] === 1,
                         instr = ftGateInstructions[a, op, First[qs]];
-                        If[instr === $Failed, Message[QECFaultTolerantCircuit::gate, op]; Throw[$Failed, "QECFaultTolerantCircuit"]];
+                        If[FailureQ[instr], Throw[qecMessageFailure[QECFaultTolerantCircuit::gate, op], "QECFaultTolerantCircuit"]];
                         emit["Gate", step, qs, instr],
 
                     Length[qs] === 2,
                         instr = ftTwoQubitInstructions[a, op, qs[[1]], qs[[2]]];
-                        If[instr === $Failed, Message[QECFaultTolerantCircuit::gate, op]; Throw[$Failed, "QECFaultTolerantCircuit"]];
+                        If[FailureQ[instr], Throw[qecMessageFailure[QECFaultTolerantCircuit::gate, op], "QECFaultTolerantCircuit"]];
                         emit["Gate", step, qs, instr],
 
                     True,
-                        Message[QECFaultTolerantCircuit::location, step];
-                        Throw[$Failed, "QECFaultTolerantCircuit"]
+                        Throw[qecMessageFailure[QECFaultTolerantCircuit::location, First[instructionRules[{step}]]], "QECFaultTolerantCircuit"]
                 ]
             ],
             {i, layers[[L]]}
@@ -327,7 +329,21 @@ ftAssemble[a_Association, circuit_List, blocks_Integer, order_String, mode_Strin
 
 Options[QECFaultTolerantCircuit] = {"Order" -> "BitFlipFirst", "Ancilla" -> "Encoder"};
 
-QECFaultTolerantCircuit[circuit_List, code_QECCode, opts : OptionsPattern[]] := Module[
+(* The old spellings -- a tuple per instruction, or the layer's short names "R", "M",
+   "Sdg" in a rule -- say how they are written now. *)
+QECFaultTolerantCircuit[circuit_List, code_QECCode, opts : OptionsPattern[]] /; AnyTrue[circuit, oldInstructionQ] := With[
+    {first = First[Select[circuit, oldInstructionQ]]},
+    With[{new = instructionRule[instructionTuple[first]]},
+        Message[QECFaultTolerantCircuit::oldform, new, first];
+        Failure["InvalidArguments", <|"MessageTemplate" :> QECFaultTolerantCircuit::oldform,
+            "MessageParameters" -> {new, first}|>]
+    ]
+]
+
+QECFaultTolerantCircuit[gates_List, code_QECCode, opts : OptionsPattern[]] /; AllTrue[gates, publicInstructionQ] :=
+    faultTolerantCircuit[instructionTuples[gates], code, opts]
+
+faultTolerantCircuit[circuit_List, code_QECCode, opts : OptionsPattern[QECFaultTolerantCircuit]] := Module[
     {a = First[code], blocks, order, mode, assembled},
 
     order = OptionValue["Order"];
@@ -335,14 +351,14 @@ QECFaultTolerantCircuit[circuit_List, code_QECCode, opts : OptionsPattern[]] := 
     blocks = Max[Cases[circuit, {_String, qs__Integer} :> Max[{qs}]], 0];
 
     Which[
-        ! codeCSSQ[a], Message[QECFaultTolerantCircuit::css]; $Failed,
-        codeLogicalQubits[a] =!= 1, Message[QECFaultTolerantCircuit::logical, codeLogicalQubits[a]]; $Failed,
-        blocks === 0, Message[QECFaultTolerantCircuit::location, circuit]; $Failed,
-        ! MemberQ[$ancillaModes, mode], Message[QECErrorCorrection::ancilla, mode, $ancillaModes]; $Failed,
+        ! codeCSSQ[a], qecMessageFailure[QECFaultTolerantCircuit::css],
+        codeLogicalQubits[a] =!= 1, qecMessageFailure[QECFaultTolerantCircuit::logical, codeLogicalQubits[a]],
+        blocks === 0, qecMessageFailure[QECFaultTolerantCircuit::location, instructionRules[circuit]],
+        ! MemberQ[$ancillaModes, mode], qecMessageFailure[QECErrorCorrection::ancilla, mode, $ancillaModes],
         True,
             assembled = ftAssemble[a, circuit, blocks, order, mode];
-            If[ assembled === $Failed,
-                $Failed,
+            If[ FailureQ[assembled],
+                assembled,
                 QECFaultTolerantCircuit[<|
                     "Code" -> a,
                     "Circuit" -> circuit,
@@ -372,8 +388,10 @@ faultTolerantData[QECFaultTolerantCircuit[a_Association]] := a
 
 QECFaultTolerantCircuit[_Association]["Properties"] := $faultTolerantProperties
 
-QECFaultTolerantCircuit[a_Association][prop : ("Circuit" | "Blocks" | "Qubits" |
-    "Instructions" | "Readouts" | "Measurements")] := a[prop]
+QECFaultTolerantCircuit[a_Association][prop : ("Blocks" | "Qubits" |
+    "Readouts" | "Measurements")] := a[prop]
+QECFaultTolerantCircuit[a_Association]["Circuit"] := instructionRules[a["Circuit"]]
+QECFaultTolerantCircuit[a_Association]["Instructions"] := instructionRules[a["Instructions"]]
 
 QECFaultTolerantCircuit[a_Association]["Code"] := QECCode[a["Code"]]
 QECFaultTolerantCircuit[a_Association]["Ancilla"] := Lookup[a, "Ancilla", "Encoder"]
@@ -394,7 +412,7 @@ QECFaultTolerantCircuit[a_Association]["Gadgets"] := Dataset[a["Gadgets"]]
 QECFaultTolerantCircuit[a_Association]["GadgetInstructions", kind_] := Module[
     {rows = a["Gadgets"], kinds = Flatten[{kind}], edges},
     edges = Prepend[Accumulate[#["Instructions"] & /@ rows], 0];
-    Catenate @ Table[
+    instructionRules @ Catenate @ Table[
         If[ MemberQ[kinds, rows[[j]]["Gadget"]],
             Take[a["Instructions"], {edges[[j]] + 1, edges[[j + 1]]}],
             {}
@@ -443,8 +461,6 @@ set (Def 10.5) needs the constructions of chapter 13.",
 the emitted circuit has no classically conditioned instruction."
 }
 
-QECFaultTolerantCircuit[a_Association][prop_String] :=
-    (Message[QECFaultTolerantCircuit::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

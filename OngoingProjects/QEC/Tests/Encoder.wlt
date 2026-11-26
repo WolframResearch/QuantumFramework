@@ -29,7 +29,7 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
 qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
@@ -87,7 +87,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    AllTrue[{3, 4, 5, 6}, QECCode["Repetition", #]["EncodingCircuitValidQ"] &],
+    AllTrue[{3, 4, 5, 6}, QECCode["Repetition"[#]]["EncodingCircuitValidQ"] &],
     True,
     TestID -> "QEC-Encoder-valid-repetition-family"
 ]

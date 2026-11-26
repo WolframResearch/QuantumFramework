@@ -11,6 +11,14 @@ PackageScope[gadgetMeasurements]
 PackageScope[gadgetHeralds]
 PackageScope[gadgetLocations]
 PackageScope[$gadgetCircuitProperties]
+PackageScope[instructionRules]
+PackageScope[instructionTuples]
+PackageScope[instructionRule]
+PackageScope[instructionTuple]
+PackageScope[internalOp]
+PackageScope[publicOp]
+PackageScope[publicInstructionQ]
+PackageScope[oldInstructionQ]
 
 
 (* ============================================================================ *)
@@ -67,22 +75,100 @@ $gadgetCircuitProperties = {
 };
 
 
+(* ---- the two spellings of an instruction ---- *)
+
+(* Inside the layer an instruction is a flat tuple, {"CNOT", c, t}, which is what the
+   frame propagator, the scheduler and every gadget builder pattern-match on.  At the
+   public surface it is spelled exactly as QuantumCircuitOperator spells it, so that a
+   list the layer hands out is a circuit the framework accepts as it is:
+
+     {"R", q}        "Reset" -> q
+     {"M", q}        "Measurement" -> q
+     {"MH", q}       a computational QuantumMeasurementOperator on q labelled "Herald"
+                     (a verification readout, kept apart from the record)
+     {"Sdg", q}      SuperDagger["S"] -> q      (likewise "Vdg", "Tdg")
+     {"CNOT", c, t}  "CNOT" -> {c, t}           (every other gate keeps its name)
+
+   The two functions below are the only crossing between them, and both accept either
+   spelling, so a caller never has to know which one it holds. *)
+$publicOpNames = <|"R" -> "Reset", "M" -> "Measurement", "MH" -> "Herald"|>;
+$internalOpNames = <|"Reset" -> "R", "Measurement" -> "M", "Herald" -> "MH"|>;
+$daggerOps = <|"Sdg" -> "S", "Vdg" -> "V", "Tdg" -> "T"|>;
+$undaggerOps = <|"S" -> "Sdg", "V" -> "Vdg", "T" -> "Tdg"|>;
+
+publicOp[op_String] := Which[
+    KeyExistsQ[$publicOpNames, op], $publicOpNames[op],
+    KeyExistsQ[$daggerOps, op], SuperDagger[$daggerOps[op]],
+    True, op
+]
+
+(* built once per qubit: a measurement operator is not free to construct *)
+heraldOperator[q_Integer] := heraldOperator[q] =
+    Wolfram`QuantumFramework`QuantumMeasurementOperator["Computational", {q}, "Label" -> "Herald"]
+
+instructionRule[{"MH", q_Integer}] := heraldOperator[q]
+instructionRule[{op_String, q_}] := publicOp[op] -> q
+instructionRule[{op_String, qs__}] := publicOp[op] -> {qs}
+instructionRule[r : ((_String | _SuperDagger) -> _)] := r
+instructionRule[m_Wolfram`QuantumFramework`QuantumMeasurementOperator] := m
+
+instructionRules[instr_List] := instructionRule /@ instr
+
+internalOp[op_String] := Lookup[$internalOpNames, op, op]
+internalOp[SuperDagger[g_String]] := Lookup[$undaggerOps, g, g <> "dg"]
+
+instructionTuple[(op : (_String | _SuperDagger)) -> qs_List] := Prepend[qs, internalOp[op]]
+instructionTuple[(op : (_String | _SuperDagger)) -> q_] := {internalOp[op], q}
+instructionTuple[{q_Integer}] := {"M", q}
+instructionTuple[m_Wolfram`QuantumFramework`QuantumMeasurementOperator] :=
+    {If[m["Label"] === "Herald", "MH", "M"], First[m["InputOrder"]]}
+instructionTuple[t : {_String, __}] := t
+
+instructionTuples[instr_List] := instructionTuple /@ instr
+
+
+(* What the public surface accepts, and the spellings it no longer does: the tuple,
+   and the layer's own short names in a rule. *)
+publicInstructionQ[x_] := MatchQ[x,
+    ((_String | _SuperDagger) -> (_Integer | {__Integer})) | {_Integer} | _Wolfram`QuantumFramework`QuantumMeasurementOperator]
+oldInstructionQ[x_] := MatchQ[x, {_String, __Integer} | (("R" | "M" | "MH" | "Sdg" | "Vdg" | "Tdg") -> _)]
+
+
 (* ---- the counts, written once ---- *)
+
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetDepth[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetDepth[instructionTuples[instr], rest]
 
 gadgetDepth[instr_List, nq_Integer] := Length[circuitSchedule[instr, nq]]
 
-gadgetGateCounts[instr_List] := Counts[First /@ instr]
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetGateCounts[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetGateCounts[instructionTuples[instr], rest]
+
+(* keyed by the public names, the ones the instruction lists themselves use *)
+gadgetGateCounts[instr_List] := KeyMap[publicOp, Counts[First /@ instr]]
+
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetMeasurements[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetMeasurements[instructionTuples[instr], rest]
 
 gadgetMeasurements[instr_List] := Count[instr, {"M", _}]
+
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetHeralds[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetHeralds[instructionTuples[instr], rest]
 
 gadgetHeralds[instr_List] := Count[instr, {"MH", _}]
 
 (* A location is an instruction OR a wait (Got26 Def 10.1), and the waits come from
    the schedule rather than from the list -- which is why this is not Length. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetLocations[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetLocations[instructionTuples[instr], rest]
+
 gadgetLocations[instr_List, nq_Integer] := Length[instr] + Length[circuitIdleSlots[instr, nq]]
 
 
 (* ---- the bridge to QuantumCircuitOperator ---- *)
+
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetCircuitGates[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetCircuitGates[instructionTuples[instr], rest]
 
 gadgetCircuitGates[instr_List] := Replace[instr, {
     {"R", q_Integer} :> "Reset" -> q,
@@ -95,9 +181,15 @@ gadgetCircuitGates[instr_List] := Replace[instr, {
     {op_String, x_Integer, y_Integer} :> op -> {x, y}
 }, {1}]
 
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetCircuitOperator[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetCircuitOperator[instructionTuples[instr], rest]
+
 gadgetCircuitOperator[instr_List] :=
     Wolfram`QuantumFramework`QuantumCircuitOperator[gadgetCircuitGates[instr]]
 
 (* The drawing is the circuit object's own; options pass through, so a caller can
    ask for a different size or ordering without this file knowing about it. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetDiagram[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetDiagram[instructionTuples[instr], rest]
+
 gadgetDiagram[instr_List, opts___] := gadgetCircuitOperator[instr]["Diagram", opts]

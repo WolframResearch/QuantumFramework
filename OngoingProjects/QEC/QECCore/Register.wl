@@ -62,12 +62,12 @@ PackageScope[registerData]
 (* teleportation, which is why blocks must be addressable at all).              *)
 (* ============================================================================ *)
 
+QECRegister::oldform = "Gates are written as for QuantumCircuitOperator, gate -> qubits: `1`, not `2`.";
 QECRegister::usage = "QECRegister[code, b] represents b blocks of a code laid out in order, so that block j owns qubits (j-1)n+1 through jn.\nreg[prop] gives a property; reg[\"Properties\"] lists them.\nreg[\"TransversalCNOT\", c, t] gives the instructions of a transversal CNOT from block c to block t, and reg[\"LogicalAction\", c, t] what it does to the logical operators.";
 
 QECRegister::blocks = "The number of blocks must be a positive integer; got `1`.";
 QECRegister::block = "`1` is not a block of this register; it has `2`.";
 QECRegister::same = "A transversal CNOT needs two different blocks; got `1` twice.";
-QECRegister::noprop = "`1` is not a property of QECRegister. Use reg[\"Properties\"] for the list.";
 
 
 (* ---- the layout ---- *)
@@ -78,6 +78,9 @@ registerIndex[n_Integer, b_Integer, q_Integer] := (b - 1) n + q
 
 (* A single-block instruction list, moved into block b.  Op names and arity are
    untouched; only the qubit slots move. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+registerLift[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := registerLift[instructionTuples[instr], rest]
+
 registerLift[instr_List, n_Integer, b_Integer] := Replace[instr, {
     {op_String, q_Integer} :> {op, registerIndex[n, b, q]},
     {op_String, x_Integer, y_Integer} :> {op, registerIndex[n, b, x], registerIndex[n, b, y]}
@@ -90,7 +93,7 @@ registerLift[instr_List, n_Integer, b_Integer] := Replace[instr, {
    block b occupies columns (b-1)n+1..bn of the first half and Bn+(b-1)n+1..Bn+bn of
    the second.  Two windows, not one. *)
 registerLabelMatrix[a_Association, blocks_Integer] :=
-    registerLabelMatrix[a, blocks] = With[
+    qecMemoKey[registerLabelMatrix[a, blocks]] = With[
         {n = a["Qubits"], mat = codeLabelMatrix[a]},
         Catenate @ Table[
             Join[
@@ -105,7 +108,7 @@ registerLabelMatrix[a_Association, blocks_Integer] :=
 (* Each block's logical operators, lifted into register-wide Pauli rows: block b's
    X-bar has its support inside block b and identity everywhere else. *)
 registerLogicalVectors[a_Association, blocks_Integer] :=
-    registerLogicalVectors[a, blocks] = With[
+    qecMemoKey[registerLogicalVectors[a, blocks]] = With[
         {n = a["Qubits"], v = codeLogicalVectors[a]},
         Association @ Table[
             key -> Catenate @ Table[
@@ -136,6 +139,9 @@ registerTransversalCNOT[n_Integer, c_Integer, t_Integer] :=
    before the circuit starts and read the frame afterwards.  Phases are dropped, as
    everywhere in the frame propagator, so this is the action on the Pauli group
    modulo sign -- which is what "is this the logical CNOT" asks. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+registerConjugate[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := registerConjugate[instructionTuples[instr], rest]
+
 registerConjugate[instr_List, nq_Integer, row_List] := With[
     {run = framePropagate[
         instr, nq,
@@ -154,7 +160,7 @@ QECRegister[code_QECCode] := QECRegister[code, 1]
 
 QECRegister[code_QECCode, blocks_] := If[
     ! (IntegerQ[blocks] && blocks > 0),
-    Message[QECRegister::blocks, blocks]; $Failed,
+    qecMessageFailure[QECRegister::blocks, blocks],
     QECRegister[<|"Code" -> First[code], "Blocks" -> blocks|>]
 ]
 
@@ -200,21 +206,27 @@ QECRegister[a_Association]["Generators"] := With[
 QECRegister[a_Association]["BlockRange", b_Integer] := With[{n = a["Code"]["Qubits"]},
     If[ 1 <= b <= a["Blocks"],
         Range[registerIndex[n, b, 1], registerIndex[n, b, n]],
-        Message[QECRegister::block, b, a["Blocks"]]; $Failed
+        qecMessageFailure[QECRegister::block, b, a["Blocks"]]
     ]
 ]
 
 QECRegister[a_Association]["Index", b_Integer, q_Integer] :=
     registerIndex[a["Code"]["Qubits"], b, q]
 
+(* Gates are spelled as for QuantumCircuitOperator, gate -> qubits, going in and coming
+   out; the old tuple spelling is refused with the new one shown. *)
+QECRegister[a_Association]["Lift", instr_List, b_Integer] /; AnyTrue[instr, oldInstructionQ] := With[
+    {first = First[Select[instr, oldInstructionQ]]},
+    qecFailure["InvalidArguments", QECRegister::oldform, instructionRule[instructionTuple[first]], first]
+]
 QECRegister[a_Association]["Lift", instr_List, b_Integer] :=
-    registerLift[instr, a["Code"]["Qubits"], b]
+    instructionRules[registerLift[instructionTuples[instr], a["Code"]["Qubits"], b]]
 
 QECRegister[a_Association]["TransversalCNOT", c_Integer, t_Integer] := Which[
-    ! (1 <= c <= a["Blocks"]), Message[QECRegister::block, c, a["Blocks"]]; $Failed,
-    ! (1 <= t <= a["Blocks"]), Message[QECRegister::block, t, a["Blocks"]]; $Failed,
-    c === t, Message[QECRegister::same, c]; $Failed,
-    True, registerTransversalCNOT[a["Code"]["Qubits"], c, t]
+    ! (1 <= c <= a["Blocks"]), qecMessageFailure[QECRegister::block, c, a["Blocks"]],
+    ! (1 <= t <= a["Blocks"]), qecMessageFailure[QECRegister::block, t, a["Blocks"]],
+    c === t, qecMessageFailure[QECRegister::same, c],
+    True, instructionRules[registerTransversalCNOT[a["Code"]["Qubits"], c, t]]
 ]
 
 (* The claim, checked rather than cited: conjugate each block's logical operators
@@ -223,8 +235,8 @@ QECRegister[a_Association]["TransversalCNOT", c_Integer, t_Integer] := Which[
    says so, which is the point of computing it. *)
 QECRegister[a_Association]["LogicalAction", c_Integer, t_Integer] := Module[
     {instr, nq, v, k},
-    instr = QECRegister[a]["TransversalCNOT", c, t];
-    If[instr === $Failed, Return[$Failed]];
+    instr = instructionTuples[QECRegister[a]["TransversalCNOT", c, t]];
+    If[FailureQ[instr], Return[instr]];
     nq = QECRegister[a]["Qubits"];
     v = registerLogicalVectors[a["Code"], a["Blocks"]];
     k = codeLogicalQubits[a["Code"]];
@@ -239,8 +251,6 @@ QECRegister[a_Association]["LogicalAction", c_Integer, t_Integer] := Module[
     ]
 ]
 
-QECRegister[a_Association][prop_String] :=
-    (Message[QECRegister::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

@@ -147,9 +147,9 @@ VerificationTest[
 VerificationTest[
     {Take[ec["BitFlipInstructions"], -14],
      Take[ec["PhaseInstructions"], -21]},
-    {Join[Table[{"CNOT", q, q + 7}, {q, 7}], Table[{"M", q + 7}, {q, 7}]],
-     Join[Table[{"CNOT", q + 7, q}, {q, 7}], Table[{"H", q + 7}, {q, 7}],
-          Table[{"M", q + 7}, {q, 7}]]},
+    {Join[Table["CNOT" -> {q, q + 7}, {q, 7}], Table["Measurement" -> q + 7, {q, 7}]],
+     Join[Table["CNOT" -> {q + 7, q}, {q, 7}], Table["H" -> q + 7, {q, 7}],
+          Table["Measurement" -> q + 7, {q, 7}]]},
     TestID -> "QEC-EC-the-two-transversal-CNOTs-run-opposite-ways"
 ]
 
@@ -248,29 +248,29 @@ VerificationTest[
    property.  The five-qubit code is not CSS and is refused rather than silently
    producing a gadget that does not measure what it claims. *)
 VerificationTest[
-    QECErrorCorrection[five],
-    $Failed,
+    FailureQ[QECErrorCorrection[five]],
+    True,
     {QECErrorCorrection::css},
     TestID -> "QEC-EC-needs-a-CSS-code"
 ]
 
 VerificationTest[
-    QECPauliMeasurement[five, "ZZZZZ", "ErrorCorrection" -> "Steane"],
-    $Failed,
+    FailureQ[QECPauliMeasurement[five, "ZZZZZ", "ErrorCorrection" -> "Steane"]],
+    True,
     {QECPauliMeasurement::eccss},
     TestID -> "QEC-EC-the-measurement-refuses-a-non-CSS-code-too"
 ]
 
 VerificationTest[
-    QECErrorCorrection[steane, 7, "Order" -> "Sideways"],
-    $Failed,
+    FailureQ[QECErrorCorrection[steane, 7, "Order" -> "Sideways"]],
+    True,
     {QECErrorCorrection::order},
     TestID -> "QEC-EC-order-must-name-a-half"
 ]
 
 VerificationTest[
-    ec["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECErrorCorrection::noprop},
+    MatchQ[ec["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECErrorCorrection::undefprop},
     TestID -> "QEC-EC-unknown-property-is-refused"
 ]

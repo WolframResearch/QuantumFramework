@@ -24,7 +24,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
 
@@ -35,8 +35,8 @@ qecDemTable = Symbol[qecScope <> "demDecoderTable"];
 bitFlip = QECCode["BitFlipCode"];
 five = QECCode["5QubitCode"];
 steane = QECCode["SteaneCode"];
-dep = QECNoiseModel["Depolarizing", qecP];
-circuit = QECNoiseModel["Circuit", 1/1000];
+dep = QECNoiseModel["Depolarizing"[qecP]];
+circuit = QECNoiseModel["Circuit"[1/1000]];
 
 bitFlipDem = QECDetectorModel[bitFlip, circuit, 1];
 fiveTransversal = QECDetectorModel[five, circuit, 1, "Extraction" -> "Transversal"];
@@ -47,7 +47,7 @@ fiveTransversal = QECDetectorModel[five, circuit, 1, "Extraction" -> "Transversa
    ============================================================================ *)
 
 VerificationTest[
-    {Head[QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing", 1/10]]],
+    {Head[QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing"[1/10]]]],
      Head[QECLogicalErrorRate[bitFlip, circuit, "Rounds" -> 1]]},
     {Rational, Rational},
     TestID -> "QEC-Decoder-rate-is-a-number-at-every-level"
@@ -68,7 +68,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Keys[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", 1/10], 1000, All]],
+    Keys[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[1/10]], 1000, All]],
     {"Rate", "Acceptance", "Accepted", "Shots"},
     TestID -> "QEC-Decoder-sampled-report-keys"
 ]
@@ -105,8 +105,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECDetectorModel[bitFlip, QECNoiseModel["Circuit", qecP], 1]["LogicalErrorRate", 100],
-    $Failed,
+    FailureQ[QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[qecP]], 1]["LogicalErrorRate", 100]],
+    True,
     {QECLogicalErrorRate::symbolicshots},
     TestID -> "QEC-Decoder-detector-model-refuses-symbolic-shots"
 ]
@@ -125,7 +125,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    With[{noise = QECNoiseModel["Depolarizing", 1/10]},
+    With[{noise = QECNoiseModel["Depolarizing"[1/10]]},
         Values[QECDecoder[five, noise]["Table"]] === Values[five["Decoder", noise]]
     ],
     True,
@@ -186,29 +186,29 @@ VerificationTest[
 (* The trivial decoder corrects nothing, so its bit-flip rate is the probability that
    anything happened on the logical class: every odd number of flips reaches it. *)
 VerificationTest[
-    Simplify[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", qecP],
+    Simplify[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[qecP]],
         "Decoder" -> QECDecoder[bitFlip, Function[s, If[s === {0, 0}, "III", Missing[]]]]]],
     Simplify[1 - (1 - qecP)^3],
     TestID -> "QEC-Decoder-undecoded-syndromes-count-as-failures"
 ]
 
 VerificationTest[
-    QECDecoder[steane, Function[s, "XX"]]["Decode", {1, 0, 0, 0, 0, 0}],
-    $Failed,
+    FailureQ[QECDecoder[steane, Function[s, "XX"]]["Decode", {1, 0, 0, 0, 0, 0}]],
+    True,
     {QECDecoder::badcorr},
     TestID -> "QEC-Decoder-a-function-must-return-a-Pauli-of-the-right-size"
 ]
 
 VerificationTest[
-    QECLogicalErrorRate[steane, dep, "Decoder" -> QECDecoder[five]],
-    $Failed,
+    FailureQ[QECLogicalErrorRate[steane, dep, "Decoder" -> QECDecoder[five]]],
+    True,
     {QECDecoder::othercode},
     TestID -> "QEC-Decoder-refuses-another-code's-decoder"
 ]
 
 VerificationTest[
-    QECDecoder[steane]["Decode", {0, 1}],
-    $Failed,
+    FailureQ[QECDecoder[steane]["Decode", {0, 1}]],
+    True,
     {QECDecoder::badsyn},
     TestID -> "QEC-Decoder-refuses-a-wrong-length-syndrome"
 ]

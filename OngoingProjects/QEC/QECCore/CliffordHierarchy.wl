@@ -93,7 +93,7 @@ proportionalToPauliQ[m_List] := Module[{d = Length[m], n, x, c, xm, diag, z, bit
 
 (* ---- level k, by the definition ---- *)
 
-hierarchyPaulis[n_Integer, k_Integer] := hierarchyPaulis[n, k] = Module[{rows},
+hierarchyPaulis[n_Integer, k_Integer] := qecMemoKey[hierarchyPaulis[n, k]] = Module[{rows},
     rows = If[ k <= 3,
         Join[
             Table[Append[ReplacePart[ConstantArray[0, 2 n], j -> 1], 0], {j, n}],
@@ -115,8 +115,8 @@ cliffordHierarchyMemberQ[m_List, k_Integer /; k >= 2] := With[{md = ConjugateTra
 
 QECCliffordHierarchyLevel[u_, opts : OptionsPattern[]] := Module[
     {m = gateMatrix[u], max = OptionValue["MaxLevel"]},
-    If[ m === $Failed || ! qubitUnitaryQ[m],
-        Message[QECCliffordHierarchyLevel::gate, u]; Return[$Failed]
+    If[ FailureQ[m] || ! qubitUnitaryQ[m],
+        Return[qecMessageFailure[QECCliffordHierarchyLevel::gate, u]]
     ];
     Replace[
         SelectFirst[Range[max], cliffordHierarchyMemberQ[m, #] &, None],

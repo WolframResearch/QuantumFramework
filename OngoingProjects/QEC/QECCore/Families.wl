@@ -2,7 +2,10 @@
 
 Package["Wolfram`QuantumFramework`QEC`"]
 
+PackageExport[$QECCodeNames]
+
 PackageScope[codeCatalog]
+PackageScope[$QECFamilyNames]
 PackageScope[classicalHammingMatrix]
 
 
@@ -11,9 +14,12 @@ PackageScope[classicalHammingMatrix]
 (*                                                                              *)
 (* Everything here is a constructor for the same QECCode object, reached through *)
 (* the object itself rather than through a separate exported symbol per family:  *)
-(* QECCode["SteaneCode"], QECCode["Repetition", 5], QECCode["CSS", hx, hz].      *)
-(* The scalable families of roadmap item (f) slot in here the same way:          *)
-(* QECCode["Surface", d] and QECCode["Toric", L]; bivariate bicycle codes next.  *)
+(* QECCode["SteaneCode"], QECCode["Repetition"[5]], QECCode["CSS"[hx, hz]].     *)
+(* The parameters go inside the name, as in the framework's QuantumState["GHZ"[3]] *)
+(* and QuantumChannel["BitFlip"[p]]: the name with its parameters says what the  *)
+(* object is, and nothing else follows it.  A family's bare name is its default  *)
+(* member.  The scalable families slot in the same way: QECCode["Surface"[d]],   *)
+(* QECCode["Toric"[L]]; bivariate bicycle codes next.                            *)
 (* ============================================================================ *)
 
 
@@ -33,16 +39,28 @@ $QECNamedCodes := $QECNamedCodes = <|
     "SteaneCode" -> Most[Wolfram`QuantumFramework`PauliStabilizer["SteaneCode"]["Stabilizers"]]
 |>
 
-QECCode::unknown = "`1` is not a known code or code family. Named codes: `2`. Families: `3`.";
+QECCode::invalidName = "`1` is not a recognized QECCode constructor. The names are `2`.";
+QECCode::invalidArgs = "QECCode constructor `1` did not match any rule.";
+QECCode::oldform = "The parameters of a code family go inside its name: `1`, not `2`.";
 
-$QECFamilies = {"Repetition", "PhaseRepetition", "DistanceTwo", "Hamming", "CSS", "Surface", "Toric"};
+$QECFamilyNames = {"Repetition", "PhaseRepetition", "DistanceTwo", "Hamming", "CSS", "Surface", "Toric"};
 
-QECCode[name_String] := If[
-    KeyExistsQ[$QECNamedCodes, name],
-    QECCode[$QECNamedCodes[name]],
-    Message[QECCode::unknown, name, StringRiffle[Keys[$QECNamedCodes], ", "], StringRiffle[$QECFamilies, ", "]];
-    $Failed
-]
+(* The names the framework's PauliStabilizer gives the same codes. *)
+$QECCodeAliases = <|"7QubitCode" -> "SteaneCode", "9QubitCode" -> "ShorCode"|>;
+
+$QECCodeNames := Join[Keys[$QECNamedCodes], Keys[$QECCodeAliases], $QECFamilyNames]
+
+(* What a family's bare name builds. *)
+$QECFamilyDefaults = <|
+    "Repetition" -> {3}, "PhaseRepetition" -> {3}, "DistanceTwo" -> {4}, "Hamming" -> {3},
+    "Surface" -> {3}, "Toric" -> {3}
+|>;
+
+QECCode[name_String] /; KeyExistsQ[$QECNamedCodes, name] := QECCode[$QECNamedCodes[name]]
+QECCode[name_String[]] /; KeyExistsQ[$QECNamedCodes, name] := QECCode[name]
+QECCode[name_String] /; KeyExistsQ[$QECCodeAliases, name] := QECCode[$QECCodeAliases[name]]
+QECCode[name_String[]] /; KeyExistsQ[$QECCodeAliases, name] := QECCode[$QECCodeAliases[name]]
+QECCode[name_String] /; KeyExistsQ[$QECFamilyDefaults, name] := QECCode[name @@ $QECFamilyDefaults[name]]
 
 
 (* ---- parametric families ---- *)
@@ -57,19 +75,19 @@ repetitionRows[n_Integer, letter_ : "Z"] := Table[
     {i, n - 1}
 ]
 
-QECCode["Repetition", n_Integer] := If[
-    n >= 2, QECCode[repetitionRows[n, "Z"]], Message[QECCode::repsize]; $Failed
+QECCode["Repetition"[n_Integer]] := If[
+    n >= 2, QECCode[repetitionRows[n, "Z"]], qecFailure["InvalidArguments", QECCode::repsize]
 ]
 
-QECCode["PhaseRepetition", n_Integer] := If[
-    n >= 2, QECCode[repetitionRows[n, "X"]], Message[QECCode::repsize]; $Failed
+QECCode["PhaseRepetition"[n_Integer]] := If[
+    n >= 2, QECCode[repetitionRows[n, "X"]], qecFailure["InvalidArguments", QECCode::repsize]
 ]
 
 (* The [[n, n-2, 2]] family of thesis sec. 8.1, saturating the quantum Singleton bound. *)
-QECCode["DistanceTwo", n_Integer] := If[
+QECCode["DistanceTwo"[n_Integer]] := If[
     EvenQ[n] && n >= 4,
     QECCode[{StringRepeat["X", n], StringRepeat["Z", n]}],
-    Message[QECCode::evensize]; $Failed
+    qecFailure["InvalidArguments", QECCode::evensize]
 ]
 
 (* Columns are the nonzero binary words of length r: the classical [2^r-1, 2^r-1-r, 3]
@@ -77,8 +95,8 @@ QECCode["DistanceTwo", n_Integer] := If[
 classicalHammingMatrix[r_Integer ? Positive] := Transpose[Table[IntegerDigits[j, 2, r], {j, 2^r - 1}]]
 
 (* The CSS code built on it, [[2^r-1, 2^r-1-2r, 3]], which is the Steane code at r = 3. *)
-QECCode["Hamming", r_Integer] := If[
-    r >= 3, QECCode["CSS", classicalHammingMatrix[r]], Message[QECCode::hammingsize]; $Failed
+QECCode["Hamming"[r_Integer]] := If[
+    r >= 3, QECCode["CSS"[classicalHammingMatrix[r]]], qecFailure["InvalidArguments", QECCode::hammingsize]
 ]
 
 
@@ -98,10 +116,10 @@ letterRow[n_Integer, letter_String, qubits_List] :=
    it; in the bulk the type alternates like a checkerboard, X when a + b is even.
    On the boundary only half the corners carry a weight-2 check: X checks on the top
    and bottom edges, Z checks on the left and right ones.  That choice is what makes
-   the two kinds of boundary of Got26 sec. 17.1.4 -- logical X runs between the two
-   Z-checked sides, logical Z between the two X-checked ones -- and the count works
-   out to (d - 1)^2 bulk plus 2 (d - 1) boundary checks, d^2 - 1 in all, so one
-   logical qubit.  X checks are listed first, then Z, each in reading order. *)
+   the two kinds of boundary of Got26 sec. 17.1.4 -- logical X runs down a column
+   between the two X-checked sides, logical Z along a row between the two Z-checked
+   ones -- and the count works out to (d - 1)^2 bulk plus 2 (d - 1) boundary checks,
+   d^2 - 1 in all, so one logical qubit.  X checks are listed first, then Z, each in reading order. *)
 surfaceChecks[d_Integer] := Module[{at, corners, onBoundary, keep, xs, zs},
     at[a_, b_] := Select[{{a - 1, b - 1}, {a - 1, b}, {a, b - 1}, {a, b}}, 0 <= #[[1]] < d && 0 <= #[[2]] < d &];
     corners = Tuples[Range[0, d], 2];
@@ -137,10 +155,10 @@ surfaceCheckOrder[d_Integer] := Module[{n = d^2, rows = surfaceChecks[d]},
     ]] /@ rows
 ]
 
-QECCode["Surface", d_Integer] := If[
+QECCode["Surface"[d_Integer]] := If[
     d >= 2,
     Replace[QECCode[surfaceChecks[d]], QECCode[a_Association] :> QECCode[Append[a, "CheckOrder" -> surfaceCheckOrder[d]]]],
-    Message[QECCode::surfacesize]; $Failed
+    qecFailure["InvalidArguments", QECCode::surfacesize]
 ]
 
 (* THE TORIC CODE, [[2 L^2, 2, L]] (Got26 sec. 17.1.1): qubits on the edges of an
@@ -161,16 +179,16 @@ toricChecks[l_Integer] := Module[{h, v, faces, vertices},
     ]
 ]
 
-QECCode["Toric", l_Integer] := If[
-    l >= 2, QECCode[toricChecks[l]], Message[QECCode::toricsize]; $Failed
+QECCode["Toric"[l_Integer]] := If[
+    l >= 2, QECCode[toricChecks[l]], qecFailure["InvalidArguments", QECCode::toricsize]
 ]
 
 
 (* ---- the catalog ---- *)
 
 $QECCatalogExamples = {
-    {"Repetition", 5}, {"PhaseRepetition", 5}, {"DistanceTwo", 6}, {"Hamming", 4},
-    {"Surface", 3}, {"Toric", 3}
+    "Repetition"[5], "PhaseRepetition"[5], "DistanceTwo"[6], "Hamming"[4],
+    "Surface"[3], "Toric"[3]
 };
 
 (* The catalog is a question about the head, so it is asked of the head. *)
@@ -182,8 +200,28 @@ codeCatalog[] := Dataset @ Association @ Join[
         {name, Keys[$QECNamedCodes]}
     ],
     Table[
-        StringTemplate["QECCode[\"``\", ``]"][First[spec], Last[spec]] ->
-            AssociationThread[{"n", "k", "d"}, (QECCode @@ spec)["Parameters"]],
+        "QECCode[" <> ToString[spec, InputForm] <> "]" ->
+            AssociationThread[{"n", "k", "d"}, QECCode[spec]["Parameters"]],
         {spec, $QECCatalogExamples}
     ]
 ]
+
+
+(* ---- what is not a code ---- *)
+
+(* Last, so that every rule above is tried first.  The old form, a family name with its
+   parameters after it, says where they go now. *)
+QECCode[name_String, args__] /; MemberQ[$QECFamilyNames, name] := qecFailure[
+    "InvalidArguments", QECCode::oldform,
+    "QECCode[" <> ToString[name[args], InputForm] <> "]",
+    "QECCode[" <> StringRiffle[ToString[#, InputForm] & /@ {name, args}, ", "] <> "]"
+]
+
+QECCode[name_String[args___]] /; MemberQ[$QECCodeNames, name] :=
+    qecFailure["InvalidArguments", QECCode::invalidArgs, Defer[name[args]]]
+
+QECCode[name_String[args___]] :=
+    qecFailure["InvalidName", QECCode::invalidName, Defer[name[args]], StringRiffle[$QECCodeNames, ", "]]
+
+QECCode[name_String] /; name =!= "Catalog" && name =!= "Properties" :=
+    qecFailure["InvalidName", QECCode::invalidName, name, StringRiffle[$QECCodeNames, ", "]]

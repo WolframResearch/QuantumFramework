@@ -23,7 +23,7 @@ PackageScope[codeMinimumLogical]
 (* [M | I] reduced over GF(2) gives [R | T] with R = T.M in echelon form.  T is
    what lets us name the actual product of generators behind a membership, and
    therefore its phase -- the prototype could only answer membership up to sign. *)
-codeSpanData[a_Association] := codeSpanData[a] = Module[{m = codeStabilizerCount[a], n = a["Qubits"], red},
+codeSpanData[a_Association] := qecMemoKey[codeSpanData[a]] = Module[{m = codeStabilizerCount[a], n = a["Qubits"], red},
     red = RowReduce[Join[a["CheckMatrix"], IdentityMatrix[m], 2], Modulus -> 2];
     <|
         "Rows" -> red[[All, 1 ;; 2 n]],
@@ -73,7 +73,7 @@ QECCode::incomplete = "Could not complete the generator set to a full stabilizer
 
 (* Extend the m code generators to n commuting independent ones, pinning one
    fiducial encoded state.  Candidates come from the commutant of the code. *)
-codeCompletedGenerators[a_Association] := codeCompletedGenerators[a] = Module[
+codeCompletedGenerators[a_Association] := qecMemoKey[codeCompletedGenerators[a]] = Module[
     {n = a["Qubits"], mat = a["CheckMatrix"], swapped, commutant, basis, extras},
     swapped = Join[mat[[All, n + 1 ;; 2 n]], mat[[All, 1 ;; n]], 2];
     commutant = gf2NullSpace[swapped];
@@ -88,7 +88,7 @@ codeCompletedGenerators[a_Association] := codeCompletedGenerators[a] = Module[
         {c, commutant}
     ];
     If[ Length[extras] + Length[mat] =!= n,
-        Message[QECCode::incomplete]; Return[$Failed]
+        Return[qecMessageFailure[QECCode::incomplete]]
     ];
     Join[codeVectors[a], Append[#, 0] & /@ extras]
 ]
@@ -102,7 +102,7 @@ codeCompletedGenerators[a_Association] := codeCompletedGenerators[a] = Module[
        [ I  A1 A2 | B  C1 C2 ]
        [ 0  0  0  | D  I  E  ]
    and returning the qubit permutation used and r, the rank of the X block. *)
-codeStandardForm[a_Association] := codeStandardForm[a] = Module[
+codeStandardForm[a_Association] := qecMemoKey[codeStandardForm[a]] = Module[
     {mat = a["CheckMatrix"], n = a["Qubits"], m = codeStabilizerCount[a], perm, r, s, pivot, swapQubits},
 
     perm = Range[n];
@@ -159,7 +159,7 @@ firstPivot[mat_, rowFrom_, rowTo_, colFrom_, colTo_, offset_] := Catch[
 
 (* Xbar = (0 E^T I | E^T C1^T + C2^T 0 0),  Zbar = (0 0 0 | A2^T 0 I), then undo
    the qubit permutation the standard form introduced. *)
-codeLogicalVectors[a_Association] := codeLogicalVectors[a] = Module[
+codeLogicalVectors[a_Association] := qecMemoKey[codeLogicalVectors[a]] = Module[
     {n = a["Qubits"], m = codeStabilizerCount[a], k, sf, mat, perm, r, mid, a2, c1, c2, e, unpermute, xRows, zRows},
 
     k = codeLogicalQubits[a];
@@ -212,7 +212,7 @@ codeLogicalOperators[a_Association] := Map[pauliString, codeLogicalVectors[a], {
    the scan at weight 3 instead of walking to 7.  Second, the syndromes of a whole
    weight class are computed as one matrix product rather than one call per
    candidate, and only the zero-syndrome survivors are tested for membership. *)
-codeMinimumLogical[a_Association] := codeMinimumLogical[a] = Module[
+codeMinimumLogical[a_Association] := qecMemoKey[codeMinimumLogical[a]] = Module[
     {n = a["Qubits"], logicals, weights, bound, witness, swapped, candidates, syndromes, kernel, found},
 
     If[codeLogicalQubits[a] === 0, Return[{Infinity, Missing["NoLogicalOperators"]}]];

@@ -4,6 +4,9 @@ Package["Wolfram`QuantumFramework`QEC`"]
 
 PackageExport[QECCode]
 
+PackageScope[qecFailure]
+PackageScope[qecMessageFailure]
+
 PackageScope[codeData]
 PackageScope[codeCheckMatrix]
 PackageScope[codeBasis]
@@ -94,7 +97,40 @@ PackageScope[exactEnumerableQ]
 (* CodeDistance, and again inside every summary-box redraw.                      *)
 (* ============================================================================ *)
 
-QECCode::usage = "QECCode[{gen1, gen2, ...}] represents a stabilizer code with the given Pauli string generators.\nQECCode[name] builds a named code, such as \"SteaneCode\" or \"5QubitCode\".\nQECCode[name, args] builds a member of a code family, such as QECCode[\"Repetition\", 5] or QECCode[\"CSS\", hx, hz].\nQECCode[ps] converts a Wolfram`QuantumFramework`PauliStabilizer into a code.\ncode[prop] gives a property; code[\"Properties\"] lists them.";
+QECCode::usage = "QECCode[{gen1, gen2, ...}] represents a stabilizer code with the given Pauli string generators.\nQECCode[name] builds a named code, such as \"SteaneCode\" or \"5QubitCode\", or a code family at its default size.\nQECCode[name[params]] builds a member of a code family, such as QECCode[\"Surface\"[3]], QECCode[\"Repetition\"[5]] or QECCode[\"CSS\"[hx, hz]].\nQECCode[ps] converts a Wolfram`QuantumFramework`PauliStabilizer into a code.\ncode[prop] gives a property; code[\"Properties\"] lists them; $QECCodeNames lists the names.";
+
+
+(* ---- equality ---- *)
+
+(* Two codes are equal when they are the same code: the same number of qubits and the
+   same stabilizer group, signs included, whatever generators were chosen for it --
+   QuantumState and QuantumOperator compare what they represent the same way. *)
+codeEqualQ[a1_Association, a2_Association] := a1 === a2 || (
+    a1["Qubits"] === a2["Qubits"] &&
+    Length[a1["CheckMatrix"]] === Length[a2["CheckMatrix"]] &&
+    AllTrue[codeVectors[a2], codeStabilizerMemberQ[a1, #] &]
+)
+
+QECCode /: Equal[cs__QECCode] := AllTrue[Partition[First /@ {cs}, 2, 1], Apply[codeEqualQ]]
+QECCode /: Unequal[cs__QECCode] := ! Equal[cs]
+
+
+(* ---- failures, the framework's way ---- *)
+
+(* A constructor that cannot build what it was asked for says why and returns a
+   Failure carrying the same message, as QuantumState and QuantumChannel do:
+   "InvalidName" for a name it does not know, "InvalidArguments" for a name it knows
+   with parameters it cannot use. *)
+SetAttributes[qecFailure, HoldRest]
+qecFailure[tag_String, msg_MessageName, params___] := With[{ps = {params}},
+    Message[msg, Sequence @@ ps];
+    Failure[tag, <|"MessageTemplate" :> msg, "MessageParameters" -> ps|>]
+]
+
+(* The same for every other refusal: the message's own tag names the failure, so
+   QECCode[{"XX", "XZ"}] gives Failure["noncomm", ...] and says why. *)
+SetAttributes[qecMessageFailure, HoldAll]
+qecMessageFailure[msg : MessageName[_, tag_String], params___] := qecFailure[tag, msg, params]
 
 
 (* ---- accessors on the data association ---- *)
@@ -111,7 +147,7 @@ codeLogicalQubits[a_Association] := a["Qubits"] - Length[a["CheckMatrix"]]
    of Got26 sec. 12.1.1), so a family whose geometry fixes a good order carries it as
    "CheckOrder"; any other code gets its supports in qubit order. *)
 codeCheckOrder[a_Association] := Lookup[a, "CheckOrder",
-    With[{n = a["Qubits"]}, Flatten[Position[BitOr[#[[1 ;; n]], #[[n + 1 ;; 2 n]]], 1]] & /@ a["CheckMatrix"]]
+    Flatten[Position[BitOr @@ Partition[#, a["Qubits"]], 1]] & /@ a["CheckMatrix"]
 ]
 
 (* Generator rows in full Pauli-row form {x|z|e}. *)
@@ -119,7 +155,7 @@ codeVectors[a_Association] := MapThread[Append, {a["CheckMatrix"], a["Phases"]}]
 
 (* Echelon basis of the check matrix, memoised: every stabilizer-membership
    question reduces against this instead of re-running elimination. *)
-codeBasis[a_Association] := codeBasis[a] = gf2Basis[a["CheckMatrix"]]
+codeBasis[a_Association] := qecMemoKey[codeBasis[a]] = gf2Basis[a["CheckMatrix"]]
 
 
 (* ---- construction ---- *)
@@ -129,37 +165,34 @@ QECCode::noncomm = "Generators `1` and `2` do not commute.";
 QECCode::dep = "Generators are not independent: the check matrix has rank `1` but `2` generators were given.";
 QECCode::overcomplete = "`1` generators were given on `2` qubits; a stabilizer code needs at most n.";
 
-fromVectors[vecs : {__List}] := Module[{n, m, mat, x, z, gram, bad, rank},
-    If[ ! AllTrue[vecs, QECPauliQ] || Length[DeleteDuplicates[Length /@ vecs]] =!= 1,
-        Message[QECCode::gens]; Return[$Failed]
-    ];
-    m = Length[vecs];
-    n = pauliQubits[First[vecs]];
-    If[m > n, Message[QECCode::overcomplete, m, n]; Return[$Failed]];
-    mat = symplecticPart /@ vecs;
-    x = mat[[All, 1 ;; n]];
-    z = mat[[All, n + 1 ;; 2 n]];
-    (* Symplectic Gram matrix: entry (i,j) is 0 exactly when generators i and j commute. *)
-    gram = Mod[x . Transpose[z] + z . Transpose[x], 2];
-    bad = FirstPosition[gram, 1, Missing["None"], {2}];
-    If[ ! MissingQ[bad],
-        Message[QECCode::noncomm, pauliString[vecs[[bad[[1]]]]], pauliString[vecs[[bad[[2]]]]]];
-        Return[$Failed]
-    ];
-    rank = gf2Rank[mat];
-    If[rank =!= m, Message[QECCode::dep, rank, m]; Return[$Failed]];
-    QECCode[<|
-        "CheckMatrix" -> mat,
-        "Phases" -> (phasePart /@ vecs),
-        "Qubits" -> n
-    |>]
+(* The first pair of rows that anticommute: the symplectic Gram matrix (entry (i,j) is 0
+   exactly when generators i and j commute), by the same rotation of the halves as
+   symplecticProduct. *)
+anticommutingPair[mat_] := FirstPosition[
+    Mod[mat . RotateLeft[Transpose[mat], Length[First[mat]] / 2], 2], 1, Missing["None"], {2}
 ]
 
-QECCode[gens : {__String}] := If[
-    AllTrue[gens, QECPauliQ],
-    fromVectors[pauliVector /@ gens],
-    Message[QECCode::gens]; $Failed
+fromVectors[vecs : {__List}] /; ! (AllTrue[vecs, QECPauliQ] && SameQ @@ (Length /@ vecs)) :=
+    qecMessageFailure[QECCode::gens]
+
+fromVectors[vecs : {__List}] /; Length[vecs] > pauliQubits[First[vecs]] :=
+    qecMessageFailure[QECCode::overcomplete, Length[vecs], pauliQubits[First[vecs]]]
+
+fromVectors[vecs : {__List}] := With[{mat = symplecticPart /@ vecs},
+    Replace[anticommutingPair[mat], {
+        {i_, j_} :> qecMessageFailure[QECCode::noncomm, pauliString[vecs[[i]]], pauliString[vecs[[j]]]],
+        _Missing :> With[{rank = gf2Rank[mat]},
+            If[ rank === Length[vecs],
+                QECCode[<|"CheckMatrix" -> mat, "Phases" -> phasePart /@ vecs, "Qubits" -> pauliQubits[First[vecs]]|>],
+                qecMessageFailure[QECCode::dep, rank, Length[vecs]]
+            ]
+        ]
+    }]
 ]
+
+QECCode[gens : {__String ? QECPauliQ}] := fromVectors[pauliVector /@ gens]
+
+QECCode[gens : {__String}] := qecMessageFailure[QECCode::gens]
 
 QECCode[vecs : {{__Integer} ..}] := fromVectors[vecs]
 
@@ -188,7 +221,6 @@ $codeParametrizedProperties = {
     "Concatenate", "RemoveQubit", "Paste", "Stim", "CodespaceProbability"
 };
 
-QECCode::noprop = "`1` is not a property of QECCode. Use code[\"Properties\"] for the list.";
 
 (* "Decoder" belongs to two of the three lists, because code["Decoder"] (the lookup
    table) and code["Decoder", noise] (the coset map) are two call shapes of one name.
@@ -203,7 +235,7 @@ QECCode[a_Association]["StabilizerCount"] := codeStabilizerCount[a]
 QECCode[a_Association]["LogicalQubits"] := codeLogicalQubits[a]
 QECCode[a_Association]["GeneratorVectors"] := codeVectors[a]
 QECCode[a_Association]["Generators"] := pauliString /@ codeVectors[a]
-QECCode[a_Association]["Signs"] := Replace[a["Phases"], {0 -> 1, 2 -> -1, e_ :> I^e}, {1}]
+QECCode[a_Association]["Signs"] := I ^ a["Phases"]
 
 QECCode[a_Association]["Parameters"] := {a["Qubits"], codeLogicalQubits[a], codeDistance[a]}
 QECCode[a_Association]["Distance"] := codeDistance[a]
@@ -222,18 +254,14 @@ QECCode[a_Association]["Decoder"] := codeDecoder[a]
 
    Weighing cosets means enumerating them, so this refuses rather than grinding on a
    code that cannot be enumerated; code["Decoder", w] is the cheap table for those. *)
-QECCode[a_Association]["Decoder", QECNoiseModel[noise_Association]] := If[
-    exactEnumerableQ[a],
-    pauliString /@ codeCosetRepresentatives[a, noise],
-    Message[QECLogicalErrorRate::mlneedsall, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit];
-    $Failed
-]
+QECCode[a_Association]["Decoder", QECNoiseModel[noise_Association]] /; exactEnumerableQ[a] :=
+    pauliString /@ codeCosetRepresentatives[a, noise]
 
-QECCode[a_Association]["LogicalErrorRate", noise : _QECNoiseModel | _Wolfram`QuantumFramework`QuantumChannel, opts___] :=
-    QECLogicalErrorRate[QECCode[a], noise, opts]
+QECCode[a_Association]["Decoder", _QECNoiseModel] :=
+    qecMessageFailure[QECLogicalErrorRate::mlneedsall, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit]
 
-QECCode[a_Association]["LogicalErrorRate", noise : _QECNoiseModel | _Wolfram`QuantumFramework`QuantumChannel, count_Integer, opts___] :=
-    QECLogicalErrorRate[QECCode[a], noise, count, opts]
+QECCode[a_Association]["LogicalErrorRate", noise : _QECNoiseModel | _Wolfram`QuantumFramework`QuantumChannel, rest___] :=
+    QECLogicalErrorRate[QECCode[a], noise, rest]
 QECCode[a_Association]["Decoder", maxWeight_Integer] := codeDecoderToWeight[a, maxWeight]
 QECCode[a_Association]["PerfectQ"] := codePerfectQ[a]
 QECCode[a_Association]["CSSQ"] := codeCSSQ[a]
@@ -252,19 +280,21 @@ QECCode[a_Association]["EncodingCircuitValidQ"] := codeEncodingValidQ[a]
    describes.  Handing over the bare generators used to be accepted by the engine and
    built a tableau whose measurements were wrong; since November 2026 the engine
    refuses strings of rank below n, which is what exposed this. *)
-QECCode[a_Association]["PauliStabilizer"] := With[{gens = codeCompletedGenerators[a]},
-    If[gens === $Failed, $Failed, Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ gens]]
-]
+QECCode[a_Association]["PauliStabilizer"] :=
+    Replace[codeCompletedGenerators[a], gens_List :> Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ gens]]
 QECCode[a_Association]["State"] := QECCode[a]["PauliStabilizer"]["State"]
 
 QECCode[a_Association]["Syndrome", err_] := codeSyndrome[a, err]
+
+(* A code applied to a Pauli gives its syndrome: code[QECPauli["XIIIIII"]].  A bare
+   string cannot be the argument, since code["..."] already asks for a property. *)
+QECCode[a_Association][p_QECPauli] := codeSyndrome[a, pauliVector[p]]
 QECCode[a_Association]["Decode", syn_] := codeDecode[a, syn]
 QECCode[a_Association]["CorrectionCycle", err_] := codeCorrectionCycle[a, err]
 QECCode[a_Association]["PhysicalCorrectionCycle", err_] := codePhysicalCorrectionCycle[a, err]
 QECCode[a_Association]["LogicalPauliQ", p_] := codeLogicalPauliQ[a, p]
 QECCode[a_Association]["StabilizerMemberQ", p_] := codeStabilizerMemberQ[a, p]
 
-QECCode[a_Association][prop_String] := (Message[QECCode::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

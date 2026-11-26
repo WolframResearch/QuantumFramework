@@ -96,7 +96,7 @@ VerificationTest[
    the new vocabulary: one ancilla per check, one record bit per check. *)
 VerificationTest[
     With[{ex = qecExtraction[qecCodeData[bitFlip], 1, "BareAncilla"]},
-        {ex["Qubits"], ex["BlockSizes"], ex["Instructions"] === bitFlip["SyndromeCircuit"]["Instructions"]}
+        {ex["Qubits"], ex["BlockSizes"], ex["Instructions"] === First[bitFlip["SyndromeCircuit"]]["Instructions"]}
     ],
     {5, {1, 1}, True},
     TestID -> "QEC-Extraction-bare-ancilla-is-the-old-circuit"
@@ -175,10 +175,10 @@ VerificationTest[
 (* The default is the bare ancilla, so every number the package produced before
    this option existed is unchanged. *)
 VerificationTest[
-    {QECDetectorModel[bitFlip, QECNoiseModel["Circuit", 1/1000], 1]["Extraction"],
-     QECDetectorModel[bitFlip, QECNoiseModel["Circuit", 1/1000], 1]["Faults"],
+    {QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[1/1000]], 1]["Extraction"],
+     QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[1/1000]], 1]["Faults"],
      Normal @ Series[
-         QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", p], "Rounds" -> 1],
+         QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[p]], "Rounds" -> 1],
          {p, 0, 1}]},
     {"BareAncilla", 60, 32 p / 15},
     TestID -> "QEC-Extraction-defaults-to-the-bare-ancilla"
@@ -188,7 +188,7 @@ VerificationTest[
    accepted and ignored rather than refused, so a sweep across levels need not
    strip it. *)
 VerificationTest[
-    Expand @ QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", p], "Extraction" -> "Transversal"],
+    Expand @ QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[p]], "Extraction" -> "Transversal"],
     3 p^2 - 2 p^3,
     TestID -> "QEC-Extraction-code-capacity-ignores-it"
 ]
@@ -203,8 +203,8 @@ VerificationTest[
    at 29p/5 rather than p^2.  Transversal: 624 faults, more than twice the
    locations, onto 72 signatures of which only 4 conflict. *)
 VerificationTest[
-    {qecAmbiguity[QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1]],
-     qecAmbiguity[QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1,
+    {qecAmbiguity[QECDetectorModel[five, QECNoiseModel["Circuit"[1/1000]], 1]],
+     qecAmbiguity[QECDetectorModel[five, QECNoiseModel["Circuit"[1/1000]], 1,
          "Extraction" -> "Transversal"]]},
     {{288, 71, 29}, {624, 72, 4}},
     TestID -> "QEC-Extraction-ambiguous-signatures-collapse"
@@ -220,7 +220,7 @@ VerificationTest[
    residual data weight, and it has to be made on both sides or not at all. *)
 VerificationTest[
     Module[{dem, d, o, h, keep, g},
-        dem = QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1,
+        dem = QECDetectorModel[five, QECNoiseModel["Circuit"[1/1000]], 1,
             "Extraction" -> "Transversal"];
         d = dem["DetectorMatrix"]; o = dem["ObservableMatrix"]; h = dem["HeraldMatrix"];
         keep = Select[Range[Length[d]], Total[h[[#]]] === 0 &];
@@ -239,9 +239,9 @@ VerificationTest[
    rows, and the bare-ancilla path -- which has no heralds -- is untouched. *)
 VerificationTest[
     Module[{demT, demB},
-        demT = First[QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1,
+        demT = First[QECDetectorModel[five, QECNoiseModel["Circuit"[1/1000]], 1,
             "Extraction" -> "Transversal"]];
-        demB = First[QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1]];
+        demB = First[QECDetectorModel[five, QECNoiseModel["Circuit"[1/1000]], 1]];
         {demT["Heralds"] > 0, demB["Heralds"] === 0}
     ],
     {True, True},
@@ -264,9 +264,9 @@ VerificationTest[
    apart and the exponent read off.  Two is what a distance-three code owes. *)
 VerificationTest[
     Module[{r1, r2, exponent},
-        r1 = QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1,
+        r1 = QECLogicalErrorRate[five, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1,
             "Extraction" -> "Transversal"];
-        r2 = QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/2000], "Rounds" -> 1,
+        r2 = QECLogicalErrorRate[five, QECNoiseModel["Circuit"[1/2000]], "Rounds" -> 1,
             "Extraction" -> "Transversal"];
         exponent = N[Log[r1 / r2] / Log[2]];
         1.9 < exponent < 2.1
@@ -279,8 +279,8 @@ VerificationTest[
 VerificationTest[
     Module[{exponent},
         exponent = N @ Log[
-            QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1] /
-            QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/2000], "Rounds" -> 1]
+            QECLogicalErrorRate[five, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1] /
+            QECLogicalErrorRate[five, QECNoiseModel["Circuit"[1/2000]], "Rounds" -> 1]
         ] / Log[2];
         0.9 < exponent < 1.1
     ],
@@ -294,16 +294,16 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    QECDetectorModel[bitFlip, QECNoiseModel["Circuit", 1/1000], 1, "Extraction" -> "Shor"],
-    $Failed,
+    FailureQ[QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[1/1000]], 1, "Extraction" -> "Shor"]],
+    True,
     {QECDetectorModel::extraction},
     TestID -> "QEC-Extraction-an-unknown-extraction-is-refused"
 ]
 
 VerificationTest[
-    QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1,
-        "Extraction" -> "Knill"],
-    $Failed,
+    FailureQ[QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1,
+        "Extraction" -> "Knill"]],
+    True,
     {QECDetectorModel::extraction},
     TestID -> "QEC-Extraction-the-rate-refuses-it-too"
 ]

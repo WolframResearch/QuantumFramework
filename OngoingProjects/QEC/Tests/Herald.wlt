@@ -61,28 +61,28 @@ toyN = <|toy, "Probabilities" -> {0.05, 0.02, 0.30}|>;
 (* THE REGRESSION.  Both routes still return a bare number, and the numbers are the
    ones they always were, so the rest of the suite is untouched by this file. *)
 VerificationTest[
-    Expand[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p]]],
+    Expand[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip"[p]]]],
     3 p^2 - 2 p^3,
     TestID -> "QEC-Herald-code-capacity-unchanged"
 ]
 
 VerificationTest[
     Normal @ Series[
-        QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["Circuit", p], "Rounds" -> 1],
+        QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[p]], "Rounds" -> 1],
         {p, 0, 1}],
     32 p / 15,
     TestID -> "QEC-Herald-circuit-level-unchanged"
 ]
 
 VerificationTest[
-    Head[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 0.01],
+    Head[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[0.01]],
         20000, "Rounds" -> 1]],
     Real,
     TestID -> "QEC-Herald-no-heralds-gives-a-bare-number"
 ]
 
 VerificationTest[
-    With[{dem = QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["Circuit", p], 1]},
+    With[{dem = QECDetectorModel[QECCode["BitFlipCode"], QECNoiseModel["Circuit"[p]], 1]},
         {dem["Heralds"], dem["PostSelectedQ"], dem["HeraldRates"]}
     ],
     {0, False, {}},
@@ -180,10 +180,10 @@ VerificationTest[
    distribution -- so a post-selected model hits the limit sooner, and the message
    counts them. *)
 VerificationTest[
-    Block[{$QECExactDetectorLimit = 4},
+    FailureQ[Block[{$QECExactDetectorLimit = 4},
         qecExact[toy, 1]
-    ],
-    $Failed,
+    ]],
+    True,
     {QECLogicalErrorRate::detbig},
     TestID -> "QEC-Herald-heralds-count-toward-the-exact-limit"
 ]

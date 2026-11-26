@@ -19,7 +19,7 @@ PackageScope[codeDecoderReach]
 
 (* Check matrix with its X and Z halves exchanged: multiplying by its transpose
    is the symplectic form. Memoised per code. *)
-codeSwapped[a_Association] := codeSwapped[a] = With[{mat = a["CheckMatrix"], n = a["Qubits"]},
+codeSwapped[a_Association] := qecMemoKey[codeSwapped[a]] = With[{mat = a["CheckMatrix"], n = a["Qubits"]},
     Join[mat[[All, n + 1 ;; 2 n]], mat[[All, 1 ;; n]], 2]
 ]
 
@@ -29,14 +29,14 @@ QECCode::errsize = "The error must act on `1` qubits.";
 
 codeSyndrome[a_Association, err_] := With[{v = pauliVector[err]},
     Which[
-        v === $Failed, $Failed,
-        Length[v] =!= 2 a["Qubits"] + 1, Message[QECCode::errsize, a["Qubits"]]; $Failed,
+        FailureQ[v], v,
+        Length[v] =!= 2 a["Qubits"] + 1, qecMessageFailure[QECCode::errsize, a["Qubits"]],
         True, codeSyndromeVector[a, v]
     ]
 ]
 
 (* Syndromes of every weight-one error, keyed by the error. *)
-codeSyndromeTable[a_Association] := codeSyndromeTable[a] = AssociationMap[
+codeSyndromeTable[a_Association] := qecMemoKey[codeSyndromeTable[a]] = AssociationMap[
     codeSyndromeVector[a, pauliVector[#]] &,
     pauliString /@ weightOneVectors[a["Qubits"]]
 ]
@@ -64,7 +64,7 @@ codeCorrectableWeight[a_Association] := With[{d = codeDistance[a]},
    This is a table, i.e. exact but exponential in the reach.  The matching and
    belief-propagation decoders of roadmap item 2 replace it for the codes where a
    table is not an option. *)
-codeDecoderToWeight[a_Association, maxWeight_Integer] := codeDecoderToWeight[a, maxWeight] = Module[{n = a["Qubits"], table},
+codeDecoderToWeight[a_Association, maxWeight_Integer] := qecMemoKey[codeDecoderToWeight[a, maxWeight]] = Module[{n = a["Qubits"], table},
     table = <|codeSyndromeVector[a, pauliIdentity[n]] -> pauliIdentity[n]|>;
     Do[
         Do[
@@ -86,7 +86,7 @@ QECCode::badsyn = "The syndrome must be a binary vector of length `1`.";
 
 codeDecode[a_Association, syn_List] := With[{m = codeStabilizerCount[a]},
     If[ Length[syn] =!= m || ! SubsetQ[{0, 1}, DeleteDuplicates[syn]],
-        Message[QECCode::badsyn, m]; $Failed,
+        qecMessageFailure[QECCode::badsyn, m],
         Replace[Lookup[codeDecoder[a], Key[syn], Missing["UndecodableSyndrome", syn]], v : {__Integer} :> pauliString[v]]
     ]
 ]
@@ -104,7 +104,7 @@ codeDecode[a_Association, syn_List] := With[{m = codeStabilizerCount[a]},
    could not tell them apart. *)
 codeCorrectionCycle[a_Association, err_] := Module[{v, syn, corr, residual, inStabilizer},
     v = pauliVector[err];
-    If[v === $Failed || Length[v] =!= 2 a["Qubits"] + 1, Message[QECCode::errsize, a["Qubits"]]; Return[$Failed]];
+    If[FailureQ[v] || Length[v] =!= 2 a["Qubits"] + 1, Return[qecMessageFailure[QECCode::errsize, a["Qubits"]]]];
 
     syn = codeSyndromeVector[a, v];
     corr = Lookup[codeDecoder[a], Key[syn], Missing["UndecodableSyndrome", syn]];
@@ -137,7 +137,7 @@ codeCorrectionCycle[a_Association, err_] := Module[{v, syn, corr, residual, inSt
    there; the difference is the point of running both. *)
 codePhysicalCorrectionCycle[a_Association, err_] := Module[{gens, reference, damaged, syn, corr, final},
     gens = codeCompletedGenerators[a];
-    If[gens === $Failed, Return[$Failed]];
+    If[FailureQ[gens], Return[gens]];
 
     reference = Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ gens];
     damaged = applyPauliVector[reference, pauliVector[err]];

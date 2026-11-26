@@ -34,7 +34,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
@@ -54,12 +54,12 @@ qecTwoQubitOps  = Symbol[qecScope <> "$circuitTwoQubitOps"];
 
 steane = QECCode["SteaneCode"];
 five = QECCode["5QubitCode"];
-four = QECCode["DistanceTwo", 4];
+four = QECCode["DistanceTwo"[4]];
 
 steaneData = qecCodeData[steane];
 
 (* R, H, CNOT, M -- one of each kind of location, and one block left idling. *)
-ft = QECFaultTolerantCircuit[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}}, steane];
+ft = QECFaultTolerantCircuit[{"Reset" -> 1, "Reset" -> 2, "H" -> 1, "CNOT" -> {1, 2}, "Measurement" -> 1, "Measurement" -> 2}, steane];
 
 (* The instructions of the gadgets of a given kind, in order. *)
 qecGadgetInstructions[obj_, kinds_List] := obj["GadgetInstructions", kinds]
@@ -112,7 +112,7 @@ VerificationTest[
 
 (* The smallest FT(C) there is: one preparation, one error correction. *)
 VerificationTest[
-    With[{one = QECFaultTolerantCircuit[{{"R", 1}}, steane]},
+    With[{one = QECFaultTolerantCircuit[{"Reset" -> 1}, steane]},
         {one["GadgetCounts"], one["Qubits"], one["CircuitLocations"]}
     ],
     {<|"Preparation" -> 1, "ErrorCorrection" -> 1|>, 14, 1},
@@ -123,7 +123,7 @@ VerificationTest[
    vocabulary every other circuit in the layer does. *)
 VerificationTest[
     Complement[
-        Union[First /@ ft["Instructions"]],
+        Union[First /@ First[ft]["Instructions"]],
         Join[qecOneQubitOps, qecTwoQubitOps, {"R", "M"}]
     ],
     {},
@@ -152,7 +152,7 @@ VerificationTest[
 VerificationTest[
     Module[{gates, named},
         gates = qecGadgetInstructions[
-            QECFaultTolerantCircuit[{{"R", 1}, {"H", 1}, {"S", 1}}, steane],
+            QECFaultTolerantCircuit[{"Reset" -> 1, "H" -> 1, "S" -> 1}, steane],
             {"Preparation", "Gate"}];
         named = Join[Drop[gates, -7], Table[{"S", q}, {q, 7}]];
         {qecFinalState[gates, 14]["Expectation", ybar],
@@ -168,7 +168,7 @@ VerificationTest[
     Module[{state, prod},
         state = qecFinalState[
             qecGadgetInstructions[
-                QECFaultTolerantCircuit[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}}, steane],
+                QECFaultTolerantCircuit[{"Reset" -> 1, "Reset" -> 2, "H" -> 1, "CNOT" -> {1, 2}}, steane],
                 {"Preparation", "Gate"}],
             28];
         prod[s1_, s2_] := qecPauliString[
@@ -198,8 +198,8 @@ VerificationTest[
 VerificationTest[
     {Length[ft["GadgetInstructions", "Gate"]],
      Union[First /@ ft["GadgetInstructions", "Gate"]],
-     Union[First /@ QECFaultTolerantCircuit[{{"R", 1}, {"S", 1}}, steane]["GadgetInstructions", "Gate"]]},
-    {14, {"CNOT", "H"}, {"Sdg"}},
+     Union[First /@ QECFaultTolerantCircuit[{"Reset" -> 1, "S" -> 1}, steane]["GadgetInstructions", "Gate"]]},
+    {14, {"CNOT", "H"}, {SuperDagger["S"]}},
     TestID -> "QEC-FT-the-gadgets-can-be-taken-apart-again"
 ]
 
@@ -220,7 +220,7 @@ VerificationTest[
 (* Those positions really are the measurement gadget's own, not an error
    correction gadget's: they point at data qubits of block 1 and block 2. *)
 VerificationTest[
-    With[{ms = Cases[ft["Instructions"], {"M", q_} :> q]},
+    With[{ms = Cases[ft["Instructions"], ("Measurement" -> q_) :> q]},
         {ms[[ft["Readouts"][1]]], ms[[ft["Readouts"][2]]]}
     ],
     {{2, 4, 6}, {9, 11, 13}},
@@ -253,7 +253,7 @@ VerificationTest[
    qubit: 7 data and 7 ancilla, and the ancilla is per block so that the
    corrections of one layer can run in parallel. *)
 VerificationTest[
-    With[{three = QECFaultTolerantCircuit[{{"R", 1}, {"R", 2}, {"R", 3}}, steane]},
+    With[{three = QECFaultTolerantCircuit[{"Reset" -> 1, "Reset" -> 2, "Reset" -> 3}, steane]},
         {three["Qubits"], three["QubitOverhead"]}
     ],
     {42, 14},
@@ -276,16 +276,16 @@ VerificationTest[
 (* Outside the Clifford group there is no transversal gadget, and chapter 13 is
    where that is fixed -- so it is refused rather than approximated. *)
 VerificationTest[
-    QECFaultTolerantCircuit[{{"R", 1}, {"T", 1}}, steane],
-    $Failed,
+    FailureQ[QECFaultTolerantCircuit[{"Reset" -> 1, "T" -> 1}, steane]],
+    True,
     {QECFaultTolerantCircuit::gate},
     TestID -> "QEC-FT-refuses-a-gate-with-no-gadget"
 ]
 
 (* Steane EC is CSS-only, so the protocol is. *)
 VerificationTest[
-    QECFaultTolerantCircuit[{{"R", 1}}, five],
-    $Failed,
+    FailureQ[QECFaultTolerantCircuit[{"Reset" -> 1}, five]],
+    True,
     {QECFaultTolerantCircuit::css},
     TestID -> "QEC-FT-needs-a-CSS-code"
 ]
@@ -293,23 +293,43 @@ VerificationTest[
 (* One logical qubit per block, which is Def 10.4's own simplification and what
    makes "the gadget for logical g" a well-posed question. *)
 VerificationTest[
-    QECFaultTolerantCircuit[{{"R", 1}}, four],
-    $Failed,
+    FailureQ[QECFaultTolerantCircuit[{"Reset" -> 1}, four]],
+    True,
     {QECFaultTolerantCircuit::logical},
     TestID -> "QEC-FT-needs-one-logical-qubit-per-block"
 ]
 
 VerificationTest[
-    {QECFaultTolerantCircuit[{{"H", 1}}, steane],
-     QECFaultTolerantCircuit[{{"R", 1}, {"M", 1}, {"H", 1}}, steane]},
-    {$Failed, $Failed},
+    FailureQ /@ {QECFaultTolerantCircuit[{"H" -> 1}, steane],
+     QECFaultTolerantCircuit[{"Reset" -> 1, "Measurement" -> 1, "H" -> 1}, steane]},
+    {True, True},
     {QECFaultTolerantCircuit::unprepared, QECFaultTolerantCircuit::measured},
     TestID -> "QEC-FT-a-block-has-to-be-live-to-be-used"
 ]
 
 VerificationTest[
-    ft["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECFaultTolerantCircuit::noprop},
+    MatchQ[ft["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECFaultTolerantCircuit::undefprop},
     TestID -> "QEC-FT-unknown-property-is-refused"
+]
+
+
+(* ============================================================================
+   Gates spelled as for QuantumCircuitOperator
+   ============================================================================ *)
+
+VerificationTest[
+    QECFaultTolerantCircuit[{{"R", 1}, {"M", 1}}, steane][[1]],
+    "InvalidArguments",
+    {QECFaultTolerantCircuit::oldform},
+    TestID -> "QEC-FT-old-tuple-form-refused"
+]
+
+VerificationTest[
+    With[{ft = QECFaultTolerantCircuit[{"Reset" -> 1, "H" -> 1, "Measurement" -> 1}, steane]},
+        {ft["Circuit"], MatchQ[ft["Instructions"], {(_String -> (_Integer | {__Integer}))..}]}
+    ],
+    {{"Reset" -> 1, "H" -> 1, "Measurement" -> 1}, True},
+    TestID -> "QEC-FT-instructions-are-gate-rules"
 ]

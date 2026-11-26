@@ -240,29 +240,29 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECCatState[1],
-    $Failed,
+    FailureQ[QECCatState[1]],
+    True,
     {QECCatState::size},
     TestID -> "QEC-Cat-too-small-refused"
 ]
 
 VerificationTest[
-    QECCatState[4, "Repetitions" -> 0],
-    $Failed,
+    FailureQ[QECCatState[4, "Repetitions" -> 0]],
+    True,
     {QECCatState::reps},
     TestID -> "QEC-Cat-bad-repetitions-refused"
 ]
 
 VerificationTest[
-    QECCatState[4, "Pairs" -> {{1, 9}}],
-    $Failed,
+    FailureQ[QECCatState[4, "Pairs" -> {{1, 9}}]],
+    True,
     {QECCatState::pairs},
     TestID -> "QEC-Cat-out-of-range-pairs-refused"
 ]
 
 VerificationTest[
-    QECCatState[4]["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECCatState::noprop},
+    MatchQ[QECCatState[4]["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECCatState::undefprop},
     TestID -> "QEC-Cat-bad-property"
 ]

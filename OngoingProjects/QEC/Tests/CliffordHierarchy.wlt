@@ -84,8 +84,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECCliffordHierarchyLevel[{{1, 1}, {0, 1}}],
-    $Failed,
+    FailureQ[QECCliffordHierarchyLevel[{{1, 1}, {0, 1}}]],
+    True,
     {QECCliffordHierarchyLevel::gate},
     TestID -> "QEC-CliffordHierarchy-refuses-a-non-unitary"
 ]

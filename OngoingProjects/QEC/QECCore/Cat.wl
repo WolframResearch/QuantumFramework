@@ -92,7 +92,6 @@ QECCatState::usage = "QECCatState[m] gives the m-qubit cat state gadget: a prepa
 QECCatState::size = "A cat state needs at least two qubits; got `1`.";
 QECCatState::pairs = "\"Pairs\" must be a list of pairs of positions in 1..`1`; got `2`.";
 QECCatState::reps = "\"Repetitions\" must be a positive integer; got `1`.";
-QECCatState::noprop = "`1` is not a property of QECCatState. Use cat[\"Properties\"] for the list.";
 
 
 (* ---- preparation ---- *)
@@ -199,12 +198,12 @@ QECCatState[qubits_List, check_Integer, opts : OptionsPattern[]] := Module[
     nq = Max[Append[qubits, check]];
     Which[
         m < 2,
-            Message[QECCatState::size, m]; $Failed,
+            qecMessageFailure[QECCatState::size, m],
         ! (IntegerQ[reps] && reps > 0),
-            Message[QECCatState::reps, reps]; $Failed,
+            qecMessageFailure[QECCatState::reps, reps],
         ! MatchQ[pairs, {{_Integer, _Integer} ...}] ||
             ! AllTrue[Catenate[pairs], 1 <= # <= m &],
-            Message[QECCatState::pairs, m, pairs]; $Failed,
+            qecMessageFailure[QECCatState::pairs, m, pairs],
         True,
             QECCatState[<|
                 "CatQubits" -> qubits,
@@ -230,11 +229,12 @@ catData[QECCatState[a_Association]] := a
 
 QECCatState[_Association]["Properties"] := $catProperties
 
-QECCatState[a_Association][prop : ("Instructions" | "CatQubits" | "CheckQubit" |
+QECCatState[a_Association][prop : ("CatQubits" | "CheckQubit" |
     "Pairs" | "Repetitions" | "Qubits")] := a[prop]
+QECCatState[a_Association]["Instructions"] := instructionRules[a["Instructions"]]
 
 QECCatState[a_Association]["Size"] := Length[a["CatQubits"]]
-QECCatState[a_Association]["PrepInstructions"] := catPrepInstructions[a["CatQubits"]]
+QECCatState[a_Association]["PrepInstructions"] := instructionRules[catPrepInstructions[a["CatQubits"]]]
 QECCatState[a_Association]["Heralds"] := gadgetHeralds[a["Instructions"]]
 QECCatState[a_Association]["GateCounts"] := gadgetGateCounts[a["Instructions"]]
 QECCatState[a_Association]["QuantumCircuitOperator"] :=
@@ -247,7 +247,6 @@ QECCatState[a_Association]["DangerousPatterns"] := catXPatterns[a["CatQubits"], 
 QECCatState[a_Association]["ChecksCoverQ"] :=
     catChecksCoverQ[a["Pairs"], catXPatterns[a["CatQubits"], a["Qubits"]]]
 
-QECCatState[a_Association][prop_String] := (Message[QECCatState::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)
@@ -256,8 +255,8 @@ QECCatState /: MakeBoxes[obj : QECCatState[a_Association] /; KeyExistsQ[a, "CatQ
     BoxForm`ArrangeSummaryBox[
         QECCatState,
         obj,
-        BarChart[Values[Counts[First /@ a["Instructions"]]],
-            ChartLabels -> Keys[Counts[First /@ a["Instructions"]]],
+        BarChart[Values[gadgetGateCounts[a["Instructions"]]],
+            ChartLabels -> Keys[gadgetGateCounts[a["Instructions"]]],
             ImageSize -> {Automatic, 34}, Axes -> False, ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
         {
             BoxForm`SummaryItem[{"Size: ", Length[a["CatQubits"]]}],

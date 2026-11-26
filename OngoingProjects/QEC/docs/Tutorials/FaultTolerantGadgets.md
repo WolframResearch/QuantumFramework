@@ -313,7 +313,7 @@ Each half is readable on its own:
 Take[ec["BitFlipInstructions"], 10]
 ```
 
-<!-- => {{"R",8},...,{"R",14},{"H",14},{"H",13},{"H",12}} — resets, then the ancilla's encoder -->
+<!-- => {"Reset" -> 8,...,"Reset" -> 14,"H" -> 14,"H" -> 13,"H" -> 12} — resets, then the ancilla's encoder -->
 
 and the order of the two halves is a choice with a consequence:
 
@@ -350,10 +350,10 @@ AssociationMap[reg, {"Blocks", "BlockQubits", "Qubits", "StabilizerCount", "Logi
 
 ```wl
 {reg["BlockRange", 2], reg["Index", 2, 3],
- reg["Lift", {{"R", 1}, {"H", 2}, {"CNOT", 1, 2}}, 2]}
+ reg["Lift", {"Reset" -> 1, "H" -> 2, "CNOT" -> {1, 2}}, 2]}
 ```
 
-<!-- => {{8,9,10,11,12,13,14}, 10, {{"R",8},{"H",9},{"CNOT",8,9}}} -->
+<!-- => {{8,9,10,11,12,13,14}, 10, {"Reset" -> 8,"H" -> 9,"CNOT" -> {8, 9}}} -->
 
 A register of one block is the identity on everything — same generators, same label matrix, same
 circuits — which is what keeps the rest of the layer unaffected by this object existing.
@@ -368,7 +368,7 @@ single fault from spreading inside either block.
 reg["TransversalCNOT", 1, 2]
 ```
 
-<!-- => {{"CNOT",1,8},{"CNOT",2,9},{"CNOT",3,10},{"CNOT",4,11},{"CNOT",5,12},{"CNOT",6,13},{"CNOT",7,14}} -->
+<!-- => {"CNOT" -> {1, 8},"CNOT" -> {2, 9},"CNOT" -> {3, 10},"CNOT" -> {4, 11},"CNOT" -> {5, 12},"CNOT" -> {6, 13},"CNOT" -> {7, 14}} -->
 
 Steane EC was already resting on this being the logical CNOT. Here it is computed, by conjugating
 the logical operators through the gate and reading the images off:
@@ -492,7 +492,7 @@ preparation, gate and storage gadget put an error correction gadget on each bloc
 after a measurement gadget, whose output is classical.
 
 ```wl
-circuit = {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}};
+circuit = {"Reset" -> 1, "Reset" -> 2, "H" -> 1, "CNOT" -> {1, 2}, "Measurement" -> 1, "Measurement" -> 2};
 ft = QECFaultTolerantCircuit[circuit, steane]
 ```
 
@@ -545,7 +545,7 @@ Now the detail that makes this more than bookkeeping. Asked for a logical $S$, t
 transversal $S^{\dagger}$:
 
 ```wl
-Union @ Map[First, QECFaultTolerantCircuit[{{"R", 1}, {"S", 1}}, steane]["GadgetInstructions", "Gate"]]
+Union @ Map[First, QECFaultTolerantCircuit[{"Reset" -> 1, "S" -> 1}, steane]["GadgetInstructions", "Gate"]]
 ```
 
 <!-- => {"Sdg"} -->

@@ -31,7 +31,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
@@ -104,22 +104,22 @@ VerificationTest[
 (* ZZI needs no rotation at all: two CNOTs into the ancilla and a measurement. *)
 VerificationTest[
     QECCode["BitFlipCode"]["SyndromeCircuit"]["Instructions"],
-    {{"R", 4}, {"CNOT", 1, 4}, {"CNOT", 2, 4}, {"M", 4},
-     {"R", 5}, {"CNOT", 2, 5}, {"CNOT", 3, 5}, {"M", 5}},
+    {"Reset" -> 4, "CNOT" -> {1, 4}, "CNOT" -> {2, 4}, "Measurement" -> 4,
+     "Reset" -> 5, "CNOT" -> {2, 5}, "CNOT" -> {3, 5}, "Measurement" -> 5},
     TestID -> "QEC-Circuit-bitflip-instructions"
 ]
 
 (* An X-type generator rotates its data qubits with H and back again. *)
 VerificationTest[
     QECCode[{"XXI"}]["SyndromeCircuit"]["Instructions"],
-    {{"R", 4}, {"H", 1}, {"H", 2}, {"CNOT", 1, 4}, {"CNOT", 2, 4}, {"H", 1}, {"H", 2}, {"M", 4}},
+    {"Reset" -> 4, "H" -> 1, "H" -> 2, "CNOT" -> {1, 4}, "CNOT" -> {2, 4}, "H" -> 1, "H" -> 2, "Measurement" -> 4},
     TestID -> "QEC-Circuit-x-type-rotations"
 ]
 
 (* A Y-type generator uses the engine's sqrt(X), which sends Y to Z, and undoes it. *)
 VerificationTest[
     QECCode[{"YY"}]["SyndromeCircuit"]["Instructions"],
-    {{"R", 3}, {"V", 1}, {"V", 2}, {"CNOT", 1, 3}, {"CNOT", 2, 3}, {"Vdg", 1}, {"Vdg", 2}, {"M", 3}},
+    {"Reset" -> 3, "V" -> 1, "V" -> 2, "CNOT" -> {1, 3}, "CNOT" -> {2, 3}, SuperDagger["V"] -> 1, SuperDagger["V"] -> 2, "Measurement" -> 3},
     TestID -> "QEC-Circuit-y-type-rotations"
 ]
 
@@ -156,21 +156,21 @@ VerificationTest[
 
 VerificationTest[
     QECCode["BitFlipCode"]["SyndromeCircuit"]["GateCounts"],
-    <|"R" -> 2, "CNOT" -> 4, "M" -> 2|>,
+    <|"Reset" -> 2, "CNOT" -> 4, "Measurement" -> 2|>,
     TestID -> "QEC-Circuit-gate-counts"
 ]
 
 VerificationTest[
-    QECSyndromeCircuit[QECCode["BitFlipCode"], 0],
-    $Failed,
+    FailureQ[QECSyndromeCircuit[QECCode["BitFlipCode"], 0]],
+    True,
     {QECSyndromeCircuit::rounds},
     TestID -> "QEC-Circuit-bad-rounds"
 ]
 
 VerificationTest[
-    QECCode["BitFlipCode"]["SyndromeCircuit"]["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECSyndromeCircuit::noprop},
+    MatchQ[QECCode["BitFlipCode"]["SyndromeCircuit"]["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECSyndromeCircuit::undefprop},
     TestID -> "QEC-Circuit-bad-property"
 ]
 
@@ -325,7 +325,7 @@ VerificationTest[
    wrong name: the repetition circuit issues 8 instructions but only needs 6 steps,
    because the second ancilla resets while the first is still being read. *)
 VerificationTest[
-    With[{c = QECSyndromeCircuit[QECCode["Repetition", 3]]},
+    With[{c = QECSyndromeCircuit[QECCode["Repetition"[3]]]},
         {c["Depth"], c["InstructionCount"]}
     ],
     {6, 8},
@@ -335,7 +335,7 @@ VerificationTest[
 (* Rounds pipeline, so depth grows by less than one round's worth: 6, 10, 14 and
    not 6, 12, 18.  The instruction count is what grows linearly. *)
 VerificationTest[
-    With[{c = QECCode["Repetition", 3]},
+    With[{c = QECCode["Repetition"[3]]},
         {#["Depth"], #["InstructionCount"]} & /@
             Table[QECSyndromeCircuit[c, r], {r, 3}]
     ],

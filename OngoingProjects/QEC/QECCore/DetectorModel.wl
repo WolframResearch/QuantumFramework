@@ -7,6 +7,7 @@ PackageExport[QECDetectorModel]
 PackageScope[detectorData]
 PackageScope[demExactReport]
 PackageScope[codeDetectorModel]
+PackageScope[demRestrictBasis]
 PackageScope[circuitFaultMechanisms]
 PackageScope[idleMechanisms]
 PackageScope[circuitMechanisms]
@@ -109,10 +110,12 @@ PackageScope[$twoQubitPaulis]
 
 QECDetectorModel::usage = "QECDetectorModel[code, noise] gives the detector error model of a code under a phenomenological or circuit-level noise model, over the default number of rounds.\nQECDetectorModel[code, noise, r] uses r rounds of syndrome extraction followed by one noiseless readout.\nEach row is an elementary fault, with the detectors it fires and the logical observables it flips.\ndem[prop] gives a property; dem[\"Properties\"] lists them.";
 
-QECDetectorModel::level = "A detector model needs a phenomenological or circuit-level noise model; this one is `1`. Use QECNoiseModel[name, p, \"MeasurementError\" -> q] or QECNoiseModel[\"Circuit\", p].";
+QECDetectorModel::level = "A detector model needs a phenomenological or circuit-level noise model; this one is `1`. Use QECNoiseModel[name[p], \"MeasurementError\" -> q] or QECNoiseModel[\"Circuit\"[p]].";
 QECDetectorModel::rounds = "The number of rounds must be a positive integer; got `1`.";
+QECDetectorModel::basis = "\"Basis\" -> `1` is not a memory basis; the choices are All, \"X\" and \"Z\".";
+QECDetectorModel::basiscss = "A memory in one basis keeps the checks of one Pauli type, which needs a CSS code; this one is not.";
+QECDetectorModel::stimbasis = "The Stim writer emits the circuit with both bases; this model keeps only the \"`1`\" basis.";
 QECDetectorModel::extraction = "\"Extraction\" -> `1` is not a known syndrome extraction; the choices are `2`. \"BareAncilla\" is the non-fault-tolerant circuit of Got26 sec. 12.1.1; \"Transversal\" measures each check through a verified cat state instead.";
-QECDetectorModel::noprop = "`1` is not a property of QECDetectorModel. Use dem[\"Properties\"] for the list.";
 
 
 (* ---- elementary faults ---- *)
@@ -126,6 +129,9 @@ roundLength[a_Association, rounds_Integer] := Length[codeCircuitInstructions[a, 
 (* A mechanism is <|"Faults" -> {{index, qubit, {x, z}}, ...}, "Probability" -> p,
    "Location" -> label|>.  Faults are placed *after* the instruction at the given
    index; index 0 is before the circuit starts. *)
+
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+circuitMechanisms[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := circuitMechanisms[instructionTuples[instr], rest]
 
 circuitMechanisms[instr_List, rates_Association] := Catenate @ Table[
     With[{op = instr[[i, 1]]},
@@ -169,6 +175,9 @@ circuitMechanisms[instr_List, rates_Association] := Catenate @ Table[
 (* Phenomenological: the data is hit between rounds and the readout can lie, but
    the extraction itself is treated as a black box.  The data faults sit at the
    instruction index just before each round begins. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+phenomenologicalMechanisms[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := phenomenologicalMechanisms[instructionTuples[instr], rest]
+
 phenomenologicalMechanisms[instr_List, a_Association, noise_Association, rounds_Integer] := Module[
     {n = a["Qubits"], len, probs, q},
     len = Length[instr] / rounds;
@@ -210,6 +219,9 @@ phenomenologicalMechanisms[instr_List, a_Association, noise_Association, rounds_
    Ancilla idles are emitted too and mostly disappear in codeDetectorModel's filter,
    since a reset wipes them; the ones that survive fall between an ancilla's R and
    its M, act as readout errors, and belong in the model. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+idleMechanisms[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := idleMechanisms[instructionTuples[instr], rest]
+
 idleMechanisms[instr_List, nq_Integer, rates_Association] := If[
     rates["Idle"] === 0,
     {},
@@ -284,6 +296,29 @@ faultEffect[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer,
 ]
 
 
+(* Every mechanism's effect at once: framePropagateBatch carries them all through
+   the circuit as the bits of wide integers, and the per-mechanism arithmetic after it
+   is the same as faultEffect's.  Same answer, one pass over the circuit instead of
+   one per mechanism -- the difference between two minutes and a few seconds for the
+   d = 7 surface code over seven rounds. *)
+faultEffectsBatch[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer,
+    faultSets_List, blocks_List] := Module[{run, x, z, labels},
+    If[faultSets === {}, Return[{}, Module]];
+    run = framePropagateBatch[instr, nq, faultSets];
+    If[FailureQ[run], Return[run, Module]];
+    {x, z} = run["Frame"];
+    labels = Mod[Join[x[[All, 1 ;; a["Qubits"]]], z[[All, 1 ;; a["Qubits"]]], 2] . Transpose[codeLabelMatrix[a]], 2];
+    MapThread[
+        {
+            recordDetectors[recordSyndromes[#1, blocks, rounds], #2[[1 ;; m]], m, rounds],
+            #2[[m + 1 ;; -1]],
+            #3
+        } &,
+        {run["Record"], labels, run["Heralds"]}
+    ]
+]
+
+
 (* ---- assembling the model ---- *)
 
 (* Two kinds of row are dropped.
@@ -304,7 +339,7 @@ codeDetectorModel[a_Association, noise_Association, rounds_Integer] :=
     codeDetectorModel[a, noise, rounds, "BareAncilla"]
 
 codeDetectorModel[a_Association, noise_Association, rounds_Integer, mode_String] :=
-    codeDetectorModel[a, noise, rounds, mode] = Module[
+    qecMemoKey[codeDetectorModel[a, noise, rounds, mode]] = Module[
     {ex, instr, nq, m, blocks, mechanisms, effects, keep},
 
     ex = codeExtraction[a, rounds, mode];
@@ -314,7 +349,8 @@ codeDetectorModel[a_Association, noise_Association, rounds_Integer, mode_String]
     m = codeStabilizerCount[a];
 
     mechanisms = circuitFaultMechanisms[a, noise, rounds, ex];
-    effects = faultEffect[a, instr, nq, m, rounds, #["Faults"], blocks] & /@ mechanisms;
+    effects = faultEffectsBatch[a, instr, nq, m, rounds, Lookup[mechanisms, "Faults", {}], blocks];
+    If[FailureQ[effects], Return[effects, Module]];
 
     (* A row that only trips a herald is NOT effectless: it discards the shot, which is
        an outcome the rate has to account for.  So the filter looks at all three. *)
@@ -362,23 +398,70 @@ codeDetectorModel[a_Association, noise_Association, rounds_Integer, mode_String]
    different questions, and "Rounds" is there to ask either. *)
 defaultRounds[a_Association] := With[{d = codeDistance[a]}, If[IntegerQ[d] && d > 0, d, 1]]
 
-Options[QECDetectorModel] = {"Extraction" -> "BareAncilla"};
+Options[QECDetectorModel] = {"Extraction" -> "BareAncilla", "Basis" -> All};
 
 QECDetectorModel[QECCode[a_Association], noise_QECNoiseModel, opts : OptionsPattern[]] :=
     QECDetectorModel[QECCode[a], noise, defaultRounds[a], opts]
 
 QECDetectorModel[QECCode[a_Association], QECNoiseModel[noise_Association], rounds_,
-    opts : OptionsPattern[]] := With[{mode = OptionValue["Extraction"]},
+    opts : OptionsPattern[]] := With[{mode = OptionValue["Extraction"], basis = OptionValue["Basis"]},
     Which[
         ! (IntegerQ[rounds] && rounds > 0),
-            Message[QECDetectorModel::rounds, rounds]; $Failed,
+            qecMessageFailure[QECDetectorModel::rounds, rounds],
         noiseLevel[noise] === "CodeCapacity",
-            Message[QECDetectorModel::level, "code-capacity"]; $Failed,
+            qecMessageFailure[QECDetectorModel::level, "code-capacity"],
         ! MemberQ[$codeExtractions, mode],
-            Message[QECDetectorModel::extraction, mode, $codeExtractions]; $Failed,
+            qecMessageFailure[QECDetectorModel::extraction, mode, $codeExtractions],
+        ! MemberQ[{All, "X", "Z"}, basis],
+            qecMessageFailure[QECDetectorModel::basis, basis],
         True,
-            QECDetectorModel[codeDetectorModel[a, noise, rounds, mode]]
+            Replace[demRestrictBasis[codeDetectorModel[a, noise, rounds, mode], basis],
+                m_Association :> QECDetectorModel[m]]
     ]
+]
+
+
+(* ---- a memory in one basis ---- *)
+
+(* A memory experiment is usually run in one basis: prepare |0_L>, measure Zbar at the
+   end, and decode the Z checks only (or the same with X).  On a CSS code that is a
+   marginal of the full model, and an exact one: keep the Zbar observables and the
+   detectors of the Z checks, project every row onto them, drop the rows left empty.
+   The rate it gives is that of a decoder that reads one basis -- a Y fault's X part is
+   decoded without the hint its Z part leaves on the other checks, which is also what
+   matching on a split graph does.
+
+   It halves the bits the exact route has to cover, and that is what puts the exact
+   rate of d = 5 within reach: 2 x 24 + 2 = 50 bits for one round in both bases, but
+   24 + 1 = 25 in one. *)
+demRestrictBasis[a_Association, All] := a
+
+demRestrictBasis[a_Association, basis : "X" | "Z"] := qecMemoKey[demRestrictBasis[a, basis]] = Module[
+    {code = a["Code"], n, m, k, xType, keep, dets, obs, dm, om, hm, rows},
+    If[ ! codeCSSQ[code], Return[qecMessageFailure[QECDetectorModel::basiscss], Module]];
+    n = code["Qubits"];
+    m = a["Checks"];
+    k = a["Observables"] / 2;
+    (* an X check has no Z part *)
+    xType = Total[#[[n + 1 ;; 2 n]]] === 0 & /@ code["CheckMatrix"];
+    keep = Flatten[Position[xType, basis === "X"]];
+    dets = Flatten[Table[b m + keep, {b, 0, a["Rounds"]}]];
+    (* the observables are the Xbar products first, then the Zbar ones *)
+    obs = If[basis === "X", Range[k], Range[k + 1, 2 k]];
+    dm = If[a["DetectorMatrix"] === {}, {}, a["DetectorMatrix"][[All, dets]]];
+    om = If[a["ObservableMatrix"] === {}, {}, a["ObservableMatrix"][[All, obs]]];
+    hm = a["HeraldMatrix"];
+    rows = Select[Range[Length[dm]], MemberQ[dm[[#]], 1] || MemberQ[om[[#]], 1] || MemberQ[hm[[#]], 1] &];
+    Join[a, <|
+        "DetectorMatrix" -> dm[[rows]],
+        "ObservableMatrix" -> om[[rows]],
+        "HeraldMatrix" -> hm[[rows]],
+        "Probabilities" -> a["Probabilities"][[rows]],
+        "Locations" -> a["Locations"][[rows]],
+        "Detectors" -> Length[dets],
+        "Observables" -> k,
+        "Basis" -> basis
+    |>]
 ]
 
 
@@ -388,8 +471,8 @@ $detectorProperties = {
     "DetectorMatrix", "ObservableMatrix", "HeraldMatrix", "Probabilities", "Locations",
     "Detectors", "Observables", "Heralds", "Rounds", "Checks", "Faults", "Code", "Noise",
     "LocationCounts", "UndetectableFaults", "DetectorRates", "ObservableRates",
-    "HeraldRates", "PostSelectedQ", "Extraction",
-    "LogicalErrorRate", "Acceptance", "Failure", "StimString", "Properties"
+    "HeraldRates", "PostSelectedQ", "Extraction", "Basis",
+    "LogicalErrorRate", "Acceptance", "Failure", "Stim", "Properties"
 };
 
 (* How often each detector fires, exactly.  A detector fires when an odd number of
@@ -439,6 +522,7 @@ QECDetectorModel[a_Association][prop : ("DetectorMatrix" | "ObservableMatrix" |
    from this model is conditional on acceptance. *)
 QECDetectorModel[a_Association]["PostSelectedQ"] := a["Heralds"] > 0
 QECDetectorModel[a_Association]["Extraction"] := Lookup[a, "Extraction", "BareAncilla"]
+QECDetectorModel[a_Association]["Basis"] := Lookup[a, "Basis", All]
 
 QECDetectorModel[a_Association]["Faults"] := Length[a["Probabilities"]]
 QECDetectorModel[a_Association]["Code"] := QECCode[a["Code"]]
@@ -454,11 +538,11 @@ QECDetectorModel[a_Association]["HeraldRates"] := heraldFiringRates[a]
    heralds, which are a property of the model.  Exact; a sample count estimates it. *)
 demReach[a_Association] := decoderReachFor[a["Code"], Automatic]
 
-demExactReport[a_Association] := demExactReport[a] = rateReport[demExactFailure[a, demReach[a]], None]
+demExactReport[a_Association] := qecMemoKey[demExactReport[a]] = rateReport[demExactFailure[a, demReach[a]], None]
 
 demSampledReport[a_Association, count_Integer] := If[
     noiseSymbolicQ[a["Noise"]],
-    Message[QECLogicalErrorRate::symbolicshots]; $Failed,
+    qecMessageFailure[QECLogicalErrorRate::symbolicshots],
     rateReport[demSampledFailure[a, count, demReach[a]], count]
 ]
 
@@ -481,7 +565,6 @@ QECDetectorModel[a_Association]["UndetectableFaults"] := With[
     a["Locations"][[rows]]
 ]
 
-QECDetectorModel[a_Association][prop_String] := (Message[QECDetectorModel::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

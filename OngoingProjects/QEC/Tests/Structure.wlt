@@ -28,7 +28,7 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
 qecPauliCommuteQ = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliCommuteQ"];
@@ -191,7 +191,7 @@ VerificationTest[
     AllTrue[qecNamed,
         Module[{code = QECCode[#], full},
             full = QECCode[code["CompletedGenerators"]];
-            full =!= $Failed && full["Qubits"] === code["Qubits"] && full["LogicalQubits"] === 0
+            ! FailureQ[full] && full["Qubits"] === code["Qubits"] && full["LogicalQubits"] === 0
         ] &
     ],
     True,

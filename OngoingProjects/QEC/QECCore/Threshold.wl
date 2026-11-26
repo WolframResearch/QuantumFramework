@@ -48,13 +48,13 @@ PackageScope[concatenationResources]
 (* 31 (2003).                                                                   *)
 (* ============================================================================ *)
 
-QECThreshold::usage = "QECThreshold[{code1, code2, ...}, noise] estimates the threshold of a family of codes under a noise model with one symbolic rate p: the rate at which the logical error curves of successive members cross.\nQECThreshold[{\"Surface\", {3, 5, 7}}, noise] takes the family by name and sizes; \"Repetition\" and \"Toric\" work the same way.\nAt code capacity, when every member is small enough, the crossings are exact roots; otherwise each curve is sampled and the crossings carry error bars.\nThe result is an object; th[\"Value\"] is the crossing of the two largest members and th[\"Properties\"] lists the rest.\nQECThreshold[code, \"Method\" -> \"Concatenation\"] gives instead a rigorous lower bound on the threshold of concatenating the code's fault-tolerant protocol, from its extended rectangles (Got26 sec. 14.5, 14.7.4).";
+QECThreshold::usage = "QECThreshold[{code1, code2, ...}, noise] estimates the threshold of a family of codes under a noise model with one symbolic rate p: the rate at which the logical error curves of successive members cross.\nQECThreshold[\"Surface\"[{3, 5, 7}], noise] takes the family by name and sizes; \"Repetition\" and \"Toric\" work the same way.\nAt code capacity, when every member is small enough, the crossings are exact roots; otherwise each curve is sampled and the crossings carry error bars.\nThe result is an object; th[\"Value\"] is the crossing of the two largest members and th[\"Properties\"] lists the rest.\nQECThreshold[code, \"Method\" -> \"Concatenation\"] gives instead a rigorous lower bound on the threshold of concatenating the code's fault-tolerant protocol, from its extended rectangles (Got26 sec. 14.5, 14.7.4).";
 
 QECThreshold::params = "The noise must carry exactly one symbolic rate; it depends on `1`.";
 QECThreshold::codes = "A threshold needs at least two codes of one family; `1` were given.";
+QECThreshold::oldform = "A family's sizes go inside its name: `1`, not `2`.";
 QECThreshold::family = "`1` is not a family QECThreshold can size; use one of `2`, or give the codes themselves.";
 QECThreshold::range = "\"Range\" must be Automatic or {pmin, pmax} with 0 < pmin < pmax < 1; got `1`.";
-QECThreshold::noprop = "`1` is not a property of QECThreshold. Use th[\"Properties\"] for the list.";
 
 QECThreshold::counting = "\"Counting\" must be \"Malignant\" or \"BadSets\"; got `1`.";
 QECThreshold::method = "Without a noise model QECThreshold computes the concatenation bound; \"Method\" must be \"Concatenation\", got `1`.";
@@ -80,14 +80,19 @@ thresholdDefaultRange["Circuit"] = {1/2000, 1/50};
 (* The family form knows each member's size, and that size is also the memory
    experiment's default number of rounds: the topological-memory convention, and
    it spares the distance search a d = 7 code cannot afford. *)
-thresholdMembers[{family_String, sizes : {__Integer}}] := If[
+thresholdMembers[family_String[sizes : {__Integer}]] := If[
     MemberQ[$thresholdFamilies, family],
     With[{sorted = Sort[DeleteDuplicates[sizes]]},
-        <|"Codes" -> (QECCode[family, #] & /@ sorted), "Sizes" -> sorted, "Rounds" -> sorted,
+        <|"Codes" -> (QECCode[family[#]] & /@ sorted), "Sizes" -> sorted, "Rounds" -> sorted,
           "Family" -> family|>
     ],
-    Message[QECThreshold::family, family, $thresholdFamilies]; $Failed
+    qecMessageFailure[QECThreshold::family, family, $thresholdFamilies]
 ]
+
+(* The old form, {family, sizes}, says where the sizes go now. *)
+thresholdMembers[{family_String, sizes : {__Integer}}] := (
+    qecMessageFailure[QECThreshold::oldform, ToString[family[sizes], InputForm], ToString[{family, sizes}, InputForm]]
+)
 
 (* Codes given directly are sized by their qubit count. *)
 thresholdMembers[codes : {__QECCode}] := With[{order = Ordering[#["Qubits"] & /@ codes]},
@@ -95,7 +100,7 @@ thresholdMembers[codes : {__QECCode}] := With[{order = Ordering[#["Qubits"] & /@
       "Rounds" -> ConstantArray[Automatic, Length[codes]], "Family" -> None|>
 ]
 
-thresholdMembers[other_] := (Message[QECThreshold::codes, Length[Flatten[{other}]]]; $Failed)
+thresholdMembers[other_] := (qecMessageFailure[QECThreshold::codes, Length[Flatten[{other}]]])
 
 (* The one symbolic rate the noise carries. *)
 noiseSymbols[n_Association] := DeleteDuplicates @ Cases[
@@ -134,19 +139,20 @@ QECThreshold::gateset = "\"GateSet\" must be \"Clifford\" or \"Universal\"; got 
 QECThreshold[code_QECCode, opts : OptionsPattern[]] := If[
     OptionValue["Method"] === "Concatenation",
     concatenationThresholdObject[code, opts],
-    Message[QECThreshold::method, OptionValue["Method"]]; $Failed
+    qecMessageFailure[QECThreshold::method, OptionValue["Method"]]
 ]
 
 concatenationThresholdObject[code_QECCode, opts : OptionsPattern[QECThreshold]] := Module[
     {mode = OptionValue[QECThreshold, {opts}, "Ancilla"], counting = OptionValue[QECThreshold, {opts}, "Counting"],
      gates = OptionValue[QECThreshold, {opts}, "GateSet"], rects, rows, worst, countedBy},
-    If[ ! MemberQ[{"Clifford", "Universal"}, gates], Message[QECThreshold::gateset, gates]; Return[$Failed]];
-    If[ ! MemberQ[{"Malignant", "BadSets"}, counting], Message[QECThreshold::counting, counting]; Return[$Failed]];
+    If[ ! MemberQ[{"Clifford", "Universal"}, gates], Return[qecMessageFailure[QECThreshold::gateset, gates]]];
+    If[ ! MemberQ[{"Malignant", "BadSets"}, counting], Return[qecMessageFailure[QECThreshold::counting, counting]]];
     rects = DeleteCases[
         AssociationMap[Quiet[QECExtendedRectangle[code, #, "Ancilla" -> mode]] &, concatenationLocations[gates]],
-        $Failed
+        _ ? FailureQ
     ];
-    If[rects === <||>, Return[$Failed]];
+    (* no location could be built: build the first again, unquieted, to say why *)
+    If[rects === <||>, Return[QECExtendedRectangle[code, First[concatenationLocations[gates]], "Ancilla" -> mode]]];
     (* the malignant count is only available for t = 1; otherwise the crude bound *)
     If[ counting === "Malignant" && MissingQ[First[rects]["MalignantThresholdBound"]], counting = "BadSets"];
     (* an exRec the frame cannot search -- the pi/8 one -- falls back to bad sets,
@@ -183,17 +189,17 @@ concatenationThresholdObject[code_QECCode, opts : OptionsPattern[QECThreshold]] 
 ]
 
 QECThreshold[members_, qc_Wolfram`QuantumFramework`QuantumChannel, opts : OptionsPattern[]] :=
-    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECThreshold[members, noise, opts], _ -> $Failed}]
+    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECThreshold[members, noise, opts], f_ ? FailureQ :> f, _ -> $Failed}]
 
 QECThreshold[members_, QECNoiseModel[n_Association], opts : OptionsPattern[]] := Module[
     {m, symbols, p, level, shots, decoder, exactQ},
 
     m = thresholdMembers[members];
-    If[m === $Failed, Return[$Failed]];
-    If[ Length[m["Codes"]] < 2, Message[QECThreshold::codes, Length[m["Codes"]]]; Return[$Failed]];
+    If[FailureQ[m], Return[m]];
+    If[ Length[m["Codes"]] < 2, Return[qecMessageFailure[QECThreshold::codes, Length[m["Codes"]]]]];
 
     symbols = noiseSymbols[n];
-    If[ Length[symbols] =!= 1, Message[QECThreshold::params, symbols]; Return[$Failed]];
+    If[ Length[symbols] =!= 1, Return[qecMessageFailure[QECThreshold::params, symbols]]];
     p = First[symbols];
     level = noiseLevel[n];
     shots = OptionValue["Shots"];
@@ -261,7 +267,7 @@ sampledThreshold[m_Association, n_Association, p_Symbol, level_String, shots_Int
     range = OptionValue[QECThreshold, {opts}, "Range"];
     points = OptionValue[QECThreshold, {opts}, "Points"];
     If[ ! (range === Automatic || MatchQ[range, {lo_ ? NumericQ, hi_ ? NumericQ} /; 0 < lo < hi < 1]),
-        Message[QECThreshold::range, range]; Return[$Failed]
+        Return[qecMessageFailure[QECThreshold::range, range]]
     ];
 
     (* With the default range, a coarse pass with a fifth of the shots finds the
@@ -270,7 +276,7 @@ sampledThreshold[m_Association, n_Association, p_Symbol, level_String, shots_Int
         range = thresholdDefaultRange[level];
         grid = thresholdGrid[range, points];
         coarse = sampleCurves[m, n, p, grid, Max[1000, Quotient[shots, 5]], decoder, opts];
-        If[coarse === $Failed, Return[$Failed]];
+        If[FailureQ[coarse], Return[coarse]];
         last = Length[m["Sizes"]];
         bracket = crossingBracket[coarse[[last - 1]], coarse[[last]]];
         If[ bracket =!= None,
@@ -280,7 +286,7 @@ sampledThreshold[m_Association, n_Association, p_Symbol, level_String, shots_Int
 
     grid = thresholdGrid[range, points];
     rates = sampleCurves[m, n, p, grid, shots, decoder, opts];
-    If[rates === $Failed, Return[$Failed]];
+    If[FailureQ[rates], Return[rates]];
 
     crossings = Association @ Table[
         m["Sizes"][[{i, i + 1}]] -> sampledCrossing[grid, rates[[i]], rates[[i + 1]]],
@@ -340,7 +346,7 @@ pointSampler[a_Association, n_Association, p_Symbol, rounds_, shots_Integer, dec
 pointSampler[a_Association, n_Association, p_Symbol, rounds_, shots_Integer, decoder_, opts : OptionsPattern[QECThreshold]] := Module[
     {mode = OptionValue[QECThreshold, {opts}, "Extraction"], dem},
     If[ ! MemberQ[$codeExtractions, mode],
-        Message[QECDetectorModel::extraction, mode, $codeExtractions]; Throw[$Failed]
+        Throw[qecMessageFailure[QECDetectorModel::extraction, mode, $codeExtractions]]
     ];
     dem = codeDetectorModel[a, n, Replace[rounds, Automatic :> defaultRounds[a]], mode];
     Function[v, demSampledReport[dem /. p -> v, shots, decoder, OptionValue[QECThreshold, {opts}, "DecoderReach"]]]
@@ -486,8 +492,6 @@ QECThreshold[d_Association]["Plot", opts___] := With[
     ]
 ]
 
-QECThreshold[_Association][prop_String, ___] :=
-    (Message[QECThreshold::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

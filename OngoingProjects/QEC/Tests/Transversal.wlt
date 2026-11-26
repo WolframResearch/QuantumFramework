@@ -31,7 +31,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
 qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
@@ -50,7 +50,7 @@ qecOneQubitOps = Symbol[qecScope <> "$circuitOneQubitOps"];
 
 steane = QECCode["SteaneCode"];
 five = QECCode["5QubitCode"];
-four = QECCode["DistanceTwo", 4];
+four = QECCode["DistanceTwo"[4]];
 
 (* Two matrices are the same gate when they differ by a global phase, which is all
    a gate gadget ever determines. *)
@@ -279,7 +279,7 @@ VerificationTest[
     With[{g = QECTransversalGate[steane, {"H", "S"}]},
         {Take[g["Instructions"], 2], Length[g["Instructions"]], g["Depth"], g["Qubits"]}
     ],
-    {{{"H", 1}, {"H", 2}}, 14, 2, 7},
+    {{"H" -> 1, "H" -> 2}, 14, 2, 7},
     TestID -> "QEC-Transversal-instructions-are-qubit-by-qubit"
 ]
 
@@ -288,7 +288,7 @@ VerificationTest[
 VerificationTest[
     {QECTransversalGate[steane, "CNOT"]["Instructions"],
      QECTransversalGate[steane, "I"]["Instructions"]},
-    {Table[{"CNOT", q, q + 7}, {q, 7}], {}},
+    {Table["CNOT" -> {q, q + 7}, {q, 7}], {}},
     TestID -> "QEC-Transversal-two-block-instructions-use-the-register-layout"
 ]
 
@@ -307,15 +307,15 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    QECTransversalGate[steane, "T"],
-    $Failed,
+    FailureQ[QECTransversalGate[steane, "T"]],
+    True,
     {QECTransversalGate::gate},
     TestID -> "QEC-Transversal-refuses-a-gate-it-cannot-build"
 ]
 
 VerificationTest[
-    QECTransversalGate[steane, "H"]["Nonsense"],
-    Missing["NotFound", "Nonsense"],
-    {QECTransversalGate::noprop},
+    MatchQ[QECTransversalGate[steane, "H"]["Nonsense"], _[_]["Nonsense"]],
+    True,
+    {QECTransversalGate::undefprop},
     TestID -> "QEC-Transversal-unknown-property-is-refused"
 ]

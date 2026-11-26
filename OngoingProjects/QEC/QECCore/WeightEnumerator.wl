@@ -62,7 +62,7 @@ QECCode::blochstate = "`1` is not a one-qubit state. Give a one-qubit QuantumSta
 
 (* Every element of S as a row with its true phase: each generator doubles the list.
    2^(n-k) products, no search. *)
-codeStabilizerGroup[a_Association] := codeStabilizerGroup[a] = Fold[
+codeStabilizerGroup[a_Association] := qecMemoKey[codeStabilizerGroup[a]] = Fold[
     Function[{elements, g}, Join[elements, pauliProduct[#, g] & /@ elements]],
     {pauliIdentity[a["Qubits"]]},
     codeVectors[a]
@@ -71,7 +71,7 @@ codeStabilizerGroup[a_Association] := codeStabilizerGroup[a] = Fold[
 stabilizerGroupAllowedQ[a_Association] := With[{m = codeStabilizerCount[a]},
     If[ 2^m <= $QECStabilizerGroupLimit,
         True,
-        Message[QECCode::groupbig, m, $QECStabilizerGroupLimit]; False
+        False
     ]
 ]
 
@@ -140,24 +140,24 @@ codeCodespaceProbability[a_Association, r_List] := Module[
 (* ---- properties ---- *)
 
 QECCode[a_Association]["WeightEnumerator"] :=
-    If[stabilizerGroupAllowedQ[a], codeWeightEnumerator[a], $Failed]
+    If[stabilizerGroupAllowedQ[a], codeWeightEnumerator[a], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit]]
 QECCode[a_Association]["WeightEnumerator", x_] :=
-    If[stabilizerGroupAllowedQ[a], enumeratorPolynomial[codeWeightEnumerator[a], x], $Failed]
+    If[stabilizerGroupAllowedQ[a], enumeratorPolynomial[codeWeightEnumerator[a], x], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit]]
 
 QECCode[a_Association]["SignedWeightEnumerator"] :=
-    If[stabilizerGroupAllowedQ[a], codeSignedWeightEnumerator[a], $Failed]
+    If[stabilizerGroupAllowedQ[a], codeSignedWeightEnumerator[a], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit]]
 QECCode[a_Association]["SignedWeightEnumerator", x_] :=
-    If[stabilizerGroupAllowedQ[a], enumeratorPolynomial[codeSignedWeightEnumerator[a], x], $Failed]
+    If[stabilizerGroupAllowedQ[a], enumeratorPolynomial[codeSignedWeightEnumerator[a], x], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit]]
 
 QECCode[a_Association]["DualWeightEnumerator"] :=
-    If[stabilizerGroupAllowedQ[a], codeDualWeightEnumerator[a], $Failed]
+    If[stabilizerGroupAllowedQ[a], codeDualWeightEnumerator[a], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit]]
 QECCode[a_Association]["DualWeightEnumerator", x_] :=
-    If[stabilizerGroupAllowedQ[a], enumeratorPolynomial[codeDualWeightEnumerator[a], x], $Failed]
+    If[stabilizerGroupAllowedQ[a], enumeratorPolynomial[codeDualWeightEnumerator[a], x], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit]]
 
 QECCode[a_Association]["CodespaceProbability", state_] := With[{r = blochVector[state]},
     Which[
-        r === $Failed, Message[QECCode::blochstate, state]; $Failed,
-        ! stabilizerGroupAllowedQ[a], $Failed,
+        FailureQ[r], qecMessageFailure[QECCode::blochstate, state],
+        ! stabilizerGroupAllowedQ[a], qecMessageFailure[QECCode::groupbig, codeStabilizerCount[a], $QECStabilizerGroupLimit],
         True, codeCodespaceProbability[a, r]
     ]
 ]

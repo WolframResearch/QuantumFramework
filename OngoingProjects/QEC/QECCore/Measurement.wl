@@ -83,7 +83,6 @@ QECPauliMeasurement::identity = "The identity has no eigenvalue to measure.";
 QECPauliMeasurement::reps = "The number of repetitions must be a positive integer; got `1`.";
 QECPauliMeasurement::ec = "\"ErrorCorrection\" -> `1` is not a known sub-gadget; use None or \"Steane\".";
 QECPauliMeasurement::eccss = "Steane error correction needs a CSS code, and this one is not. Use \"ErrorCorrection\" -> None, or a CSS code; Shor error correction, which has no such restriction, is not built.";
-QECPauliMeasurement::noprop = "`1` is not a property of QECPauliMeasurement. Use m[\"Properties\"] for the list.";
 
 
 (* ---- one attempt ---- *)
@@ -177,6 +176,9 @@ pauliMeasureOutcome[record_List, m_Integer, reps_Integer] := With[
    With all three in place a single fault leaves at most one data error, and
    dropping the herald filter is enough to see weight two reappear, so the checks
    are visibly load-bearing rather than decorative. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+pauliMeasureDataWeights[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := pauliMeasureDataWeights[instructionTuples[instr], rest]
+
 pauliMeasureDataWeights[instr_List, nq_Integer, n_Integer, v_List] :=
     pauliMeasureDataWeights[instr, nq, n, v, {}]
 
@@ -218,19 +220,19 @@ QECPauliMeasurement[code_QECCode, p_, reps_, opts : OptionsPattern[]] := Module[
        carrying a phase, whose Hermitian representative is what this gadget measures. *)
     v = If[QECPauliQ[p], pauliVector[p], $Failed];
     Which[
-        v === $Failed || Length[v] =!= 2 n + 1 || Last[v] =!= 0,
-            Message[QECPauliMeasurement::pauli, p, n]; $Failed,
+        FailureQ[v] || Length[v] =!= 2 n + 1 || Last[v] =!= 0,
+            qecMessageFailure[QECPauliMeasurement::pauli, p, n],
         ! (IntegerQ[reps] && reps > 0),
-            Message[QECPauliMeasurement::reps, reps]; $Failed,
+            qecMessageFailure[QECPauliMeasurement::reps, reps],
         ! MemberQ[{None, "Steane"}, ec],
-            Message[QECPauliMeasurement::ec, ec]; $Failed,
+            qecMessageFailure[QECPauliMeasurement::ec, ec],
         ec === "Steane" && ! codeCSSQ[First[code]],
-            Message[QECPauliMeasurement::eccss]; $Failed,
+            qecMessageFailure[QECPauliMeasurement::eccss],
         True,
             support = Select[Range[n], letterAt[v, n, #] =!= {0, 0} &];
             m = Length[support];
             If[ m === 0,
-                Message[QECPauliMeasurement::identity]; Return[$Failed]
+                Return[qecMessageFailure[QECPauliMeasurement::identity]]
             ];
             cat = Range[n + 1, n + m];
             check = n + m + 1;
@@ -241,7 +243,7 @@ QECPauliMeasurement[code_QECCode, p_, reps_, opts : OptionsPattern[]] := Module[
                redundant, since the standard FT simulation (Def 10.6) already puts an
                EC between every adjacent pair of gadgets. *)
             ecGadget = If[ec === "Steane", QECErrorCorrection[code, check], None];
-            ecInstr = If[ecGadget === None, None, ecGadget["Instructions"]];
+            ecInstr = If[ecGadget === None, None, First[ecGadget]["Instructions"]];
             QECPauliMeasurement[<|
                 "Code" -> First[code],
                 "Pauli" -> Take[v, 2 n],
@@ -277,7 +279,8 @@ measurementData[QECPauliMeasurement[a_Association]] := a
 
 QECPauliMeasurement[_Association]["Properties"] := $measurementProperties
 
-QECPauliMeasurement[a_Association][prop : ("Instructions" | "Support" | "Repetitions" |
+QECPauliMeasurement[a_Association]["Instructions"] := instructionRules[a["Instructions"]]
+QECPauliMeasurement[a_Association][prop : ("Support" | "Repetitions" |
     "CatRepetitions" | "DataQubits" | "CatQubits" | "CheckQubit" | "Qubits" | "Pairs" |
     "ErrorCorrection")] := a[prop]
 
@@ -291,7 +294,7 @@ QECPauliMeasurement[a_Association]["Depth"] := gadgetDepth[a["Instructions"], a[
 QECPauliMeasurement[a_Association]["QuantumCircuitOperator"] :=
     gadgetCircuitOperator[a["Instructions"]]
 QECPauliMeasurement[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
-QECPauliMeasurement[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
+QECPauliMeasurement[a_Association]["GateCounts"] := gadgetGateCounts[a["Instructions"]]
 
 QECPauliMeasurement[a_Association]["Cat"] :=
     QECCatState[a["CatQubits"], a["CheckQubit"],
@@ -357,8 +360,6 @@ QECPauliMeasurement[a_Association]["OpenAssumptions"] := If[
     QECErrorCorrection[QECCode[a["Code"]], a["CheckQubit"]]["OpenAssumptions"]
 ]
 
-QECPauliMeasurement[a_Association][prop_String] :=
-    (Message[QECPauliMeasurement::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- the extraction a detector model can actually consume ---- *)
@@ -401,7 +402,7 @@ codeExtraction[a_Association, rounds_Integer, "BareAncilla"] := <|
 |>
 
 codeExtraction[a_Association, rounds_Integer, "Transversal"] :=
-    codeExtraction[a, rounds, "Transversal"] = Module[
+    qecMemoKey[codeExtraction[a, rounds, "Transversal"]] = Module[
         {n = a["Qubits"], mat = a["CheckMatrix"], supports, widest, cat, check},
         supports = Table[
             Select[Range[n], letterAt[v, n, #] =!= {0, 0} &],
@@ -455,8 +456,8 @@ QECPauliMeasurement /: MakeBoxes[
 ] := BoxForm`ArrangeSummaryBox[
     QECPauliMeasurement,
     obj,
-    BarChart[Values[Counts[First /@ a["Instructions"]]],
-        ChartLabels -> Keys[Counts[First /@ a["Instructions"]]],
+    BarChart[Values[gadgetGateCounts[a["Instructions"]]],
+        ChartLabels -> Keys[gadgetGateCounts[a["Instructions"]]],
         ImageSize -> {Automatic, 34}, Axes -> False,
         ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
     {

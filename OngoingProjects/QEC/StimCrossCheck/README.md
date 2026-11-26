@@ -42,7 +42,7 @@ sqrt(X) basis change and its round trip through Stim's `SQRT_X`.
 
 ## Result of the run on 2026-11-03: the scalable families
 
-Two more cases, added with `QECCode["Surface", d]` and `QECCode["Toric", L]`, two million shots
+Two more cases, added with `QECCode["Surface"[d]]` and `QECCode["Toric"[L]]`, two million shots
 each (Stim 1.16.0, PyMatching 2.4.0).
 
 | case | detectors | max sigma | observable (ours, exact) | observable (Stim) | sigma | MWPM |
@@ -56,7 +56,7 @@ layer will have to reproduce.
 
 ## Result of the run on 2026-11-04: the surface-code check order and the native matching decoder
 
-`surface3-circ` re-emitted after `QECCode["Surface", d]` started carrying its CNOT order (`code["CheckOrder"]`: X checks
+`surface3-circ` re-emitted after `QECCode["Surface"[d]]` started carrying its CNOT order (`code["CheckOrder"]`: X checks
 row by row, Z checks column by column, so no hook error lies along a logical operator), two million
 shots:
 

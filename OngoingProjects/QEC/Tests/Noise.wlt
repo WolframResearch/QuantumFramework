@@ -31,7 +31,7 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
 qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
@@ -47,28 +47,28 @@ qecBinomialTail[n_, p_] := Sum[Binomial[n, j] p^j (1 - p)^(n - j), {j, Floor[n/2
    Building a noise model
    ============================================================================ *)
 
-VerificationTest[Head[QECNoiseModel["Depolarizing", 1/10]], QECNoiseModel, TestID -> "QEC-Noise-head"]
+VerificationTest[Head[QECNoiseModel["Depolarizing"[1/10]]], QECNoiseModel, TestID -> "QEC-Noise-head"]
 
 VerificationTest[
-    QECNoiseModel["Depolarizing", qecP]["Probabilities"],
+    QECNoiseModel["Depolarizing"[qecP]]["Probabilities"],
     {1 - qecP, qecP/3, qecP/3, qecP/3},
     TestID -> "QEC-Noise-depolarizing-rates"
 ]
 
 VerificationTest[
-    QECNoiseModel["BitFlip", qecP]["Probabilities"],
+    QECNoiseModel["BitFlip"[qecP]]["Probabilities"],
     {1 - qecP, qecP, 0, 0},
     TestID -> "QEC-Noise-bitflip-rates"
 ]
 
 VerificationTest[
-    QECNoiseModel["PhaseFlip", qecP]["Probabilities"],
+    QECNoiseModel["PhaseFlip"[qecP]]["Probabilities"],
     {1 - qecP, 0, 0, qecP},
     TestID -> "QEC-Noise-phaseflip-rates"
 ]
 
 VerificationTest[
-    QECNoiseModel["BitPhaseFlip", qecP]["Probabilities"],
+    QECNoiseModel["BitPhaseFlip"[qecP]]["Probabilities"],
     {1 - qecP, 0, qecP, 0},
     TestID -> "QEC-Noise-bitphaseflip-rates"
 ]
@@ -79,25 +79,25 @@ VerificationTest[
     TestID -> "QEC-Noise-general-pauli"
 ]
 
-VerificationTest[QECNoiseModel["Depolarizing", qecP]["SymbolicQ"], True, TestID -> "QEC-Noise-symbolic-flag"]
+VerificationTest[QECNoiseModel["Depolarizing"[qecP]]["SymbolicQ"], True, TestID -> "QEC-Noise-symbolic-flag"]
 
-VerificationTest[QECNoiseModel["Depolarizing", 1/10]["SymbolicQ"], False, TestID -> "QEC-Noise-numeric-flag"]
+VerificationTest[QECNoiseModel["Depolarizing"[1/10]]["SymbolicQ"], False, TestID -> "QEC-Noise-numeric-flag"]
 
-VerificationTest[QECNoiseModel["Depolarizing", qecP]["Parameters"], {qecP}, TestID -> "QEC-Noise-parameters"]
+VerificationTest[QECNoiseModel["Depolarizing"[qecP]]["Parameters"], {qecP}, TestID -> "QEC-Noise-parameters"]
 
-VerificationTest[QECNoiseModel["Depolarizing", qecP]["MeanWeight"], qecP, TestID -> "QEC-Noise-mean-weight"]
+VerificationTest[QECNoiseModel["Depolarizing"[qecP]]["MeanWeight"], qecP, TestID -> "QEC-Noise-mean-weight"]
 
-VerificationTest[Quiet[QECNoiseModel["NoSuchModel", 1/10]], $Failed, TestID -> "QEC-Noise-unknown-model"]
+VerificationTest[Quiet[QECNoiseModel["NoSuchModel"[1/10]]][[1]], "InvalidName", TestID -> "QEC-Noise-unknown-model"]
 
 VerificationTest[
-    Quiet[Check[QECNoiseModel["NoSuchModel", 1/10], "fired", QECNoiseModel::unknown]],
+    Quiet[Check[QECNoiseModel["NoSuchModel"[1/10]], "fired", QECNoiseModel::invalidName]],
     "fired",
     TestID -> "QEC-Noise-unknown-message"
 ]
 
 (* Rates that cannot be probabilities are rejected; symbolic ones are taken on
    trust, since that is the point of allowing them. *)
-VerificationTest[Quiet[QECNoiseModel[{1/2, 9/10, 0, 0}]], $Failed, TestID -> "QEC-Noise-reject-bad-rates"]
+VerificationTest[FailureQ[Quiet[QECNoiseModel[{1/2, 9/10, 0, 0}]]], True, TestID -> "QEC-Noise-reject-bad-rates"]
 
 VerificationTest[Head[QECNoiseModel[{1 - qecP, qecP, 0, 0}]], QECNoiseModel, TestID -> "QEC-Noise-accept-symbolic-rates"]
 
@@ -110,20 +110,20 @@ VerificationTest[Head[QECNoiseModel[{1 - qecP, qecP, 0, 0}]], QECNoiseModel, Tes
    ============================================================================ *)
 
 VerificationTest[
-    QECNoiseModel["Depolarizing", qecP]["ErrorProbability", "IIIII"],
+    QECNoiseModel["Depolarizing"[qecP]]["ErrorProbability", "IIIII"],
     (1 - qecP)^5,
     TestID -> "QEC-Noise-probability-identity"
 ]
 
 VerificationTest[
-    Simplify[QECNoiseModel["Depolarizing", qecP]["ErrorProbability", "XIIII"] - (qecP/3) (1 - qecP)^4],
+    Simplify[QECNoiseModel["Depolarizing"[qecP]]["ErrorProbability", "XIIII"] - (qecP/3) (1 - qecP)^4],
     0,
     TestID -> "QEC-Noise-probability-weight-one"
 ]
 
 (* Position cannot matter. *)
 VerificationTest[
-    Module[{noise = QECNoiseModel["Depolarizing", qecP], errors},
+    Module[{noise = QECNoiseModel["Depolarizing"[qecP]], errors},
         errors = {"XYIII", "IXYII", "IIXYI", "YXIII"};
         Length[DeleteDuplicates[Simplify[noise["ErrorProbability", #]] & /@ errors]]
     ],
@@ -134,20 +134,20 @@ VerificationTest[
 (* A channel with a Pauli switched off still gives an ordinary product: the
    zero-probability factors have multiplicity zero, an empty product, not 0^0. *)
 VerificationTest[
-    QECNoiseModel["BitFlip", qecP]["ErrorProbability", "XIII"],
+    QECNoiseModel["BitFlip"[qecP]]["ErrorProbability", "XIII"],
     qecP (1 - qecP)^3,
     TestID -> "QEC-Noise-probability-with-zero-rate"
 ]
 
 VerificationTest[
-    QECNoiseModel["BitFlip", qecP]["ErrorProbability", "ZIII"],
+    QECNoiseModel["BitFlip"[qecP]]["ErrorProbability", "ZIII"],
     0,
     TestID -> "QEC-Noise-impossible-error"
 ]
 
 (* Over all 4^n errors the probabilities sum to one. *)
 VerificationTest[
-    Module[{noise = QECNoiseModel["Depolarizing", qecP], all},
+    Module[{noise = QECNoiseModel["Depolarizing"[qecP]], all},
         all = qecPauliString /@ Flatten[Table[Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[3, w], {w, 0, 3}], 1];
         Simplify[Total[noise["ErrorProbability", #] & /@ all]]
     ],
@@ -168,7 +168,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{noise, mixture},
-        noise = QECNoiseModel["Depolarizing", qecP];
+        noise = QECNoiseModel["Depolarizing"[qecP]];
         mixture = noise["QuantumChannel", {1}][PauliStabilizer[1]];
         Simplify[Sort[mixture[[All, 1]]] == Sort[noise["Probabilities"]]]
     ],
@@ -178,7 +178,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{noise, mixture},
-        noise = QECNoiseModel["BitFlip", qecP];
+        noise = QECNoiseModel["BitFlip"[qecP]];
         mixture = noise["QuantumChannel", {1}][PauliStabilizer[1]];
         Simplify[Sort[mixture[[All, 1]]] == Sort[DeleteCases[noise["Probabilities"], 0]]]
     ],
@@ -188,7 +188,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{noise, mixture},
-        noise = QECNoiseModel["PhaseFlip", qecP];
+        noise = QECNoiseModel["PhaseFlip"[qecP]];
         mixture = noise["QuantumChannel", {1}][PauliStabilizer[1]];
         Simplify[Sort[mixture[[All, 1]]] == Sort[DeleteCases[noise["Probabilities"], 0]]]
     ],
@@ -199,7 +199,7 @@ VerificationTest[
 (* The bit-flip channel really does flip the sign of the Z stabilizer. *)
 VerificationTest[
     Module[{mixture},
-        mixture = QECNoiseModel["BitFlip", qecP]["QuantumChannel", {1}][PauliStabilizer[2]];
+        mixture = QECNoiseModel["BitFlip"[qecP]]["QuantumChannel", {1}][PauliStabilizer[2]];
         Sort[mixture[[All, 2]] /. ps_PauliStabilizer :> First[ps["Stabilizers"]]]
     ],
     Sort[{"ZI", "-ZI"}],
@@ -214,7 +214,7 @@ VerificationTest[
 VerificationTest[
     Module[{},
         SeedRandom[1];
-        Length[QECNoiseModel["Depolarizing", 1/2]["RandomErrors", 5, 20]]
+        Length[QECNoiseModel["Depolarizing"[1/2]]["RandomErrors", 5, 20]]
     ],
     20,
     TestID -> "QEC-Noise-sample-count"
@@ -223,7 +223,7 @@ VerificationTest[
 VerificationTest[
     Module[{},
         SeedRandom[2];
-        AllTrue[QECNoiseModel["Depolarizing", 1/2]["RandomErrors", 6, 30], StringLength[#] === 6 &]
+        AllTrue[QECNoiseModel["Depolarizing"[1/2]]["RandomErrors", 6, 30], StringLength[#] === 6 &]
     ],
     True,
     TestID -> "QEC-Noise-sample-width"
@@ -233,7 +233,7 @@ VerificationTest[
 VerificationTest[
     Module[{},
         SeedRandom[3];
-        AllTrue[QECNoiseModel["BitFlip", 1/2]["RandomErrors", 6, 50], StringFreeQ[#, "Y" | "Z"] &]
+        AllTrue[QECNoiseModel["BitFlip"[1/2]]["RandomErrors", 6, 50], StringFreeQ[#, "Y" | "Z"] &]
     ],
     True,
     TestID -> "QEC-Noise-sample-respects-channel"
@@ -243,7 +243,7 @@ VerificationTest[
 VerificationTest[
     Module[{sample},
         SeedRandom[4];
-        sample = QECNoiseModel["Depolarizing", 1/10]["RandomErrors", 20, 5000];
+        sample = QECNoiseModel["Depolarizing"[1/10]]["RandomErrors", 20, 5000];
         Abs[Mean[N[qecPauliWeight /@ sample]] - 2] < 0.15
     ],
     True,
@@ -260,25 +260,25 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    Simplify[QECLogicalErrorRate[QECCode["Repetition", 3], QECNoiseModel["BitFlip", qecP]] == qecBinomialTail[3, qecP]],
+    Simplify[QECLogicalErrorRate[QECCode["Repetition"[3]], QECNoiseModel["BitFlip"[qecP]]] == qecBinomialTail[3, qecP]],
     True,
     TestID -> "QEC-Rate-repetition-3-vs-binomial"
 ]
 
 VerificationTest[
-    Simplify[QECLogicalErrorRate[QECCode["Repetition", 5], QECNoiseModel["BitFlip", qecP]] == qecBinomialTail[5, qecP]],
+    Simplify[QECLogicalErrorRate[QECCode["Repetition"[5]], QECNoiseModel["BitFlip"[qecP]]] == qecBinomialTail[5, qecP]],
     True,
     TestID -> "QEC-Rate-repetition-5-vs-binomial"
 ]
 
 VerificationTest[
-    Simplify[QECLogicalErrorRate[QECCode["Repetition", 7], QECNoiseModel["BitFlip", qecP]] == qecBinomialTail[7, qecP]],
+    Simplify[QECLogicalErrorRate[QECCode["Repetition"[7]], QECNoiseModel["BitFlip"[qecP]]] == qecBinomialTail[7, qecP]],
     True,
     TestID -> "QEC-Rate-repetition-7-vs-binomial"
 ]
 
 VerificationTest[
-    Simplify[QECLogicalErrorRate[QECCode["PhaseRepetition", 5], QECNoiseModel["PhaseFlip", qecP]] == qecBinomialTail[5, qecP]],
+    Simplify[QECLogicalErrorRate[QECCode["PhaseRepetition"[5]], QECNoiseModel["PhaseFlip"[qecP]]] == qecBinomialTail[5, qecP]],
     True,
     TestID -> "QEC-Rate-phase-repetition-dual"
 ]
@@ -286,7 +286,7 @@ VerificationTest[
 (* A distance-3 code corrects one error, so it cannot fail below weight two:
    the rate must vanish to second order. *)
 VerificationTest[
-    Module[{rate = QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing", qecP]]},
+    Module[{rate = QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing"[qecP]]]},
         {rate /. qecP -> 0, Exponent[Normal[Series[rate, {qecP, 0, 4}]], qecP, Min]}
     ],
     {0, 2},
@@ -297,13 +297,13 @@ VerificationTest[
    weight-two error fails, so the leading coefficient is exactly the number of
    weight-two errors times their probability, 9 Binomial[5,2] / 9 = 10. *)
 VerificationTest[
-    Coefficient[Normal[Series[QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing", qecP]], {qecP, 0, 2}]], qecP, 2],
+    Coefficient[Normal[Series[QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing"[qecP]]], {qecP, 0, 2}]], qecP, 2],
     10,
     TestID -> "QEC-Rate-five-qubit-leading-coefficient"
 ]
 
 VerificationTest[
-    Module[{rate = QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", qecP]]},
+    Module[{rate = QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[qecP]]]},
         Exponent[Normal[Series[rate, {qecP, 0, 4}]], qecP, Min]
     ],
     2,
@@ -312,14 +312,14 @@ VerificationTest[
 
 (* Rate zero at rate zero, and no code protects what it does not hold. *)
 VerificationTest[
-    QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 0]],
+    QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing"[0]]],
     0,
     TestID -> "QEC-Rate-no-noise-no-error"
 ]
 
 VerificationTest[
-    Quiet[QECLogicalErrorRate[QECCode[QECCode["5QubitCode"]["CompletedGenerators"]], QECNoiseModel["Depolarizing", qecP]]],
-    $Failed,
+    FailureQ[Quiet[QECLogicalErrorRate[QECCode[QECCode["5QubitCode"]["CompletedGenerators"]], QECNoiseModel["Depolarizing"[qecP]]]]],
+    True,
     TestID -> "QEC-Rate-no-logical-qubits"
 ]
 
@@ -333,9 +333,9 @@ VerificationTest[
 
 VerificationTest[
     Module[{code = QECCode["5QubitCode"], exact, sampled, n = 100000},
-        exact = N[QECLogicalErrorRate[code, QECNoiseModel["Depolarizing", 1/20]]];
+        exact = N[QECLogicalErrorRate[code, QECNoiseModel["Depolarizing"[1/20]]]];
         SeedRandom[11];
-        sampled = QECLogicalErrorRate[code, QECNoiseModel["Depolarizing", 1/20], n];
+        sampled = QECLogicalErrorRate[code, QECNoiseModel["Depolarizing"[1/20]], n];
         Abs[sampled - exact] <= 4 Sqrt[exact (1 - exact)/n]
     ],
     True,
@@ -344,9 +344,9 @@ VerificationTest[
 
 VerificationTest[
     Module[{code = QECCode["SteaneCode"], exact, sampled, n = 100000},
-        exact = N[QECLogicalErrorRate[code, QECNoiseModel["Depolarizing", 1/20]]];
+        exact = N[QECLogicalErrorRate[code, QECNoiseModel["Depolarizing"[1/20]]]];
         SeedRandom[12];
-        sampled = QECLogicalErrorRate[code, QECNoiseModel["Depolarizing", 1/20], n];
+        sampled = QECLogicalErrorRate[code, QECNoiseModel["Depolarizing"[1/20]], n];
         Abs[sampled - exact] <= 4 Sqrt[exact (1 - exact)/n]
     ],
     True,
@@ -354,10 +354,10 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Module[{code = QECCode["Repetition", 5], exact, sampled, n = 100000},
-        exact = N[QECLogicalErrorRate[code, QECNoiseModel["BitFlip", 1/10]]];
+    Module[{code = QECCode["Repetition"[5]], exact, sampled, n = 100000},
+        exact = N[QECLogicalErrorRate[code, QECNoiseModel["BitFlip"[1/10]]]];
         SeedRandom[13];
-        sampled = QECLogicalErrorRate[code, QECNoiseModel["BitFlip", 1/10], n];
+        sampled = QECLogicalErrorRate[code, QECNoiseModel["BitFlip"[1/10]], n];
         Abs[sampled - exact] <= 4 Sqrt[exact (1 - exact)/n]
     ],
     True,
@@ -366,8 +366,8 @@ VerificationTest[
 
 (* The sampled route needs a number to draw from. *)
 VerificationTest[
-    Quiet[QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing", qecP], 100]],
-    $Failed,
+    FailureQ[Quiet[QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Depolarizing"[qecP]], 100]]],
+    True,
     TestID -> "QEC-Rate-sampling-needs-a-numeric-rate"
 ]
 
@@ -382,7 +382,7 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    Module[{decoder = QECCode["SteaneCode"]["Decoder", QECNoiseModel["Depolarizing", 1/100]]},
+    Module[{decoder = QECCode["SteaneCode"]["Decoder", QECNoiseModel["Depolarizing"[1/100]]]},
         {AssociationQ[decoder], Length[decoder], AllTrue[Values[decoder], StringQ]}
     ],
     {True, 64, True},
@@ -392,7 +392,7 @@ VerificationTest[
 (* Every stored correction really does produce the syndrome it is stored under. *)
 VerificationTest[
     Module[{code = QECCode["SteaneCode"], decoder},
-        decoder = code["Decoder", QECNoiseModel["Depolarizing", 1/100]];
+        decoder = code["Decoder", QECNoiseModel["Depolarizing"[1/100]]];
         AllTrue[Normal[decoder], FromDigits[code["Syndrome", Last[#]], 2] === First[#] &]
     ],
     True,
@@ -401,7 +401,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{code = QECCode["5QubitCode"], decoder},
-        decoder = code["Decoder", QECNoiseModel["Depolarizing", 1/100]];
+        decoder = code["Decoder", QECNoiseModel["Depolarizing"[1/100]]];
         AllTrue[Normal[decoder], FromDigits[code["Syndrome", Last[#]], 2] === First[#] &]
     ],
     True,
@@ -422,7 +422,7 @@ VerificationTest[
 
 (* The property on the code object and the free function are the same thing. *)
 VerificationTest[
-    Module[{code = QECCode["Repetition", 5], noise = QECNoiseModel["BitFlip", qecP]},
+    Module[{code = QECCode["Repetition"[5]], noise = QECNoiseModel["BitFlip"[qecP]]},
         Simplify[code["LogicalErrorRate", noise] - QECLogicalErrorRate[code, noise]]
     ],
     0,
@@ -434,8 +434,8 @@ VerificationTest[
    p = 1/2 exactly. *)
 VerificationTest[
     Module[{r3, r5},
-        r3 = QECLogicalErrorRate[QECCode["Repetition", 3], QECNoiseModel["BitFlip", qecP]];
-        r5 = QECLogicalErrorRate[QECCode["Repetition", 5], QECNoiseModel["BitFlip", qecP]];
+        r3 = QECLogicalErrorRate[QECCode["Repetition"[3]], QECNoiseModel["BitFlip"[qecP]]];
+        r5 = QECLogicalErrorRate[QECCode["Repetition"[5]], QECNoiseModel["BitFlip"[qecP]]];
         {N[(r5 - r3) /. qecP -> 1/10] < 0, N[(r5 - r3) /. qecP -> 9/10] > 0,
          Simplify[(r5 - r3) /. qecP -> 1/2]}
     ],
@@ -455,8 +455,8 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    Quiet[QECLogicalErrorRate[QECCode["DistanceTwo", 12], QECNoiseModel["Depolarizing", 1/100]]],
-    $Failed,
+    FailureQ[Quiet[QECLogicalErrorRate[QECCode["DistanceTwo"[12]], QECNoiseModel["Depolarizing"[1/100]]]]],
+    True,
     TestID -> "QEC-Decoder-exact-refuses-above-the-limit"
 ]
 
@@ -466,7 +466,7 @@ VerificationTest[
     Module[{r},
         SeedRandom[21];
         r = TimeConstrained[
-            Quiet[QECLogicalErrorRate[QECCode["DistanceTwo", 12], QECNoiseModel["Depolarizing", 1/50], 20000]],
+            Quiet[QECLogicalErrorRate[QECCode["DistanceTwo"[12]], QECNoiseModel["Depolarizing"[1/50]], 20000]],
             30, $Aborted];
         {NumericQ[r], 0 < r < 1}
     ],
@@ -477,7 +477,7 @@ VerificationTest[
 (* And it says which decoder the number describes rather than switching quietly. *)
 VerificationTest[
     Quiet[Check[
-        QECLogicalErrorRate[QECCode["DistanceTwo", 12], QECNoiseModel["Depolarizing", 1/50], 500],
+        QECLogicalErrorRate[QECCode["DistanceTwo"[12]], QECNoiseModel["Depolarizing"[1/50]], 500],
         "fired", QECLogicalErrorRate::mwdecoder]],
     "fired",
     TestID -> "QEC-Decoder-announces-the-fallback"
@@ -486,9 +486,9 @@ VerificationTest[
 (* Asking for maximum likelihood on a code that cannot supply it is refused, not
    silently downgraded. *)
 VerificationTest[
-    Quiet[QECLogicalErrorRate[QECCode["DistanceTwo", 12], QECNoiseModel["Depolarizing", 1/50], 500,
-        "Decoder" -> "MaximumLikelihood"]],
-    $Failed,
+    FailureQ[Quiet[QECLogicalErrorRate[QECCode["DistanceTwo"[12]], QECNoiseModel["Depolarizing"[1/50]], 500,
+        "Decoder" -> "MaximumLikelihood"]]],
+    True,
     TestID -> "QEC-Decoder-explicit-ML-refused-above-the-limit"
 ]
 
@@ -512,7 +512,7 @@ VerificationTest[
    decoders give the same leading coefficient under symmetric noise. *)
 VerificationTest[
     Module[{code = QECCode["5QubitCode"], noise, lead},
-        noise = QECNoiseModel["Depolarizing", qecP];
+        noise = QECNoiseModel["Depolarizing"[qecP]];
         lead[e_] := Coefficient[Normal[Series[e, {qecP, 0, 2}]], qecP, 2];
         {lead[QECLogicalErrorRate[code, noise, "Decoder" -> "MaximumLikelihood"]],
          lead[QECLogicalErrorRate[code, noise, "Decoder" -> "MinimumWeight"]]}
@@ -528,7 +528,7 @@ VerificationTest[
    is 13 p^2 against 31 p^2 -- the table is more than twice as bad. *)
 VerificationTest[
     Module[{code = QECCode["ShorCode"], noise, lead},
-        noise = QECNoiseModel["Depolarizing", qecP];
+        noise = QECNoiseModel["Depolarizing"[qecP]];
         lead[e_] := Coefficient[Normal[Series[e, {qecP, 0, 2}]], qecP, 2];
         {lead[QECLogicalErrorRate[code, noise, "Decoder" -> "MaximumLikelihood"]],
          lead[QECLogicalErrorRate[code, noise, "Decoder" -> "MinimumWeight"]]}
@@ -539,7 +539,7 @@ VerificationTest[
 
 (* Automatic on a small code is maximum likelihood, so nothing changed there. *)
 VerificationTest[
-    Module[{code = QECCode["5QubitCode"], noise = QECNoiseModel["Depolarizing", qecP]},
+    Module[{code = QECCode["5QubitCode"], noise = QECNoiseModel["Depolarizing"[qecP]]},
         Simplify[
             QECLogicalErrorRate[code, noise] -
             QECLogicalErrorRate[code, noise, "Decoder" -> "MaximumLikelihood"]
@@ -551,7 +551,7 @@ VerificationTest[
 
 (* A deeper table is a deliberate choice with a cost, so the reach is an option. *)
 VerificationTest[
-    Module[{code = QECCode["SteaneCode"], noise = QECNoiseModel["Depolarizing", 1/50], shallow, deep},
+    Module[{code = QECCode["SteaneCode"], noise = QECNoiseModel["Depolarizing"[1/50]], shallow, deep},
         SeedRandom[22];
         shallow = QECLogicalErrorRate[code, noise, 20000, "Decoder" -> "MinimumWeight", "DecoderReach" -> 1];
         SeedRandom[22];
@@ -560,4 +560,28 @@ VerificationTest[
     ],
     {True, True, True},
     TestID -> "QEC-Decoder-reach-is-an-option"
+]
+
+
+(* ============================================================================
+   Named objects, the framework's way: the rate goes inside the name
+   ============================================================================ *)
+
+VerificationTest[
+    {QECNoiseModel["BitFlip"]["Probabilities"], QECNoiseModel["Circuit"]["Rates"]["TwoQubit"], $QECNoiseNames},
+    {{99/100, 1/100, 0, 0}, 1/100, {"Depolarizing", "BitFlip", "PhaseFlip", "BitPhaseFlip", "Circuit"}},
+    TestID -> "QEC-Noise-bare-name-is-the-default-rate"
+]
+
+VerificationTest[
+    QECNoiseModel["Depolarizing", "MeasurementError" -> qecQ]["Level"],
+    "Phenomenological",
+    TestID -> "QEC-Noise-bare-name-takes-options"
+]
+
+VerificationTest[
+    QECNoiseModel["Depolarizing", qecP][[1]],
+    "InvalidArguments",
+    {QECNoiseModel::oldform},
+    TestID -> "QEC-Noise-old-form-refused"
 ]

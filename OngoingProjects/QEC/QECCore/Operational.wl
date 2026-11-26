@@ -85,6 +85,7 @@ $QECDenseQubitLimit = 10;
 
 QECCode::dense = "`1` materializes a dense object on `2` qubits, above $QECDenseQubitLimit = `3`. The logical channel, the Knill-Laflamme matrix and the detector model carry the same information without it; raise $QECDenseQubitLimit to force it.";
 QECCode::nolevel = "The logical channel is built from code-capacity noise, where it is exact. At the `1` level the rate, its acceptance and its failure are read from the detector model: QECDetectorModel[code, noise].";
+QECCode::noisespec = "`1` is not a noise model. Give a QECNoiseModel, or a single-qubit Pauli QuantumChannel.";
 QECCode::klerrors = "`1` is not an error set. Give a list of Pauli strings or rows on the code's qubits, or \"Weight\"[t] for every Pauli of weight at most t.";
 QECCode::zbarsign = "The encoding circuit's output is not an eigenstate of Zbar_`1`; the codewords cannot be put in the code's logical basis.";
 
@@ -92,7 +93,7 @@ QECCode::zbarsign = "The encoding circuit's output is not an eigenstate of Zbar_
 denseAllowedQ[a_Association, prop_String] := If[
     a["Qubits"] <= $QECDenseQubitLimit,
     True,
-    Message[QECCode::dense, prop, a["Qubits"], $QECDenseQubitLimit]; False
+    False
 ]
 
 
@@ -117,7 +118,7 @@ pauliRowMatrix[row_List] := With[{n = pauliQubits[row]},
 (* The circuit's |0...0> output, moved into the +1 eigenspace of every Zbar_j, and the
    other codewords generated from it by the Xbar's.  Column c (0-based) is the codeword
    for logical input c, logical qubit 1 most significant. *)
-codeEncoderMatrix[a_Association] := codeEncoderMatrix[a] = Module[
+codeEncoderMatrix[a_Association] := qecMemoKey[codeEncoderMatrix[a]] = Module[
     {n = a["Qubits"], k = codeLogicalQubits[a], u, v0, xs, zs, sign},
 
     u = Wolfram`QuantumFramework`QuantumCircuitOperator[
@@ -135,7 +136,7 @@ codeEncoderMatrix[a_Association] := codeEncoderMatrix[a] = Module[
         Which[
             sign === 1, Null,
             sign === -1, v0 = xs[[j]] . v0,
-            True, Message[QECCode::zbarsign, j]; Return[$Failed, Module]
+            True, Return[qecMessageFailure[QECCode::zbarsign, j], Module]
         ],
         {j, k}
     ];
@@ -147,8 +148,8 @@ codeEncoderMatrix[a_Association] := codeEncoderMatrix[a] = Module[
 ]
 
 codeEncoderOperator[a_Association] := With[{v = codeEncoderMatrix[a]},
-    If[ v === $Failed,
-        $Failed,
+    If[ FailureQ[v],
+        v,
         Wolfram`QuantumFramework`QuantumOperator[
             v, {Range[a["Qubits"]], Range[Max[codeLogicalQubits[a], 1]]}
         ]
@@ -156,14 +157,14 @@ codeEncoderOperator[a_Association] := With[{v = codeEncoderMatrix[a]},
 ]
 
 codeCodewords[a_Association] := With[{v = codeEncoderMatrix[a]},
-    If[v === $Failed, $Failed, Wolfram`QuantumFramework`QuantumState /@ Transpose[v]]
+    If[FailureQ[v], v, Wolfram`QuantumFramework`QuantumState /@ Transpose[v]]
 ]
 
 (* P = V V^dagger.  The tests check it against the product of (1 + g)/2 over the
    generators, which is the same projector reached without the encoder. *)
 codeCodespace[a_Association] := With[{v = codeEncoderMatrix[a]},
-    If[ v === $Failed,
-        $Failed,
+    If[ FailureQ[v],
+        v,
         Wolfram`QuantumFramework`QuantumOperator[v . ConjugateTranspose[v], Range[a["Qubits"]]]
     ]
 ]
@@ -174,7 +175,7 @@ codeCodespace[a_Association] := With[{v = codeEncoderMatrix[a]},
 (* One projector per syndrome, P_s = Prod_i (1 + (-1)^(s_i) g_i) / 2.  Outcome i of the
    measurement is the syndrome IntegerDigits[i - 1, 2, m], the order code["Syndrome", e]
    reports its bits in. *)
-codeSyndromeProjectors[a_Association] := codeSyndromeProjectors[a] = Module[
+codeSyndromeProjectors[a_Association] := qecMemoKey[codeSyndromeProjectors[a]] = Module[
     {n = a["Qubits"], gens = pauliRowMatrix /@ codeVectors[a], one},
     one = IdentityMatrix[2^n, SparseArray];
     Table[
@@ -196,7 +197,7 @@ codeSyndromeMeasurement[a_Association] := With[{n = a["Qubits"]},
 (* The unitary channel of the correction the code's decoder applies for syndrome s:
    one Kraus operator, a Pauli, so it goes in as that operator (see krausChannel). *)
 codeRecovery[a_Association, syn_List] := With[{corr = codeDecode[a, syn]},
-    If[ corr === $Failed || MissingQ[corr],
+    If[ FailureQ[corr] || MissingQ[corr],
         corr,
         krausChannel[{pauliRowMatrix[pauliVector[corr]]}, Range[a["Qubits"]]]
     ]
@@ -208,7 +209,7 @@ codeRecovery[a_Association, syn_List] := With[{corr = codeDecode[a, syn]},
 (* Which logical Pauli each class key names.  Read off by labelling a representative of
    every logical Pauli with the same function that labels errors, so the mapping cannot
    drift from the one the decoder and the rate use. *)
-codeLogicalClassPaulis[a_Association] := codeLogicalClassPaulis[a] = Module[
+codeLogicalClassPaulis[a_Association] := qecMemoKey[codeLogicalClassPaulis[a]] = Module[
     {n = a["Qubits"], k = codeLogicalQubits[a], xs, zs, reps, keys},
     xs = codeLogicalVectors[a]["X"];
     zs = codeLogicalVectors[a]["Z"];
@@ -257,7 +258,7 @@ QECCode::undecoded = "The decoder leaves syndromes carrying probability `1` with
 codeLogicalChannel[a_Association, noise_Association, decoder_Association] := Module[
     {probs = codeLogicalPauliProbabilities[a, noise, decoder], k = codeLogicalQubits[a], kraus},
     If[ KeyExistsQ[probs, "Undecoded"],
-        Message[QECCode::undecoded, probs["Undecoded"]]; Return[$Failed]
+        Return[qecMessageFailure[QECCode::undecoded, probs["Undecoded"]]]
     ];
     kraus = KeyValueMap[
         If[ PossibleZeroQ[#2], Nothing,
@@ -275,7 +276,7 @@ knillLaflammeErrors[a_Association, "Weight"[t_Integer ? NonNegative]] :=
     Catenate @ Table[weightKVectors[a["Qubits"], w], {w, 0, Min[t, a["Qubits"]]}]
 
 knillLaflammeErrors[a_Association, errs_List] := With[{rows = pauliVector /@ errs},
-    If[ MemberQ[rows, $Failed] || ! AllTrue[rows, Length[#] === 2 a["Qubits"] + 1 &],
+    If[ AnyTrue[rows, FailureQ] || ! AllTrue[rows, Length[#] === 2 a["Qubits"] + 1 &],
         $Failed,
         rows
     ]
@@ -290,7 +291,7 @@ pauliDagger[row_List] := MapAt[Mod[-#, 4] &, row, -1]
 (* h_ab, or Missing naming the first pair whose product is a nontrivial logical. *)
 codeKnillLaflammeMatrix[a_Association, spec_] := Module[{rows, entry},
     rows = knillLaflammeErrors[a, spec];
-    If[rows === $Failed, Message[QECCode::klerrors, spec]; Return[$Failed]];
+    If[FailureQ[rows], Return[qecMessageFailure[QECCode::klerrors, spec]]];
     entry[ea_, eb_] := With[{prod = pauliProduct[pauliDagger[ea], eb]},
         If[ Total[codeSyndromeVector[a, prod]] > 0,
             0,
@@ -315,9 +316,10 @@ codeKnillLaflammeMatrix[a_Association, spec_] := Module[{rows, entry},
 operationalNoise[QECNoiseModel[noise_Association]] := noise
 operationalNoise[qc_Wolfram`QuantumFramework`QuantumChannel] := Replace[QECNoiseModel[qc], {
     QECNoiseModel[noise_Association] :> noise,
+    f_ ? FailureQ :> f,
     _ -> $Failed
 }]
-operationalNoise[_] := $Failed
+operationalNoise[spec_] := qecMessageFailure[QECCode::noisespec, spec]
 
 Options[codeOperationalChannel] = {"Decoder" -> Automatic, "DecoderReach" -> Automatic};
 
@@ -326,29 +328,28 @@ Options[codeOperationalChannel] = {"Decoder" -> Automatic, "DecoderReach" -> Aut
 operationalChannelData[a_Association, spec_, opts : OptionsPattern[codeOperationalChannel]] := Module[
     {noise = operationalNoise[spec], reach, decoder},
     Which[
-        noise === $Failed, Return[$Failed],
-        codeLogicalQubits[a] === 0, Message[QECLogicalErrorRate::nological]; Return[$Failed],
+        FailureQ[noise], Return[noise],
+        codeLogicalQubits[a] === 0, Return[qecMessageFailure[QECLogicalErrorRate::nological]],
         noiseLevel[noise] =!= "CodeCapacity",
             Message[QECCode::nolevel, noiseLevel[noise]]; Return[Missing["NotAvailable", noiseLevel[noise]]],
         ! exactEnumerableQ[a],
-            Message[QECLogicalErrorRate::toobig, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit];
-            Return[$Failed]
+            Return[qecMessageFailure[QECLogicalErrorRate::toobig, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit]]
     ];
     reach = decoderReachFor[a, OptionValue[codeOperationalChannel, {opts}, "DecoderReach"]];
     decoder = decoderFor[a, noise, OptionValue[codeOperationalChannel, {opts}, "Decoder"], reach];
-    If[ decoder === $Failed,
-        $Failed,
+    If[ FailureQ[decoder],
+        decoder,
         {noise, decoderLookup[decoder, Keys[cosetProbabilities[a, noise]][[All, 1]]]}
     ]
 ]
 
-QECCode[a_Association]["Encoder"] := If[denseAllowedQ[a, "Encoder"], codeEncoderOperator[a], $Failed]
-QECCode[a_Association]["Codewords"] := If[denseAllowedQ[a, "Codewords"], codeCodewords[a], $Failed]
-QECCode[a_Association]["Codespace"] := If[denseAllowedQ[a, "Codespace"], codeCodespace[a], $Failed]
+QECCode[a_Association]["Encoder"] := If[denseAllowedQ[a, "Encoder"], codeEncoderOperator[a], qecMessageFailure[QECCode::dense, "Encoder", a["Qubits"], $QECDenseQubitLimit]]
+QECCode[a_Association]["Codewords"] := If[denseAllowedQ[a, "Codewords"], codeCodewords[a], qecMessageFailure[QECCode::dense, "Codewords", a["Qubits"], $QECDenseQubitLimit]]
+QECCode[a_Association]["Codespace"] := If[denseAllowedQ[a, "Codespace"], codeCodespace[a], qecMessageFailure[QECCode::dense, "Codespace", a["Qubits"], $QECDenseQubitLimit]]
 QECCode[a_Association]["SyndromeMeasurement"] :=
-    If[denseAllowedQ[a, "SyndromeMeasurement"], codeSyndromeMeasurement[a], $Failed]
+    If[denseAllowedQ[a, "SyndromeMeasurement"], codeSyndromeMeasurement[a], qecMessageFailure[QECCode::dense, "SyndromeMeasurement", a["Qubits"], $QECDenseQubitLimit]]
 
-QECCode[a_Association]["Recovery", syn_List] := If[denseAllowedQ[a, "Recovery"], codeRecovery[a, syn], $Failed]
+QECCode[a_Association]["Recovery", syn_List] := If[denseAllowedQ[a, "Recovery"], codeRecovery[a, syn], qecMessageFailure[QECCode::dense, "Recovery", a["Qubits"], $QECDenseQubitLimit]]
 
 QECCode[a_Association]["LogicalPauliProbabilities", noise_, opts : OptionsPattern[codeOperationalChannel]] :=
     Replace[operationalChannelData[a, noise, opts], {
@@ -363,5 +364,5 @@ QECCode[a_Association]["LogicalChannel", noise_, opts : OptionsPattern[codeOpera
 QECCode[a_Association]["KnillLaflammeMatrix", errors_] := codeKnillLaflammeMatrix[a, errors]
 
 QECCode[a_Association]["CorrectableQ", errors_] := With[{h = codeKnillLaflammeMatrix[a, errors]},
-    If[h === $Failed, $Failed, ! MissingQ[h]]
+    If[FailureQ[h], h, ! MissingQ[h]]
 ]

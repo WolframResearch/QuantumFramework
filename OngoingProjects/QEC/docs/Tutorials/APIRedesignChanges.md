@@ -29,6 +29,7 @@ function, and with fewer public names.
 | 5 | the renames, all at once, with aliases for the old names |
 | 6 | gate matrices are read from the framework |
 | 7 | documentation and tests |
+| 8 | named objects and circuits in the framework's spelling (November 2026) |
 
 ## Definition
 
@@ -103,7 +104,7 @@ message: something that is not a Pauli, a Pauli of the wrong size, and a Pauli c
 {QECPauliMeasurement[five, "XQ"], QECPauliMeasurement[five, "XX"], QECPauliMeasurement[five, "-XZZXI"]}
 ```
 
-<!-- => {$Failed, $Failed, $Failed}, each with QECPauliMeasurement::pauli -->
+<!-- => three Failure["pauli", ...] objects, each with QECPauliMeasurement::pauli -->
 
 The third item of step 1, taking `QECClassicalHammingMatrix` out of the public namespace, moved to
 step 5, because six tests and two documentation cells used it.
@@ -161,8 +162,8 @@ Head /@ <|
     "Codespace" -> bitFlip["Codespace"],
     "SyndromeMeasurement" -> bitFlip["SyndromeMeasurement"],
     "Recovery" -> bitFlip["Recovery", {1, 1}],
-    "LogicalChannel" -> bitFlip["LogicalChannel", QECNoiseModel["BitFlip", 1/10]],
-    "noise[\"QuantumChannel\"]" -> QECNoiseModel["BitFlip", 1/10]["QuantumChannel"]|>
+    "LogicalChannel" -> bitFlip["LogicalChannel", QECNoiseModel["BitFlip"[1/10]]],
+    "noise[\"QuantumChannel\"]" -> QECNoiseModel["BitFlip"[1/10]]["QuantumChannel"]|>
 ```
 
 <!-- => <|"Encoder" -> QuantumOperator, "Codewords" -> QuantumState, "Codespace" -> QuantumOperator, "SyndromeMeasurement" -> QuantumMeasurementOperator, "Recovery" -> QuantumChannel, "LogicalChannel" -> QuantumChannel, "noise[\"QuantumChannel\"]" -> QuantumChannel|> -->
@@ -257,7 +258,7 @@ default) with a message saying what to use instead:
 Block[{$QECDenseQubitLimit = 5}, steane["Encoder"]]
 ```
 
-<!-- => $Failed, with QECCode::dense -->
+<!-- => Failure["dense", ...], with QECCode::dense -->
 
 ### The logical channel
 
@@ -268,7 +269,7 @@ Pauli channel with $4^k$ weights, and those weights are exactly the coset probab
 maximum-likelihood decoder already computed. So it comes out exact, symbolic, and cheap:
 
 ```wl
-bitFlip["LogicalPauliProbabilities", QECNoiseModel["BitFlip", p]]
+bitFlip["LogicalPauliProbabilities", QECNoiseModel["BitFlip"[p]]]
 ```
 
 <!-- => <|"I" -> (-1 + p)^2 (1 + 2 p), "X" -> (3 - 2 p) p^2, "Y" -> 0, "Z" -> 0|> -->
@@ -279,7 +280,7 @@ This is decision A in one line: the logical error rate is one minus the identity
 two agree coefficient for coefficient:
 
 ```wl
-With[{noise = QECNoiseModel["Depolarizing", p]},
+With[{noise = QECNoiseModel["Depolarizing"[p]]},
     Simplify[1 - steane["LogicalPauliProbabilities", noise]["I"] - QECLogicalErrorRate[steane, noise]]]
 ```
 
@@ -291,7 +292,7 @@ With[{noise = QECNoiseModel["Depolarizing", p]},
 to compose with anything else in the framework:
 
 ```wl
-With[{ch = steane["LogicalChannel", QECNoiseModel["Depolarizing", 1/10]]}, {Head[ch], ch["Order"]}]
+With[{ch = steane["LogicalChannel", QECNoiseModel["Depolarizing"[1/10]]]}, {Head[ch], ch["Order"]}]
 ```
 
 <!-- => {QuantumChannel, {{0, 1}, {1}}} -->
@@ -306,7 +307,7 @@ channel is read back as a noise model and is accepted everywhere a noise model i
 
 ```wl
 {QECNoiseModel[QuantumChannel["Depolarizing"[q]]]["Probabilities"],
- Expand[QECLogicalErrorRate[QECCode["Repetition", 3], QuantumChannel["BitFlip"[p]]]]}
+ Expand[QECLogicalErrorRate[QECCode["Repetition"[3]], QuantumChannel["BitFlip"[p]]]]}
 ```
 
 <!-- => {{1 - 3 q/4, q/4, q/4, q/4}, 3 p^2 - 2 p^3} -->
@@ -319,7 +320,7 @@ A channel that is not Pauli is refused with its reason, rather than approximated
 QECNoiseModel[QuantumChannel["AmplitudeDamping"[g]]]
 ```
 
-<!-- => $Failed, with QECNoiseModel::notpauli -->
+<!-- => Failure["notpauli", ...], with QECNoiseModel::notpauli -->
 
 And the other way round: `noise["QuantumChannel"]` used to work only for the named channels; it now
 works for every Pauli model.
@@ -361,8 +362,8 @@ returned an `Association` with `"Rate"`, `"Acceptance"`, and so on. The caller h
 advance. Now it always returns the rate:
 
 ```wl
-Head /@ {QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing", 1/10]],
-    QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1]}
+Head /@ {QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing"[1/10]]],
+    QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1]}
 ```
 
 <!-- => {Rational, Rational} -->
@@ -373,7 +374,7 @@ The full report comes with `All`, with the same keys whether or not anything was
 (without heralds the acceptance is 1 and the failure is the rate):
 
 ```wl
-QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing", 1/10], All]
+QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing"[1/10]], All]
 ```
 
 <!-- => <|"Rate" -> 13147289/113906250, "Acceptance" -> 1, "Failure" -> 13147289/113906250|> -->
@@ -383,8 +384,8 @@ QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing", 1/10], All]
 And the detector model, which is where heralds come from, answers the same as properties:
 
 ```wl
-With[{dem = QECDetectorModel[bitFlip, QECNoiseModel["Circuit", 1/1000], 1]},
-    {dem["LogicalErrorRate"] === QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1],
+With[{dem = QECDetectorModel[bitFlip, QECNoiseModel["Circuit"[1/1000]], 1]},
+    {dem["LogicalErrorRate"] === QECLogicalErrorRate[bitFlip, QECNoiseModel["Circuit"[1/1000]], "Rounds" -> 1],
      dem["Acceptance"]}]
 ```
 
@@ -415,7 +416,7 @@ rate scores it with the same machinery as the others. The decoder that never cor
 whenever anything happens:
 
 ```wl
-Simplify[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", p],
+Simplify[QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[p]],
     "Decoder" -> QECDecoder[bitFlip, If[# === {0, 0}, "III", Missing[]] &]]]
 ```
 
@@ -437,7 +438,7 @@ All in one step, so the API breaks once and not several times:
 | `QECStimCircuit` | `QECStim`, plus `dem["StimString"]` |
 | `code["StimCircuit"]` | `code["Stim"]` |
 | `QECCodeCatalog[]` | `QECCode["Catalog"]` |
-| `QECClassicalHammingMatrix` | internal; `QECCode["Hamming", r]` builds the quantum code |
+| `QECClassicalHammingMatrix` | internal; `QECCode["Hamming"[r]]` builds the quantum code |
 
 `QECPauliQ` stays as it is: it is the guard.
 
@@ -499,39 +500,29 @@ the row; it does not replace it.
 
 <!-- => {{6, 2, 2}, True, Dataset} -->
 
-### The old names still work, for one more release
+### The old names, kept for one release and then removed
 
-The eleven retired names (ten functions and the `"StimCircuit"` property) live in `Deprecated.wl`:
-they return exactly what they returned before and say, once per session, what to use instead:
-
-```wl
-QECPauliVector["XZ"]
-```
-
-<!-- => {1, 0, 0, 1, 0}, with QECPauliVector::qecdeprecated -->
-
----
-
-The second time there is no warning, so that a loop over a thousand Paulis does not print a
-thousand messages:
+The eleven retired names (ten functions and the `"StimCircuit"` property) lived for one release in
+`Deprecated.wl`, returning what they had returned and saying once per session what to use instead.
+That release is over: the file is gone, and so is the detector model's `"StimString"`. An old
+property name now gets the same answer as any unknown one:
 
 ```wl
-QECPauliVector["ZX"]
+QECCode["BitFlipCode"]["StimCircuit"]
 ```
 
-<!-- => {0, 1, 1, 0, 0} -->
+<!-- => QECCode::undefprop, and the call is left as it was -->
 
 ### The public surface
 
 ```wl
-Module[{all = Names["Wolfram`QuantumFramework`QEC`*"], old, limits},
-    old = {"QECPauliVector", "QECPauliString", "QECPauliWeight", "QECPauliCommuteQ", "QECPauliProduct",
-        "QECPauliPhase", "QECFaultTolerant", "QECStimCircuit", "QECCodeCatalog", "QECClassicalHammingMatrix"};
+Module[{all = Names["Wolfram`QuantumFramework`QEC`*"], limits, predicates},
     limits = Select[all, StringStartsQ[#, "$"] &];
-    <|"public functions" -> Complement[all, old, limits], "limits" -> limits|>]
+    predicates = Select[Complement[all, limits], StringEndsQ[#, "Q"] &];
+    <|"public functions" -> Complement[all, limits, predicates], "predicates" -> predicates, "limits" -> limits|>]
 ```
 
-<!-- => 19 functions (QECCatState ... QECTransversalGate) and 4 $ limits -->
+<!-- => the public functions, one predicate per object, and the $ settings -->
 
 There were 26 functions at the start. It is not the "about 16" the audit estimated, because
 `QECDecoder` was added and the three constructions stayed functions (decision B).
@@ -573,6 +564,86 @@ missing is a constructor from a Clifford `QuantumOperator` and a `cc["Conjugate"
 New files: `Gadget.wl`, `Operational.wl`, `Decoder.wl`, `Deprecated.wl`, and the tests
 `Gadget.wlt`, `Operational.wlt`, `Decoder.wlt`, `Surface.wlt`. Nothing in
 `QuantumFramework/Kernel/` was modified.
+
+## Step 8: named objects and circuits in the framework's spelling
+
+A later pass, in November 2026, brought the remaining constructors in line with the framework's
+named objects. In `QuantumState["GHZ"[3]]`, `QuantumOperator["RX"[θ]]` and
+`QuantumChannel["BitFlip"[p]]` the name carries its own parameters, and whatever follows it is
+order, basis or options. The QEC constructors now read the same way:
+
+| before | now |
+|---|---|
+| `QECCode["Surface", 3]` | `QECCode["Surface"[3]]` |
+| `QECCode["CSS", hx, hz]` | `QECCode["CSS"[hx, hz]]` |
+| `QECNoiseModel["Depolarizing", p, "MeasurementError" -> q]` | `QECNoiseModel["Depolarizing"[p], "MeasurementError" -> q]` |
+| `QECNoiseModel["Circuit", <\|...\|>]` | `QECNoiseModel["Circuit"[<\|...\|>]]` |
+| `QECThreshold[{"Surface", {3, 5, 7}}, noise]` | `QECThreshold["Surface"[{3, 5, 7}], noise]` |
+| `QECFaultTolerantCircuit[{{"R", 1}, {"CNOT", 1, 2}, {"M", 1}}, code]` | `QECFaultTolerantCircuit[{"Reset" -> 1, "CNOT" -> {1, 2}, "Measurement" -> 1}, code]` |
+
+Three more conventions came with it:
+
+- **Bare names and name lists.** A family's bare name is its default member and a noise's bare
+  name takes $p = 1/100$, as `QuantumChannel["BitFlip"]` takes its default. `$QECCodeNames` and
+  `$QECNoiseNames` list the names, like `$QuantumChannelNames`.
+- **Failures.** An unknown name returns `Failure["InvalidName", ...]` with `::invalidName`, and a
+  known name with parameters it cannot use returns `Failure["InvalidArguments", ...]` with
+  `::invalidArgs` or a message that says what is wrong, as `QuantumState` does.
+- **Circuits.** Every instruction list the layer hands out (`"Instructions"`,
+  `"GadgetInstructions"`, `"BitFlipInstructions"`, a register's `"Lift"` and `"TransversalCNOT"`)
+  is a circuit `QuantumCircuitOperator` accepts as it is: gate -> qubits, with the framework's
+  own names, `"Reset" -> q`, `"Measurement" -> q`, `SuperDagger["S"] -> q`, and a verification
+  readout as a `QuantumMeasurementOperator` labelled `"Herald"`. `"GateCounts"` is keyed by the
+  same names. Inside the layer the flat tuples stay, since every builder pattern-matches on them;
+  `instructionRules` and `instructionTuples` (`Gadget.wl`) are the only crossing.
+- **Objects applied to what they act on**, as a `QuantumOperator` is applied to a state: a
+  decoder to a syndrome, `dec[{0, 0, 0, 1, 1, 1}]`, and a code to a Pauli, `code[QECPauli["XIIIIII"]]`,
+  which gives its syndrome.
+- **Equality by content.** `code1 == code2` is true when the two codes have the same stabilizer
+  group, signs included, whatever generators were written; `noise1 == noise2` when they put the
+  same probabilities on the same locations; `QECPauli[p] == QECPauli[q]` when they are the same
+  Pauli.
+- **`QuantumTensorProduct`** joins codes side by side, as it joins bases, states, operators and
+  channels: `QuantumTensorProduct[QECCode["SteaneCode"], QECCode["5QubitCode"]]` is a
+  $[[12, 2, 3]]$ code.
+- **The framework's names**: `"7QubitCode"` and `"9QubitCode"`, as `PauliStabilizer` calls them,
+  name the Steane and Shor codes, and a detector model's Stim source is `dem["Stim"]`, as a
+  circuit's Qiskit form is `qco["Qiskit"]`.
+
+The old forms are not kept. Each is refused with a message that shows the new spelling:
+
+```wl
+QECCode["Surface", 3]
+```
+
+<!-- => QECCode::oldform message, and Failure["InvalidArguments", ...] -->
+
+## Step 9: objects that behave like the framework's
+
+The same pass gave every QEC object the behaviour the framework's own objects share
+(`QuantumChannel.m`, `QuantumState.m`):
+
+- **Predicates.** `QECCodeQ`, `QECDecoderQ`, `QECNoiseModelQ`, `QECDetectorModelQ` and one for
+  every other head. An object whose data carries what its head needs is marked valid with
+  `System`Private`HoldSetValid` the first time it evaluates, so the predicate is a flag lookup
+  from then on. `obj["ValidQ"]` asks the same question, and `obj["AllProperties"]` adds
+  `"Properties"`, `"AllProperties"` and `"ValidQ"` to the list.
+- **Unknown properties.** A property the head does not know gives `H::undefprop` and is left
+  unevaluated, as `QuantumState["Nonsense"]` is. It used to give `Missing["NotFound", ...]`.
+- **Failures.** Every refusal that comes with a message returns a `Failure` carrying that
+  message, tagged with the message's name: `QECCode[{"ZI", "IZ", "ZZ"}]` gives
+  `Failure["overcomplete", ...]`. A failure met inside the layer is passed on unchanged, and every
+  internal check asks `FailureQ`, so a bare `$Failed` left in a helper is still handled.
+- **Caching.** The layer's memoised results go through one store that keeps them only while the
+  framework's `$QuantumFrameworkPropCache` is on, so
+  `Block[{$QuantumFrameworkPropCache = False}, ...]` turns off both caches at once.
+  `QECClearCache[]` still drops what is stored.
+
+```wl
+{QECCodeQ[steane], QECCodeQ[QECCode[<|"Qubits" -> 3|>]], steane["ValidQ"], FailureQ[Quiet[QECCode[{"ZI", "IZ", "ZZ"}]]]}
+```
+
+<!-- => {True, False, True, True} -->
 
 ## One finding
 

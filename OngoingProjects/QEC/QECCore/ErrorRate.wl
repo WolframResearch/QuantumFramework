@@ -78,7 +78,7 @@ $QECDecoderProbeRate = 1/1000;
 
 (* Checks stacked on logical operators, X and Z halves exchanged, so that
    row . labelMatrix^T is the vector of symplectic products. *)
-codeLabelMatrix[a_Association] := codeLabelMatrix[a] = With[
+codeLabelMatrix[a_Association] := qecMemoKey[codeLabelMatrix[a]] = With[
     {n = a["Qubits"], rows = Join[a["CheckMatrix"], symplecticPart /@ Join @@ Values[codeLogicalVectors[a]]]},
     Join[rows[[All, n + 1 ;; 2 n]], rows[[All, 1 ;; n]], 2]
 ]
@@ -106,7 +106,7 @@ allPauliRows[n_Integer] := With[
 (* <|{synKey, classKey, nx, ny, nz} -> count|> over every error, plus a
    minimum-weight representative per (synKey, classKey).  Memoised on the code:
    it is a fact about the code, not about any noise model. *)
-codeErrorTally[a_Association] := codeErrorTally[a] = Module[
+codeErrorTally[a_Association] := qecMemoKey[codeErrorTally[a]] = Module[
     {n = a["Qubits"], m = codeStabilizerCount[a], rows, labels, synKeys, classKeys, x, z, nx, ny, nz, weights, order, keys},
 
     rows = allPauliRows[n];
@@ -142,7 +142,7 @@ exactEnumerableQ[a_Association] := 4^a["Qubits"] <= $QECExactEnumerationLimit
 (* ---- maximum-likelihood decoding ---- *)
 
 (* Probability of each (syndrome, class) under the noise, as an exact expression. *)
-cosetProbabilities[a_Association, noise_Association] := cosetProbabilities[a, noise] = Module[
+cosetProbabilities[a_Association, noise_Association] := qecMemoKey[cosetProbabilities[a, noise]] = Module[
     {tally = codeErrorTally[a], n},
     n = tally["Qubits"];
     Merge[
@@ -156,7 +156,7 @@ cosetProbabilities[a_Association, noise_Association] := cosetProbabilities[a, no
 
 (* syndrome -> the class carrying the most probability.  With a symbolic rate the
    comparison is made at $QECDecoderProbeRate; see the note above. *)
-codeMaximumLikelihoodDecoder[a_Association, noise_Association] := codeMaximumLikelihoodDecoder[a, noise] = Module[
+codeMaximumLikelihoodDecoder[a_Association, noise_Association] := qecMemoKey[codeMaximumLikelihoodDecoder[a, noise]] = Module[
     {probs = cosetProbabilities[a, noise], concrete, grouped},
 
     concrete = If[
@@ -184,7 +184,7 @@ codeMaximumLikelihoodDecoder[a_Association, noise_Association] := codeMaximumLik
 
    A syndrome the table does not cover has no correction, and an uncorrectable syndrome
    is a failure, so it is simply absent here and the caller counts it as one. *)
-codeMinimumWeightDecoder[a_Association, reach_Integer] := codeMinimumWeightDecoder[a, reach] = With[
+codeMinimumWeightDecoder[a_Association, reach_Integer] := qecMemoKey[codeMinimumWeightDecoder[a, reach]] = With[
     {corrections = Values[codeDecoderToWeight[a, reach]]},
     With[{keys = codeLabelKeys[a, corrections]},
         AssociationThread[First[keys] -> Last[keys]]
@@ -218,8 +218,7 @@ decoderFor[a_Association, noise_Association, spec_, reach_] := Switch[spec,
     "MaximumLikelihood",
         If[ exactEnumerableQ[a],
             codeMaximumLikelihoodDecoder[a, noise],
-            Message[QECLogicalErrorRate::mlneedsall, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit];
-            $Failed
+            qecMessageFailure[QECLogicalErrorRate::mlneedsall, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit]
         ],
     "MinimumWeight",
         codeMinimumWeightDecoder[a, reach],
@@ -233,7 +232,7 @@ decoderFor[a_Association, noise_Association, spec_, reach_] := Switch[spec,
 
 (* The correction the decoder applies for a syndrome: a minimum-weight member of
    the chosen coset. *)
-codeCosetRepresentatives[a_Association, noise_Association] := codeCosetRepresentatives[a, noise] = With[
+codeCosetRepresentatives[a_Association, noise_Association] := qecMemoKey[codeCosetRepresentatives[a, noise]] = With[
     {tally = codeErrorTally[a], decoder = codeMaximumLikelihoodDecoder[a, noise]},
     Association @ KeyValueMap[#1 -> tally["Representatives"][{#1, #2}] &, decoder]
 ]
@@ -271,7 +270,7 @@ sampledLogicalErrorRate[a_Association, noise_Association, count_Integer, decoder
 
 
 Options[QECLogicalErrorRate] = {"Decoder" -> Automatic, "DecoderReach" -> Automatic,
-    "Rounds" -> Automatic, "Extraction" -> "BareAncilla"};
+    "Rounds" -> Automatic, "Extraction" -> "BareAncilla", "Basis" -> All};
 
 (* ONE RETURN TYPE.  QECLogicalErrorRate gives the rate and only the rate: a number,
    or an exact expression when the noise is symbolic, and Indeterminate when a
@@ -286,10 +285,10 @@ Options[QECLogicalErrorRate] = {"Decoder" -> Automatic, "DecoderReach" -> Automa
    is the rate.  It is also what the detector model answers as dem["LogicalErrorRate"],
    dem["Acceptance"] and dem["Failure"]. *)
 rateArguments[opts___] := Sequence @@ (OptionValue[QECLogicalErrorRate, {opts}, #] & /@
-    {"Decoder", "DecoderReach", "Rounds", "Extraction"})
+    {"Decoder", "DecoderReach", "Rounds", "Extraction", "Basis"})
 
 rateReport[r_Association, _] := r
-rateReport[r : ($Failed | _Missing), _] := r
+rateReport[r : (_ ? FailureQ | _Missing), _] := r
 rateReport[r_, None] := <|"Rate" -> r, "Acceptance" -> 1, "Failure" -> r|>
 rateReport[r_, count_Integer] := <|"Rate" -> r, "Acceptance" -> 1., "Accepted" -> count, "Shots" -> count|>
 
@@ -311,7 +310,7 @@ QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, count_Integer ? Positive,
 (* A one-qubit Pauli QuantumChannel is the same noise said in the framework's own
    terms; QECNoiseModel reads it back (and refuses a non-Pauli one with its reason). *)
 QECLogicalErrorRate[code_QECCode, qc_Wolfram`QuantumFramework`QuantumChannel, rest___] :=
-    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECLogicalErrorRate[code, noise, rest], _ -> $Failed}]
+    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECLogicalErrorRate[code, noise, rest], f_ ? FailureQ :> f, _ -> $Failed}]
 
 (* Rounds only mean something once a check can lie, so a code-capacity model ignores
    them and the other two levels default to the code distance -- the standard memory
@@ -319,38 +318,41 @@ QECLogicalErrorRate[code_QECCode, qc_Wolfram`QuantumFramework`QuantumChannel, re
 roundsFor[a_Association, Automatic] := defaultRounds[a]
 roundsFor[_Association, r_Integer ? Positive] := r
 
-logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, roundSpec_, mode_] /;
+logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, roundSpec_, mode_, basis_] /;
         noiseLevel[noise] =!= "CodeCapacity" := Module[{reach},
     If[ codeLogicalQubits[a] === 0,
-        Message[QECLogicalErrorRate::nological]; Return[$Failed]
+        Return[qecMessageFailure[QECLogicalErrorRate::nological]]
     ];
     If[ ! MemberQ[$codeExtractions, mode],
-        Message[QECDetectorModel::extraction, mode, $codeExtractions]; Return[$Failed]
+        Return[qecMessageFailure[QECDetectorModel::extraction, mode, $codeExtractions]]
     ];
-    (* matching needs no table, so it needs no reach either *)
-    reach = If[matchingSpecQ[spec], 1, decoderReachFor[a, reachSpec]];
-    demRate[a, noise, roundsFor[a, roundSpec], count, reach, mode, spec]
+    (* matching and maximum likelihood need no table of lightest faults, so they need
+       no reach either *)
+    reach = If[matchingSpecQ[spec] || maximumLikelihoodSpecQ[spec], 1, decoderReachFor[a, reachSpec]];
+    If[ ! MemberQ[{All, "X", "Z"}, basis],
+        Return[qecMessageFailure[QECDetectorModel::basis, basis]]
+    ];
+    demRate[a, noise, roundsFor[a, roundSpec], count, reach, mode, spec, basis]
 ]
 
 (* Code capacity has no circuit, so it has no extraction to choose; the option is
    accepted and ignored rather than refused, since a sweep across noise levels
    should not have to strip it. *)
-logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, _, _] := Module[{decoder, reach},
+logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, _, _, _] := Module[{decoder, reach},
     Which[
         codeLogicalQubits[a] === 0,
-            Message[QECLogicalErrorRate::nological]; Return[$Failed],
+            Return[qecMessageFailure[QECLogicalErrorRate::nological]],
         (* the exact route sums over every coset, so it needs the enumeration whatever
            decoder it is describing *)
         count === None && ! exactEnumerableQ[a],
-            Message[QECLogicalErrorRate::toobig, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit];
-            Return[$Failed],
+            Return[qecMessageFailure[QECLogicalErrorRate::toobig, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit]],
         IntegerQ[count] && noiseSymbolicQ[noise],
-            Message[QECNoiseModel::rates, noise["Probabilities"]]; Return[$Failed]
+            Return[qecMessageFailure[QECNoiseModel::rates, noise["Probabilities"]]]
     ];
 
     reach = If[matchingSpecQ[spec], 1, decoderReachFor[a, reachSpec]];
     decoder = decoderFor[a, noise, spec, reach];
-    If[decoder === $Failed, Return[$Failed]];
+    If[FailureQ[decoder], Return[decoder]];
 
     If[ count === None,
         exactLogicalErrorRate[a, noise, decoder],

@@ -32,7 +32,7 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
-(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+(* The row functions and helpers that the public QECPauli and QECCode["CSS"[...]]
    stand on, in PackageScope since step 5 of the API redesign. *)
 qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
 
@@ -45,7 +45,7 @@ bitFlip = QECCode["BitFlipCode"];
 five = QECCode["5QubitCode"];
 steane = QECCode["SteaneCode"];
 shor = QECCode["ShorCode"];
-twoLogical = QECCode["DistanceTwo", 4];
+twoLogical = QECCode["DistanceTwo"[4]];
 
 opMatrix[p_String] := Normal[qecPauliMatrix[qecPauliVector[p]]]
 kron[l_List] := Fold[KroneckerProduct, l]
@@ -157,27 +157,27 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    Simplify /@ bitFlip["LogicalPauliProbabilities", QECNoiseModel["BitFlip", qecP]],
+    Simplify /@ bitFlip["LogicalPauliProbabilities", QECNoiseModel["BitFlip"[qecP]]],
     <|"I" -> Simplify[(1 - qecP)^2 (1 + 2 qecP)], "X" -> Simplify[(3 - 2 qecP) qecP^2], "Y" -> 0, "Z" -> 0|>,
     TestID -> "QEC-Operational-bit-flip-logical-channel-is-exact"
 ]
 
 VerificationTest[
-    Simplify[1 - steane["LogicalPauliProbabilities", QECNoiseModel["Depolarizing", qecP]]["I"] -
-        QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing", qecP]]],
+    Simplify[1 - steane["LogicalPauliProbabilities", QECNoiseModel["Depolarizing"[qecP]]]["I"] -
+        QECLogicalErrorRate[steane, QECNoiseModel["Depolarizing"[qecP]]]],
     0,
     TestID -> "QEC-Operational-logical-channel-agrees-with-the-rate"
 ]
 
 VerificationTest[
-    Simplify[Total[five["LogicalPauliProbabilities", QECNoiseModel["Depolarizing", qecP]]]],
+    Simplify[Total[five["LogicalPauliProbabilities", QECNoiseModel["Depolarizing"[qecP]]]]],
     1,
     TestID -> "QEC-Operational-logical-probabilities-sum-to-one"
 ]
 
 VerificationTest[
-    With[{ch = steane["LogicalChannel", QECNoiseModel["Depolarizing", 1/10]],
-          q = steane["LogicalPauliProbabilities", QECNoiseModel["Depolarizing", 1/10]]},
+    With[{ch = steane["LogicalChannel", QECNoiseModel["Depolarizing"[1/10]]],
+          q = steane["LogicalPauliProbabilities", QECNoiseModel["Depolarizing"[1/10]]]},
         zeroQ[Normal[ch[QuantumState["0"]]["DensityMatrix"]] - DiagonalMatrix[{q["I"] + q["Z"], q["X"] + q["Y"]}]]
     ],
     True,
@@ -187,19 +187,19 @@ VerificationTest[
 (* Noise that only ever produces the identity leaves one Kraus operator; the channel
    must still act on the logical wire, not on an environment in its place. *)
 VerificationTest[
-    bitFlip["LogicalChannel", QECNoiseModel["BitFlip", 0]]["Order"],
+    bitFlip["LogicalChannel", QECNoiseModel["BitFlip"[0]]]["Order"],
     {{1}, {1}},
     TestID -> "QEC-Operational-noiseless-logical-channel-is-the-identity-on-its-wire"
 ]
 
 VerificationTest[
-    Simplify[1 - QECCode["Repetition", 3]["LogicalPauliProbabilities", QuantumChannel["BitFlip"[qecP]]]["I"]],
+    Simplify[1 - QECCode["Repetition"[3]]["LogicalPauliProbabilities", QuantumChannel["BitFlip"[qecP]]]["I"]],
     Simplify[3 qecP^2 - 2 qecP^3],
     TestID -> "QEC-Operational-logical-channel-accepts-a-QuantumChannel"
 ]
 
 VerificationTest[
-    steane["LogicalChannel", QECNoiseModel["Circuit", 1/100]],
+    steane["LogicalChannel", QECNoiseModel["Circuit"[1/100]]],
     Missing["NotAvailable", "Circuit"],
     {QECCode::nolevel},
     TestID -> "QEC-Operational-logical-channel-is-code-capacity-only"
@@ -244,8 +244,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    bitFlip["KnillLaflammeMatrix", {"XX"}],
-    $Failed,
+    FailureQ[bitFlip["KnillLaflammeMatrix", {"XX"}]],
+    True,
     {QECCode::klerrors},
     TestID -> "QEC-Operational-Knill-Laflamme-refuses-a-wrong-size-error"
 ]
@@ -268,8 +268,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECNoiseModel[QuantumChannel["AmplitudeDamping"[qecG]]],
-    $Failed,
+    FailureQ[QECNoiseModel[QuantumChannel["AmplitudeDamping"[qecG]]]],
+    True,
     {QECNoiseModel::notpauli},
     TestID -> "QEC-Operational-non-Pauli-channel-is-refused"
 ]
@@ -283,7 +283,7 @@ VerificationTest[
 
 VerificationTest[
     Simplify[QECLogicalErrorRate[bitFlip, QuantumChannel["BitFlip"[qecP]]] -
-        QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip", qecP]]],
+        QECLogicalErrorRate[bitFlip, QECNoiseModel["BitFlip"[qecP]]]],
     0,
     TestID -> "QEC-Operational-rate-accepts-a-QuantumChannel"
 ]
@@ -294,8 +294,8 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    Block[{$QECDenseQubitLimit = 5}, steane["Encoder"]],
-    $Failed,
+    FailureQ[Block[{$QECDenseQubitLimit = 5}, steane["Encoder"]]],
+    True,
     {QECCode::dense},
     TestID -> "QEC-Operational-dense-objects-respect-the-limit"
 ]

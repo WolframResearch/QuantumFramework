@@ -43,13 +43,13 @@ QECClearCache[];
    ============================================================================ *)
 
 VerificationTest[
-    QECNoiseModel["Depolarizing", qecP]["Level"],
+    QECNoiseModel["Depolarizing"[qecP]]["Level"],
     "CodeCapacity",
     TestID -> "QEC-CircuitNoise-level-default"
 ]
 
 VerificationTest[
-    QECNoiseModel["Depolarizing", qecP, "MeasurementError" -> qecQ]["Level"],
+    QECNoiseModel["Depolarizing"[qecP], "MeasurementError" -> qecQ]["Level"],
     "Phenomenological",
     TestID -> "QEC-CircuitNoise-level-phenomenological"
 ]
@@ -57,19 +57,19 @@ VerificationTest[
 (* Readout error zero is code capacity, not a degenerate phenomenological model:
    the two are the same object and should report the same level. *)
 VerificationTest[
-    QECNoiseModel["BitFlip", qecP, "MeasurementError" -> 0]["Level"],
+    QECNoiseModel["BitFlip"[qecP], "MeasurementError" -> 0]["Level"],
     "CodeCapacity",
     TestID -> "QEC-CircuitNoise-level-zero-readout"
 ]
 
 VerificationTest[
-    QECNoiseModel["Circuit", qecP]["Level"],
+    QECNoiseModel["Circuit"[qecP]]["Level"],
     "Circuit",
     TestID -> "QEC-CircuitNoise-level-circuit"
 ]
 
 VerificationTest[
-    QECNoiseModel["Depolarizing", qecP, "MeasurementError" -> qecQ]["MeasurementError"],
+    QECNoiseModel["Depolarizing"[qecP], "MeasurementError" -> qecQ]["MeasurementError"],
     qecQ,
     TestID -> "QEC-CircuitNoise-readout-rate"
 ]
@@ -77,32 +77,32 @@ VerificationTest[
 (* A single number spreads over every location but idling, which has no parallel
    layer to sit in yet. *)
 VerificationTest[
-    QECNoiseModel["Circuit", qecP]["Rates"],
+    QECNoiseModel["Circuit"[qecP]]["Rates"],
     <|"OneQubit" -> qecP, "TwoQubit" -> qecP, "Measurement" -> qecP, "Reset" -> qecP, "Idle" -> 0|>,
     TestID -> "QEC-CircuitNoise-uniform-rates"
 ]
 
 VerificationTest[
-    QECNoiseModel["Circuit", <|"Measurement" -> qecQ|>]["Rates"],
+    QECNoiseModel["Circuit"[<|"Measurement" -> qecQ|>]]["Rates"],
     <|"OneQubit" -> 0, "TwoQubit" -> 0, "Measurement" -> qecQ, "Reset" -> 0, "Idle" -> 0|>,
     TestID -> "QEC-CircuitNoise-partial-rates"
 ]
 
 VerificationTest[
-    QECNoiseModel["Circuit", <|"Typo" -> 1/10|>],
-    $Failed,
+    FailureQ[QECNoiseModel["Circuit"[<|"Typo" -> 1/10|>]]],
+    True,
     {QECNoiseModel::circuitrates},
     TestID -> "QEC-CircuitNoise-bad-rate-key"
 ]
 
 VerificationTest[
-    QECNoiseModel["Circuit", qecP]["SymbolicQ"],
+    QECNoiseModel["Circuit"[qecP]]["SymbolicQ"],
     True,
     TestID -> "QEC-CircuitNoise-symbolic-circuit"
 ]
 
 VerificationTest[
-    QECNoiseModel["Circuit", 1/1000]["SymbolicQ"],
+    QECNoiseModel["Circuit"[1/1000]]["SymbolicQ"],
     False,
     TestID -> "QEC-CircuitNoise-numeric-circuit"
 ]
@@ -118,11 +118,11 @@ VerificationTest[
 
 qecBF = QECCode["BitFlipCode"];
 
-qecDem1 = QECDetectorModel[qecBF, QECNoiseModel["BitFlip", qecP, "MeasurementError" -> qecQ], 1];
+qecDem1 = QECDetectorModel[qecBF, QECNoiseModel["BitFlip"[qecP], "MeasurementError" -> qecQ], 1];
 
 VerificationTest[
-    QECDetectorModel[qecBF, QECNoiseModel["BitFlip", qecP], 1],
-    $Failed,
+    FailureQ[QECDetectorModel[qecBF, QECNoiseModel["BitFlip"[qecP]], 1]],
+    True,
     {QECDetectorModel::level},
     TestID -> "QEC-CircuitNoise-dem-refuses-code-capacity"
 ]
@@ -202,7 +202,7 @@ VerificationTest[
    circuit-level statement of "this code has no phase protection". *)
 VerificationTest[
     Length @ QECDetectorModel[qecBF,
-        QECNoiseModel["Depolarizing", qecP, "MeasurementError" -> qecQ], 1]["UndetectableFaults"],
+        QECNoiseModel["Depolarizing"[qecP], "MeasurementError" -> qecQ], 1]["UndetectableFaults"],
     3,
     TestID -> "QEC-CircuitNoise-dem-undetectable-z"
 ]
@@ -211,7 +211,7 @@ VerificationTest[
    when its own readout lies. *)
 VerificationTest[
     Simplify @ QECDetectorModel[qecBF,
-        QECNoiseModel["BitFlip", 0, "MeasurementError" -> qecQ], 1]["DetectorRates"],
+        QECNoiseModel["BitFlip"[0], "MeasurementError" -> qecQ], 1]["DetectorRates"],
     {qecQ, qecQ, qecQ, qecQ},
     TestID -> "QEC-CircuitNoise-dem-detector-rates"
 ]
@@ -226,8 +226,8 @@ VerificationTest[
 
 VerificationTest[
     Simplify[
-        QECLogicalErrorRate[qecBF, QECNoiseModel["BitFlip", qecP, "MeasurementError" -> 0], "Rounds" -> 1] ==
-        QECLogicalErrorRate[qecBF, QECNoiseModel["BitFlip", qecP]]
+        QECLogicalErrorRate[qecBF, QECNoiseModel["BitFlip"[qecP], "MeasurementError" -> 0], "Rounds" -> 1] ==
+        QECLogicalErrorRate[qecBF, QECNoiseModel["BitFlip"[qecP]]]
     ],
     True,
     TestID -> "QEC-CircuitNoise-perfect-readout-is-code-capacity-bitflip"
@@ -236,7 +236,7 @@ VerificationTest[
 VerificationTest[
     Simplify[
         QECLogicalErrorRate[qecBF,
-            QECNoiseModel["BitFlip", qecP, "MeasurementError" -> 0], "Rounds" -> 1] ==
+            QECNoiseModel["BitFlip"[qecP], "MeasurementError" -> 0], "Rounds" -> 1] ==
         3 qecP^2 - 2 qecP^3
     ],
     True,
@@ -249,9 +249,9 @@ VerificationTest[
 VerificationTest[
     Simplify[
         QECLogicalErrorRate[QECCode["5QubitCode"],
-            QECNoiseModel["Depolarizing", qecP, "MeasurementError" -> 0], "Rounds" -> 1] ==
+            QECNoiseModel["Depolarizing"[qecP], "MeasurementError" -> 0], "Rounds" -> 1] ==
         QECLogicalErrorRate[QECCode["5QubitCode"],
-            QECNoiseModel["Depolarizing", qecP], "Decoder" -> "MinimumWeight"]
+            QECNoiseModel["Depolarizing"[qecP]], "Decoder" -> "MinimumWeight"]
     ],
     True,
     TestID -> "QEC-CircuitNoise-perfect-readout-is-code-capacity-5qubit"
@@ -261,7 +261,7 @@ VerificationTest[
    signature and corrected, so failure needs two of them. *)
 VerificationTest[
     Simplify @ QECLogicalErrorRate[qecBF,
-        QECNoiseModel["BitFlip", 0, "MeasurementError" -> qecQ], "Rounds" -> 1],
+        QECNoiseModel["BitFlip"[0], "MeasurementError" -> qecQ], "Rounds" -> 1],
     qecQ^2,
     TestID -> "QEC-CircuitNoise-readout-only-rate"
 ]
@@ -269,8 +269,8 @@ VerificationTest[
 (* Sampling and the exact sum are two routes to the same number. *)
 VerificationTest[
     With[
-        {exact = N @ QECLogicalErrorRate[qecBF, QECNoiseModel["Circuit", 1/200], "Rounds" -> 2],
-         sampled = QECLogicalErrorRate[qecBF, QECNoiseModel["Circuit", 1/200], 200000, "Rounds" -> 2]},
+        {exact = N @ QECLogicalErrorRate[qecBF, QECNoiseModel["Circuit"[1/200]], "Rounds" -> 2],
+         sampled = QECLogicalErrorRate[qecBF, QECNoiseModel["Circuit"[1/200]], 200000, "Rounds" -> 2]},
         Abs[exact - sampled] < 5 Sqrt[exact (1 - exact) / 200000]
     ],
     True,
@@ -278,8 +278,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECLogicalErrorRate[qecBF, QECNoiseModel["Circuit", qecP], 1000, "Rounds" -> 1],
-    $Failed,
+    FailureQ[QECLogicalErrorRate[qecBF, QECNoiseModel["Circuit"[qecP]], 1000, "Rounds" -> 1]],
+    True,
     {QECLogicalErrorRate::symbolicshots},
     TestID -> "QEC-CircuitNoise-symbolic-shots-refused"
 ]
@@ -287,9 +287,9 @@ VerificationTest[
 (* The state space of the exact route is 2^(detectors + observables), and it says
    so rather than trying. *)
 VerificationTest[
-    QECLogicalErrorRate[QECCode["SteaneCode"],
-        QECNoiseModel["Depolarizing", 1/100, "MeasurementError" -> 1/100], "Rounds" -> 3],
-    $Failed,
+    FailureQ[QECLogicalErrorRate[QECCode["SteaneCode"],
+        QECNoiseModel["Depolarizing"[1/100], "MeasurementError" -> 1/100], "Rounds" -> 3]],
+    True,
     {QECLogicalErrorRate::detbig},
     TestID -> "QEC-CircuitNoise-exact-limit"
 ]
@@ -299,7 +299,7 @@ VerificationTest[
    The Stim export
    ============================================================================ *)
 
-qecStim = QECStim[qecBF, QECNoiseModel["Circuit", 1/200], 2];
+qecStim = QECStim[qecBF, QECNoiseModel["Circuit"[1/200]], 2];
 
 VerificationTest[
     StringQ[qecStim],
@@ -345,29 +345,29 @@ VerificationTest[
 
 VerificationTest[
     StringContainsQ[
-        QECStim[qecBF, QECNoiseModel["Depolarizing", 1/100, "MeasurementError" -> 1/50], 1],
+        QECStim[qecBF, QECNoiseModel["Depolarizing"[1/100], "MeasurementError" -> 1/50], 1],
         "PAULI_CHANNEL_1"],
     True,
     TestID -> "QEC-CircuitNoise-stim-phenomenological-channel"
 ]
 
 VerificationTest[
-    QECStim[qecBF, QECNoiseModel["Depolarizing", 1/100], 1],
-    $Failed,
+    FailureQ[QECStim[qecBF, QECNoiseModel["Depolarizing"[1/100]], 1]],
+    True,
     {QECStim::level},
     TestID -> "QEC-CircuitNoise-stim-refuses-code-capacity"
 ]
 
 VerificationTest[
-    QECStim[qecBF, QECNoiseModel["Circuit", 1/200], 1, "Observable" -> "Q"],
-    $Failed,
+    FailureQ[QECStim[qecBF, QECNoiseModel["Circuit"[1/200]], 1, "Observable" -> "Q"]],
+    True,
     {QECStim::observable},
     TestID -> "QEC-CircuitNoise-stim-bad-observable"
 ]
 
 (* The Y-generator path reaches Stim as its sqrt(X). *)
 VerificationTest[
-    StringContainsQ[QECStim[QECCode[{"YYI", "IYY"}], QECNoiseModel["Circuit", 1/500], 1], "SQRT_X"],
+    StringContainsQ[QECStim[QECCode[{"YYI", "IYY"}], QECNoiseModel["Circuit"[1/500]], 1], "SQRT_X"],
     True,
     TestID -> "QEC-CircuitNoise-stim-sqrt-x"
 ]

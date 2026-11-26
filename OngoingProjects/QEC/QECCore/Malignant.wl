@@ -54,7 +54,7 @@ intParity[x_Integer] := Mod[DigitCount[x, 2, 1], 2]
 
 (* The per-block tables, over all 2^n frames: the syndrome a frame gives, the
    lightest correction of a syndrome, and the logical bit of the decoded frame. *)
-blockTables[a_Association] := blockTables[a] = Module[
+blockTables[a_Association] := qecMemoKey[blockTables[a]] = Module[
     {n = a["Qubits"], hz, hx, zbar, xbar, corrX, corrZ, synZ, synX},
     hz = verificationChecks[a, "Z"][[1 ;; -1 - codeLogicalQubits[a]]];
     hx = verificationChecks[a, "X"][[1 ;; -1 - codeLogicalQubits[a]]];
@@ -130,7 +130,7 @@ $atomFields = {"H", "S1x", "S1z", "S2x", "S2z", "Wx", "Wz", "Fx", "Fz", "R"};
 
 exRecMalignantCounts[rect_QECExtendedRectangle] := exRecMalignantCounts[First[rect]]
 
-exRecMalignantCounts[d_Association] := exRecMalignantCounts[d] = Module[
+exRecMalignantCounts[d_Association] := qecMemoKey[exRecMalignantCounts[d]] = Module[
     {a = d["Code"], n = d["Code"]["Qubits"], B = d["Blocks"], tb, locs, seam, layerOf, lastLead, elem, elemIndex,
      effects, faultVec, faults, corrXP, corrZP, classXP, classZP, synZP, synXP, c1x, c1z, gadget, refTables,
      verdict, singles, pairs, kind = d["Location"], size, nloc},

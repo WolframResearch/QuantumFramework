@@ -32,6 +32,7 @@ Module[{dir = DirectoryName[$InputFileName]},
         "Operational.wl",
         "WeightEnumerator.wl",
         "CliffordHierarchy.wl",
+        "Transform.wl",
         "Memory.wl",
         "Matching.wl",
         "Decoder.wl",
@@ -41,8 +42,8 @@ Module[{dir = DirectoryName[$InputFileName]},
         "Malignant.wl",
         "Threshold.wl",
         "Stim.wl",
-        "Deprecated.wl",
         "Bosonic.wl",
+        "Objects.wl",
         "Cache.wl"
     }
 ]

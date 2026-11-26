@@ -62,7 +62,6 @@ QECExtendedRectangle::usage = "QECExtendedRectangle[code, location] gives the ex
 
 QECExtendedRectangle::css = "Extended rectangles are built here from Steane error correction, which needs a CSS code with one logical qubit.";
 QECExtendedRectangle::location = "`1` is not a location with a gadget for this code; use \"Preparation\", \"Measurement\", \"Wait\", a transversal one-qubit Clifford, or \"CNOT\".";
-QECExtendedRectangle::noprop = "`1` is not a property of QECExtendedRectangle. Use rect[\"Properties\"] for the list.";
 
 Options[QECExtendedRectangle] = {"Ancilla" -> "Verified", "Order" -> "BitFlipFirst"};
 
@@ -78,6 +77,9 @@ Options[QECExtendedRectangle] = {"Ancilla" -> "Verified", "Order" -> "BitFlipFir
    the first layer only because it schedules everything as early as it can.  This
    is "designed to minimize waiting times", the book's fig. 14.8a, done by the
    counting rather than by redrawing the circuit. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+exRecLiveWaits[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := exRecLiveWaits[instructionTuples[instr], rest]
+
 exRecLiveWaits[instr_List, nq_Integer] := Module[{layerOf, touches},
     layerOf = circuitInstructionLayers[instr, nq];
     touches = GroupBy[
@@ -146,11 +148,11 @@ exRecLayout[a_Association, location_, mode_String, order_String] := Module[
             {"LeadingEC" -> ec[1, 1], "Wait" -> {}, "TrailingEC" -> ec[1, 2]},
         _?(MemberQ[$circuitTwoQubitOps, #] &),
             gadget = ftTwoQubitInstructions[a, location, 1, 2];
-            If[gadget === $Failed, Return[$Failed]];
+            If[FailureQ[gadget], Return[gadget]];
             {"LeadingEC" -> Join[ec[1, 1], ec[2, 1]], "Gate" -> gadget, "TrailingEC" -> Join[ec[1, 2], ec[2, 2]]},
         _String,
             gadget = ftGateInstructions[a, location, 1];
-            If[gadget === $Failed, Return[$Failed]];
+            If[FailureQ[gadget], Return[gadget]];
             {"LeadingEC" -> ec[1, 1], "Gate" -> gadget, "TrailingEC" -> ec[1, 2]},
         _, Return[$Failed]
     ];
@@ -235,15 +237,18 @@ preparationAttemptLocations[_Association, "Encoder"] := 0
 
 (* ---- construction ---- *)
 
+QECExtendedRectangle[code_QECCode, location_, opts : OptionsPattern[]] /; ! FreeQ[location, _SuperDagger] :=
+    QECExtendedRectangle[code, location /. SuperDagger[g_String] :> internalOp[SuperDagger[g]], opts]
+
 QECExtendedRectangle[code_QECCode, location_, opts : OptionsPattern[]] := Module[
     {a = First[code], mode = OptionValue["Ancilla"], order = OptionValue["Order"], layout, locs},
     Which[
-        ! codeCSSQ[a] || codeLogicalQubits[a] =!= 1, Message[QECExtendedRectangle::css]; Return[$Failed],
-        ! MemberQ[$ancillaModes, mode], Message[QECErrorCorrection::ancilla, mode, $ancillaModes]; Return[$Failed],
-        ! MemberQ[{"BitFlipFirst", "PhaseFirst"}, order], Message[QECErrorCorrection::order, order]; Return[$Failed]
+        ! codeCSSQ[a] || codeLogicalQubits[a] =!= 1, Return[qecMessageFailure[QECExtendedRectangle::css]],
+        ! MemberQ[$ancillaModes, mode], Return[qecMessageFailure[QECErrorCorrection::ancilla, mode, $ancillaModes]],
+        ! MemberQ[{"BitFlipFirst", "PhaseFirst"}, order], Return[qecMessageFailure[QECErrorCorrection::order, order]]
     ];
     layout = Quiet[exRecLayout[a, location, mode, order]];
-    If[ layout === $Failed, Message[QECExtendedRectangle::location, location]; Return[$Failed]];
+    If[ FailureQ[layout], Return[qecMessageFailure[QECExtendedRectangle::location, location]]];
     locs = exRecLocations[layout];
     QECExtendedRectangle[Join[layout, <|
         "Code" -> a,
@@ -317,7 +322,8 @@ $exRecProperties = {
 
 QECExtendedRectangle[_Association]["Properties"] := $exRecProperties
 
-QECExtendedRectangle[d_Association][prop : "Location" | "Ancilla" | "Order" | "Instructions" | "Qubits" |
+QECExtendedRectangle[d_Association]["Instructions"] := instructionRules[d["Instructions"]]
+QECExtendedRectangle[d_Association][prop : "Location" | "Ancilla" | "Order" | "Qubits" |
     "Blocks" | "Verifications" | "PreparationLocations" | "Correctable" | "MagicPreparationLocations"] := d[prop]
 QECExtendedRectangle[d_Association]["Code"] := QECCode[d["Code"]]
 QECExtendedRectangle[d_Association]["Parts"] := Length /@ d["Parts"]
@@ -353,8 +359,6 @@ QECExtendedRectangle[d_Association]["MalignantPairsByType"] :=
 QECExtendedRectangle[d_Association]["MalignantProbabilityBound", p_] := exRecMalignantBound[d, p]
 QECExtendedRectangle[d_Association]["MalignantThresholdBound"] := malignantThreshold[d]
 
-QECExtendedRectangle[_Association][prop_String, ___] :=
-    (Message[QECExtendedRectangle::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)

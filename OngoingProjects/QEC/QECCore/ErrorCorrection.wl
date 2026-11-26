@@ -105,7 +105,6 @@ QECErrorCorrection::usage = "QECErrorCorrection[code] gives the Steane error-cor
 
 QECErrorCorrection::css = "Steane error correction needs a CSS code; this one is not CSS. Its generators must each be purely X-type or purely Z-type.";
 QECErrorCorrection::order = "\"Order\" must be \"BitFlipFirst\" or \"PhaseFirst\"; got `1`.";
-QECErrorCorrection::noprop = "`1` is not a property of QECErrorCorrection. Use ec[\"Properties\"] for the list.";
 
 
 (* ---- the encoded ancilla states ---- *)
@@ -115,7 +114,7 @@ QECErrorCorrection::noprop = "`1` is not a property of QECErrorCorrection. Use e
    wire is logical when putting the input in |+> there makes the encoded state a
    +1 eigenstate of the corresponding logical X.  Memoised, since it costs one
    engine run per candidate wire. *)
-codeLogicalWires[a_Association] := codeLogicalWires[a] = With[
+codeLogicalWires[a_Association] := qecMemoKey[codeLogicalWires[a]] = With[
     {n = a["Qubits"], gates = codeEncodingGates[a], xbars = codeLogicalVectors[a]["X"]},
     Table[
         SelectFirst[
@@ -225,6 +224,9 @@ steaneRegions[a_Association, order_String] := Module[
    non-fault-tolerant one, and a single fault in it can leave a quarter of the
    block wrong.  Reporting that separately is what turns the open assumption into
    a measured quantity instead of a caveat in a comment. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+steaneResidualWeights[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := steaneResidualWeights[instructionTuples[instr], rest]
+
 steaneResidualWeights[instr_List, nq_Integer, n_Integer, region_List] :=
     DeleteDuplicates @ Flatten @ Table[
         With[{fr = framePropagate[instr, nq, {{i, q, pauli}}]["Frame"]},
@@ -325,7 +327,7 @@ cnotLayers[cnots_List] := Module[{left = cnots, out = {}, used, layer},
     out
 ]
 
-hadamardIsLogicalQ[a_Association] := hadamardIsLogicalQ[a] =
+hadamardIsLogicalQ[a_Association] := qecMemoKey[hadamardIsLogicalQ[a]] =
     TrueQ[transversalValidQ[a, "H", 1]] && transversalName[transversalLogicalAction[a, "H", 1], 1] === "H"
 
 (* The parities a clean comparison leaves at zero, as rows over the checker's n
@@ -429,6 +431,9 @@ acceptedQ[heralds_List, checks_List] := AllTrue[checks, Function[c, AllTrue[Mod[
 (* Every location of an instruction list and the faults each can carry: the
    detector model's own enumeration, with every rate set to one, grouped by
    location -- a reset, a measurement, a one- or two-qubit gate, or a wait. *)
+(* either spelling of an instruction list; see instructionTuples (Gadget.wl) *)
+gadgetLocationFaults[instr : {___, _Rule | _Wolfram`QuantumFramework`QuantumMeasurementOperator, ___}, rest___] := gadgetLocationFaults[instructionTuples[instr], rest]
+
 gadgetLocationFaults[instr_List, nq_Integer] := With[
     {rates = <|"OneQubit" -> 1, "TwoQubit" -> 1, "Measurement" -> 1, "Reset" -> 1, "Idle" -> 1|>},
     GroupBy[Join[circuitMechanisms[instr, rates], idleMechanisms[instr, nq, rates]], #["Location"] &, #[[All, "Faults"]] &]
@@ -456,7 +461,7 @@ steaneResidual[a_Association, instr_List, nq_Integer, checks_List, order_String,
    checks, found by weight, up to the weight where the table is complete. *)
 cssCorrection[a_Association, letter_String, syn_List] := Lookup[cssCorrectionTable[a, letter], Key[syn], ConstantArray[0, a["Qubits"]]]
 
-cssCorrectionTable[a_Association, letter_String] := cssCorrectionTable[a, letter] = Module[
+cssCorrectionTable[a_Association, letter_String] := qecMemoKey[cssCorrectionTable[a, letter]] = Module[
     {n = a["Qubits"], checks = verificationChecks[a, If[letter === "X", "Z", "X"]][[1 ;; -1 - codeLogicalQubits[a]]], table = <||>},
     Do[
         With[{e = ReplacePart[ConstantArray[0, n], Thread[sub -> 1]]},
@@ -486,11 +491,11 @@ QECErrorCorrection[code_QECCode, offset_Integer, opts : OptionsPattern[]] := Mod
     mode = OptionValue["Ancilla"];
     Which[
         ! codeCSSQ[a],
-            Message[QECErrorCorrection::css]; $Failed,
+            qecMessageFailure[QECErrorCorrection::css],
         ! MemberQ[{"BitFlipFirst", "PhaseFirst"}, order],
-            Message[QECErrorCorrection::order, order]; $Failed,
+            qecMessageFailure[QECErrorCorrection::order, order],
         ! MemberQ[$ancillaModes, mode],
-            Message[QECErrorCorrection::ancilla, mode, $ancillaModes]; $Failed,
+            qecMessageFailure[QECErrorCorrection::ancilla, mode, $ancillaModes],
         True,
             pieces = steanePieces[a, offset, order, mode];
             QECErrorCorrection[<|
@@ -525,8 +530,9 @@ correctionData[QECErrorCorrection[a_Association]] := a
 
 QECErrorCorrection[_Association]["Properties"] := $correctionProperties
 
-QECErrorCorrection[a_Association][prop : ("Instructions" | "DataQubits" |
+QECErrorCorrection[a_Association][prop : ("DataQubits" |
     "AncillaQubits" | "Offset" | "Order" | "Qubits")] := a[prop]
+QECErrorCorrection[a_Association]["Instructions"] := instructionRules[a["Instructions"]]
 
 QECErrorCorrection[a_Association]["Ancilla"] := Lookup[a, "Ancilla", "Encoder"]
 QECErrorCorrection[a_Association]["HeraldChecks"] := Lookup[a, "HeraldChecks", {}]
@@ -540,7 +546,7 @@ QECErrorCorrection[a_Association]["ResidualWeights"] := correctionResidualWeight
 
 QECErrorCorrection[a_Association]["MaxResidualWeight"] := Max[Values[correctionResidualWeights[a]]]
 
-correctionResidualWeights[a_Association] := correctionResidualWeights[a] = Module[
+correctionResidualWeights[a_Association] := qecMemoKey[correctionResidualWeights[a]] = Module[
     {instr = a["Instructions"], nq = a["Qubits"], regions, locs, checks},
     regions = correctionRegions[a];
     checks = Lookup[a, "HeraldChecks", {}];
@@ -577,9 +583,9 @@ QECErrorCorrection[a_Association]["QuantumCircuitOperator"] :=
 QECErrorCorrection[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 
 QECErrorCorrection[a_Association]["BitFlipInstructions"] :=
-    steaneBitFlipInstructions[a["Code"], a["Offset"]]
+    instructionRules[steaneBitFlipInstructions[a["Code"], a["Offset"]]]
 QECErrorCorrection[a_Association]["PhaseInstructions"] :=
-    steanePhaseInstructions[a["Code"], a["Offset"]]
+    instructionRules[steanePhaseInstructions[a["Code"], a["Offset"]]]
 
 (* The data-ancilla interaction is one CNOT per position and nothing else.  The
    ancilla PREPARATION is not transversal and is not claimed to be; it touches no
@@ -632,8 +638,6 @@ tolerant (Got26 Procedure 6.6). Fault-tolerant preparation of encoded |0> and |+
 is chapter 13 work, and this gadget is fault tolerant given a clean ancilla."
 }
 
-QECErrorCorrection[a_Association][prop_String] :=
-    (Message[QECErrorCorrection::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)
@@ -644,8 +648,8 @@ QECErrorCorrection /: MakeBoxes[
 ] := BoxForm`ArrangeSummaryBox[
     QECErrorCorrection,
     obj,
-    BarChart[Values[Counts[First /@ a["Instructions"]]],
-        ChartLabels -> Keys[Counts[First /@ a["Instructions"]]],
+    BarChart[Values[gadgetGateCounts[a["Instructions"]]],
+        ChartLabels -> Keys[gadgetGateCounts[a["Instructions"]]],
         ImageSize -> {Automatic, 34}, Axes -> False,
         ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
     {

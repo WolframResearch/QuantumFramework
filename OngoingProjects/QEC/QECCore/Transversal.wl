@@ -81,7 +81,6 @@ PackageScope[$transversalTwoQubitGates]
 QECTransversalGate::usage = "QECTransversalGate[code, gate] represents the gate applied qubit by qubit to a block of a code, where gate is \"H\", \"S\", \"Sdg\", \"V\", \"Vdg\", \"X\", \"Y\", \"Z\", \"I\", a list of those applied in order, or a two-block gate \"CNOT\", \"CZ\" or \"SWAP\".\ng[prop] gives a property; g[\"Properties\"] lists them.\nQECTransversalGate[code, All] gives the one-qubit Clifford gates that are transversal on the code, with the logical gate each one performs.";
 
 QECTransversalGate::gate = "`1` is not a transversal gate specification. Use one of `2`, a list of them, or one of the two-block gates `3`.";
-QECTransversalGate::noprop = "`1` is not a property of QECTransversalGate. Use g[\"Properties\"] for the list.";
 QECTransversalGate::phase = "The conjugate of a Pauli by `1` is not a Pauli times a fourth root of unity; the gate is not Clifford.";
 
 
@@ -137,7 +136,7 @@ transversalPauliMatrix[v_List] := With[{n = Length[v] / 2},
 ]
 
 (* Every symplectic pattern on nq qubits, in a fixed order. *)
-transversalPatterns[nq_Integer] := transversalPatterns[nq] = Table[
+transversalPatterns[nq_Integer] := qecMemoKey[transversalPatterns[nq]] = Table[
     Join[t[[All, 1]], t[[All, 2]]],
     {t, Tuples[Values[$pauliLetterXZ], nq]}
 ]
@@ -145,7 +144,7 @@ transversalPatterns[nq_Integer] := transversalPatterns[nq] = Table[
 (* U E U^dagger = i^c E' for a Clifford U.  E' is found by the only nonzero trace
    overlap and c by the coefficient, which must be a fourth root of unity -- if it
    is not, the matrix was not Clifford and saying so beats returning nonsense. *)
-transversalAction[gate_, nq_Integer] := transversalAction[gate, nq] = With[
+transversalAction[gate_, nq_Integer] := qecMemoKey[transversalAction[gate, nq]] = With[
     {u = transversalMatrix[gate], basis = transversalPatterns[nq]},
     Association @ Table[
         v -> Module[{m = u . transversalPauliMatrix[v] . ConjugateTranspose[u], hit},
@@ -159,7 +158,7 @@ transversalAction[gate_, nq_Integer] := transversalAction[gate, nq] = With[
                 True &
             ];
             If[ MissingQ[hit] || MissingQ[hit[[2]]],
-                Message[QECTransversalGate::phase, gate]; Return[$Failed, Module],
+                Return[qecMessageFailure[QECTransversalGate::phase, gate], Module],
                 Append[hit[[1]], hit[[2]]]
             ]
         ],
@@ -198,7 +197,7 @@ transversalPairConjugate[gate_, row_List, n_Integer] := With[
 (* The stabilizer of two blocks is the direct sum, and building it as an ordinary
    code association is what lets codeStabilizerElement -- signs and all -- answer
    membership for the pair with no second implementation. *)
-transversalPairCode[a_Association] := transversalPairCode[a] = With[
+transversalPairCode[a_Association] := qecMemoKey[transversalPairCode[a]] = With[
     {n = a["Qubits"], mat = a["CheckMatrix"], z = gf2Zero[a["Qubits"]]},
     <|
         "CheckMatrix" -> Join[
@@ -213,7 +212,7 @@ transversalPairCode[a_Association] := transversalPairCode[a] = With[
 (* The logical operators of the pair, block by block rather than from the pair's
    own standard form: the question is what the gate does to THIS block's qubit and
    THAT block's qubit, so the basis has to be the block-wise one. *)
-transversalPairLogicals[a_Association] := transversalPairLogicals[a] = With[
+transversalPairLogicals[a_Association] := qecMemoKey[transversalPairLogicals[a]] = With[
     {n = a["Qubits"], v = codeLogicalVectors[a], z = gf2Zero[a["Qubits"]]},
     Association @ Table[
         key -> Join[
@@ -317,7 +316,7 @@ transversalGeneratorImages[gate_, nq_Integer] := With[
 (* One representative of each of the 24 one-qubit Cliffords, as a word in H and S,
    with the named gates preferred as labels: the naming table is built by looking
    up an action, so a gate that has a name gets it and the rest keep their word. *)
-transversalCliffordWords[nq_Integer] := transversalCliffordWords[nq] = DeleteDuplicatesBy[
+transversalCliffordWords[nq_Integer] := qecMemoKey[transversalCliffordWords[nq]] = DeleteDuplicatesBy[
     Join[{{}}, Catenate[Table[Tuples[{"H", "S"}, l], {l, 1, 6}]]],
     transversalGeneratorImages[#, nq] &
 ]
@@ -325,7 +324,7 @@ transversalCliffordWords[nq_Integer] := transversalCliffordWords[nq] = DeleteDup
 (* The naming table, images -> label.  The named gates go in LAST so that they win
    the key they share with a word: the transversal S of the 7-qubit code is to be
    reported as "Sdg", not as "SSS". *)
-transversalGateNames[nq_Integer] := transversalGateNames[nq] = Association @ Which[
+transversalGateNames[nq_Integer] := qecMemoKey[transversalGateNames[nq]] = Association @ Which[
     nq === 1,
         Join[
             Table[transversalGeneratorImages[w, 1] -> If[w === {}, "I", StringJoin[w]], {w, transversalCliffordWords[1]}],
@@ -366,9 +365,14 @@ transversalGateQ[seq_List] := AllTrue[seq, StringQ[#] && MemberQ[$transversalOne
 
 transversalGateQ[_] := False
 
+(* A dagger is spelled as the framework spells it, SuperDagger["S"]; the layer's own
+   name for it is "Sdg". *)
+QECTransversalGate[code_QECCode, gate_] /; ! FreeQ[gate, _SuperDagger] :=
+    QECTransversalGate[code, gate /. SuperDagger[g_String] :> internalOp[SuperDagger[g]]]
+
 QECTransversalGate[code_QECCode, gate_] := If[
     ! transversalGateQ[gate],
-    Message[QECTransversalGate::gate, gate, $transversalOneQubitGates, $transversalTwoQubitGates]; $Failed,
+    qecMessageFailure[QECTransversalGate::gate, gate, $transversalOneQubitGates, $transversalTwoQubitGates],
     QECTransversalGate[<|"Code" -> First[code], "Gate" -> gate|>]
 ]
 
@@ -408,15 +412,15 @@ QECTransversalGate[a_Association]["LogicalQubits"] :=
     transversalQubits[a["Gate"]] codeLogicalQubits[a["Code"]]
 
 QECTransversalGate[a_Association]["Instructions"] :=
-    transversalInstructions[a["Gate"], a["Code"]["Qubits"]]
+    instructionRules[transversalInstructions[a["Gate"], a["Code"]["Qubits"]]]
 
 QECTransversalGate[a_Association]["Depth"] :=
     If[ListQ[a["Gate"]], Length[DeleteCases[a["Gate"], "I"]], If[a["Gate"] === "I", 0, 1]]
 
 QECTransversalGate[a_Association]["QuantumCircuitOperator"] :=
-    gadgetCircuitOperator[QECTransversalGate[a]["Instructions"]]
+    gadgetCircuitOperator[transversalInstructions[a["Gate"], a["Code"]["Qubits"]]]
 QECTransversalGate[a_Association]["Diagram"] :=
-    gadgetDiagram[QECTransversalGate[a]["Instructions"]]
+    gadgetDiagram[transversalInstructions[a["Gate"], a["Code"]["Qubits"]]]
 
 QECTransversalGate[a_Association]["TransversalQ"] :=
     transversalValidQ[a["Code"], a["Gate"], transversalQubits[a["Gate"]]]
@@ -449,8 +453,6 @@ QECTransversalGate[a_Association]["LogicalGate"] := Module[{nq, action},
     ]
 ]
 
-QECTransversalGate[a_Association][prop_String] :=
-    (Message[QECTransversalGate::noprop, prop]; Missing["NotFound", prop])
 
 
 (* ---- formatting ---- *)
