@@ -86,8 +86,8 @@ stabilizerNumericArrayQ[m_] := With[{sparse = stabilizerSparse[m]}, AllTrue[spar
 
 stabilizerExactQ[m_] := Precision[m] === Infinity
 
-(* |x| = 1 shown for symbolic x, its symbols taken as real (ComplexExpand). *)
-stabilizerUnitModulusQ[x_] := TrueQ[Simplify[ComplexExpand[Abs[x] ^ 2] == 1]]
+(* |x| = 1 shown for symbolic x, its symbols taken as real. *)
+stabilizerUnitModulusQ[x_] := TrueQ[simplifyOnReals[Abs[x] ^ 2 == 1, DeleteDuplicates @ symbolicParameters[x]]]
 
 (* An exact matrix divided by the phase of its first entry that is not zero: the *)
 (* Clifford test does not see a global phase, and an algebraic phase such as     *)

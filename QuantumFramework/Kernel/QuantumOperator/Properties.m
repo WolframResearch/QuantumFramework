@@ -138,7 +138,7 @@ QuantumOperatorProp[QuantumOperator[state_, _], prop_String] /; MemberQ[$Quantum
    again, until $RecursionLimit. A name operators do not define is declined, for the
    circuit to answer. *)
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
-    result = QuantumOperatorProp[qo, prop, args]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumOperator, prop, QuantumOperatorProp[qo, prop, args]], QuantumOperatorProp[qo, prop, args]]
     },
     Which[
         FailureQ[Unevaluated @ result],
@@ -541,15 +541,43 @@ QuantumOperatorProp[qo_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qo["InputQu
     QuantumOperator[#, {qo["OutputOrder"], Drop[qo["InputOrder"], {n}]}] & /@ qo["State"]["UnstackInput", n]
 
 
-QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
+(* A symbolic matrix is Hermitian or unitary when it is so for every value its symbols' facts allow:
+   M - M^dagger, or M^dagger M - 1, is formed from M and M^dagger refined under the facts and tested entry by entry
+   (zeroVerdict), giving True, False, or Indeterminate with a message (yesNo). A numeric or non-square matrix
+   is tested directly. Either answer is kept with the operator (storedVerdict), and an operator built as a
+   unitary gate already holds its "UnitaryQ". *)
+QuantumOperatorProp[qo_, "HermitianQ"] := storedVerdict[qo, "HermitianQ", With[{m = qo["Matrix"]},
+    If[ qo["State"]["NumericQ"] || ! SquareMatrixQ[m],
+        HermitianMatrixQ[m],
+        yesNo[QuantumOperator, "HermitianQ", hermitianVerdict, m, qo["Basis"]]
+    ]
+]]
 
-QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
+QuantumOperatorProp[qo_, "UnitaryQ"] := knownUnitaryQ[qo] || storedVerdict[qo, "UnitaryQ", With[{m = qo["Matrix"]},
+    If[ qo["State"]["NumericQ"] || ! SquareMatrixQ[m],
+        UnitaryMatrixQ[N[m]],
+        yesNo[QuantumOperator, "UnitaryQ", unitaryVerdict, m, qo["Basis"]]
+    ]
+]]
 
-QuantumOperatorProp[qo_, "Eigenvalues", opts___] /; qo["SquareQ"] := eigenvalues[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+hermitianVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]},
+    With[{es = symbolicEntries[m - conjugateTransposeOnDomains[m, qb]]}, noteLeftover[es]; zeroVerdict[es, qb]]
+]
 
-QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvectors[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+unitaryVerdict[m0_, qb_] := With[{m = refineOnFacts[m0, qb]},
+    With[{es = symbolicEntries[conjugateTransposeOnDomains[m, qb] . m - IdentityMatrix[Length[m], SparseArray]]}, noteLeftover[es]; zeroVerdict[es, qb]]
+]
 
-QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+symbolicEntries[m_SparseArray] := m["NonzeroValues"]
+symbolicEntries[m_] := Flatten[Normal[m]]
+
+(* The matrix is refined on its facts first: an entry the facts make zero, Sqrt[p^2] - p for p >= 0, is then
+   zero for the eigensolver too, which would otherwise read a multiple of the identity as a Jordan block. *)
+QuantumOperatorProp[qo_, "Eigenvalues", opts___] /; qo["SquareQ"] := eigenvalues[refineOnFacts[qo["MatrixRepresentation"], qo["Basis"]], opts, "Sort" -> False, "Normalize" -> True]
+
+QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvectors[refineOnFacts[qo["MatrixRepresentation"], qo["Basis"]], opts, "Sort" -> False, "Normalize" -> True]
+
+QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[refineOnFacts[qo["MatrixRepresentation"], qo["Basis"]], opts, "Sort" -> False, "Normalize" -> True]
 
 QuantumOperator::noeigenbasis = "the eigenvectors of the operator span only `1` of its `2` dimensions at the precision of its eigenvectors, so it has no eigenbasis";
 
@@ -754,8 +782,9 @@ QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]
 ]
 
 
-QuantumOperatorProp[qo_, prop : "Dagger" | "ConjugateTranspose" | "Inverse"] := simplifyLabel @ QuantumOperator[
-    qo["State"][prop], {qo["InputOrder"], qo["OutputOrder"]}]
+(* the dagger and the inverse of an operator known to be unitary are unitary *)
+QuantumOperatorProp[qo_, prop : "Dagger" | "ConjugateTranspose" | "Inverse"] := keepUnitary[qo, simplifyLabel @ QuantumOperator[
+    qo["State"][prop], {qo["InputOrder"], qo["OutputOrder"]}]]
 
 QuantumOperatorProp[qo_, prop : "Conjugate" | "Dual"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 
@@ -1028,32 +1057,33 @@ kakKroneckerFactorSymbolic[mat_, simp_] := Module[{blocks, a0, c0, b, r0, s0},
    Det[u]^(1/4)) is unit modulus under the real-parameter assumption. *)
 kakUnwrapAngle[z_] := - I PowerExpand[Log[Simplify[TrigToExp[z]]]]
 
-(* Structured-symbolic KAK: the same magic-basis factorization in exact arithmetic. ComplexExpand makes
-   Re/Im split once the parameters are declared real, an exact Sqrt[2] separates the eigenvalues,
+(* Structured-symbolic KAK: the same magic-basis factorization in exact arithmetic, with the symbols
+   reals real (simplifyOnReals), so Re/Im split, an exact Sqrt[2] separates the eigenvalues,
    Orthogonalize forces a real-orthonormal eigenbasis, kakUnwrapAngle reads off the continuous angles,
-   and FullSimplify[..., assum] reduces to closed form. Returns the same association as TwoQubitKAK (for
+   and FullSimplify under their reality reduces to closed form. Returns the same association as TwoQubitKAK (for
    a generic dense symbolic matrix the eigensolve is a Root blowup; the caller bounds it). *)
-TwoQubitKAKSymbolic[u_ ? SquareMatrixQ, assum_] /; Dimensions[u] === {4, 4} := Module[{
+TwoQubitKAKSymbolic[u_ ? SquareMatrixQ, reals_List] /; Dimensions[u] === {4, 4} := Module[{
     mb = $MagicBasis, mbd = ConjugateTranspose[$MagicBasis], signs = $kakBellSigns,
-    simp, su, uMagic, m2, proj, k1, theta, coords, corr
+    simp, real, su, uMagic, m2, proj, k1, theta, coords, corr
 },
-    simp = FullSimplify[#, assum] &;
+    simp = FullSimplify[#, Element[reals, Reals]] &;
+    real = simplifyOnReals[#, reals, FullSimplify] &;
     su = u / Det[u] ^ (1/4);
-    uMagic = simp @ ComplexExpand[mbd . su . mb];
-    m2 = simp @ ComplexExpand[Transpose[uMagic] . uMagic];
-    proj = simp @ ComplexExpand @ Transpose[Orthogonalize[
+    uMagic = real[mbd . su . mb];
+    m2 = real[Transpose[uMagic] . uMagic];
+    proj = real @ Transpose[Orthogonalize[
         Eigensystem[ComplexExpand[Re[m2]] + Sqrt[2] ComplexExpand[Im[m2]]][[2]]]];
     If[TrueQ[simp[Re[Det[proj]]] < 0], proj[[All, 1]] = - proj[[All, 1]]];
     theta = simp[kakUnwrapAngle[Diagonal[Transpose[proj] . m2 . proj]] / 2];
-    k1 = simp @ ComplexExpand[uMagic . proj . DiagonalMatrix[Exp[- I theta]]];
+    k1 = real[uMagic . proj . DiagonalMatrix[Exp[- I theta]]];
     If[TrueQ[simp[Re[Det[k1]]] < 0], k1[[All, 1]] = - k1[[All, 1]]; theta[[1]] += Pi];
     coords = simp[Transpose[signs] . theta / 4];
-    corr = simp @ ComplexExpand[mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd];
+    corr = real[mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd];
     <|
         "GlobalPhase" -> simp @ kakUnwrapAngle[Det[u] ^ (1/4)],
-        "Left" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . k1 . mbd . corr], simp],
+        "Left" -> kakKroneckerFactorSymbolic[real[mb . k1 . mbd . corr], simp],
         "Canonical" -> coords,
-        "Right" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . Transpose[proj] . mbd], simp]
+        "Right" -> kakKroneckerFactorSymbolic[real[mb . Transpose[proj] . mbd], simp]
     |>
 ]
 
@@ -1106,7 +1136,7 @@ QuantumCircuitOperator::kaksymbolic = "KAK could not decompose `1` symbolically 
 
 QuantumOperatorProp[qo_, "KAK"] /; qo["Dimension"] == 16 && MatchQ[qo["Dimensions"], {2, 2, 2, 2}] :=
 Enclose @ Module[{
-    mat = Normal @ qo["Sort"]["MatrixRepresentation"], numericQ, vars, assum, data, c, a, b, o1, o2, order,
+    mat = Normal @ qo["Sort"]["MatrixRepresentation"], numericQ, vars, data, c, a, b, o1, o2, order,
     gates, circuit, circMat, residualPhase
 },
     numericQ = MatrixQ[Quiet @ N @ mat, NumericQ];
@@ -1134,10 +1164,9 @@ Enclose @ Module[{
     ,
     (* ---- structured-symbolic path: direct matrix gates, global phase = worker's gp (no projection).
        A generic dense symbolic eigensolve is a Root blowup, so the worker is time-bounded and bails. ---- *)
-        (* the free parameters: actual non-System symbols (Variables misses these inside Cos / E^...) *)
-        vars = DeleteDuplicates @ Cases[mat, _Symbol ? (Context[#] =!= "System`" &), Infinity];
-        assum = Element[vars, Reals];
-        data = TimeConstrained[TwoQubitKAKSymbolic[mat, assum], $kakSymbolicTimeBudget, $Failed];
+        (* the free parameters, plain or indexed, all taken real *)
+        vars = DeleteDuplicates @ symbolicParameters[mat];
+        data = TimeConstrained[TwoQubitKAKSymbolic[mat, vars], $kakSymbolicTimeBudget, $Failed];
         If[ ! AssociationQ[data],
             Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
             Return[QuantumCircuitOperator[{qo}, "Label" -> "KAK"], Module]

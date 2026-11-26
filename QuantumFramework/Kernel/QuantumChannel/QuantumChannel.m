@@ -115,5 +115,5 @@ Scan[
     qc[AssociationThread[Take[qc["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qc_QuantumChannel ? QuantumChannelQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qc["Parameters"]] :=
-    QuantumChannel[qc["Operator"][rules]]
+    Replace[valueOutsideFacts[qc, rules], {bad_List :> domainFailure[QuantumChannel, bad], None :> QuantumChannel[qc["Operator"][rules]]}]
 

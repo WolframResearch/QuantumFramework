@@ -22,10 +22,10 @@ QuantumHamiltonianOperator /: MakeBoxes[qho_QuantumHamiltonianOperator /; Quantu
         },
         {
             {
-                BoxForm`SummaryItem[{"Hermitian: ", qho["HermitianQ"]}]
+                BoxForm`SummaryItem[{"Hermitian: ", Block[{$verdictMessages = False}, qho["HermitianQ"]]}]
             },
             {
-                BoxForm`SummaryItem[{"Unitary: ", qho["UnitaryQ"]}]
+                BoxForm`SummaryItem[{"Unitary: ", Block[{$verdictMessages = False}, qho["UnitaryQ"]]}]
             }
         },
         format,

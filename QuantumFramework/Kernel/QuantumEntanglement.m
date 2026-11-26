@@ -85,7 +85,7 @@ methodName[_] := None
 renyiOrderQ[alpha_ ? NumericQ] := TrueQ[NonNegative[alpha]]
 renyiOrderQ[alpha_] := FreeQ[alpha, _String | _List] && With[{ps = symbolicParameters[alpha]},
     ps =!= {} && AllTrue[ps, FreeQ[#, s_Symbol /; Context[s] === "System`" && s =!= Subscript] &] &&
-        ! TrueQ[TimeConstrained[Simplify[alpha < 0 || Im[alpha] != 0, Element[ps, Reals]], 1]]
+        ! TrueQ[TimeConstrained[simplifyOnReals[alpha < 0 || Im[alpha] != 0, ps], 1]]
 ]
 
 (* The arguments after the state, read as {split, method}, or as {measurement, split, method} for MutualInformationJ
@@ -699,10 +699,7 @@ symbolicContext[rho_] := With[{ps = DeleteDuplicates @ symbolicParameters[rho]},
     With[{physical = With[{e = positiveSemidefiniteCoefficients[rho, ps]},
         If[ ListQ[e],
             TimeConstrained[
-                Simplify[
-                    And @@ Join[Thread[Flatten[ComplexExpand[{Re[#], Im[#]}] & [rho - ConjugateTranspose[rho]]] == 0], Thread[e >= 0]],
-                    Element[ps, Reals]
-                ],
+                simplifyOnReals[And @@ Join[Thread[Flatten[{Re[#], Im[#]} & [rho - ConjugateTranspose[rho]]] == 0], Thread[e >= 0]], ps],
                 $entanglementSignTime,
                 $Failed
             ],
@@ -713,18 +710,12 @@ symbolicContext[rho_] := With[{ps = DeleteDuplicates @ symbolicParameters[rho]},
     ]
 ]
 
-(* The parameters of a symbolic expression: its outermost parts that are not numeric and on which no numeric function
-   acts, plain symbols and indexed ones such as x[1] or Subscript[p, 1]. *)
-symbolicParameters[_ ? NumericQ] := {}
-symbolicParameters[h_Symbol[args___]] /; h === List || MemberQ[Attributes[h], NumericFunction] := Catenate[symbolicParameters /@ {args}]
-symbolicParameters[x_] := {x}
-
 (* The coefficients e_k of det(x + h) = Sum[e_k x^(n - k)]: the elementary symmetric functions of the eigenvalues of
    h, all of them nonnegative exactly when no eigenvalue of the Hermitian h is negative; $Failed when they are not
    found within $entanglementSignTime seconds. *)
 positiveSemidefiniteCoefficients[h_, ps_] := Module[{x},
     TimeConstrained[
-        Simplify[ComplexExpand[(-1) ^ Length[h] CoefficientList[CharacteristicPolynomial[-h, x], x]], Element[ps, Reals]],
+        simplifyOnReals[(-1) ^ Length[h] CoefficientList[CharacteristicPolynomial[-h, x], x], ps],
         $entanglementSignTime,
         $Failed
     ]
@@ -744,7 +735,7 @@ resolvedQ[q_] := TrueQ @ TimeConstrained[
     False
 ]
 
-realForm[v_, c_] := TimeConstrained[Simplify[ComplexExpand[v], Element[c["Parameters"], Reals]], $entanglementSignTime, $Failed]
+realForm[v_, c_] := TimeConstrained[simplifyOnReals[v, c["Parameters"]], $entanglementSignTime, $Failed]
 
 
 (* The sign, 1, 0 or -1, of a real criterion quantity, or Indeterminate when it cannot be decided. An approximate
@@ -876,7 +867,11 @@ toleratedState[qs_] := If[
 
 (* With assumptions on the parameters of a symbolic state, the state is simplified under them before the monotone is
    read, its intermediate eigenvalues are simplified under them (assumedSimplify), and so is the value. *)
-assumedMonotone[qs_, a_, True] := entanglementMonotone[qs, Sequence @@ a]
+(* With no assumptions given, a value that holds symbols is refined under the state's own facts, the ranges its
+   roles and its declarations give, so Werner[p] with p in [0, 1] leaves no Conjugate[p] in its negativity. *)
+assumedMonotone[qs_, a_, True] := With[{v = entanglementMonotone[qs, Sequence @@ a]},
+    If[NumericQ[v] || FailureQ[v], v, refineOnFacts[v, qs["Basis"]]]
+]
 
 assumedMonotone[qs_, a_, given_] := Block[{$Assumptions = given},
     If[ ArrayQ[qs["State"], _, NumericQ],
@@ -1129,9 +1124,9 @@ pureImpurity[qs_, bp_] := Which[
 symbolicPureQ[m_] := With[{a = Replace[sampleAssignments[m], {{first_, ___} :> (m /. first), _ -> None}]},
     ! (ArrayQ[a, 2, NumericQ] && Precision[a] === Infinity && (MatchQ[quantitySign[Total[a Transpose[a], 2] - Tr[a] ^ 2], 1 | -1] || exactUnphysicalQ[a]))
 ] && TrueQ @ TimeConstrained[
-    Simplify[
-        ComplexExpand[Total[m Transpose[m], 2] - Tr[m] ^ 2] == 0 && And @@ Thread[ComplexExpand[Flatten[m - ConjugateTranspose[m]]] == 0],
-        Element[DeleteDuplicates @ symbolicParameters[m], Reals]
+    simplifyOnReals[
+        Total[m Transpose[m], 2] - Tr[m] ^ 2 == 0 && And @@ Thread[Flatten[m - ConjugateTranspose[m]] == 0],
+        DeleteDuplicates @ symbolicParameters[m]
     ],
     $entanglementSignTime,
     False

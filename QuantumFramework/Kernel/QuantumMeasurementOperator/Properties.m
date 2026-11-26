@@ -35,7 +35,7 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
 $QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits", "Basis"}
 
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
-    result = QuantumMeasurementOperatorProp[qmo, prop, args]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumMeasurementOperator, prop, QuantumMeasurementOperatorProp[qmo, prop, args]], QuantumMeasurementOperatorProp[qmo, prop, args]]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumMeasurementOperatorProp[qmo, prop, args]] &&
         ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&
@@ -326,7 +326,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Auto
                 ],
                 "Input" -> QuantumTensorProduct[inputBasis, tracedOperator["Input"]],
                 "Label" -> "Eigen"[qmo["Label"]],
-                "ParameterSpec" -> qmo["ParameterSpec"]
+                "ParameterSpec" -> qmo["ParameterSpec"],
+                "SymbolDomains" -> MergeSymbolDomains[qmo]
             ]
         ];
 

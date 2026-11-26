@@ -264,4 +264,13 @@ VerificationTest[
     TestID -> "KAK-symbolic-Can-exact"
 ]
 
+(* an indexed angle theta[1] is a parameter like a plain one: the circuit equals the gate for every real angle *)
+VerificationTest[
+    With[{u = MatrixExp[-I \[Theta][1] / 2 kakKP[kakY, kakY]]},
+        Simplify[Normal[(QuantumOperator @ QuantumOperator[u, {1, 2}]["KAK"])["MatrixRepresentation"]] - u, Element[\[Theta][1], Reals]]
+    ],
+    ConstantArray[0, {4, 4}],
+    TestID -> "KAK-symbolic-indexed-angle-exact"
+]
+
 EndTestSection[]

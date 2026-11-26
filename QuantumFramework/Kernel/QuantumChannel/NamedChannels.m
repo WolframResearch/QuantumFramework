@@ -41,8 +41,15 @@ quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := Enclose @ Wi
 quantumChannel[args___] := quantumChannel[QuantumOperator[args]]
 
 
+(* Each probability of a named channel lies in [0, 1] by its role (in [0, 4/3] for Depolarizing, where
+   the Kraus weight 1 - 3 p / 4 must stay nonnegative), and joins the basis's "SymbolDomains". For every
+   channel but ResetError these are the exact regions where the channel is completely positive and trace
+   preserving. The region of ResetError is the triangle p0, p1 >= 0, p0 + p1 <= 1; a record holds facts about
+   one symbol at a time, so it keeps that triangle's extent along each axis, and the joint condition only
+   where it falls on one symbol, as for ResetError[r, r] (r in [0, 1/2]) through its p0 + p1 slot. *)
+
 QuantumChannel["AmplitudeDamping"[gamma_ : .5], args___] :=
-    quantumChannel[{{{1, 0}, {0, Sqrt[1 - gamma]}}, {{0, Sqrt[gamma]}, {0, 0}}}, args, "Label" -> "AmplitudeDamping"[gamma]]
+    quantumChannel[{{{1, 0}, {0, Sqrt[1 - gamma]}}, {{0, Sqrt[gamma]}, {0, 0}}}, args, "Label" -> "AmplitudeDamping"[gamma], roleDomainOption[{gamma}, Interval[{0, 1}]]]
 
 QuantumChannel["GeneralizedAmplitudeDamping"[gamma_ : .5, p_ : .5], args___] :=
 	quantumChannel[{
@@ -52,21 +59,22 @@ QuantumChannel["GeneralizedAmplitudeDamping"[gamma_ : .5, p_ : .5], args___] :=
         Sqrt[1 - p] {{0, 0}, {Sqrt[gamma], 0}}
     },
         args,
-        "Label" -> "GeneralizedAmplitudeDamping"[gamma, p]
+        "Label" -> "GeneralizedAmplitudeDamping"[gamma, p],
+        roleDomainOption[{gamma, p}, Interval[{0, 1}]]
     ]
 
 QuantumChannel["PhaseDamping"[lambda_ : .5], args___] :=
-    quantumChannel[{{{1, 0}, {0, Sqrt[1 - lambda]}}, {{0, 0}, {0, Sqrt[lambda]}}}, args, "Label" -> "PhaseDamping"[lambda]]
+    quantumChannel[{{{1, 0}, {0, Sqrt[1 - lambda]}}, {{0, 0}, {0, Sqrt[lambda]}}}, args, "Label" -> "PhaseDamping"[lambda], roleDomainOption[{lambda}, Interval[{0, 1}]]]
 
 
 QuantumChannel["BitFlip"[p_ : .5], args___] :=
-    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p]]
+    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p], roleDomainOption[{p}, Interval[{0, 1}]]]
 
 QuantumChannel["PhaseFlip"[p_ : .5], args___] :=
-    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p]]
+    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p], roleDomainOption[{p}, Interval[{0, 1}]]]
 
 QuantumChannel["BitPhaseFlip"[p_ : .5], args___] :=
-    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p]]
+    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p], roleDomainOption[{p}, Interval[{0, 1}]]]
 
 QuantumChannel["Depolarizing"[p_ : .5], args___] :=
     quantumChannel[{
@@ -76,7 +84,8 @@ QuantumChannel["Depolarizing"[p_ : .5], args___] :=
         Sqrt[p] (1 / 2) PauliMatrix[3]
     },
         args,
-        "Label" -> "\[CapitalDelta]"[p]
+        "Label" -> "\[CapitalDelta]"[p],
+        roleDomainOption[{p}, Interval[{0, 4/3}]]
     ]
 
 QuantumChannel["ResetError"[p0_ : .25, p1_ : .25], args___] :=
@@ -88,7 +97,8 @@ QuantumChannel["ResetError"[p0_ : .25, p1_ : .25], args___] :=
         Sqrt[p1] {{0, 0}, {0, 1}}
     },
         args,
-        "Label" -> "ResetError"[p0, p1]
+        "Label" -> "ResetError"[p0, p1],
+        roleDomainOption[{p0, p1, p0 + p1}, Interval[{0, 1}]]
     ]
 
 QuantumChannel[name_String, args___] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[name[], args]

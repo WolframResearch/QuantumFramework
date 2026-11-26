@@ -26,7 +26,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
 
 
 (qc_QuantumChannel[prop_ ? propQ, args___]) /; QuantumChannelQ[qc] := With[{
-    result = QuantumChannelProp[qc, prop, args]
+    result = If[MatchQ[prop, $yesNoProperties], verdictScope[QuantumChannel, prop, QuantumChannelProp[qc, prop, args]], QuantumChannelProp[qc, prop, args]]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumChannelProp[qc, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Operator", "QuantumOperator", "Basis"}, prop] &&
@@ -67,11 +67,18 @@ QuantumChannelProp[qc_, "TraceBasis"] := qc["Output"]["Extract", Range[qc["Trace
 QuantumChannelProp[qc_, "Unitality"] := QuantumOperator @ QuantumPartialTrace[
     QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
 
-QuantumChannelProp[qc_, "UnitalQ"] := With[{m = Chop @ qc["Unitality"]["MatrixRepresentation"]},
-    If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m, SparseArray], Undefined]
+QuantumChannelProp[qc_, "UnitalQ"] := storedVerdict[qc, "UnitalQ", unitality[qc, "UnitalQ"]]
+
+QuantumChannelProp[qc_, "TracePreservingQ"] := storedVerdict[qc, "TracePreservingQ", unitality[qc["Adjoint"], "TracePreservingQ"]]
+
+unitality[qc_, prop_] := With[{m = Chop @ qc["Unitality"]["MatrixRepresentation"]},
+    If[ MatrixQ[m, NumericQ],
+        m == IdentityMatrix[Length @ m, SparseArray],
+        yesNo[QuantumChannel, prop, identityVerdict, m, qc["Basis"]]
+    ]
 ]
 
-QuantumChannelProp[qc_, "TracePreservingQ"] := qc["Adjoint"]["UnitalQ"]
+identityVerdict[m_, qb_] := zeroVerdict[Flatten @ Normal[m - IdentityMatrix[Length @ m]], qb]
 
 QuantumChannelProp[qc_, "EvolutionChannel"] := QuantumChannel[
     (I #)["EvolutionOperator"] & /@  qc["UnstackOutput", 1]

@@ -37,6 +37,8 @@ PackageScope["eigenvalues"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
 PackageScope["roundoffChop"]
+PackageScope["symbolicParameters"]
+PackageScope["simplifyOnReals"]
 PackageScope["pauliMatrix"]
 PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
@@ -1705,10 +1707,11 @@ HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Inser
    constructs. A pattern-bearing key - only ever a symbolic / meta call - would otherwise create
    an over-matching DownValue (the latent bug the old code masked with Quiet) and emit Rule::rhs;
    such keys are simply left uncached. The key is small (obj + prop + args), so the FreeQ check
-   is cheap, and no Quiet is needed. Returns result either way. *)
+   is cheap, and no Quiet is needed. An Indeterminate answer is not stored either: it may come from a time
+   limit, and a later call with more time can decide it. Returns result either way. *)
 SetAttributes[cacheProperty, HoldFirst];
 cacheProperty[prop_, result_] := (
-    If[ FreeQ[Unevaluated[prop], _Pattern | _Blank | _BlankSequence | _BlankNullSequence | _Optional],
+    If[ result =!= Indeterminate && FreeQ[Unevaluated[prop], _Pattern | _Blank | _BlankSequence | _BlankNullSequence | _Optional],
         prop = result;
         $cachedPropertyKeys[Hash[Unevaluated[prop]]] = True
     ];
@@ -1750,3 +1753,21 @@ QuditAdjacencyMatrix[xs_ ? VectorQ, dim_ : Automatic] := With[{d = Replace[dim, 
 	Abs[xs] DiagonalMatrix[Mod[Arg[xs], 2 Pi] / (Pi / (2 d)) + 1] + If[d > 1, SparseArray[Band[{2, 1}] -> 1, {d, d}], 0]
 ]
 
+
+(* The parameters of a symbolic expression: its outermost parts that are not numeric and on which no numeric function
+   acts, plain symbols and indexed ones such as x[1] or Subscript[p, 1]. *)
+symbolicParameters[_ ? NumericQ] := {}
+symbolicParameters[h_Symbol[args___]] /; h === List || MemberQ[Attributes[h], NumericFunction] := Catenate[symbolicParameters /@ {args}]
+symbolicParameters[x_] := {x}
+
+(* expr simplified with the symbols reals real and every other symbol complex. ComplexExpand takes the others as
+   complex through one pattern, and writes them through Conjugate rather than Re and Im, so they stay whole; the
+   simplifier, Simplify unless another is given, then works under the reals' reality. With no symbol but the
+   reals, ComplexExpand alone takes every variable real, and its result simplifies faster. *)
+simplifyOnReals[expr_, reals_List, simplify_ : Simplify] := simplify[
+    If[ SubsetQ[reals, symbolicParameters[expr]],
+        ComplexExpand[expr],
+        ComplexExpand[expr, {Except[Alternatives @@ reals]}, TargetFunctions -> {Conjugate}]
+    ],
+    Element[reals, Reals]
+]
