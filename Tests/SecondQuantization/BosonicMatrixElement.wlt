@@ -159,13 +159,12 @@ VerificationTest[
     TestID -> "BME-Exp-MixedDisentangles"
 ]
 
-(* The payoff: a squeeze written as its disentangled product of wings agrees with the
-   closed form the SqueezeOperator clause gives for the same operator. *)
+(* The payoff: a squeeze written as its disentangled product of wings gives the
+   squeezed-vacuum amplitude <2|S(r)|0> = -Tanh[r]/Sqrt[2 Cosh[r]]. *)
 VerificationTest[
     With[{sd = BosonicExpOrder[
             Exp[(Conjugate[\[Xi]] av ** av - \[Xi] adv ** adv)/2], $v, Assumptions -> \[Xi] > 0] /. \[Xi] -> 0.4},
-        Chop[BosonicMatrixElement[{2, 0}, Evaluate[sd], $v] -
-             BosonicMatrixElement[{2, 0}, SqueezeOperator[0.4]]]],
+        Chop[BosonicMatrixElement[{2, 0}, Evaluate[sd], $v] + Tanh[0.4]/Sqrt[2 Cosh[0.4]]]],
     0,
     TestID -> "BME-Exp-SqueezeMatchesNamed"
 ]
@@ -392,7 +391,7 @@ VerificationTest[
 VerificationTest[
     {BosonicMatrixElement[{{m}, {n}}, adv ** av, $v],
      BosonicMatrixElement[{{2}, {0}}, Exp[z adv], $v],
-     BosonicMatrixElement[{{1}, {0}}, DisplacementOperator[\[Alpha]]],
+     BosonicMatrixElement[{{1}, {0}}, DisplacementOperator[\[Alpha], Infinity, $v], $v],
      BosonicMatrixElement[{m, n}, bd1 ** b1, {{bd1}, {b1}}],
      BosonicMatrixElement[{2, 0}, Exp[z bd1], {{bd1}, {b1}}]},
     {Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2], \[Alpha] E^(-Conjugate[\[Alpha]] \[Alpha]/2),
@@ -400,16 +399,16 @@ VerificationTest[
     TestID -> "BME-Modes-OneModeSpellings"
 ]
 
-(* The closed forms of D and S take a symbolic Fock index when m - n is a number: <n|D(g)|n> is
-   e^(-|g|^2/2) L_n(|g|^2), odd differences of S vanish, <2m|S|0> is the squeezed-vacuum amplitude,
-   and <n + 2|S|n> at n = 0, ..., 3 is the integer element. *)
+(* D and S in the ladder operators take a symbolic Fock index: <n|D(g)|n> is e^(-|g|^2/2) L_n(|g|^2),
+   odd differences of S vanish, <2m|S|0> is the squeezed-vacuum amplitude, and <n + 2|S|n> at
+   n = 0, ..., 3 is the integer element. *)
 VerificationTest[
-    {
-        BosonicMatrixElement[{n, n}, DisplacementOperator[g]] - E^(-g Conjugate[g]/2) LaguerreL[n, g Conjugate[g]],
-        BosonicMatrixElement[{n + 1, n}, SqueezeOperator[{r, th}]],
-        Simplify[BosonicMatrixElement[{2 m, 0}, SqueezeOperator[{r, th}]] - Sqrt[(2 m)! Sech[r]] (-E^(I th) Tanh[r])^m/(2^m m!), m \[Element] Integers && m >= 0],
-        Table[Simplify[FunctionExpand[BosonicMatrixElement[{n + 2, n}, SqueezeOperator[{r, th}]] /. n -> j] - BosonicMatrixElement[{j + 2, j}, SqueezeOperator[{r, th}]]], {j, 0, 3}]
-    },
+    With[{dg = DisplacementOperator[g, Infinity, $v], s = SqueezeOperator[{r, th}, Infinity, $v]}, {
+        BosonicMatrixElement[{n, n}, dg, $v] - E^(-g Conjugate[g]/2) LaguerreL[n, g Conjugate[g]],
+        BosonicMatrixElement[{n + 1, n}, s, $v, Assumptions -> r > 0],
+        Simplify[BosonicMatrixElement[{2 m, 0}, s, $v, Assumptions -> r > 0] - Sqrt[(2 m)! Sech[r]] (-E^(I th) Tanh[r])^m/(2^m m!), m \[Element] Integers && m >= 0],
+        Table[Simplify[FunctionExpand[BosonicMatrixElement[{n + 2, n}, s, $v, Assumptions -> r > 0] /. n -> j] - BosonicMatrixElement[{j + 2, j}, s, $v, Assumptions -> r > 0], r > 0], {j, 0, 3}]
+    }],
     {0, 0, 0, {0, 0, 0, 0}},
     TestID -> "BME-SymbolicIndexClosedForms"
 ]
@@ -417,14 +416,24 @@ VerificationTest[
 (* Symbolic Fock indices are nonnegative integers, so a branch whose sign of m - n is impossible is
    dropped: <0|D|n> and <m|S|0> keep one branch, while a fully symbolic <m|S|n> keeps both. *)
 VerificationTest[
-    {
-        BosonicMatrixElement[{0, n}, DisplacementOperator[g]] - (-Conjugate[g])^n E^(-g Conjugate[g]/2)/Sqrt[n!],
-        Length[First[BosonicMatrixElement[{m, 0}, SqueezeOperator[{r, th}]]]],
-        Length[First[BosonicMatrixElement[{0, n}, SqueezeOperator[{r, th}]]]],
-        Length[First[BosonicMatrixElement[{m, n}, SqueezeOperator[{r, th}]]]]
-    },
+    With[{s = SqueezeOperator[{r, th}, Infinity, $v]}, {
+        BosonicMatrixElement[{0, n}, DisplacementOperator[g, Infinity, $v], $v] - (-Conjugate[g])^n E^(-g Conjugate[g]/2)/Sqrt[n!],
+        Length[First[BosonicMatrixElement[{m, 0}, s, $v]]],
+        Length[First[BosonicMatrixElement[{0, n}, s, $v]]],
+        Length[First[BosonicMatrixElement[{m, n}, s, $v]]]
+    }],
     {0, 1, 1, 2},
     TestID -> "BME-SymbolicIndexNonNegative"
+]
+
+(* A ladder operator beside D keeps the symbolic index closed: the photon-added coherent element
+   <m|a^dagger D(al)|n> agrees with the integer route for m, n = 0, 1, 2. *)
+VerificationTest[
+    With[{op = adv ** DisplacementOperator[\[Alpha], Infinity, $v]},
+        With[{s = BosonicMatrixElement[{m, n}, op, $v]},
+            Union[Flatten[Table[Simplify[(s /. {m -> i, n -> j}) - BosonicMatrixElement[{i, j}, op, $v]], {i, 0, 2}, {j, 0, 2}]]]]],
+    {0},
+    TestID -> "BME-SymbolicIndexPhotonAdded"
 ]
 
 (* An exponential in one mode of several: the other mode contributes its overlap. *)

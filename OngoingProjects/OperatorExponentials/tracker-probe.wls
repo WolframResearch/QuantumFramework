@@ -99,7 +99,7 @@ chk["P-020 moments |2>", With[{chi = BosonicMatrixElement[{2, 2}, Exp[g bd] ** E
     Table[moment[chi, m, k] - BosonicMatrixElement[{2, 2}, NonCommutativeMultiply @@ Join[ConstantArray[bd, m], ConstantArray[b, k]], v], {m, 0, 2}, {k, 0, 2}] === ConstantArray[0, {3, 3}]]];
 chk["G-024 Fock from diagonal", And @@ (With[{s = Exp[al Conjugate[al]] coh[{al, al}, #[[1]]] /. Conjugate[al] -> u /. al -> w},
     Simplify[Table[(D[s, {u, m}, {w, k}] /. {u -> 0, w -> 0})/Sqrt[m! k!] - (#[[2]][m, k] /. toAbs), {m, 0, 3}, {k, 0, 3}]] === ConstantArray[0, {4, 4}]] & /@
-    {{disp[gg], BosonicMatrixElement[{#1, #2}, DisplacementOperator[gg]] &}, {Exp[c nn], BosonicMatrixElement[{#1, #2}, Exp[c nn], v] &}})];
+    {{disp[gg], BosonicMatrixElement[{#1, #2}, DisplacementOperator[gg, Infinity, v], v] &}, {Exp[c nn], BosonicMatrixElement[{#1, #2}, Exp[c nn], v] &}})];
 chk["C-031 translation coeff", Simplify[ExpToTrig[gaussTrace[coh[{al, al}, Exp[-I t/2] disp[-a0] ** Exp[-I t nn]]] -
     1/(2 I Sin[t/2]) Exp[I a0 Conjugate[a0] Cot[t/2]/2]], 0 < t < Pi] === 0];
 chk["ExpOrder D(-a) e^{-itN}", MatchQ[BosonicExpOrder[disp[-a0] ** Exp[-I t nn], v], _. Power[E, _ ? (FreeQ[#, b] &)] ** _NormalOrdered ** Power[E, _ ? (FreeQ[#, bd] &)]]];
@@ -136,7 +136,7 @@ ipG = Integrate[#, {gx, -Infinity, Infinity}, {gy, -Infinity, Infinity}]/Pi &;
 chk["P-020 rho |be>", Simplify[ipG[(coh[{bx + I by, bx + I by}, disp[gx + I gy]] /. realG) kernG] - coh[{z, bx + I by}, 1] coh[{bx + I by, w0}, 1], Element[{bx, by}, Reals]] === 0];
 polyGauss[poly_, gauss_] := Total[(#2 D[gaussTrace[gauss Exp[s1 al + t1 Conjugate[al]]], {s1, #1[[1]]}, {t1, #1[[2]]}] /. {s1 -> 0, t1 -> 0}) & @@@
     CoefficientRules[Expand[poly /. Conjugate[al] -> cu /. al -> cw], {cw, cu}]];
-chk["P-020 rho |m>", Table[With[{chi = BosonicMatrixElement[{m, m}, DisplacementOperator[al]] /. toAbs},
+chk["P-020 rho |m>", Table[With[{chi = BosonicMatrixElement[{m, m}, DisplacementOperator[al, Infinity, v], v] /. toAbs},
     Simplify[polyGauss[Simplify[chi Exp[al Conjugate[al]/2]], Exp[-al Conjugate[al]/2] coh[{z, w0}, disp[-al]]] - coh[{z, 0}, 1] coh[{0, w0}, 1] (Conjugate[z] w0)^m/m!]], {m, 0, 3}] === {0, 0, 0, 0}];
 chk["P-030 measure k=3/4", With[{st = BosonicMatrixElement[{2 # + 1, 1}, Exp[ze bd ** bd/2], v] /. ze -> r Exp[I ph] &},
     Table[Simplify[1/(2 Pi) Integrate[r (1 - r^2)^(-1/2) ComplexExpand[st[m] Conjugate[st[n]]], {r, 0, 1}, {ph, 0, 2 Pi}]], {m, 0, 2}, {n, 0, 2}] === IdentityMatrix[3]]];

@@ -457,7 +457,7 @@ VerificationTest[
             {"Normal", "Weak", "Antinormal"},
         FreeQ[Normal[SqueezeOperator[{r, th}, 4, "Ordering" -> #]["Matrix"]], Abs | Arg | Conjugate] & /@ {"Normal", "Weak", "Antinormal"},
         Simplify[Normal[SqueezeOperator[{r, th}, 4]["Matrix"]][[{1, 2, 3}, {1, 2, 1}]] -
-            Outer[BosonicMatrixElement[{#1, #2}, SqueezeOperator[{r, th}]] &, {0, 1, 2}, {0, 1, 0}], r > 0 && th \[Element] Reals]
+            Outer[BosonicMatrixElement[{#1, #2}, SqueezeOperator[{r, th}, Infinity, FieldVariables[]], FieldVariables[], Assumptions -> r > 0] &, {0, 1, 2}, {0, 1, 0}], r > 0 && th \[Element] Reals]
     },
     {{True, True, True}, {True, True, True}, ConstantArray[0, {3, 3}]},
     TestID -> "SqueezeOperatorPolarTruncated"

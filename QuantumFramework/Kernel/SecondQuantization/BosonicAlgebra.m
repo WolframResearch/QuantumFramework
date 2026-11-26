@@ -144,47 +144,13 @@ BosonicVEV[expr_, vars_, opts : OptionsPattern[]] :=
 
 
 BosonicMatrixElement::usage =
-"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] in the ladder operators vars.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the element of poly between multimode Fock states.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) gives \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states.";
+"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives \[LeftAngleBracket]m\[VerticalSeparator]expr\[VerticalSeparator]n\[RightAngleBracket] in the ladder operators vars.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], \"1\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) gives the element of poly between multimode Fock states.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) gives \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]expr\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states.";
 
 Options[BosonicMatrixElement] = {"Basis" -> "Fock", Assumptions :> $Assumptions}
 
+BosonicMatrixElement::matrix = "`1` holds a matrix operator; give it in the ladder operators, e.g. DisplacementOperator[\[Alpha], \[Infinity], vars].";
+
 SetAttributes[BosonicMatrixElement, HoldRest]
-
-fockIndexQ[x_] := ! ListQ[x] && (! NumericQ[x] || IntegerQ[x] && x >= 0)
-
-SetAttributes[ladderBranch, HoldAll]
-
-ladderBranch[up_, down_, {m_, n_}, d_, c_] := With[{a = {m, n} \[Element] NonNegativeIntegers},
-    Which[
-        NumericQ[d], If[d >= 0, up, down],
-        TrueQ[Refine[d >= 0, a]], Refine[Piecewise[{{up, c}}, 0], a],
-        TrueQ[Refine[d <= 0, a]], Refine[Piecewise[{{down, c}}, 0], a],
-        True, Refine[Piecewise[{{up, d >= 0 && c}, {down, d < 0 && c}}, 0], a]
-    ]
-]
-
-BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, (DisplacementOperator | SqueezeOperator)[_ ? PossibleZeroQ | {_ ? PossibleZeroQ, _}]] :=
-    KroneckerDelta[m, n]
-
-BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, DisplacementOperator[\[Alpha]_]] :=
-    With[{a2 = Conjugate[\[Alpha]] \[Alpha], d = Simplify[m - n]},
-        E^(-a2/2) ladderBranch[
-            Sqrt[n!/m!] \[Alpha]^d LaguerreL[n, d, a2],
-            Sqrt[m!/n!] (-Conjugate[\[Alpha]])^(-d) LaguerreL[m, -d, a2],
-            {m, n}, d, True
-        ]
-    ]
-
-BosonicMatrixElement[{m_ ? fockIndexQ, n_ ? fockIndexQ}, SqueezeOperator[\[Xi]_]] :=
-    With[{r = If[ListQ[\[Xi]], First[\[Xi]], Abs[\[Xi]]], \[Phi] = If[ListQ[\[Xi]], Last[\[Xi]], Arg[\[Xi]]], d = Simplify[m - n]},
-        If[ NumericQ[d] && OddQ[d], 0,
-            ladderBranch[
-                (-E^(I \[Phi]) Tanh[r]/2)^(d/2)/(d/2)! Sqrt[m!/n!] Sech[r]^(n + 1/2) Hypergeometric2F1[-n/2, (1 - n)/2, d/2 + 1, -Sinh[r]^2],
-                (E^(-I \[Phi]) Tanh[r]/2)^(-d/2)/(-d/2)! Sqrt[n!/m!] Sech[r]^(m + 1/2) Hypergeometric2F1[-m/2, (1 - m)/2, 1 - d/2, -Sinh[r]^2],
-                {m, n}, d, Mod[d, 2] == 0
-            ]
-        ]
-    ]
 
 
 fockLadderElement[m_, n_, p_, q_] :=
@@ -216,14 +182,15 @@ BosonicMatrixElement[{m_, n_}, c_ ? NumericQ, opts : OptionsPattern[]] /;
         {Flatten[{m}], Flatten[{n}]}
     ]
 
-BosonicMatrixElement[{_, _}, Except[_DisplacementOperator | _SqueezeOperator | _ ? NumericQ], OptionsPattern[]] :=
+BosonicMatrixElement[{_, _}, Except[_ ? NumericQ], OptionsPattern[]] :=
     (Message[BosonicMatrixElement::argrx, BosonicMatrixElement, 2, 3]; $Failed)
 
 BosonicMatrixElement[{m_, n_}, e_, vars : Except[_Rule | _RuleDelayed], opts : OptionsPattern[]] :=
     Module[{expr = e /. GeneralizedPower[NonCommutativeMultiply, _, 0] -> 1, lv = ResolveLadderVariables[BosonicMatrixElement, vars], ms = Flatten[{m}], ns = Flatten[{n}], pair, j, d, r},
         pair = If[AssociationQ[lv], {First[lv["Creators"]], First[lv["Annihilators"]]}];
         r = Which[
-            lv === $Failed || ! FreeQ[expr, _QuantumOperator | _QuantumState], $Failed,
+            lv === $Failed, $Failed,
+            ! FreeQ[expr, _QuantumOperator | _QuantumState], Message[BosonicMatrixElement::matrix, HoldForm[e]]; $Failed,
             Length[ms] === Length[ns] === Length[lv["Annihilators"]] && vevPolynomialQ[expr, lv["Generators"]],
                 If[ coherentBasisQ[opts],
                     Times @@ MapThread[coherentOverlap, {ms, ns}] ladderSum[ZeroLimitPower[Conjugate[#1], #3] ZeroLimitPower[#2, #4] &, {ms, ns}, expr, lv],
@@ -299,6 +266,43 @@ normalFactor[fac_, pair_, k_, x_] :=
         ]
     ]
 
+(* Sum_l c1^(d + l) c2^l g(b - k l) / ((d + l)! l! (b - k l)!), the middle j = b - k l: a geometric middle g(0) q^j makes it
+   Laguerre for k = 1 and the series kF1((i - b)/k; d + 1; (-k)^k c1 c2 / q^k), i = 0 .. k - 1, otherwise; a vacuum middle
+   g(0) KroneckerDelta[j, 0] keeps the term l = b/k; any other middle is left to Sum *)
+wingBranch[c1_, c2_, d_, b_, k_, g_, asm_] :=
+    Module[{l, e, t},
+        With[{q = Simplify[g[t + 1]/g[t]], g0 = g[0]}, {geo = FreeQ[q, t] && ! PossibleZeroQ[q]},
+            Which[
+                geo && k == 1, g0 q^b c1^d LaguerreL[b, d, -c1 c2/q]/(b + d)!,
+                geo, g0 q^b c1^d/(d! b!) HypergeometricPFQ[Table[(i - b)/k, {i, 0, k - 1}], {d + 1}, (-k)^k c1 c2/q^k] /.
+                    HypergeometricPFQ[{s1_, s2_}, {s3_}, z_] :> Hypergeometric2F1[s1, s2, s3, z],
+                MatchQ[g[t], s_. (KroneckerDelta[t, 0] | KroneckerDelta[0, t]) /; FreeQ[s, t]],
+                    Piecewise[{{g0 c1^(d + b/k) c2^(b/k)/((d + b/k)! (b/k)!), Mod[b, k] == 0}}, 0],
+                True, Sum[c1^(e + l) c2^l g[b - k l]/((e + l)! l! (b - k l)!), {l, 0, Floor[b/k]},
+                    Assumptions -> asm && Element[e, Integers] && e >= 0] /. e -> d
+            ]
+        ]
+    ]
+
+(* <m| x^p e^(cu x^k) f(N) e^(cd x^k) x^q |n> with a symbolic index: the middle steps by k down from the smaller of
+   A = m - p and B = n - q, and only the orientations whose condition can hold are summed *)
+monomialWingSum[{m_, n_}, {p_, u_}, {q_, w_}, f_, j_, x_] :=
+    With[{a = CoefficientRules[u, {x}], b = CoefficientRules[w, {x}], asm = Element[{m, n}, Integers] && m >= 0 && n >= 0},
+        If[ MatchQ[a, {{_} -> _}] && MatchQ[b, {{_} -> _}] && a[[1, 1]] === b[[1, 1]],
+            With[{k = a[[1, 1, 1]], cu = a[[1, 2]], cd = b[[1, 2]], A = m - p, B = n - q, g = (f /. j -> #) &},
+                {down = TrueQ[Simplify[B >= A, asm]]},
+                Simplify[
+                    Piecewise[Cases[
+                        Transpose[{{{cu, cd, A, B}, {cd, cu, B, A}}, Simplify[{
+                            ! down && A >= B >= 0 && Mod[A - B, k] == 0,
+                            If[down, B >= A >= 0, B > A >= 0] && Mod[B - A, k] == 0}, asm]}],
+                        {{c1_, c2_, x1_, x2_}, c : Except[False]} :> {Sqrt[m!] Sqrt[n!] wingBranch[c1, c2, (x1 - x2)/k, x2, k, g, asm], c}], 0],
+                    asm, ExcludedForms -> {_LaguerreL, _Hypergeometric2F1, _HypergeometricPFQ}]
+            ],
+            $Failed
+        ]
+    ]
+
 (* scalar Exp[P[ad]] ad^p f[n] a^q Exp[Q[a]], any factor absent: the up side is x^p Exp[P], the down side x^q Exp[Q],
    and the middle sum runs to Min[m, n].  The closed form vanishes for n < q before f[n - q] is evaluated, so
    a^dagger f[N] a keeps the vacuum when f[n - 1] is singular at n = 0; coherent elements sum the middle before the
@@ -333,7 +337,7 @@ normalProductElement[expr_, pair_, m_, n_, j_, coherent_] :=
             fu === 1, scalar (f /. j -> m) wing[n, m, fd, x],
             IntegerQ[m] && IntegerQ[n],
                 scalar Sum[wing[m, j, fu, x] f wing[n, j, fd, x], {j, 0, Min[m, n]}],
-            True, $Failed
+            True, Replace[monomialWingSum[{m, n}, {p, u}, {q, w}, f, j, x], s : Except[$Failed] :> scalar s]
         ];
         If[FreeQ[r, SeriesCoefficient], r, $Failed]
     ]
